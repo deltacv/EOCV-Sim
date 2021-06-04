@@ -37,7 +37,7 @@ dependencies {
     implementation 'org.openpnp:opencv:4.3.0-2'
 
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'io.github.classgraph:classgraph:4.8.94'
+    implementation 'io.github.classgraph:classgraph:4.8.107'
 
     implementation 'com.formdev:flatlaf:0.45'
     implementation 'com.formdev:flatlaf-intellij-themes:0.45'
