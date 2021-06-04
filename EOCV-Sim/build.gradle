@@ -34,7 +34,7 @@ apply from: '../test-logging.gradle'
 
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
-    implementation 'org.openpnp:opencv:4.3.0-2'
+    implementation 'org.openpnp:opencv:4.5.1-2'
 
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'io.github.classgraph:classgraph:4.8.94'
