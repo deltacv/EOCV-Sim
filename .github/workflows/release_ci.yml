@@ -1,0 +1,47 @@
+name: Create GitHub release(s)
+
+on:
+  push:
+    branches: [ master, dev ]
+    tags: 'v*'
+
+jobs:
+  build-and-release:
+    if: ${{ startsWith(github.ref, 'refs/tags/v') || github.ref != 'ref/heads/master' }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 8
+      uses: actions/setup-java@v2.1.0
+      with:
+        distribution: adopt
+        java-version: 8
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build release shadow jar with Gradle
+      run: ./gradlew -Penv=release shadowJar -x test
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
+    - name: Build dev shadow jar with Gradle
+      run: |
+        SHA_SHORT="$(git rev-parse --short HEAD)"
+        ./gradlew -Phash=$SHA_SHORT shadowJar -x test
+      if: ${{ !startsWith(github.ref, 'refs/tags/v') && github.ref != 'refs/heads/master' }}
+
+    - uses: eine/tip@master
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: 'Dev'
+        rm: true
+        files: |
+          EOCV-Sim/build/libs/*.jar
+      if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/v')}}
+
+    - uses: softprops/action-gh-release@v1
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      with:
+        files: 'EOCV-Sim/build/libs/*.jar'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

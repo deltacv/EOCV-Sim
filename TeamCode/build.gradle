@@ -1,0 +1,18 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm'
+}
+
+apply from: '../build.common.gradle'
+
+dependencies {
+    implementation 'org.openpnp:opencv:4.3.0-2'
+    implementation project(':EOCV-Sim')
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+}
+
+task(runSim, dependsOn: 'classes', type: JavaExec) {
+    main = 'com.github.serivesmejia.eocvsim.Main'
+    classpath = sourceSets.main.runtimeClasspath
+}

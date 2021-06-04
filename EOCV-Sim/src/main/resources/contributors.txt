@@ -1,0 +1,6 @@
+<html>NPE & the OpenFTC Team - EOCV Developers & Advisors</html>
+<html>serivesmejia - Main Dev</html>
+<html>Purav - Contributor & Mac Tester </html>
+<html>Jaran - Kotlin & Coroutines Advisor</html>
+<html>Shaurya - Guide Contributor & Mac Tester</html>
+<html>Henopied - JVM Crash Bugfix</html>

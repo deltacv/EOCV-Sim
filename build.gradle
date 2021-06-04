@@ -1,0 +1,61 @@
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+buildscript {
+    ext {
+        kotlin_version = "1.4.32"
+        kotlinx_coroutines_version = "1.4.3"
+
+        env = findProperty('env') == 'release' ? 'release' : 'dev'
+
+        println("Current build is: $env")
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    group 'com.github.serivesmejia'
+    version '3.0.0'
+
+    ext {
+        standardVersion = version
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    tasks.withType(Jar) {
+        manifest {
+            attributes['Main-Class'] = 'com.github.serivesmejia.eocvsim.Main'
+        }
+    }
+
+    if(env == 'dev') {
+        String date = DateTimeFormatter.ofPattern(
+            "yyMMdd-hhmm"
+        ).format(LocalDateTime.now())
+
+        String hash = findProperty('hash')
+
+        version += "-dev-${hash ?: date}"
+        println("Final version of ${project.name} is $version")
+
+        File libsFolder = java.nio.file.Paths.get(
+            projectDir.absolutePath, 'build', 'libs'
+        ).toFile()
+
+
+        for(file in libsFolder.listFiles()) {
+             if(file.name.contains("dev") && file.name.endsWith(".jar"))
+                file.delete()
+        }
+    }
+}

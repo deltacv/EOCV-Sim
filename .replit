@@ -1,0 +1,2 @@
+language = "java10"
+run = "chmod +x gradlew && ./gradlew runSim"

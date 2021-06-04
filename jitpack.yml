@@ -1,0 +1,6 @@
+jdk:
+  - openjdk8
+before_install:
+ - chmod +x gradlew
+install:
+ - ./gradlew :EOCV-Sim:clean :EOCV-Sim:build :EOCV-Sim:publishToMavenLocal -x :EOCV-Sim:test

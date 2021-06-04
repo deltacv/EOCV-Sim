@@ -1,0 +1,28 @@
+name: "Validate Gradle Wrapper"
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+    branches:
+      - master
+      - dev
+
+jobs:
+  validationPlugin:
+    name: "Validation Plugin"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: gradle/wrapper-validation-action@v1
+  validationJavaSample:
+    name: "Validation Java Sample"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: demo/java
+    steps:
+      - uses: actions/checkout@v2
+      - uses: gradle/wrapper-validation-action@v1
