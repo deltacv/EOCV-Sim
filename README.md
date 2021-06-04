@@ -1,6 +1,6 @@
 <img src='/EOCV-Sim/src/main/resources/images/icon/ico_eocvsim_letters_transparent.png' height='128px'>
 
-![Java CI with Gradle](https://github.com/deltacv/EOCV-Sim/workflows/Java%20CI%20with%20Gradle/badge.svg)
+![Java CI with Gradle](https://github.com/deltacv/EOCV-Sim/workflows/Build%20and%20test%20with%20Gradle/badge.svg)
 [![](https://jitpack.io/v/deltacvvesmejia/EOCV-Sim.svg)](https://jitpack.io/#deltacv/EOCV-Sim)
 [![Run on Repl.it](https://repl.it/badge/github/deltacv/EOCV-Sim)](https://repl.it/github/deltacv/EOCV-Sim)
 
@@ -99,7 +99,7 @@ No complicated setup is required for this method either, it's straight up import
 
    1) Clone EOCV-Sim repo and cd to the cloned folder
    
-	 git clone https://github.com/serivesmejia/EOCV-Sim.git
+	 git clone https://github.com/deltacv/EOCV-Sim.git
 	 cd EOCV-Sim
    \**Or it can also be manually downloaded as a ZIP file from GitHub*<br/>
 
@@ -113,7 +113,7 @@ No complicated setup is required for this method either, it's straight up import
 	 
 ## From repl.it
 
-   1) Click [here](https://repl.it/github/serivesmejia/EOCV-Sim) to go to repl.it, you might require to create an account if you haven't already. Once you do that, it will automatically create a new project and start cloning the EOCV-Sim repo.
+   1) Click [here](https://repl.it/github/deltacv/EOCV-Sim) to go to repl.it, you might require to create an account if you haven't already. Once you do that, it will automatically create a new project and start cloning the EOCV-Sim repo.
  
    2) After the cloning is finished, click on the green "Run" button at the top and EOCV-Sim should start.
   
@@ -148,7 +148,7 @@ No complicated setup is required for this method either, it's straight up import
    Adding the EOCV-Sim dependecy
    ```xml
     <dependency>
-	    <groupId>com.github.serivesmejia</groupId>
+	    <groupId>com.github.deltacv</groupId>
 	    <artifactId>EOCV-Sim</artifactId>
 	    <version>3.0.0</version>
 	</dependency>
