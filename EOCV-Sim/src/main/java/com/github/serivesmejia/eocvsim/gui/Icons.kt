@@ -39,6 +39,8 @@ object Icons {
     private var colorsInverted = false
 
     init {
+        addImage("ico_eocvsim", "/images/icon/ico_eocvsim.png")
+
         addImage("ico_img", "/images/icon/ico_img.png")
         addImage("ico_cam", "/images/icon/ico_cam.png")
         addImage("ico_vid", "/images/icon/ico_vid.png")
