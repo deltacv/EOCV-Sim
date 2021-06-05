@@ -54,7 +54,8 @@ class Output @JvmOverloads constructor(
     private val buildBottomButtonsPanel = BuildOutputBottomButtonsPanel(::close)
     private val buildOutputPanel = OutputPanel(buildBottomButtonsPanel)
 
-    private val pipelineOutputPanel = OutputPanel(::close)
+    private val pipelineBottomButtonsPanel = PipelineBottomButtonsPanel(::close)
+    private val pipelineOutputPanel = OutputPanel(pipelineBottomButtonsPanel)
 
     private val tabbedPane = JTabbedPane()
 
@@ -81,8 +82,13 @@ class Output @JvmOverloads constructor(
 
         updatePipelineOutput()
 
-        buildEnded()
+        if(eocvSim.pipelineManager.paused) {
+            pipelinePaused()
+        } else {
+            pipelineResumed()
+        }
 
+        buildEnded()
         if(compiledPipelineManager.isBuildRunning) {
             buildRunning()
         }
@@ -124,6 +130,32 @@ class Output @JvmOverloads constructor(
             }
         }
 
+        eocvSim.pipelineManager.onPause {
+            if(!output.isVisible) {
+                it.removeThisPersistent()
+            } else {
+                pipelinePaused()
+            }
+        }
+
+        eocvSim.pipelineManager.onResume {
+            if(!output.isVisible) {
+                it.removeThisPersistent()
+            } else {
+                pipelineResumed()
+            }
+        }
+
+        pipelineBottomButtonsPanel.pauseButton.addActionListener {
+            eocvSim.pipelineManager.setPaused(pipelineBottomButtonsPanel.pauseButton.isSelected)
+
+            if(pipelineBottomButtonsPanel.pauseButton.isSelected) {
+                pipelinePaused()
+            } else {
+                pipelineResumed()
+            }
+        }
+
         buildBottomButtonsPanel.buildAgainButton.addActionListener {
             eocvSim.visualizer.asyncCompilePipelines()
         }
@@ -150,10 +182,32 @@ class Output @JvmOverloads constructor(
         buildBottomButtonsPanel.buildAgainButton.isEnabled = true
     }
 
+    private fun pipelineResumed() {
+        pipelineBottomButtonsPanel.pauseButton.isSelected = false
+        pipelineBottomButtonsPanel.pauseButton.text = "Pause"
+    }
+
+    private fun pipelinePaused() {
+        pipelineBottomButtonsPanel.pauseButton.isSelected = true
+        pipelineBottomButtonsPanel.pauseButton.text = "Resume"
+    }
+
     fun close() {
         output.isVisible = false
         isAlreadyOpened = false
         latestIndex = tabbedPane.selectedIndex
+    }
+
+    class PipelineBottomButtonsPanel(
+        closeCallback: () -> Unit
+    ) : OutputPanel.DefaultBottomButtonsPanel(closeCallback) {
+        val pauseButton = JToggleButton("Pause")
+
+        override fun create(panel: OutputPanel) {
+            add(Box.createRigidArea(Dimension(4, 0)))
+            add(pauseButton)
+            super.create(panel)
+        }
     }
 
     class BuildOutputBottomButtonsPanel(

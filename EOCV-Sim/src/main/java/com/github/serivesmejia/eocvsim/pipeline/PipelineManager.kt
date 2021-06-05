@@ -183,7 +183,10 @@ class PipelineManager(var eocvSim: EOCVSim) {
             currentTelemetry?.infoItem?.setValue("")
         }
 
-        if(paused || currentPipeline == null) return
+        if(paused || currentPipeline == null) {
+            updateExceptionTracker()
+            return
+        }
 
         timestampedPipelineHandler.update(currentPipeline)
 
@@ -236,17 +239,9 @@ class PipelineManager(var eocvSim: EOCVSim) {
                     }
                 }
 
-                if(currentPipelineIndex < pipelines.size) {
-                    pipelineExceptionTracker.update(
-                        pipelines[currentPipelineIndex], null
-                    )
-                }
+                updateExceptionTracker()
             } catch (ex: Exception) { //handling exceptions from pipelines
-                if(currentPipelineIndex < pipelines.size) {
-                    pipelineExceptionTracker.update(
-                        pipelines[currentPipelineIndex], ex
-                    )
-                }
+                updateExceptionTracker(ex)
             }
         }
 
@@ -281,6 +276,14 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 //pipeline if it ever returns.
                 pipelineJob.cancel()
             }
+        }
+    }
+
+    private fun updateExceptionTracker(ex: Throwable? = null) {
+        if(currentPipelineIndex < pipelines.size && currentPipeline != null) {
+            pipelineExceptionTracker.update(
+                pipelines[currentPipelineIndex], ex
+            )
         }
     }
 

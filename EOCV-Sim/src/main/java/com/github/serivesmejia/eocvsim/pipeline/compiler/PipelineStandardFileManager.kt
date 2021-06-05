@@ -45,7 +45,7 @@ class PipelineStandardFileManager(delegate: StandardJavaFileManager) : Delegatin
             
             for(file in SysUtil.getClasspathFiles()) {
                 val files = SysUtil.filesUnder(file, ".jar")
-                files.forEach { Log.info(TAG, "Found classpath file ${file.absolutePath} in classpath") }
+                files.forEach { Log.info(TAG, "Found classpath file ${it.absolutePath} in classpath") }
                 
                 classpathList.addAll(files)
             }
@@ -55,7 +55,7 @@ class PipelineStandardFileManager(delegate: StandardJavaFileManager) : Delegatin
             classpathList.toList()
         }
         
-        private val TAG = "PipelineStandardFileManager"
+        private const val TAG = "PipelineStandardFileManager"
     }
 
     init {
