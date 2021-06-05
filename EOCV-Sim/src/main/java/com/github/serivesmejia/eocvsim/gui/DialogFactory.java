@@ -93,8 +93,25 @@ public class DialogFactory {
         invokeLater(() -> new About(eocvSim.visualizer.frame, eocvSim));
     }
 
+    public static void createOutput(EOCVSim eocvSim) {
+        invokeLater(() -> {
+             if(!Output.Companion.isAlreadyOpened())
+                new Output(eocvSim.visualizer.frame, eocvSim);
+        });
+    }
+
     public static void createBuildOutput(EOCVSim eocvSim) {
-        invokeLater(() -> new BuildOutput(eocvSim.visualizer.frame, eocvSim));
+        invokeLater(() -> {
+            if(!Output.Companion.isAlreadyOpened())
+                new Output(eocvSim.visualizer.frame, eocvSim, 1);
+        });
+    }
+
+    public static void createPipelineOutput(EOCVSim eocvSim) {
+        invokeLater(() -> {
+            if(!Output.Companion.isAlreadyOpened())
+                new Output(eocvSim.visualizer.frame, eocvSim, 0);
+        });
     }
 
     public static FileAlreadyExists.UserChoice createFileAlreadyExistsDialog(EOCVSim eocvSim) {
