@@ -38,8 +38,9 @@ class OutputPanel(
     constructor(closeCallback: () -> Unit) : this(DefaultBottomButtonsPanel(closeCallback))
 
     init {
-        outputArea.isEditable = false
-        outputArea.lineWrap   = true
+        outputArea.isEditable  = false
+        outputArea.highlighter = null
+        outputArea.lineWrap    = true
 
         val outputScroll = JScrollPane(outputArea)
         outputScroll.verticalScrollBarPolicy   = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
