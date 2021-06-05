@@ -25,13 +25,11 @@ package com.github.serivesmejia.eocvsim.gui;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.dialog.*;
-import com.github.serivesmejia.eocvsim.gui.dialog.SplashScreen;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateCameraSource;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateImageSource;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateSource;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateVideoSource;
 import com.github.serivesmejia.eocvsim.input.SourceType;
-import com.github.serivesmejia.eocvsim.util.event.EventHandler;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -95,29 +93,8 @@ public class DialogFactory {
         invokeLater(() -> new About(eocvSim.visualizer.frame, eocvSim));
     }
 
-    public static void createOutput(EOCVSim eocvSim) {
-        invokeLater(() -> {
-             if(!Output.Companion.isAlreadyOpened())
-                new Output(eocvSim.visualizer.frame, eocvSim);
-        });
-    }
-
     public static void createBuildOutput(EOCVSim eocvSim) {
-        invokeLater(() -> {
-            if(!Output.Companion.isAlreadyOpened())
-                new Output(eocvSim.visualizer.frame, eocvSim, 1);
-        });
-    }
-
-    public static void createPipelineOutput(EOCVSim eocvSim) {
-        invokeLater(() -> {
-            if(!Output.Companion.isAlreadyOpened())
-                new Output(eocvSim.visualizer.frame, eocvSim, 0);
-        });
-    }
-
-    public static void createSplashScreen(EventHandler closeHandler) {
-        invokeLater(() -> new SplashScreen(closeHandler));
+        invokeLater(() -> new BuildOutput(eocvSim.visualizer.frame, eocvSim));
     }
 
     public static FileAlreadyExists.UserChoice createFileAlreadyExistsDialog(EOCVSim eocvSim) {

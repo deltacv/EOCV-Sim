@@ -72,6 +72,7 @@ class TelemetryPanel : JPanel(FlowLayout(FlowLayout.CENTER)) {
                 listModel.addElement(line)
             }
 
+            telemetryList.fixedCellWidth = 240
             telemetryList.model = listModel
         }
 
@@ -81,8 +82,6 @@ class TelemetryPanel : JPanel(FlowLayout(FlowLayout.CENTER)) {
             listModel.addElement("<html></html>")
             telemetryList.model = listModel
         }
-
-        telemetryList.fixedCellWidth = 240
 
         revalAndRepaint()
     }

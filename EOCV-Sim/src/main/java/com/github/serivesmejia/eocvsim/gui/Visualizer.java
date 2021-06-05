@@ -24,17 +24,18 @@
 package com.github.serivesmejia.eocvsim.gui;
 
 import com.formdev.flatlaf.FlatLaf;
-import com.github.serivesmejia.eocvsim.Build;
 import com.github.serivesmejia.eocvsim.EOCVSim;
+import com.github.serivesmejia.eocvsim.Build;
 import com.github.serivesmejia.eocvsim.gui.component.Viewport;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.InputSourceDropTarget;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.SourceSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TopMenuBar;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
+import com.github.serivesmejia.eocvsim.gui.util.GuiUtil;
 import com.github.serivesmejia.eocvsim.gui.util.ReflectTaskbar;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompiler;
 import com.github.serivesmejia.eocvsim.util.Log;
@@ -45,11 +46,22 @@ import kotlin.Unit;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class Visualizer {
+
+    public static ImageIcon ICO_EOCVSIM = null;
+
+    static {
+        try {
+            ICO_EOCVSIM = GuiUtil.loadImageIcon("/images/icon/ico_eocvsim.png");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     public final EventHandler onInitFinished = new EventHandler("OnVisualizerInitFinish");
 
@@ -95,7 +107,7 @@ public class Visualizer {
         if(ReflectTaskbar.INSTANCE.isUsable()){
             try {
                 //set icon for mac os (and other systems which do support this method)
-                ReflectTaskbar.INSTANCE.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
+                ReflectTaskbar.INSTANCE.setIconImage(ICO_EOCVSIM.getImage());
             } catch (final UnsupportedOperationException e) {
                 Log.warn("Visualizer", "Setting the Taskbar icon image is not supported on this platform");
             } catch (final SecurityException e) {
@@ -196,7 +208,7 @@ public class Visualizer {
 
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-        frame.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
+        frame.setIconImage(ICO_EOCVSIM.getImage());
 
         frame.setLocationRelativeTo(null);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -204,14 +216,14 @@ public class Visualizer {
 
         globalSplitPane.setDividerLocation(1070);
 
-        colorPicker = new ColorPicker(viewport.image);
-
-        frame.setVisible(true);
-
         onInitFinished.run();
         onInitFinished.setCallRightAway(true);
 
+        frame.setVisible(true);
+
         registerListeners();
+
+        colorPicker = new ColorPicker(viewport.image);
 
         hasFinishedInitializing = true;
     }

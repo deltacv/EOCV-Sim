@@ -33,17 +33,17 @@ public enum Theme {
     Default(() -> {
         UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
     }),
-    Light(FlatLightLaf::setup),
-    Dark(FlatDarkLaf::setup),
-    Darcula(FlatDarculaLaf::setup),
-    Light_Intellij(FlatIntelliJLaf::setup),
-    Light_Flat_Intellij(FlatLightFlatIJTheme::setup),
-    Cyan_Light_Intellij(FlatCyanLightIJTheme::setup),
-    High_Contrast_Intellij(FlatHighContrastIJTheme::setup),
-    Dracula_Intellij(FlatDraculaIJTheme::setup),
-    Dark_Flat_Intellij(FlatDarkFlatIJTheme::setup),
-    Spacegray_Intellij(FlatSpacegrayIJTheme::setup),
-    Material_Dark_Intellij(FlatMaterialDesignDarkIJTheme::setup);
+    Light(FlatLightLaf::install),
+    Dark(FlatDarkLaf::install),
+    Darcula(FlatDarculaLaf::install),
+    Light_Intellij(FlatIntelliJLaf::install),
+    Light_Flat_Intellij(FlatLightFlatIJTheme::install),
+    Cyan_Light_Intellij(FlatCyanLightIJTheme::install),
+    High_Contrast_Intellij(FlatHighContrastIJTheme::install),
+    Dracula_Intellij(FlatDraculaIJTheme::install),
+    Dark_Flat_Intellij(FlatDarkFlatIJTheme::install),
+    Spacegray_Intellij(FlatSpacegrayIJTheme::install),
+    Material_Dark_Intellij(FlatMaterialDesignDarkIJTheme::install);
 
     ThemeInstaller installRunn;
 
