@@ -24,7 +24,7 @@
 package com.github.serivesmejia.eocvsim.pipeline.compiler
 
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.gui.dialog.BuildOutput
+import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.util.Log
@@ -184,7 +184,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         } else {
             Log.warn(TAG, "$lastBuildOutputMessage\n")
 
-            if(result.status == PipelineCompileStatus.FAILED && !BuildOutput.isAlreadyOpened)
+            if(result.status == PipelineCompileStatus.FAILED && !Output.isAlreadyOpened)
                 DialogFactory.createBuildOutput(pipelineManager.eocvSim)
         }
 
@@ -220,7 +220,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
         lastBuildResult = PipelineCompileResult(PipelineCompileStatus.FAILED, lastBuildOutputMessage!!)
 
-        if(!BuildOutput.isAlreadyOpened)
+        if(!Output.isAlreadyOpened)
             DialogFactory.createBuildOutput(pipelineManager.eocvSim)
 
         lastBuildResult!!
