@@ -24,16 +24,12 @@
 package com.github.serivesmejia.eocvsim.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.gui.util.MatPoster
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineClassLoader
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
-import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.EventListener
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import kotlinx.coroutines.*
@@ -103,15 +99,11 @@ class PipelineManager(var eocvSim: EOCVSim) {
     var latestSnapshot: PipelineSnapshot? = null
         private set
 
-    //manages and builds pipelines in runtime
     @JvmField val compiledPipelineManager = CompiledPipelineManager(this)
+
     //this will be handling the special pipeline "timestamped" type
     val timestampedPipelineHandler = TimestampedPipelineHandler()
-    //counting and tracking exceptions for logging and reporting purposes
-    val pipelineExceptionTracker = PipelineExceptionTracker(this)
-
-    private var openedPipelineOutputCount = 0
-
+    
     enum class PauseReason {
         USER_REQUESTED, IMAGE_ONE_ANALYSIS, NOT_PAUSED
     }
@@ -137,25 +129,6 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 compiledPipelineManager.onBuildEnd.doOnce(::applyStaticSnapOrDef)
             else
                 applyStaticSnapOrDef()
-        }
-
-        pipelineExceptionTracker.onNewPipelineException {
-            if(openedPipelineOutputCount <= 3) {
-                DialogFactory.createPipelineOutput(eocvSim)
-                openedPipelineOutputCount++
-            }
-
-            currentTelemetry?.errItem?.caption = "[/!\\]"
-            currentTelemetry?.errItem?.setValue("Uncaught exception thrown in\n pipeline, check Workspace -> Output.")
-        }
-
-        pipelineExceptionTracker.onPipelineExceptionClear {
-            currentTelemetry?.errItem?.caption = ""
-            currentTelemetry?.errItem?.setValue("")
-        }
-
-        onPipelineChange {
-            openedPipelineOutputCount = 0
         }
     }
 
@@ -236,17 +209,14 @@ class PipelineManager(var eocvSim: EOCVSim) {
                     }
                 }
 
-                if(currentPipelineIndex < pipelines.size) {
-                    pipelineExceptionTracker.update(
-                        pipelines[currentPipelineIndex], null
-                    )
-                }
+                //clear error messages in telemetry
+                currentTelemetry?.errItem?.caption = ""
+                currentTelemetry?.errItem?.setValue("")
             } catch (ex: Exception) { //handling exceptions from pipelines
-                if(currentPipelineIndex < pipelines.size) {
-                    pipelineExceptionTracker.update(
-                        pipelines[currentPipelineIndex], ex
-                    )
-                }
+                currentTelemetry?.errItem?.caption = "[/!\\]"
+                currentTelemetry?.errItem?.setValue("Uncaught exception thrown in pipeline\nCheck console for details.")
+
+                Log.error("PipelineManager", "Uncaught exception thrown while processing pipeline $currentPipelineName", ex)
             }
         }
 

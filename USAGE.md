@@ -8,7 +8,7 @@ Thank you for your interest in EOCV-Sim :)
 
 We made this tool in hopes that it will be useful for all FTC teams seeking a way of learning and developing their seasonal OpenCV algorithms in a easy and straightforward way, while also providing some extra tools to improve the experience of developing such algorithms.
 
-The main purpose of this software is to *simulate the package & class structure of OpenFTC's EasyOpenCV and a little bit of the FTC SDK*, while also providing OpenCV functionality and a simple GUI. 
+The main purpose of this software is to simulate the package & class structure of OpenFTC's EasyOpenCV and a little bit of the FTC SDK, while also providing OpenCV functionality and a simple GUI. 
 
 By simulating the aforementioned structure, it allows the imports, class names, etc. to be the same as they would if you were using the FTC SDK with EasyOpenCV, allowing you to simply copy paste your vision code onto your Android Studio project once you want to transfer it to a robot.<br/>
 
@@ -29,7 +29,29 @@ By simulating the aforementioned structure, it allows the imports, class names, 
 
 **This part is applicable with any installation method**
 
+### Introduction to workspaces
 
+Workspaces are the new major feature introduced in v3.0.0!
+
+A workspace basically consists of a folder containing `.java` source files and resource files, which are compiled on the fly by EOCV-Sim. This removes the need of having to use Gradle for running builds, or even allowing to see code changes in real time within a few seconds or even milliseconds! 
+
+Note that a Java Development Kit (JDK) is needed for using this feature, since Java Runtime Environments (JREs) don't come with a compiler packaged, 
+
+The simulator watches for file changes in the background every 800ms, and triggers a build automatically. This can be greately beneficial for writing pipelines, plus the variable tuner that also allows to change variables in real time to reflect changes immediately. The simulator also tries to snapshot the state of the pipeline selected before the build, and try to apply it to the (possibly new if it was compiled on runtime) selected pipeline if the package and class names of the old and the new pipeline match, therefore values tuned with the variable tuner can be kept between builds even if the source code has changed.
+
+The simulator creates and selects by default a workspace in the user folder, `~/.eocvsim/default_workspace`, which contains a sample GrayscalePipeline that is compiled and added on runtime, but you can change it by doing the following steps:
+
+1) Go under the "Pipelines" section, click the "Workspace" and finally "Select workspace". Or alternatively, you can also go to Workspace -> Select workspace 
+
+<img src='doc/images/eocvsim_usage_workspace_select.gif' width='50%' height='50%'>
+   
+2) Select a folder in the file explorer that pops up
+
+3) Done! The sim should select the folder as a workspace, create a `eocvsim_workspace.json` file if it doesn't exist, start running a build and watch for file changes in the selected folder
+
+### VS Code
+
+### The `eocvsim_workspace.json` file
 
 ## IntelliJ project structure (with the old installation method)
 
@@ -119,19 +141,11 @@ To allow multiple ways to test your pipeline, the simulator comes with *Input So
     - Unlike the image sources, these will not pause the execution of you pipeline by default, but you can click the "Pause" button to pause it at any time.
 - **Video Source:**
     - These will feed your pipeline with a constantly changing video stream from a file in your hard drive, pause rules are the same as camera sources.
-    - Most tested video format is *\*.avi*, although it depends on your operating system's codecs.
+    - Most tested video format is *\*.avi*, although it depends on your operating system's support.
   
 ### Creating an Input Source
 
-   1) Go to the panel located at the right. Under the "Sources" section, click on "Create"<br/><br/>
-   
-      <img src='doc/images/eocvsim_usage_createsource_2.png' width='25%' height='25%'><br/><br/>
-      
-      - Alternatively, you can also go to *File -> New -> Input Source* in the top bar menu<br/><br/>
-      
-        <img src='doc/images/eocvsim_usage_createsource_menubar.png' width='30%' height='30%'><br/><br/>
-      
-   2) Select the type of InputSource you want to create. If you're on the "Sources" section, click on next.<br/><br/>
+1) From your Operating System's file manager, grab a media file such as an image or a video. 
 
 ## Telemetry
 

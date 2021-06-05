@@ -1,10 +1,9 @@
-import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 buildscript {
     ext {
-        kotlin_version = "1.5.10"
+        kotlin_version = "1.4.32"
         kotlinx_coroutines_version = "1.4.3"
 
         env = findProperty('env') == 'release' ? 'release' : 'dev'
@@ -23,7 +22,7 @@ buildscript {
 
 allprojects {
     group 'com.github.serivesmejia'
-    version '3.1.0'
+    version '3.0.0'
 
     ext {
         standardVersion = version
@@ -36,13 +35,12 @@ allprojects {
     tasks.withType(Jar) {
         manifest {
             attributes['Main-Class'] = 'com.github.serivesmejia.eocvsim.Main'
-            attributes['SplashScreen-Image'] = 'images/icon/ico_eocvsim.png'
         }
     }
 
     if(env == 'dev') {
         String date = DateTimeFormatter.ofPattern(
-            "yyMMdd-HHmm"
+            "yyMMdd-hhmm"
         ).format(LocalDateTime.now())
 
         String hash = findProperty('hash')
@@ -50,9 +48,10 @@ allprojects {
         version += "-dev-${hash ?: date}"
         println("Final version of ${project.name} is $version")
 
-        File libsFolder = Paths.get(
+        File libsFolder = java.nio.file.Paths.get(
             projectDir.absolutePath, 'build', 'libs'
         ).toFile()
+
 
         for(file in libsFolder.listFiles()) {
              if(file.name.contains("dev") && file.name.endsWith(".jar"))
