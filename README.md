@@ -1,8 +1,8 @@
 <img src='/EOCV-Sim/src/main/resources/images/icon/ico_eocvsim_letters_transparent.png' height='128px'>
 
-![Java CI with Gradle](https://github.com/serivesmejia/EOCV-Sim/workflows/Java%20CI%20with%20Gradle/badge.svg)
-[![](https://jitpack.io/v/serivesmejia/EOCV-Sim.svg)](https://jitpack.io/#serivesmejia/EOCV-Sim)
-[![Run on Repl.it](https://repl.it/badge/github/serivesmejia/EOCV-Sim)](https://repl.it/github/serivesmejia/EOCV-Sim)
+![Java CI with Gradle](https://github.com/deltacv/EOCV-Sim/workflows/Build%20and%20test%20with%20Gradle/badge.svg)
+[![](https://jitpack.io/v/deltacvvesmejia/EOCV-Sim.svg)](https://jitpack.io/#deltacv/EOCV-Sim)
+[![Run on Repl.it](https://repl.it/badge/github/deltacv/EOCV-Sim)](https://repl.it/github/deltacv/EOCV-Sim)
 
 
 # Welcome!
@@ -36,7 +36,7 @@ Since OpenCV in Java uses a native library, which is platform specific, the simu
 
 1) **Make sure you have downloaded a JDK as mentioned above**
 
-2) **Go to the releases page on this repo and find the latest version ([or click here](https://github.com/serivesmejia/EOCV-Sim/releases/latest))**
+2) **Go to the releases page on this repo and find the latest version ([or click here](https://github.com/deltacv/EOCV-Sim/releases/latest))**
 
 3) **Download the jar file, named `EOCV-Sim-X.X.X-all.jar`, available at the bottom on the "assets" section**
 
@@ -60,7 +60,7 @@ Since OpenCV in Java uses a native library, which is platform specific, the simu
      chmod +x EOCV-Sim-X.X.X-all.jar
      ```
     
-**Now the sim should be running without any issues! If you find any problem feel free to open an issue, and check the [usage explanation](https://github.com/serivesmejia/EOCV-Sim/blob/master/USAGE.md) for more details about how to use the simulator (and VS Code).**
+**Now the sim should be running without any issues! If you find any problem feel free to open an issue, and check the [usage explanation](https://github.com/deltacv/EOCV-Sim/blob/master/USAGE.md) for more details about how to use the simulator (and VS Code).**
 
 ## Altenative installation method (IntelliJ IDEA)
 
@@ -84,7 +84,7 @@ No complicated setup is required for this method either, it's straight up import
             
       2) Another window will show up for cloning and importing a repository into IntelliJ<br/>
       
-         1) In the "URL" field, enter: ```https://github.com/serivesmejia/EOCV-Sim.git```<br/>
+         1) In the "URL" field, enter: ```https://github.com/deltacv/EOCV-Sim.git```<br/>
          2) The directory can be changed, but it will be automatically filled so it's not necessary.
          3) Make sure the "Version control" is set to "Git".<br/><br/>
 			<img src='doc/images/eocvsim_screenshot_installation_3.png' width='50%' height='50%'><br/>
@@ -93,13 +93,13 @@ No complicated setup is required for this method either, it's straight up import
          5) After the cloning finishes, the project should automatically import and you'll have something like this:<br/><br/>
             <img src='doc/images/eocvsim_screenshot_installation_5.png' width='75%' height='75%'><br/>
             
-### And you're ready to go! Refer to the [usage explanation](https://github.com/serivesmejia/EOCV-Sim/blob/master/USAGE.md) for further details on how to utilize the simulator.<br/>
+### And you're ready to go! Refer to the [usage explanation](https://github.com/deltacv/EOCV-Sim/blob/master/USAGE.md) for further details on how to utilize the simulator.<br/>
 
 ## From the command-line
 
    1) Clone EOCV-Sim repo and cd to the cloned folder
    
-	 git clone https://github.com/serivesmejia/EOCV-Sim.git
+	 git clone https://github.com/deltacv/EOCV-Sim.git
 	 cd EOCV-Sim
    \**Or it can also be manually downloaded as a ZIP file from GitHub*<br/>
 
@@ -113,7 +113,7 @@ No complicated setup is required for this method either, it's straight up import
 	 
 ## From repl.it
 
-   1) Click [here](https://repl.it/github/serivesmejia/EOCV-Sim) to go to repl.it, you might require to create an account if you haven't already. Once you do that, it will automatically create a new project and start cloning the EOCV-Sim repo.
+   1) Click [here](https://repl.it/github/deltacv/EOCV-Sim) to go to repl.it, you might require to create an account if you haven't already. Once you do that, it will automatically create a new project and start cloning the EOCV-Sim repo.
  
    2) After the cloning is finished, click on the green "Run" button at the top and EOCV-Sim should start.
   
@@ -129,7 +129,7 @@ No complicated setup is required for this method either, it's straight up import
    }
    
    dependencies {
-      implementation 'com.github.serivesmejia:EOCV-Sim:3.0.0' //add the EOCV-Sim dependency
+      implementation 'com.github.deltacv:EOCV-Sim:3.0.0' //add the EOCV-Sim dependency
    }
    ```
    
@@ -148,7 +148,7 @@ No complicated setup is required for this method either, it's straight up import
    Adding the EOCV-Sim dependecy
    ```xml
     <dependency>
-	    <groupId>com.github.serivesmejia</groupId>
+	    <groupId>com.github.deltacv</groupId>
 	    <artifactId>EOCV-Sim</artifactId>
 	    <version>3.0.0</version>
 	</dependency>
