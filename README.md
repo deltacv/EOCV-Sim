@@ -107,7 +107,7 @@ No complicated setup is required for this method either, it's straight up import
   
 	 gradlew runSim
 	 
-   \**On some command lines (like Windows PowerShell) you might need to execute "./gradlew" instead*<br/>
+   \**On some command lines (such as Windows PowerShell and macOS) you might need to execute "./gradlew" instead*<br/>
 	 
 #### And that's it! You might need to wait a bit for gradle to download all the dependencies but EOCV-Sim will open eventually.
 	 
