@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter
 
 buildscript {
     ext {
-        kotlin_version = "1.4.32"
+        kotlin_version = "1.5.10"
         kotlinx_coroutines_version = "1.4.3"
 
         env = findProperty('env') == 'release' ? 'release' : 'dev'
@@ -22,7 +22,7 @@ buildscript {
 
 allprojects {
     group 'com.github.serivesmejia'
-    version '3.0.0'
+    version '3.1.0'
 
     ext {
         standardVersion = version
@@ -40,7 +40,7 @@ allprojects {
 
     if(env == 'dev') {
         String date = DateTimeFormatter.ofPattern(
-            "yyMMdd-hhmm"
+            "yyMMdd-HHmm"
         ).format(LocalDateTime.now())
 
         String hash = findProperty('hash')
