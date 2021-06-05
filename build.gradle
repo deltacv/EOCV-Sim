@@ -3,7 +3,7 @@ import java.time.format.DateTimeFormatter
 
 buildscript {
     ext {
-        kotlin_version = "1.4.32"
+        kotlin_version = "1.5.10"
         kotlinx_coroutines_version = "1.4.3"
 
         env = findProperty('env') == 'release' ? 'release' : 'dev'
