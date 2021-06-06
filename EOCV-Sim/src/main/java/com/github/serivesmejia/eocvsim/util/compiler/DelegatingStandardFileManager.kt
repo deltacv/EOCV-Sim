@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2021 Sebastian Erives
+ * Copyright (c) 2021 Sebastian Erives & (c) 2017 Robert Atkinson
+ *
+ * Based from the FTC SDK's org.firstinspires.ftc.onbotjava.OnBotJavaDelegatingStandardFileManager
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

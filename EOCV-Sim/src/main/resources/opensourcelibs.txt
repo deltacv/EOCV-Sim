@@ -1,5 +1,5 @@
 <html><a href="https://github.com/opencv/opencv">OpenCV</a> - Under Apache 2.0 License</html>
-<html><a href="https://github.com/FIRST-Tech-Challenge/FtcRobotController">FTC SDK</a> - Some source code under MIT License</html>
+<html><a href="https://github.com/FIRST-Tech-Challenge/FtcRobotController">FTC SDK</a> - Some source code under the BSD License</html>
 <html><a href="https://github.com/OpenFTC/EasyOpenCV">EasyOpenCV</a> - Some source code under MIT License</html>
 <html><a href="https://github.com/google/gson">Gson</a> - Under Apache 2.0 License</html>
 <html><a href="https://github.com/classgraph/classgraph">ClassGraph</a> - Under MIT License</html>
