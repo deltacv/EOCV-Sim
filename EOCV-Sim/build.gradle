@@ -4,7 +4,7 @@ import java.time.format.DateTimeFormatter
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
     id 'maven-publish'
 }
 
@@ -39,10 +39,10 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'io.github.classgraph:classgraph:4.8.107'
 
-    implementation 'com.formdev:flatlaf:0.45'
-    implementation 'com.formdev:flatlaf-intellij-themes:0.45'
+    implementation 'com.formdev:flatlaf:1.2'
+    implementation 'com.formdev:flatlaf-intellij-themes:1.2'
 
-    implementation 'net.lingala.zip4j:zip4j:2.7.0'
+    implementation 'net.lingala.zip4j:zip4j:2.8.0'
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-swing:$kotlinx_coroutines_version"

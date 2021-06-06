@@ -24,14 +24,12 @@
 package com.github.serivesmejia.eocvsim.gui.dialog
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
-import java.awt.*
+import java.awt.Dimension
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
@@ -54,7 +52,8 @@ class Output @JvmOverloads constructor(
     private val buildBottomButtonsPanel = BuildOutputBottomButtonsPanel(::close)
     private val buildOutputPanel = OutputPanel(buildBottomButtonsPanel)
 
-    private val pipelineOutputPanel = OutputPanel(::close)
+    private val pipelineBottomButtonsPanel = PipelineBottomButtonsPanel(::close)
+    private val pipelineOutputPanel = OutputPanel(pipelineBottomButtonsPanel)
 
     private val tabbedPane = JTabbedPane()
 
@@ -81,8 +80,13 @@ class Output @JvmOverloads constructor(
 
         updatePipelineOutput()
 
-        buildEnded()
+        if(eocvSim.pipelineManager.paused) {
+            pipelinePaused()
+        } else {
+            pipelineResumed()
+        }
 
+        buildEnded()
         if(compiledPipelineManager.isBuildRunning) {
             buildRunning()
         }
@@ -124,6 +128,36 @@ class Output @JvmOverloads constructor(
             }
         }
 
+        eocvSim.pipelineManager.onPause {
+            if(!output.isVisible) {
+                it.removeThisPersistent()
+            } else {
+                pipelinePaused()
+            }
+        }
+
+        eocvSim.pipelineManager.onResume {
+            if(!output.isVisible) {
+                it.removeThisPersistent()
+            } else {
+                pipelineResumed()
+            }
+        }
+
+        pipelineBottomButtonsPanel.pauseButton.addActionListener {
+            eocvSim.pipelineManager.setPaused(pipelineBottomButtonsPanel.pauseButton.isSelected)
+
+            if(pipelineBottomButtonsPanel.pauseButton.isSelected) {
+                pipelinePaused()
+            } else {
+                pipelineResumed()
+            }
+        }
+
+        pipelineBottomButtonsPanel.clearButton.addActionListener {
+            eocvSim.pipelineManager.pipelineExceptionTracker.clear()
+        }
+
         buildBottomButtonsPanel.buildAgainButton.addActionListener {
             eocvSim.visualizer.asyncCompilePipelines()
         }
@@ -150,14 +184,36 @@ class Output @JvmOverloads constructor(
         buildBottomButtonsPanel.buildAgainButton.isEnabled = true
     }
 
+    private fun pipelineResumed() {
+        pipelineBottomButtonsPanel.pauseButton.isSelected = false
+        pipelineBottomButtonsPanel.pauseButton.text = "Pause"
+    }
+
+    private fun pipelinePaused() {
+        pipelineBottomButtonsPanel.pauseButton.isSelected = true
+        pipelineBottomButtonsPanel.pauseButton.text = "Resume"
+    }
+
     fun close() {
         output.isVisible = false
         isAlreadyOpened = false
         latestIndex = tabbedPane.selectedIndex
     }
 
-    class BuildOutputBottomButtonsPanel(
+    class PipelineBottomButtonsPanel(
         closeCallback: () -> Unit
+    ) : OutputPanel.DefaultBottomButtonsPanel(closeCallback) {
+        val pauseButton = JToggleButton("Pause")
+
+        override fun create(panel: OutputPanel) {
+            add(Box.createRigidArea(Dimension(4, 0)))
+            add(pauseButton)
+            super.create(panel)
+        }
+    }
+
+    class BuildOutputBottomButtonsPanel(
+        closeCallback: () -> Unit,
     ) : OutputPanel.DefaultBottomButtonsPanel(closeCallback) {
         val buildAgainButton = JButton("Build again")
 

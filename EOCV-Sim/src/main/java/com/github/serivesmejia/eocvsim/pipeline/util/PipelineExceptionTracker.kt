@@ -33,7 +33,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
     companion object {
         private const val TAG = "PipelineExceptionTracker"
 
-        const val millisExceptionExpire = 5000L
+        const val millisExceptionExpire = 8000L
     }
 
     var currentPipeline: PipelineData? = null
@@ -115,17 +115,25 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
                 .append("**Pipeline $pipelineName is throwing ${exceptionsThrown.size} exception(s)**")
                 .appendLine("\n")
         } else {
-            messageBuilder
-                .append("**Pipeline $pipelineName running OK at ${pipelineManager.pipelineFpsCounter.fps} FPS**")
-                .appendLine("\n")
+
+
+            messageBuilder.append("**Pipeline $pipelineName ")
+
+            if(pipelineManager.paused) {
+                messageBuilder.append("is paused (last time was running at ${pipelineManager.pipelineFpsCounter.fps} FPS)")
+            } else {
+                messageBuilder.append("running OK at ${pipelineManager.pipelineFpsCounter.fps} FPS")
+            }
+
+            messageBuilder.append("**").appendLine("\n")
         }
 
         for((_, data) in exceptionsThrown) {
             val expiresIn = millisExceptionExpire - (System.currentTimeMillis() - data.millisThrown)
-            val expiresInSecs = String.format("%.2f", expiresIn.toDouble() / 1000.0)
+            val expiresInSecs = String.format("%.1f", expiresIn.toDouble() / 1000.0)
 
             val shortStacktrace = StrUtil.cutStringBy(
-                data.stacktrace, "at com.github.serivesmejia.eocvsim", 1
+                data.stacktrace, "\n", 7
             ).trim()
 
             messageBuilder
@@ -137,6 +145,8 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
 
         return messageBuilder.toString().trim()
     }
+
+    fun clear() = exceptionsThrown.clear()
 
     data class PipelineException(var count: Int,
                                  val stacktrace: String,

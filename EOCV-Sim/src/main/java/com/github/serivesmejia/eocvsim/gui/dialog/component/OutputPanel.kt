@@ -26,11 +26,12 @@ package com.github.serivesmejia.eocvsim.gui.dialog.component
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import java.awt.event.ActionEvent
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import javax.swing.*
 
 class OutputPanel(
-    val bottomButtonsPanel: BottomButtonsPanel
+    private val bottomButtonsPanel: BottomButtonsPanel
 ) : JPanel(GridBagLayout()) {
 
     val outputArea = JTextArea("")
@@ -38,8 +39,13 @@ class OutputPanel(
     constructor(closeCallback: () -> Unit) : this(DefaultBottomButtonsPanel(closeCallback))
 
     init {
-        outputArea.isEditable = false
-        outputArea.lineWrap   = true
+        if(bottomButtonsPanel is DefaultBottomButtonsPanel) {
+            bottomButtonsPanel.outputTextSupplier = { outputArea.text }
+        }
+
+        outputArea.isEditable  = false
+        outputArea.highlighter = null
+        outputArea.lineWrap    = true
 
         val outputScroll = JScrollPane(outputArea)
         outputScroll.verticalScrollBarPolicy   = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
@@ -66,13 +72,23 @@ class OutputPanel(
     open class DefaultBottomButtonsPanel(
         override val closeCallback: () -> Unit
     ) : BottomButtonsPanel() {
+        val copyButton  = JButton("Copy")
         val clearButton = JButton("Clear")
         val closeButton = JButton("Close")
+
+        var outputTextSupplier: () -> String = { "" }
 
         override fun create(panel: OutputPanel){
             layout = BoxLayout(this, BoxLayout.LINE_AXIS)
 
             add(Box.createHorizontalGlue())
+            copyButton.addActionListener {
+                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(outputTextSupplier()), null)
+            }
+
+            add(copyButton)
+            add(Box.createRigidArea(Dimension(4, 0)))
+
             clearButton.addActionListener { panel.outputArea.text = "" }
 
             add(clearButton)
@@ -83,6 +99,7 @@ class OutputPanel(
             add(closeButton)
             add(Box.createRigidArea(Dimension(4, 0)))
         }
+
     }
 
 }

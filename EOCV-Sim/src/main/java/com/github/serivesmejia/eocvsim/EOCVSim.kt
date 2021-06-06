@@ -40,8 +40,8 @@ import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
+import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
-import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
 import nu.pattern.OpenCV
 import org.opencv.core.Size
 import java.awt.Dimension
@@ -111,11 +111,26 @@ class EOCVSim(val params: Parameters = Parameters()) {
     private val hexCode = Integer.toHexString(hashCode())
 
     enum class DestroyReason {
-        USER_REQUESTED, THEME_CHANGING, RESTART, CRASH
+        USER_REQUESTED, RESTART, CRASH
     }
 
     fun init() {
         eocvSimThread = Thread.currentThread()
+
+        if(!EOCVSimFolder.couldLock) {
+            Log.error(TAG,
+                "Couldn't finally claim lock file in \"${EOCVSimFolder.absolutePath}\"! " +
+                        "Is the folder opened by another EOCV-Sim instance?"
+            )
+
+            Log.error(TAG, "Unable to continue with the execution, the sim will exit now.")
+            exitProcess(-1)
+        } else {
+            Log.info(TAG, "Confirmed claiming of the lock file in ${EOCVSimFolder.absolutePath}")
+            Log.blank()
+        }
+
+        DialogFactory.createSplashScreen(visualizer.onInitFinished)
 
         Log.info(TAG, "Initializing EasyOpenCV Simulator v$VERSION ($hexCode)")
         Log.blank()
