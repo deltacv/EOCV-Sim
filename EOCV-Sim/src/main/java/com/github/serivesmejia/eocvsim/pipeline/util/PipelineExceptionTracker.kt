@@ -146,6 +146,8 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
         return messageBuilder.toString().trim()
     }
 
+    fun clear() = exceptionsThrown.clear()
+
     data class PipelineException(var count: Int,
                                  val stacktrace: String,
                                  var millisThrown: Long)
