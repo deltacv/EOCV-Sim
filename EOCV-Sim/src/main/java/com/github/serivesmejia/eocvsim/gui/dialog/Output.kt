@@ -24,14 +24,12 @@
 package com.github.serivesmejia.eocvsim.gui.dialog
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
-import java.awt.*
+import java.awt.Dimension
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
@@ -156,6 +154,10 @@ class Output @JvmOverloads constructor(
             }
         }
 
+        pipelineBottomButtonsPanel.clearButton.addActionListener {
+            eocvSim.pipelineManager.pipelineExceptionTracker.clear()
+        }
+
         buildBottomButtonsPanel.buildAgainButton.addActionListener {
             eocvSim.visualizer.asyncCompilePipelines()
         }
@@ -211,7 +213,7 @@ class Output @JvmOverloads constructor(
     }
 
     class BuildOutputBottomButtonsPanel(
-        closeCallback: () -> Unit
+        closeCallback: () -> Unit,
     ) : OutputPanel.DefaultBottomButtonsPanel(closeCallback) {
         val buildAgainButton = JButton("Build again")
 
