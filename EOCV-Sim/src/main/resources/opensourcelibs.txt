@@ -5,4 +5,4 @@
 <html><a href="https://github.com/classgraph/classgraph">ClassGraph</a> - Under MIT License</html>
 <html><a href="https://github.com/JFormDesigner/FlatLaf/">FlatLaf</a> - Under Apache 2.0 License</html>
 <html></html>
-<html><a href="https://github.com/serivesmejia/EOCVSim/">EOCV-Sim</a> and its source code is distributed under the MIT License</html>
+<html><a href="https://github.com/deltacv/EOCVSim/">EOCV-Sim</a> and its source code is distributed under the MIT License</html>

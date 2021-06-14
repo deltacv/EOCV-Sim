@@ -36,7 +36,11 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import kotlin.math.roundToInt
 
-class VideoRecordingSession(val videoFps: Double = 30.0, val videoSize: Size = Size(320.0, 240.0), val isFramesRgb: Boolean = true) {
+class VideoRecordingSession(
+    val videoFps: Double = 30.0,
+    val videoSize: Size = Size(320.0, 240.0),
+    val isFramesRgb: Boolean = true
+) {
 
     private val videoWriter = VideoWriter()
     private val tempFile = File.createTempFile(StrUtil.random(), ".avi")
@@ -52,10 +56,7 @@ class VideoRecordingSession(val videoFps: Double = 30.0, val videoSize: Size = S
     @Volatile var hasStopped = false
         private set
 
-    val isRecording: Boolean
-        get() {
-            return hasStarted && !hasStopped
-        }
+    val isRecording get() = hasStarted && !hasStopped
 
     init {
         matPoster.addPostable { postMat(it) }

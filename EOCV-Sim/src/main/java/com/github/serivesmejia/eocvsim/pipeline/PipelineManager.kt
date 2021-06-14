@@ -44,6 +44,7 @@ import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong
 
+@OptIn(DelicateCoroutinesApi::class)
 class PipelineManager(var eocvSim: EOCVSim) {
 
     companion object {
@@ -165,6 +166,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
     }
 
+    @DelicateCoroutinesApi
     fun update(inputMat: Mat) {
         onUpdate.run()
 
@@ -369,7 +371,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
      * Changes to the requested pipeline, no matter
      * if we're currently on the same pipeline or not
      */
-    @OptIn(ObsoleteCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun forceChangePipeline(index: Int?,
                             applyLatestSnapshot: Boolean = false,
                             applyStaticSnapshot: Boolean = false) {
