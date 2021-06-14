@@ -34,6 +34,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
         private const val TAG = "PipelineExceptionTracker"
 
         const val millisExceptionExpire = 8000L
+        const val cutStacktraceLines = 9
     }
 
     var currentPipeline: PipelineData? = null
@@ -92,7 +93,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
                 exceptionsThrown.remove(e)
                 Log.info(
                     TAG,
-                    "Pipeline ${currentPipeline!!.clazz.simpleName} stopped throwing ${e}"
+                    "Pipeline ${currentPipeline!!.clazz.simpleName} stopped throwing $e"
                 )
 
                 if(exceptionsThrown.isEmpty())
@@ -133,7 +134,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
             val expiresInSecs = String.format("%.1f", expiresIn.toDouble() / 1000.0)
 
             val shortStacktrace = StrUtil.cutStringBy(
-                data.stacktrace, "\n", 7
+                data.stacktrace, "\n", cutStacktraceLines
             ).trim()
 
             messageBuilder

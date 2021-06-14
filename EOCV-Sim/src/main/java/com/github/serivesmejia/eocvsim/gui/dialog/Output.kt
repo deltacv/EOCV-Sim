@@ -25,6 +25,7 @@ package com.github.serivesmejia.eocvsim.gui.dialog
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
+import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompileStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -37,14 +38,16 @@ import javax.swing.*
 class Output @JvmOverloads constructor(
     parent: JFrame,
     private val eocvSim: EOCVSim,
-    tabbedPaneIndex: Int = latestIndex
+    private val tabbedPaneIndex: Int = latestIndex,
+    private val wasManuallyOpened: Boolean = false
 ) {
 
     companion object {
         var isAlreadyOpened = false
             private set
 
-        private var latestIndex = 0
+        var latestIndex = 0
+            private set
     }
 
     private val output = JDialog(parent)
@@ -86,7 +89,7 @@ class Output @JvmOverloads constructor(
             pipelineResumed()
         }
 
-        buildEnded()
+        buildEnded(true)
         if(compiledPipelineManager.isBuildRunning) {
             buildRunning()
         }
@@ -172,8 +175,18 @@ class Output @JvmOverloads constructor(
         buildOutputPanel.outputArea.text = "Build running..."
     }
 
-    private fun buildEnded() {
+    private fun buildEnded(calledOnInit: Boolean = false) {
         compiledPipelineManager.run {
+            if(!wasManuallyOpened &&
+                compiledPipelineManager.lastBuildResult!!.status == PipelineCompileStatus.SUCCESS &&
+                tabbedPaneIndex == 1 && !calledOnInit
+            ) {
+                // close if the dialog was automatically opened in the
+                // "build output" tab and a new build was successful
+                close()
+                return@buildEnded
+            }
+
             buildOutputPanel.outputArea.text = when {
                 lastBuildOutputMessage != null -> lastBuildOutputMessage!!
                 lastBuildResult != null -> lastBuildResult!!.message

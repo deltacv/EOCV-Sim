@@ -25,15 +25,12 @@ package com.github.serivesmejia.eocvsim.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.gui.util.MatPoster
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
-import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineClassLoader
-import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
+import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
 import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.EventListener
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import kotlinx.coroutines.*
@@ -45,11 +42,11 @@ import java.awt.Dimension
 import java.lang.reflect.Constructor
 import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.math.roundToLong
 
 class PipelineManager(var eocvSim: EOCVSim) {
 
     companion object {
-        const val PIPELINE_TIMEOUT_MS = 4100L
         const val MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS = 5
 
         var staticSnapshot: PipelineSnapshot? = null
@@ -246,14 +243,16 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
 
         runBlocking {
-            try {
-                //allow double timeout if we haven't initialized the pipeline
-                val timeout = if(hasInitCurrentPipeline) {
-                    PIPELINE_TIMEOUT_MS
-                } else {
-                    PIPELINE_TIMEOUT_MS * 2
-                }
+            val configTimeout = eocvSim.config.pipelineTimeout
 
+            //allow double timeout if we haven't initialized the pipeline
+            val timeout = if(hasInitCurrentPipeline) {
+                configTimeout.ms
+            } else {
+                (configTimeout.ms * 1.8).roundToLong()
+            }
+
+            try {
                 //ok! this is the part in which we'll wait for the pipeline with a timeout
                 withTimeout(timeout) {
                     pipelineJob.join()
@@ -268,7 +267,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 //someone wants to do something here
                 onPipelineTimeout.run()
 
-                Log.warn(TAG , "User pipeline $currentPipelineName took too long to $lastPipelineAction (more than $PIPELINE_TIMEOUT_MS ms), falling back to DefaultPipeline.")
+                Log.warn(TAG , "User pipeline $currentPipelineName took too long to $lastPipelineAction (more than $timeout ms), falling back to DefaultPipeline.")
                 Log.blank()
             } finally {
                 //we cancel our pipeline job so that it
@@ -294,17 +293,19 @@ class PipelineManager(var eocvSim: EOCVSim) {
             pipeline.onViewportTapped()
         }
 
+        val configTimeoutMs = eocvSim.config.pipelineTimeout.ms
+
         try {
             //perform the timeout here (we'll block for a bit
             //and if it runs out of time, give up and move on)
             runBlocking {
-                withTimeout(PIPELINE_TIMEOUT_MS) {
+                withTimeout(configTimeoutMs) {
                     viewportTappedJob.join()
                 }
             }
         } catch(ex: TimeoutCancellationException) {
             //send a warning to the user
-            Log.warn(TAG , "User pipeline $currentPipelineName took too long to handle onViewportTapped (more than $PIPELINE_TIMEOUT_MS ms).")
+            Log.warn(TAG , "User pipeline $currentPipelineName took too long to handle onViewportTapped (more than $configTimeoutMs ms).")
         } finally {
             //cancel the job
             viewportTappedJob.cancel()
@@ -549,6 +550,42 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     fun refreshGuiPipelineList() = eocvSim.visualizer.pipelineSelectorPanel.updatePipelinesList()
 
+}
+
+enum class PipelineTimeout(val ms: Long, val coolName: String) {
+    LOW(1000, "Low (1 sec)"),
+    MEDIUM(4100, "Medium (4.1 secs)"),
+    HIGH(8200, "High (8.2 secs)"),
+    HIGHEST(12400, "Highest (12.4 secs)");
+
+    companion object {
+        @JvmStatic
+        fun fromCoolName(coolName: String): PipelineTimeout? {
+            for(timeout in values()) {
+                if(timeout.coolName == coolName)
+                    return timeout
+            }
+            return null
+        }
+    }
+}
+
+enum class PipelineFps(val fps: Int, val coolName: String) {
+    LOW(10, "Low (10 FPS)"),
+    MEDIUM(30, "Medium (30 FPS)"),
+    HIGH(60, "High (60 FPS)"),
+    HIGHEST(100, "Highest (100 FPS)");
+
+    companion object {
+        @JvmStatic
+        fun fromCoolName(coolName: String): PipelineFps? {
+            for(fps in values()) {
+                if(fps.coolName == coolName)
+                    return fps
+            }
+            return null
+        }
+    }
 }
 
 data class PipelineData(val source: PipelineSource, val clazz: Class<out OpenCvPipeline>)

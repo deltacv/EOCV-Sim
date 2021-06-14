@@ -102,7 +102,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         workspBuildOutput.addActionListener {
             if(!Output.isAlreadyOpened)
-                DialogFactory.createOutput(eocvSim)
+                DialogFactory.createOutput(eocvSim, true)
         }
         mWorkspMenu.add(workspBuildOutput)
 

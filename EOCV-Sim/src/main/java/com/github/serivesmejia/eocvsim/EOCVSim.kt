@@ -224,7 +224,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             visualizer.telemetryPanel.updateTelemetry(pipelineManager.currentTelemetry)
 
             //limit FPS
-            fpsLimiter.maxFPS = configManager.config.maxFps.toDouble()
+            fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
             fpsLimiter.sync()
         }
 

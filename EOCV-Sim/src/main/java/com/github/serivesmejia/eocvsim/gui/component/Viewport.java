@@ -99,8 +99,7 @@ public class Viewport extends JPanel {
 
         image.setImage(lastBuffImage); //set buff image to ImageX component
 
-        Config config = eocvSim.configManager.getConfig();
-        if (config.storeZoom) config.zoom = scale; //store latest scale if store setting turned on
+        eocvSim.configManager.getConfig().zoom = scale; //store latest scale if store setting turned on
     }
 
     public void attachToPoster(MatPoster poster) {
