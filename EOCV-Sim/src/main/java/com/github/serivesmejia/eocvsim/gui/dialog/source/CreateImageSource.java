@@ -163,7 +163,6 @@ public class CreateImageSource {
     }
 
     public void imageFileSelected(File f) {
-
         String fileAbsPath = f.getAbsolutePath();
 
         if (CvUtil.checkImageValid(fileAbsPath)) {
@@ -175,8 +174,8 @@ public class CreateImageSource {
 
             Size size = CvUtil.scaleToFit(CvUtil.getImageSize(fileAbsPath), EOCVSim.DEFAULT_EOCV_SIZE);
 
-            sizeFieldsInput.getWidthTextField().setText(String.valueOf(size.width));
-            sizeFieldsInput.getHeightTextField().setText(String.valueOf(size.height));
+            sizeFieldsInput.getWidthTextField().setText(String.valueOf(Math.round(size.width)));
+            sizeFieldsInput.getHeightTextField().setText(String.valueOf(Math.round(size.height)));
 
             selectedValidImage = true;
         } else {
@@ -185,7 +184,6 @@ public class CreateImageSource {
         }
 
         updateCreateBtt();
-
     }
 
     public void close() {
@@ -194,12 +192,10 @@ public class CreateImageSource {
     }
 
     public void createSource(String sourceName, String imgPath, Size size) {
-        eocvSim.onMainUpdate.doOnce(() -> {
-            eocvSim.inputSourceManager.addInputSource(
-                sourceName,
-                new ImageSource(imgPath, size)
-            );
-        });
+        eocvSim.onMainUpdate.doOnce(() -> eocvSim.inputSourceManager.addInputSource(
+            sourceName,
+            new ImageSource(imgPath, size)
+        ));
     }
 
     public void updateCreateBtt() {

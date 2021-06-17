@@ -125,10 +125,9 @@ public class SysUtil {
     }
 
     public static void copyStream(File inFile, OutputStream out) throws IOException {
-        InputStream in = new FileInputStream(inFile);
-        try {
+        try (InputStream in = new FileInputStream(inFile)) {
             copyStream(in, out);
-        } finally { in.close(); }
+        }
     }
 
     public static void copyStream(InputStream in, OutputStream out) throws IOException {

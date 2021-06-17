@@ -44,6 +44,7 @@ public class Config {
     public volatile boolean pauseOnImages = true;
 
     public volatile Size videoRecordingSize = new Size(640, 480);
+    public volatile PipelineFps videoRecordingFps = PipelineFps.MEDIUM;
 
     public volatile String workspacePath  = CompiledPipelineManager.Companion.getDEF_WORKSPACE_FOLDER().getAbsolutePath();
 

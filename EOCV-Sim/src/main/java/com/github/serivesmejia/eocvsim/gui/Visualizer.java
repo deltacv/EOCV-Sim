@@ -366,9 +366,6 @@ public class Visualizer {
             tunerMenuPanel.add(fieldPanel);
             fieldPanel.showFieldPanel();
         }
-
-        tunerMenuPanel.updateUI();
-        imageTunerSplitPane.updateUI();
     }
 
     public void asyncCompilePipelines() {

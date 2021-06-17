@@ -269,7 +269,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
     fun startRecordingSession() {
         if (currentRecordingSession == null) {
-            currentRecordingSession = VideoRecordingSession(fpsLimiter.maxFPS, configManager.config.videoRecordingSize)
+            currentRecordingSession = VideoRecordingSession(
+                config.videoRecordingFps.fps.toDouble(), config.videoRecordingSize
+            )
+
             currentRecordingSession!!.startRecordingSession()
 
             Log.info(TAG, "Recording session started")

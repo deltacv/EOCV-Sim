@@ -37,7 +37,7 @@ import java.awt.*;
 public class Configuration {
 
     private final EOCVSim eocvSim;
-    public JPanel contents = new JPanel(new GridLayout(6, 1, 1, 8));
+    public JPanel contents = new JPanel(new GridLayout(7, 1, 1, 8));
     public JComboBox<String> themeComboBox = new JComboBox<>();
 
     public JButton acceptButton = new JButton("Accept");
@@ -48,6 +48,7 @@ public class Configuration {
     public EnumComboBox<PipelineFps> pipelineFpsComboBox = null;
 
     public SizeFields videoRecordingSize = null;
+    public EnumComboBox<PipelineFps> videoRecordingFpsComboBox = null;
 
     JDialog configuration;
 
@@ -65,7 +66,7 @@ public class Configuration {
         Config config = this.eocvSim.configManager.getConfig();
         configuration.setModal(true);
         configuration.setTitle("Settings");
-        configuration.setSize(350, 260);
+        configuration.setSize(350, 300);
 
         JPanel themePanel = new JPanel(new FlowLayout());
         JLabel themeLabel = new JLabel("Theme: ");
@@ -114,6 +115,15 @@ public class Configuration {
         );
         contents.add(this.videoRecordingSize);
 
+        // video fps
+
+        videoRecordingFpsComboBox = new EnumComboBox<>(
+                "Video Recording FPS: ", PipelineFps.class,
+                PipelineFps.values(), PipelineFps::getCoolName, PipelineFps::fromCoolName
+        );
+        videoRecordingFpsComboBox.setSelectedEnum(config.videoRecordingFps);
+        contents.add(videoRecordingFpsComboBox);
+
         JPanel acceptPanel = new JPanel(new FlowLayout());
         acceptPanel.add(acceptButton);
 
@@ -143,6 +153,7 @@ public class Configuration {
         config.pipelineTimeout = pipelineTimeoutComboBox.getSelectedEnum();
         config.pipelineMaxFps = pipelineFpsComboBox.getSelectedEnum();
         config.videoRecordingSize = videoRecordingSize.getCurrentSize();
+        config.videoRecordingFps = videoRecordingFpsComboBox.getSelectedEnum();
 
         eocvSim.configManager.saveToFile(); //update config file
 
