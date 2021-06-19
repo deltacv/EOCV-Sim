@@ -101,6 +101,9 @@ class PipelineManager(var eocvSim: EOCVSim) {
     var latestSnapshot: PipelineSnapshot? = null
         private set
 
+    var lastInitialSnapshot: PipelineSnapshot? = null
+        private set
+
     //manages and builds pipelines in runtime
     @JvmField val compiledPipelineManager = CompiledPipelineManager(this)
     //this will be handling the special pipeline "timestamped" type
@@ -426,6 +429,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
         currentTelemetry     = nextTelemetry
         currentPipelineIndex = index
         currentPipelineName  = currentPipeline!!.javaClass.simpleName
+
+        lastInitialSnapshot = PipelineSnapshot(currentPipeline!!)
 
         if(applyLatestSnapshot) applyLatestSnapshot()
         if(applyStaticSnapshot) staticSnapshot?.transferTo(currentPipeline!!)

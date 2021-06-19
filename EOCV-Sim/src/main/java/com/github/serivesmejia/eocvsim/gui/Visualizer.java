@@ -361,6 +361,7 @@ public class Visualizer {
 
     public void updateTunerFields(List<TunableFieldPanel> fields) {
         tunerMenuPanel.removeAll();
+        tunerMenuPanel.repaint();
 
         for (TunableFieldPanel fieldPanel : fields) {
             tunerMenuPanel.add(fieldPanel);

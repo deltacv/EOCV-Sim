@@ -27,12 +27,15 @@ import com.github.serivesmejia.eocvsim.util.Log
 import org.openftc.easyopencv.OpenCvPipeline
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
+import java.util.*
 
-class PipelineSnapshot(holdingPipeline: OpenCvPipeline) {
+class PipelineSnapshot(val holdingPipeline: OpenCvPipeline) {
 
     companion object {
         private val TAG = "PipelineSnapshot"
     }
+
+    val holdingPipelineName = holdingPipeline::class.simpleName
 
     val pipelineFieldValues: Map<Field, Any>
     val pipelineClass = holdingPipeline::class.java
@@ -52,10 +55,23 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline) {
         Log.info(TAG, "Taken snapshot of pipeline ${pipelineClass.name}")
     }
 
-    fun transferTo(otherPipeline: OpenCvPipeline) {
+    fun transferTo(otherPipeline: OpenCvPipeline,
+                   lastInitialPipelineSnapshot: PipelineSnapshot? = null) {
         if(pipelineClass.name != otherPipeline::class.java.name) return
 
+        val changedList = if(lastInitialPipelineSnapshot != null)
+            getChangedFieldsComparedTo(lastInitialPipelineSnapshot)
+        else Collections.emptyList()
+
         for((field, value) in pipelineFieldValues) {
+            if(changedList.contains(field)) {
+                Log.info(TAG,
+                    "Skipping field ${field.name} since its value was changed in code, " +
+                            "compared to the initial state of the pipeline"
+                )
+                continue
+            }
+
             try {
                 field.set(otherPipeline, value)
             } catch(e: Exception) {
@@ -76,6 +92,27 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline) {
                 }
             }
         }
+    }
+
+    fun getField(name: String) = pipelineClass.getDeclaredField(name)
+
+    fun getChangedFieldsComparedTo(pipelineSnapshot: PipelineSnapshot): List<Field> {
+        if(holdingPipelineName != pipelineSnapshot.holdingPipelineName && pipelineClass != pipelineClass)
+            return Collections.emptyList()
+
+        val changedList = mutableListOf<Field>()
+
+        for(field in pipelineClass.declaredFields) {
+            val otherField = pipelineSnapshot.getField(field.name)
+            if(field.type != otherField.type) continue
+
+            val otherValue = otherField.get(pipelineSnapshot.holdingPipeline)
+            if(otherValue != field.get(holdingPipeline)) {
+                changedList.add(field)
+            }
+        }
+
+        return changedList
     }
 
 }
