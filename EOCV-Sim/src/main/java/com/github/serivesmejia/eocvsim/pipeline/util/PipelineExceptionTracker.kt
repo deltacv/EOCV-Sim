@@ -33,7 +33,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
     companion object {
         private const val TAG = "PipelineExceptionTracker"
 
-        const val millisExceptionExpire = 8000L
+        const val millisExceptionExpire = 25000L
         const val cutStacktraceLines = 9
     }
 
