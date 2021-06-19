@@ -42,7 +42,6 @@ import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
-import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
 import nu.pattern.OpenCV
 import org.opencv.core.Size
 import java.awt.Dimension
@@ -58,8 +57,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         const val VERSION = Build.versionString
         const val DEFAULT_EOCV_WIDTH = 320
         const val DEFAULT_EOCV_HEIGHT = 240
-        @JvmField
-        val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
+        @JvmField val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
 
         private const val TAG = "EOCVSim"
 
@@ -98,7 +96,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
     val pipelineManager = PipelineManager(this)
     @JvmField
     val tunerManager = TunerManager(this)
-
     @JvmField
     val workspaceManager = WorkspaceManager(this)
 
@@ -106,7 +103,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
         get() = configManager.config
 
     var currentRecordingSession: VideoRecordingSession? = null
-
     val fpsLimiter = FpsLimiter(30.0)
 
     lateinit var eocvSimThread: Thread
@@ -115,7 +111,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     private val hexCode = Integer.toHexString(hashCode())
 
     enum class DestroyReason {
-        USER_REQUESTED, THEME_CHANGING, RESTART, CRASH
+        USER_REQUESTED, RESTART, CRASH
     }
 
     fun init() {

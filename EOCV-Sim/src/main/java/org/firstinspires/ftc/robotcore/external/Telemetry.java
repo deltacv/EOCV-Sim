@@ -122,7 +122,9 @@ public class Telemetry {
             inTelemUpdate.append("\n").append(errItem.toString());
         }
 
-        lastTelemUpdate = inTelemUpdate.toString(); //and then we write to the volatile, public one
+        inTelemUpdate.append("\n<html></html>");
+
+        lastTelemUpdate = inTelemUpdate.toString().trim(); //and then we write to the volatile, public one
     }
 
     public synchronized boolean removeItem(Item item) {
@@ -135,7 +137,6 @@ public class Telemetry {
     }
 
     public synchronized void clear() {
-
         for (ItemOrLine i : telem.toArray(new ItemOrLine[0])) {
             if (i instanceof Item) {
                 if (!((Item) i).isRetained) telem.remove(i);
@@ -143,7 +144,6 @@ public class Telemetry {
                 telem.remove(i);
             }
         }
-
     }
 
     public synchronized boolean hasChanged() {

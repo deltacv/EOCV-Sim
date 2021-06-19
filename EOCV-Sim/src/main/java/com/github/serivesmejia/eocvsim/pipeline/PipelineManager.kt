@@ -101,11 +101,15 @@ class PipelineManager(var eocvSim: EOCVSim) {
     var latestSnapshot: PipelineSnapshot? = null
         private set
 
+    //manages and builds pipelines in runtime
     @JvmField val compiledPipelineManager = CompiledPipelineManager(this)
-
     //this will be handling the special pipeline "timestamped" type
     val timestampedPipelineHandler = TimestampedPipelineHandler()
-    
+    //counting and tracking exceptions for logging and reporting purposes
+    val pipelineExceptionTracker = PipelineExceptionTracker(this)
+
+    private var openedPipelineOutputCount = 0
+
     enum class PauseReason {
         USER_REQUESTED, IMAGE_ONE_ANALYSIS, NOT_PAUSED
     }
@@ -131,6 +135,25 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 compiledPipelineManager.onBuildEnd.doOnce(::applyStaticSnapOrDef)
             else
                 applyStaticSnapOrDef()
+        }
+
+        pipelineExceptionTracker.onNewPipelineException {
+            if(openedPipelineOutputCount <= 3) {
+                DialogFactory.createPipelineOutput(eocvSim)
+                openedPipelineOutputCount++
+            }
+
+            currentTelemetry?.errItem?.caption = "[/!\\]"
+            currentTelemetry?.errItem?.setValue("Uncaught exception thrown in\n pipeline, check Workspace -> Output.")
+        }
+
+        pipelineExceptionTracker.onPipelineExceptionClear {
+            currentTelemetry?.errItem?.caption = ""
+            currentTelemetry?.errItem?.setValue("")
+        }
+
+        onPipelineChange {
+            openedPipelineOutputCount = 0
         }
     }
 
