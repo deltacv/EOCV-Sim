@@ -26,23 +26,25 @@ package com.github.serivesmejia.eocvsim.config;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanelConfig;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
+import com.github.serivesmejia.eocvsim.pipeline.PipelineFps;
+import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager;
-import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import org.opencv.core.Size;
 
-import java.io.File;
 import java.util.HashMap;
 
 public class Config {
     public volatile Theme simTheme = Theme.Light;
 
     public volatile double zoom = 1;
-    public volatile boolean storeZoom = true;
 
-    public volatile int maxFps = 30;
+    public volatile PipelineFps pipelineMaxFps = PipelineFps.MEDIUM;
+    public volatile PipelineTimeout pipelineTimeout = PipelineTimeout.MEDIUM;
+
     public volatile boolean pauseOnImages = true;
 
     public volatile Size videoRecordingSize = new Size(640, 480);
+    public volatile PipelineFps videoRecordingFps = PipelineFps.MEDIUM;
 
     public volatile String workspacePath  = CompiledPipelineManager.Companion.getDEF_WORKSPACE_FOLDER().getAbsolutePath();
 

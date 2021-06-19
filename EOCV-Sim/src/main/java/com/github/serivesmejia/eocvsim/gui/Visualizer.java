@@ -129,7 +129,7 @@ public class Visualizer {
 
         //instantiate all swing elements after theme installation
         frame = new JFrame();
-        viewport = new Viewport(eocvSim, eocvSim.getConfig().maxFps);
+        viewport = new Viewport(eocvSim, eocvSim.getConfig().pipelineMaxFps.getFps());
 
         menuBar = new TopMenuBar(this, eocvSim);
 
@@ -378,9 +378,6 @@ public class Visualizer {
             tunerMenuPanel.add(fieldPanel);
             fieldPanel.showFieldPanel();
         }
-
-        tunerMenuPanel.updateUI();
-        imageTunerSplitPane.updateUI();
     }
 
     public void asyncCompilePipelines() {

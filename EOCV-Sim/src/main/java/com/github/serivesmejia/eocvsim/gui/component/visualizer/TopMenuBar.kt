@@ -101,8 +101,8 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         val workspBuildOutput = JMenuItem("Output")
 
         workspBuildOutput.addActionListener {
-            if(!BuildOutput.isAlreadyOpened)
-                DialogFactory.createBuildOutput(eocvSim)
+            if(!Output.isAlreadyOpened)
+                DialogFactory.createOutput(eocvSim, true)
         }
         mWorkspMenu.add(workspBuildOutput)
 
@@ -138,7 +138,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val helpUsage = JMenuItem("Usage")
         helpUsage.addActionListener {
-            Desktop.getDesktop().browse(URI("https://github.com/serivesmejia/EOCV-Sim/blob/master/USAGE.md"))
+            Desktop.getDesktop().browse(URI("https://github.com/deltacv/EOCV-Sim/blob/master/USAGE.md"))
         }
 
         helpUsage.isEnabled = Desktop.isDesktopSupported()
