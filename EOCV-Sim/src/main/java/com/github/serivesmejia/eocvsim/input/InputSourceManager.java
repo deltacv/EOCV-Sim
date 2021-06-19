@@ -243,7 +243,15 @@ public class InputSourceManager {
     }
 
     public SourceType getSourceType(String sourceName) {
+        if(sourceName == null) {
+            return SourceType.UNKNOWN;
+        }
+
         InputSource source = sources.get(sourceName);
+
+        if(source == null) {
+            return SourceType.UNKNOWN;
+        }
         return SourceType.fromClass(source.getClass());
     }
 
