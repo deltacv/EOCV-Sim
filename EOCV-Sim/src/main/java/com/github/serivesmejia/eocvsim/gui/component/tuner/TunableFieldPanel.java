@@ -139,7 +139,15 @@ public class TunableFieldPanel extends JPanel {
     public void setFieldValue(int index, Object value) {
         if(index >= fields.length) return;
 
-        fields[index].setText(value.toString());
+        String text;
+        if(tunableField.getAllowMode() == TunableField.AllowMode.ONLY_NUMBERS) {
+            text = String.valueOf((int) Math.round(Double.parseDouble(value.toString())));
+        } else {
+            text = value.toString();
+        }
+
+        fields[index].setText(text);
+
         try {
             sliders[index].setScaledValue(Double.parseDouble(value.toString()));
         } catch(NumberFormatException ignored) {}
