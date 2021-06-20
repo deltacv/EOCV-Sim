@@ -150,7 +150,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
                 .appendLine()
         }
 
-        for(message in messages) {
+        for((message, _) in messages) {
             messageBuilder.appendLine(message)
         }
 

@@ -404,17 +404,19 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
             Log.info(TAG, "Instantiated pipeline class " + pipelineClass.name)
         } catch (ex: NoSuchMethodException) {
-            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline (" + pipelineClass.simpleName + ")")
-            pipelineExceptionTracker.addMessage("Make sure your pipeline implements a public constructor with no parameters or with a Telemetry parameter")
+            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline, \"${pipelineClass.simpleName}\". Falling back to previous one.")
+            pipelineExceptionTracker.addMessage("Make sure your pipeline implements a public constructor with no parameters or a Telemetry parameter.")
 
             eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = currentPipelineIndex
 
+            Log.error(TAG, "Error while instantiating requested pipeline, ${pipelineClass.simpleName} (usable constructor missing)", ex)
             Log.blank()
+            return
         } catch (ex: Exception) {
-            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline (" + pipelineClass.simpleName + "), falling back to previous one")
+            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline, \"${pipelineClass.simpleName}\". Falling back to previous one.")
             updateExceptionTracker(ex)
 
-            Log.error(TAG, "Error while instantiating requested pipeline (" + pipelineClass.simpleName + ")", ex)
+            Log.error(TAG, "Error while instantiating requested pipeline, ${pipelineClass.simpleName} (unknown issue)", ex)
             Log.blank()
 
             eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = currentPipelineIndex
