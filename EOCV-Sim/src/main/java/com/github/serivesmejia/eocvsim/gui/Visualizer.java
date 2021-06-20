@@ -43,6 +43,7 @@ import com.github.serivesmejia.eocvsim.workspace.util.template.GradleWorkspaceTe
 import kotlin.Unit;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
@@ -147,25 +148,26 @@ public class Visualizer {
         imgScrollPane.getHorizontalScrollBar().setUnitIncrement(16);
         imgScrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        rightContainer.setLayout(new GridLayout(3, 1));
+        rightContainer.setLayout(new BorderLayout());
+
 
         /*
          * PIPELINE SELECTOR
          */
-
-        rightContainer.add(pipelineSelectorPanel);
+        pipelineSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
+        rightContainer.add(pipelineSelectorPanel, BorderLayout.NORTH);
 
         /*
          * SOURCE SELECTOR
          */
-
-        rightContainer.add(sourceSelectorPanel);
+        sourceSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
+        rightContainer.add(sourceSelectorPanel, BorderLayout.CENTER);
 
         /*
          * TELEMETRY
          */
-
-        rightContainer.add(telemetryPanel);
+        telemetryPanel.setBorder(new EmptyBorder(0, 20, 20, 20));
+        rightContainer.add(telemetryPanel, BorderLayout.SOUTH);
 
         /*
          * SPLIT

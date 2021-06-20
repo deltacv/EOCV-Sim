@@ -10,9 +10,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
 import java.awt.FlowLayout
-import java.awt.GridLayout
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
 import javax.swing.*
 
 class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
@@ -33,18 +32,15 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     var allowSourceSwitching = true
 
     init {
-        layout = FlowLayout(FlowLayout.CENTER)
+        layout = GridBagLayout()
 
         sourceSelectorLabel.font = sourceSelectorLabel.font.deriveFont(20.0f)
         sourceSelectorLabel.horizontalAlignment = JLabel.CENTER
 
-        add(sourceSelectorLabel)
-
-        val sourceSelectorScrollContainer = JPanel()
-        sourceSelectorScrollContainer.layout = GridLayout()
-        sourceSelectorScrollContainer.border = BorderFactory.createEmptyBorder(0, 20, 0, 20)
-
-        sourceSelectorScrollContainer.add(sourceSelectorScroll)
+        add(sourceSelectorLabel, GridBagConstraints().apply {
+            gridy = 0
+            ipady = 20
+        })
 
         sourceSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
 
@@ -52,8 +48,19 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         sourceSelectorScroll.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
         sourceSelectorScroll.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
 
+        add(sourceSelectorScroll, GridBagConstraints().apply {
+            gridy = 1
+
+            weightx = 0.5
+            weighty = 1.0
+            fill = GridBagConstraints.BOTH
+
+            ipadx = 120
+            ipady = 20
+        })
+
         //different icons
-        sourceSelector.setCellRenderer(SourcesListIconRenderer(eocvSim.inputSourceManager))
+        sourceSelector.cellRenderer = SourcesListIconRenderer(eocvSim.inputSourceManager)
 
         sourceSelectorCreateBtt.addActionListener {
             lastCreateSourcePopup?.hide()
@@ -69,14 +76,15 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
             popup.show()
         }
 
-        add(sourceSelectorScrollContainer)
-
         sourceSelectorButtonsContainer = JPanel(FlowLayout(FlowLayout.CENTER))
 
         sourceSelectorButtonsContainer.add(sourceSelectorCreateBtt)
         sourceSelectorButtonsContainer.add(sourceSelectorDeleteBtt)
 
-        add(sourceSelectorButtonsContainer)
+        add(sourceSelectorButtonsContainer, GridBagConstraints().apply {
+            gridy = 2
+            ipady = 20
+        })
 
         registerListeners()
     }
@@ -151,7 +159,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         }
     }
 
-    fun getIndexOf(name: String): Int? {
+    fun getIndexOf(name: String): Int {
         for(i in 0..sourceSelector.model.size) {
             if(sourceSelector.model.getElementAt(i) == name)
                 return i

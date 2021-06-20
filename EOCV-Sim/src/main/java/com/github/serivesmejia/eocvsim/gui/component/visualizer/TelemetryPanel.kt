@@ -2,12 +2,14 @@ package com.github.serivesmejia.eocvsim.gui.component.visualizer
 
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import java.awt.FlowLayout
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
 import java.awt.GridLayout
 import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionListener
 import javax.swing.*
 
-class TelemetryPanel : JPanel(FlowLayout(FlowLayout.CENTER)) {
+class TelemetryPanel : JPanel() {
 
     val telemetryScroll = JScrollPane()
     val telemetryList  = JList<String>()
@@ -15,6 +17,8 @@ class TelemetryPanel : JPanel(FlowLayout(FlowLayout.CENTER)) {
     val telemetryLabel = JLabel("Telemetry")
 
     init {
+        layout = GridBagLayout()
+
         /*
          * TELEMETRY
          */
@@ -22,7 +26,10 @@ class TelemetryPanel : JPanel(FlowLayout(FlowLayout.CENTER)) {
         telemetryLabel.font = telemetryLabel.font.deriveFont(20.0f)
         telemetryLabel.horizontalAlignment = JLabel.CENTER
 
-        add(telemetryLabel)
+        add(telemetryLabel, GridBagConstraints().apply {
+            gridy = 0
+            ipady = 20
+        })
 
         telemetryScroll.setViewportView(telemetryList)
         telemetryScroll.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
@@ -43,13 +50,16 @@ class TelemetryPanel : JPanel(FlowLayout(FlowLayout.CENTER)) {
 
         telemetryList.selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
 
-        val telemetryScrollContainer = JPanel()
-        telemetryScrollContainer.layout = GridLayout()
-        telemetryScrollContainer.border = BorderFactory.createEmptyBorder(0, 20, 20, 20)
+        add(telemetryScroll, GridBagConstraints().apply {
+            gridy = 1
 
-        telemetryScrollContainer.add(telemetryScroll)
+            weightx = 0.5
+            weighty = 1.0
+            fill = GridBagConstraints.BOTH
 
-        add(telemetryScrollContainer)
+            ipadx = 120
+            ipady = 20
+        })
     }
 
     fun revalAndRepaint() {
