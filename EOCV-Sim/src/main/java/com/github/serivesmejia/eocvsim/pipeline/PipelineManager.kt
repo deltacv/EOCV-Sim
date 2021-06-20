@@ -404,18 +404,15 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
             Log.info(TAG, "Instantiated pipeline class " + pipelineClass.name)
         } catch (ex: NoSuchMethodException) {
-            eocvSim.visualizer.asyncPleaseWaitDialog("Error while instantiating requested pipeline", "Check console for details",
-                    "Close", Dimension(300, 150), true, true)
-
-            Log.error(TAG, "Error while instantiating requested pipeline (" + pipelineClass.simpleName + ")", ex)
-            Log.info(TAG, "Make sure your pipeline implements a public constructor with no parameters or with a Telemetry parameter")
+            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline (" + pipelineClass.simpleName + ")")
+            pipelineExceptionTracker.addMessage("Make sure your pipeline implements a public constructor with no parameters or with a Telemetry parameter")
 
             eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = currentPipelineIndex
 
             Log.blank()
         } catch (ex: Exception) {
-            eocvSim.visualizer.asyncPleaseWaitDialog("Error while instantiating requested pipeline", "Falling back to previous one",
-                    "Close", Dimension(300, 150), true, true)
+            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline (" + pipelineClass.simpleName + "), falling back to previous one")
+            updateExceptionTracker(ex)
 
             Log.error(TAG, "Error while instantiating requested pipeline (" + pipelineClass.simpleName + ")", ex)
             Log.blank()

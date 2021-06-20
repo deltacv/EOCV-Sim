@@ -121,10 +121,7 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline) {
             val (otherField, otherValue) = pipelineSnapshotB.getField(field.name) ?: continue
             if (field.type != otherField.type) continue
 
-            println("comparing $value (${field.type}) to $otherValue (${otherField.type})")
-
             if(otherValue != value) {
-                println("field $field changed")
                 changedList.add(field)
             }
         }
