@@ -148,26 +148,25 @@ public class Visualizer {
         imgScrollPane.getHorizontalScrollBar().setUnitIncrement(16);
         imgScrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        rightContainer.setLayout(new BorderLayout());
-
+        rightContainer.setLayout(new BoxLayout(rightContainer, BoxLayout.Y_AXIS));
 
         /*
          * PIPELINE SELECTOR
          */
         pipelineSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(pipelineSelectorPanel, BorderLayout.NORTH);
+        rightContainer.add(pipelineSelectorPanel);
 
         /*
          * SOURCE SELECTOR
          */
         sourceSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(sourceSelectorPanel, BorderLayout.CENTER);
+        rightContainer.add(sourceSelectorPanel);
 
         /*
          * TELEMETRY
          */
         telemetryPanel.setBorder(new EmptyBorder(0, 20, 20, 20));
-        rightContainer.add(telemetryPanel, BorderLayout.SOUTH);
+        rightContainer.add(telemetryPanel);
 
         /*
          * SPLIT
@@ -269,24 +268,26 @@ public class Visualizer {
         frame.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent evt) {
-                double ratio = frame.getSize().getHeight() / 645;
+                double ratioH = frame.getSize().getHeight() / 645;
 
-                double fontSize = 15.5 * ratio;
-                int columns = (int) Math.round(5 * ratio);
+                double fontSize = 17 * ratioH;
+                int columns = (int) Math.round(6 * ratioH);
 
                 Font font = pipelineSelectorPanel.getPipelineSelectorLabel().getFont().deriveFont((float)fontSize);
 
-                pipelineSelectorPanel.getPipelineSelector().setVisibleRowCount(columns);
+                //pipelineSelectorPanel.getPipelineSelector().setVisibleRowCount(columns);
                 pipelineSelectorPanel.getPipelineSelectorLabel().setFont(font);
                 pipelineSelectorPanel.revalAndRepaint();
 
-                columns = (int) Math.round(5 * ratio);
-                
-                sourceSelectorPanel.getSourceSelector().setVisibleRowCount(columns);
+                columns = (int) Math.round(7.5 * ratioH);
+
+                //sourceSelectorPanel.getSourceSelector().setVisibleRowCount(columns);
                 sourceSelectorPanel.getSourceSelectorLabel().setFont(font);
                 sourceSelectorPanel.revalAndRepaint();
 
-                telemetryPanel.getTelemetryList().setVisibleRowCount(columns);
+                columns = (int) Math.round(6 * ratioH);
+
+                //telemetryPanel.getTelemetryList().setVisibleRowCount(columns);
                 telemetryPanel.getTelemetryLabel().setFont(font);
                 telemetryPanel.revalAndRepaint();
 
@@ -296,6 +297,7 @@ public class Visualizer {
         });
 
         //stop color-picking mode when changing pipeline
+        // TODO: find out why this breaks everything?????
         //eocvSim.pipelineManager.onPipelineChange.doPersistent(() -> colorPicker.stopPicking());
     }
 

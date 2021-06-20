@@ -394,10 +394,10 @@ class PipelineManager(var eocvSim: EOCVSim) {
         try {
             nextTelemetry = Telemetry()
 
-            try { //instantiate pipeline if it has a constructor with a telemetry parameter
+            try { //instantiate pipeline if it has a constructor of a telemetry parameter
                 constructor = pipelineClass.getConstructor(Telemetry::class.java)
                 nextPipeline = constructor.newInstance(nextTelemetry) as OpenCvPipeline
-            } catch (ex: NoSuchMethodException) { //instantiating with a constructor with no params
+            } catch (ex: NoSuchMethodException) { //instantiating with a constructor of no params
                 constructor = pipelineClass.getConstructor()
                 nextPipeline = constructor.newInstance() as OpenCvPipeline
             }
