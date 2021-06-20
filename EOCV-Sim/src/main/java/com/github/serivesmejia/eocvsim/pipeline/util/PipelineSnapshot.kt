@@ -29,7 +29,7 @@ import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.*
 
-class PipelineSnapshot(val holdingPipeline: OpenCvPipeline) {
+class PipelineSnapshot(holdingPipeline: OpenCvPipeline) {
 
     companion object {
         private val TAG = "PipelineSnapshot"
@@ -60,16 +60,20 @@ class PipelineSnapshot(val holdingPipeline: OpenCvPipeline) {
         if(pipelineClass.name != otherPipeline::class.java.name) return
 
         val changedList = if(lastInitialPipelineSnapshot != null)
-            getChangedFieldsComparedTo(lastInitialPipelineSnapshot)
+            getChangedFieldsComparedTo(PipelineSnapshot(otherPipeline), lastInitialPipelineSnapshot)
         else Collections.emptyList()
 
+        fieldValuesLoop@
         for((field, value) in pipelineFieldValues) {
-            if(changedList.contains(field)) {
-                Log.info(TAG,
-                    "Skipping field ${field.name} since its value was changed in code, " +
-                            "compared to the initial state of the pipeline"
-                )
-                continue
+            for(changedField in changedList) {
+                if(changedField.name == field.name && changedField.type == field.type) {
+                    Log.info(
+                        TAG,
+                        "Skipping field ${field.name} since its value was changed in code, compared to the initial state of the pipeline"
+                    )
+
+                    continue@fieldValuesLoop
+                }
             }
 
             try {
@@ -94,20 +98,33 @@ class PipelineSnapshot(val holdingPipeline: OpenCvPipeline) {
         }
     }
 
-    fun getField(name: String) = pipelineClass.getDeclaredField(name)
+    fun getField(name: String): Pair<Field, Any>? {
+        for((field, value) in pipelineFieldValues) {
+            if(field.name == name) {
+                return Pair(field, value)
+            }
+        }
 
-    fun getChangedFieldsComparedTo(pipelineSnapshot: PipelineSnapshot): List<Field> {
-        if(holdingPipelineName != pipelineSnapshot.holdingPipelineName && pipelineClass != pipelineClass)
+        return null
+    }
+
+    private fun getChangedFieldsComparedTo(
+        pipelineSnapshotA: PipelineSnapshot,
+        pipelineSnapshotB: PipelineSnapshot
+    ): List<Field> = pipelineSnapshotA.run {
+        if(holdingPipelineName != pipelineSnapshotB.holdingPipelineName && pipelineClass != pipelineSnapshotB.pipelineClass)
             return Collections.emptyList()
 
         val changedList = mutableListOf<Field>()
 
-        for(field in pipelineClass.declaredFields) {
-            val otherField = pipelineSnapshot.getField(field.name)
-            if(field.type != otherField.type) continue
+        for((field, value) in pipelineFieldValues) {
+            val (otherField, otherValue) = pipelineSnapshotB.getField(field.name) ?: continue
+            if (field.type != otherField.type) continue
 
-            val otherValue = otherField.get(pipelineSnapshot.holdingPipeline)
-            if(otherValue != field.get(holdingPipeline)) {
+            println("comparing $value (${field.type}) to $otherValue (${otherField.type})")
+
+            if(otherValue != value) {
+                println("field $field changed")
                 changedList.add(field)
             }
         }

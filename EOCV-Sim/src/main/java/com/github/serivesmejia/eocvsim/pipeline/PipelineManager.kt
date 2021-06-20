@@ -430,9 +430,13 @@ class PipelineManager(var eocvSim: EOCVSim) {
         currentPipelineIndex = index
         currentPipelineName  = currentPipeline!!.javaClass.simpleName
 
-        lastInitialSnapshot = PipelineSnapshot(currentPipeline!!)
+        val snap = PipelineSnapshot(currentPipeline!!)
 
-        if(applyLatestSnapshot) applyLatestSnapshot()
+        lastInitialSnapshot = if(applyLatestSnapshot) {
+            applyLatestSnapshot()
+            snap
+        } else snap
+
         if(applyStaticSnapshot) staticSnapshot?.transferTo(currentPipeline!!)
 
         hasInitCurrentPipeline = false
@@ -474,7 +478,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     fun applyLatestSnapshot() {
         if(currentPipeline != null && latestSnapshot != null) {
-            latestSnapshot!!.transferTo(currentPipeline!!)
+            latestSnapshot!!.transferTo(currentPipeline!!, lastInitialSnapshot)
         }
     }
 
