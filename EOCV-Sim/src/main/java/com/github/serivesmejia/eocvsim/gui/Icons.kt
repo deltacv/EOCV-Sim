@@ -36,27 +36,40 @@ object Icons {
     private val icons = HashMap<String, ImageIcon>()
     private val resizedIcons = HashMap<String, ImageIcon>()
 
+    private val futureIcons = mutableListOf<FutureIcon>()
+
     private var colorsInverted = false
 
+    private const val TAG = "Icons"
+
     init {
-        addImage("ico_img", "/images/icon/ico_img.png")
-        addImage("ico_cam", "/images/icon/ico_cam.png")
-        addImage("ico_vid", "/images/icon/ico_vid.png")
+        addFutureImage("ico_eocvsim", "/images/icon/ico_eocvsim.png")
 
-        addImage("ico_config", "/images/icon/ico_config.png")
-        addImage("ico_slider", "/images/icon/ico_slider.png")
-        addImage("ico_textbox", "/images/icon/ico_textbox.png")
-        addImage("ico_colorpick", "/images/icon/ico_colorpick.png")
+        addFutureImage("ico_img", "/images/icon/ico_img.png")
+        addFutureImage("ico_cam", "/images/icon/ico_cam.png")
+        addFutureImage("ico_vid", "/images/icon/ico_vid.png")
 
-        addImage("ico_gears", "/images/icon/ico_gears.png")
-        addImage("ico_hammer", "/images/icon/ico_hammer.png")
+        addFutureImage("ico_config", "/images/icon/ico_config.png")
+        addFutureImage("ico_slider", "/images/icon/ico_slider.png")
+        addFutureImage("ico_textbox", "/images/icon/ico_textbox.png")
+        addFutureImage("ico_colorpick", "/images/icon/ico_colorpick.png")
 
-        addImage("ico_colorpick_pointer", "/images/icon/ico_colorpick_pointer.png")
+        addFutureImage("ico_gears", "/images/icon/ico_gears.png")
+        addFutureImage("ico_hammer", "/images/icon/ico_hammer.png")
 
-        printIconsList()
+        addFutureImage("ico_colorpick_pointer", "/images/icon/ico_colorpick_pointer.png")
     }
 
     fun getImage(name: String): ImageIcon {
+        for(futureIcon in futureIcons.toTypedArray()) {
+            if(futureIcon.name == name) {
+                Log.info(TAG, "Loading future icon $name")
+                addImage(futureIcon.name, futureIcon.resourcePath)
+
+                futureIcons.remove(futureIcon)
+            }
+        }
+
         if(!icons.containsKey(name)) {
             throw NoSuchElementException("Image $name is not loaded into memory")
         }
@@ -84,6 +97,8 @@ object Icons {
         return icon!!
     }
 
+    fun addFutureImage(name: String, path: String) = futureIcons.add(FutureIcon(name, path))
+
     fun addImage(name: String, path: String) {
         val buffImg = GuiUtil.loadBufferedImage(path)
         if(colorsInverted) {
@@ -108,24 +123,12 @@ object Icons {
         }
     }
 
-    fun printIconsList() {
-        val builder = StringBuilder()
-
-        for((name, _) in icons) {
-            builder.appendLine(name)
-        }
-
-        for((name, _) in resizedIcons) {
-            builder.appendLine(name)
-        }
-
-        Log.info("Icons", "Loaded icons:\n" + builder.toString())
-    }
-
-    fun invertAll() {
+    private fun invertAll() {
         for((_, img) in bufferedImages) {
             GuiUtil.invertBufferedImageColors(img)
         }
     }
+
+    data class FutureIcon(val name: String, val resourcePath: String)
 
 }

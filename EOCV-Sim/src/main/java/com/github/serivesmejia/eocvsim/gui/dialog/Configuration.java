@@ -25,9 +25,11 @@ package com.github.serivesmejia.eocvsim.gui.dialog;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.config.Config;
+import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox;
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
-import org.opencv.core.Size;
+import com.github.serivesmejia.eocvsim.pipeline.PipelineFps;
+import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,15 +37,18 @@ import java.awt.*;
 public class Configuration {
 
     private final EOCVSim eocvSim;
-    public JPanel contents = new JPanel(new GridLayout(5, 1));
+    public JPanel contents = new JPanel(new GridLayout(7, 1, 1, 8));
     public JComboBox<String> themeComboBox = new JComboBox<>();
 
     public JButton acceptButton = new JButton("Accept");
 
-    public JCheckBox storeZoomCheckBox = new JCheckBox();
     public JCheckBox pauseOnImageCheckBox = new JCheckBox();
 
+    public EnumComboBox<PipelineTimeout> pipelineTimeoutComboBox = null;
+    public EnumComboBox<PipelineFps> pipelineFpsComboBox = null;
+
     public SizeFields videoRecordingSize = null;
+    public EnumComboBox<PipelineFps> videoRecordingFpsComboBox = null;
 
     JDialog configuration;
 
@@ -58,46 +63,27 @@ public class Configuration {
 
     private void initConfiguration() {
 
-        Config config = eocvSim.configManager.getConfig();
-
+        Config config = this.eocvSim.configManager.getConfig();
         configuration.setModal(true);
-
         configuration.setTitle("Settings");
-        configuration.setSize(350, 240);
+        configuration.setSize(350, 300);
 
-        //theme selection
         JPanel themePanel = new JPanel(new FlowLayout());
-
         JLabel themeLabel = new JLabel("Theme: ");
-        themeLabel.setHorizontalAlignment(JLabel.CENTER);
 
-        //add all themes to combo box
+        themeLabel.setHorizontalAlignment(0);
+
         for (Theme theme : Theme.values()) {
-            themeComboBox.addItem(theme.toString().replace("_", " "));
+            this.themeComboBox.addItem(theme.toString().replace("_", " "));
         }
 
-        //select current theme by index
-        themeComboBox.setSelectedIndex(eocvSim.configManager.getConfig().simTheme.ordinal());
-
+        themeComboBox.setSelectedIndex(eocvSim.getConfig().simTheme.ordinal());
         themePanel.add(themeLabel);
-        themePanel.add(themeComboBox);
-
+        themePanel.add(this.themeComboBox);
         contents.add(themePanel);
 
-        //store zoom option
-        JPanel storeZoomPanel = new JPanel(new FlowLayout());
-        JLabel storeZoomLabel = new JLabel("Store zoom value");
-
-        storeZoomCheckBox.setSelected(config.storeZoom);
-
-        storeZoomPanel.add(storeZoomCheckBox);
-        storeZoomPanel.add(storeZoomLabel);
-
-        contents.add(storeZoomPanel);
-
-        //pause on image option
         JPanel pauseOnImagePanel = new JPanel(new FlowLayout());
-        JLabel pauseOnImageLabel = new JLabel("Pause with image sources");
+        JLabel pauseOnImageLabel = new JLabel("Pause with Image Sources");
 
         pauseOnImageCheckBox.setSelected(config.pauseOnImages);
 
@@ -106,36 +92,56 @@ public class Configuration {
 
         contents.add(pauseOnImagePanel);
 
-        videoRecordingSize = new SizeFields(config.videoRecordingSize, false, "Video Rec. Size: ");
+        pipelineTimeoutComboBox = new EnumComboBox<>(
+                "Pipeline Process Timeout: ", PipelineTimeout.class,
+                PipelineTimeout.values(), PipelineTimeout::getCoolName, PipelineTimeout::fromCoolName
+        );
+        pipelineTimeoutComboBox.setSelectedEnum(config.pipelineTimeout);
+        contents.add(pipelineTimeoutComboBox);
 
-        videoRecordingSize.onChange.doPersistent(() -> {
-            acceptButton.setEnabled(videoRecordingSize.getValid());
-        });
+        pipelineFpsComboBox = new EnumComboBox<>(
+                "Pipeline Max FPS: ", PipelineFps.class,
+                PipelineFps.values(), PipelineFps::getCoolName, PipelineFps::fromCoolName
+        );
+        pipelineFpsComboBox.setSelectedEnum(config.pipelineMaxFps);
+        contents.add(this.pipelineFpsComboBox);
 
-        contents.add(videoRecordingSize);
+        videoRecordingSize = new SizeFields(
+                config.videoRecordingSize, false,
+                "Video Recording Size: "
+        );
+        videoRecordingSize.onChange.doPersistent(() ->
+                acceptButton.setEnabled(this.videoRecordingSize.getValid())
+        );
+        contents.add(this.videoRecordingSize);
 
-        //accept button
+        // video fps
+
+        videoRecordingFpsComboBox = new EnumComboBox<>(
+                "Video Recording FPS: ", PipelineFps.class,
+                PipelineFps.values(), PipelineFps::getCoolName, PipelineFps::fromCoolName
+        );
+        videoRecordingFpsComboBox.setSelectedEnum(config.videoRecordingFps);
+        contents.add(videoRecordingFpsComboBox);
+
         JPanel acceptPanel = new JPanel(new FlowLayout());
         acceptPanel.add(acceptButton);
 
-        acceptButton.addActionListener((e) -> {
-            eocvSim.onMainUpdate.doOnce(this::applyChanges);
+        acceptButton.addActionListener(e -> {
+            this.eocvSim.onMainUpdate.doOnce(this::applyChanges);
             close();
         });
 
         contents.add(acceptPanel);
-
         contents.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
-        configuration.add(contents);
-
+        configuration.add(this.contents);
         configuration.setResizable(false);
         configuration.setLocationRelativeTo(null);
         configuration.setVisible(true);
     }
 
     private void applyChanges() {
-
         Config config = eocvSim.configManager.getConfig();
 
         Theme userSelectedTheme = Theme.valueOf(themeComboBox.getSelectedItem().toString().replace(" ", "_"));
@@ -143,15 +149,16 @@ public class Configuration {
 
         //save user modifications to config
         config.simTheme = userSelectedTheme;
-        config.storeZoom = storeZoomCheckBox.isSelected();
         config.pauseOnImages = pauseOnImageCheckBox.isSelected();
+        config.pipelineTimeout = pipelineTimeoutComboBox.getSelectedEnum();
+        config.pipelineMaxFps = pipelineFpsComboBox.getSelectedEnum();
         config.videoRecordingSize = videoRecordingSize.getCurrentSize();
+        config.videoRecordingFps = videoRecordingFpsComboBox.getSelectedEnum();
 
         eocvSim.configManager.saveToFile(); //update config file
 
         if (userSelectedTheme != beforeTheme)
             eocvSim.restart();
-
     }
 
     public void close() {

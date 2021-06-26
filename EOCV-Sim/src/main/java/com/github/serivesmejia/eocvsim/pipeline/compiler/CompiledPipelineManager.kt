@@ -24,7 +24,7 @@
 package com.github.serivesmejia.eocvsim.pipeline.compiler
 
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.gui.dialog.BuildOutput
+import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.util.Log
@@ -33,10 +33,7 @@ import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.workspace.util.template.DefaultWorkspaceTemplate
 import com.qualcomm.robotcore.util.ElapsedTime
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import org.openftc.easyopencv.OpenCvPipeline
 import java.io.File
 
@@ -88,7 +85,8 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         }
     }
 
-    fun uncheckedCompile(fixSelectedPipeline: Boolean = false): PipelineCompileResult {
+    @OptIn(DelicateCoroutinesApi::class)
+    suspend fun uncheckedCompile(fixSelectedPipeline: Boolean = false): PipelineCompileResult {
         if(isBuildRunning) return PipelineCompileResult(
             PipelineCompileStatus.FAILED, "A build is already running"
         )
@@ -184,7 +182,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         } else {
             Log.warn(TAG, "$lastBuildOutputMessage\n")
 
-            if(result.status == PipelineCompileStatus.FAILED && !BuildOutput.isAlreadyOpened)
+            if(result.status == PipelineCompileStatus.FAILED && !Output.isAlreadyOpened)
                 DialogFactory.createBuildOutput(pipelineManager.eocvSim)
         }
 
@@ -202,7 +200,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     }
 
     fun compile(fixSelectedPipeline: Boolean = true) = try {
-        uncheckedCompile(fixSelectedPipeline)
+        runBlocking { uncheckedCompile(fixSelectedPipeline) }
     } catch(e: Exception) {
         isBuildRunning = false
         onBuildEnd.run()
@@ -220,13 +218,14 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
         lastBuildResult = PipelineCompileResult(PipelineCompileStatus.FAILED, lastBuildOutputMessage!!)
 
-        if(!BuildOutput.isAlreadyOpened)
+        if(!Output.isAlreadyOpened)
             DialogFactory.createBuildOutput(pipelineManager.eocvSim)
 
         lastBuildResult!!
     }
 
     @JvmOverloads
+    @OptIn(DelicateCoroutinesApi::class)
     fun asyncCompile(
         fixSelectedPipeline: Boolean = true,
         endCallback: (PipelineCompileResult) -> Unit = {}

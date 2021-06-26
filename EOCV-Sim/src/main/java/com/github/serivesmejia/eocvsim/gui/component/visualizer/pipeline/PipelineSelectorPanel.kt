@@ -26,13 +26,13 @@ package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.util.icon.PipelineListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
-import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
 import java.awt.FlowLayout
-import java.awt.GridLayout
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
 
@@ -60,29 +60,39 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     private var beforeSelectedPipeline = -1
 
     init {
-        layout = FlowLayout(FlowLayout.CENTER)
+        layout = GridBagLayout()
 
         pipelineSelectorLabel.font = pipelineSelectorLabel.font.deriveFont(20.0f)
 
         pipelineSelectorLabel.horizontalAlignment = JLabel.CENTER
-        add(pipelineSelectorLabel)
 
-        pipelineSelector.setCellRenderer(PipelineListIconRenderer(eocvSim.pipelineManager))
+        add(pipelineSelectorLabel, GridBagConstraints().apply {
+            gridy = 0
+            ipady = 20
+        })
+
+        pipelineSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager)
         pipelineSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
-
-        val pipelineSelectorScrollContainer = JPanel()
-        pipelineSelectorScrollContainer.layout = GridLayout()
-        pipelineSelectorScrollContainer.border = BorderFactory.createEmptyBorder(0, 20, 0, 20)
-
-        pipelineSelectorScrollContainer.add(pipelineSelectorScroll)
 
         pipelineSelectorScroll.setViewportView(pipelineSelector)
         pipelineSelectorScroll.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
         pipelineSelectorScroll.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
 
-        add(pipelineSelectorScrollContainer)
+        add(pipelineSelectorScroll, GridBagConstraints().apply {
+            gridy = 1
 
-        add(buttonsPanel)
+            weightx = 0.5
+            weighty = 1.0
+            fill = GridBagConstraints.BOTH
+
+            ipadx = 120
+            ipady = 20
+        })
+
+        add(buttonsPanel, GridBagConstraints().apply {
+            gridy = 2
+            ipady = 20
+        })
 
         registerListeners()
     }

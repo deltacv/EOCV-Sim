@@ -27,8 +27,16 @@ fun interface EventListener {
     fun run(remover: EventListenerRemover)
 }
 
-class EventListenerRemover(val handler: EventHandler, val listener: EventListener) {
-    fun removeThisOnce() = handler.removeOnceListener(listener)
+class EventListenerRemover(
+    val handler: EventHandler,
+    val listener: EventListener,
+    val isOnceListener: Boolean
+) {
+    fun removeThis() {
+        if(isOnceListener)
+            handler.removeOnceListener(listener)
+        else
+            handler.removePersistentListener(listener)
+    }
 
-    fun removeThisPersistent() = handler.removePersistentListener(listener)
 }

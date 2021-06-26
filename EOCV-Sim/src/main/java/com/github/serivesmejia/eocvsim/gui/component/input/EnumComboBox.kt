@@ -28,7 +28,7 @@ import javax.swing.JComboBox
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-class EnumComboBox<T : Enum<T>>(
+class EnumComboBox<T : Enum<T>> @JvmOverloads constructor(
     descriptiveText: String = "Select a value:",
     private val clazz: Class<T>,
     values: Array<T>,
@@ -49,7 +49,7 @@ class EnumComboBox<T : Enum<T>>(
         }
         get() {
             comboBox.selectedItem?.let {
-                return enumSupplier(comboBox.selectedItem.toString())
+                return enumSupplier(comboBox.selectedItem!!.toString())
             }
             return null
         }

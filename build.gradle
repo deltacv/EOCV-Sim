@@ -1,10 +1,11 @@
+import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 buildscript {
     ext {
-        kotlin_version = "1.4.32"
-        kotlinx_coroutines_version = "1.4.3"
+        kotlin_version = "1.5.10"
+        kotlinx_coroutines_version = "1.5.0-native-mt"
 
         env = findProperty('env') == 'release' ? 'release' : 'dev'
 
@@ -22,7 +23,7 @@ buildscript {
 
 allprojects {
     group 'com.github.serivesmejia'
-    version '3.0.0'
+    version '3.1.0'
 
     ext {
         standardVersion = version
@@ -40,18 +41,17 @@ allprojects {
 
     if(env == 'dev') {
         String date = DateTimeFormatter.ofPattern(
-            "yyMMdd-hhmm"
+            "yyMMdd-HHmm"
         ).format(LocalDateTime.now())
 
         String hash = findProperty('hash')
 
         version += "-dev-${hash ?: date}"
-        println("Final version of ${project.name} is $version")
+        println("Final version of ${project} is $version")
 
-        File libsFolder = java.nio.file.Paths.get(
+        File libsFolder = Paths.get(
             projectDir.absolutePath, 'build', 'libs'
         ).toFile()
-
 
         for(file in libsFolder.listFiles()) {
              if(file.name.contains("dev") && file.name.endsWith(".jar"))

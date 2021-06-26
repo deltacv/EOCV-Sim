@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.util;
 
+import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder;
 import org.opencv.core.Core;
 
 import java.io.*;
@@ -124,10 +125,9 @@ public class SysUtil {
     }
 
     public static void copyStream(File inFile, OutputStream out) throws IOException {
-        InputStream in = new FileInputStream(inFile);
-        try {
+        try (InputStream in = new FileInputStream(inFile)) {
             copyStream(in, out);
-        } finally { in.close(); }
+        }
     }
 
     public static void copyStream(InputStream in, OutputStream out) throws IOException {
@@ -222,9 +222,7 @@ public class SysUtil {
     }
 
     public static File getEOCVSimFolder() {
-        File f = new File(getAppData() + File.separator + ".eocvsim");
-        f.mkdir();
-        return f;
+        return EOCVSimFolder.INSTANCE;
     }
 
     public static Optional<String> getExtensionByStringHandling(String filename) {
@@ -361,7 +359,7 @@ public class SysUtil {
             result.output = message.toString();
         } catch (IOException | InterruptedException e) {
             result.output = StrUtil.fromException(e);
-            result.exitCode = 0;
+            result.exitCode = -1;
         }
 
         return result;

@@ -72,4 +72,14 @@ public final class StrUtil {
         return writer.toString().trim();
     }
 
+    public static String cutStringBy(String str, String by, int amount) {
+        int truncateIndex = str.length();
+
+        for(int i = 0 ; i < amount ; i++) {
+            truncateIndex = str.lastIndexOf(by, truncateIndex - 1);
+        }
+
+        return str.substring(0, truncateIndex);
+    }
+
 }

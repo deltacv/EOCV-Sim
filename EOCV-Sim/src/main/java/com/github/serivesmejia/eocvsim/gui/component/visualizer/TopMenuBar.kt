@@ -27,7 +27,7 @@ package com.github.serivesmejia.eocvsim.gui.component.visualizer
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
-import com.github.serivesmejia.eocvsim.gui.dialog.BuildOutput
+import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
@@ -101,8 +101,8 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         val workspBuildOutput = JMenuItem("Output")
 
         workspBuildOutput.addActionListener {
-            if(!BuildOutput.isAlreadyOpened)
-                DialogFactory.createBuildOutput(eocvSim)
+            if(!Output.isAlreadyOpened)
+                DialogFactory.createOutput(eocvSim, true)
         }
         mWorkspMenu.add(workspBuildOutput)
 
@@ -138,7 +138,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val helpUsage = JMenuItem("Usage")
         helpUsage.addActionListener {
-            Desktop.getDesktop().browse(URI("https://github.com/serivesmejia/EOCV-Sim/blob/master/USAGE.md"))
+            Desktop.getDesktop().browse(URI("https://github.com/deltacv/EOCV-Sim/blob/master/USAGE.md"))
         }
 
         helpUsage.isEnabled = Desktop.isDesktopSupported()

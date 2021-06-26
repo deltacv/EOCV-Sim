@@ -24,18 +24,17 @@
 package com.github.serivesmejia.eocvsim.gui;
 
 import com.formdev.flatlaf.FlatLaf;
-import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.Build;
+import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.Viewport;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.InputSourceDropTarget;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.SourceSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TopMenuBar;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
-import com.github.serivesmejia.eocvsim.gui.util.GuiUtil;
 import com.github.serivesmejia.eocvsim.gui.util.ReflectTaskbar;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompiler;
 import com.github.serivesmejia.eocvsim.util.Log;
@@ -44,24 +43,14 @@ import com.github.serivesmejia.eocvsim.workspace.util.template.GradleWorkspaceTe
 import kotlin.Unit;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class Visualizer {
-
-    public static ImageIcon ICO_EOCVSIM = null;
-
-    static {
-        try {
-            ICO_EOCVSIM = GuiUtil.loadImageIcon("/images/icon/ico_eocvsim.png");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public final EventHandler onInitFinished = new EventHandler("OnVisualizerInitFinish");
 
@@ -107,7 +96,7 @@ public class Visualizer {
         if(ReflectTaskbar.INSTANCE.isUsable()){
             try {
                 //set icon for mac os (and other systems which do support this method)
-                ReflectTaskbar.INSTANCE.setIconImage(ICO_EOCVSIM.getImage());
+                ReflectTaskbar.INSTANCE.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
             } catch (final UnsupportedOperationException e) {
                 Log.warn("Visualizer", "Setting the Taskbar icon image is not supported on this platform");
             } catch (final SecurityException e) {
@@ -129,7 +118,7 @@ public class Visualizer {
 
         //instantiate all swing elements after theme installation
         frame = new JFrame();
-        viewport = new Viewport(eocvSim, eocvSim.getConfig().maxFps);
+        viewport = new Viewport(eocvSim, eocvSim.getConfig().pipelineMaxFps.getFps());
 
         menuBar = new TopMenuBar(this, eocvSim);
 
@@ -159,25 +148,26 @@ public class Visualizer {
         imgScrollPane.getHorizontalScrollBar().setUnitIncrement(16);
         imgScrollPane.getVerticalScrollBar().setUnitIncrement(16);
 
-        rightContainer.setLayout(new GridLayout(3, 1));
+        rightContainer.setLayout(new BorderLayout());
+
 
         /*
          * PIPELINE SELECTOR
          */
-
-        rightContainer.add(pipelineSelectorPanel);
+        pipelineSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
+        rightContainer.add(pipelineSelectorPanel, BorderLayout.NORTH);
 
         /*
          * SOURCE SELECTOR
          */
-
-        rightContainer.add(sourceSelectorPanel);
+        sourceSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
+        rightContainer.add(sourceSelectorPanel, BorderLayout.CENTER);
 
         /*
          * TELEMETRY
          */
-
-        rightContainer.add(telemetryPanel);
+        telemetryPanel.setBorder(new EmptyBorder(0, 20, 20, 20));
+        rightContainer.add(telemetryPanel, BorderLayout.SOUTH);
 
         /*
          * SPLIT
@@ -208,7 +198,7 @@ public class Visualizer {
 
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-        frame.setIconImage(ICO_EOCVSIM.getImage());
+        frame.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
 
         frame.setLocationRelativeTo(null);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -216,14 +206,14 @@ public class Visualizer {
 
         globalSplitPane.setDividerLocation(1070);
 
-        onInitFinished.run();
-        onInitFinished.setCallRightAway(true);
+        colorPicker = new ColorPicker(viewport.image);
 
         frame.setVisible(true);
 
-        registerListeners();
+        onInitFinished.run();
+        onInitFinished.setCallRightAway(true);
 
-        colorPicker = new ColorPicker(viewport.image);
+        registerListeners();
 
         hasFinishedInitializing = true;
     }
@@ -373,14 +363,12 @@ public class Visualizer {
 
     public void updateTunerFields(List<TunableFieldPanel> fields) {
         tunerMenuPanel.removeAll();
+        tunerMenuPanel.repaint();
 
         for (TunableFieldPanel fieldPanel : fields) {
             tunerMenuPanel.add(fieldPanel);
             fieldPanel.showFieldPanel();
         }
-
-        tunerMenuPanel.updateUI();
-        imageTunerSplitPane.updateUI();
     }
 
     public void asyncCompilePipelines() {

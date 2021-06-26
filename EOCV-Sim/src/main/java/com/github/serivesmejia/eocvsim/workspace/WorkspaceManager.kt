@@ -26,7 +26,7 @@ package com.github.serivesmejia.eocvsim.workspace
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.FileWatcher
+import com.github.serivesmejia.eocvsim.util.io.FileWatcher
 import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfig
@@ -41,7 +41,7 @@ import java.nio.file.Paths
 class WorkspaceManager(val eocvSim: EOCVSim) {
 
     companion object {
-        private val TAG = "WorkspaceManager"
+        private const val TAG = "WorkspaceManager"
     }
 
     val workspaceConfigLoader by lazy { WorkspaceConfigLoader(workspaceFile) }
@@ -170,10 +170,10 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
         }
 
         val file = File(eocvSim.config.workspacePath)
-        if(file.exists())
-            workspaceFile = file
+        workspaceFile = if(file.exists())
+            file
         else
-            workspaceFile = CompiledPipelineManager.DEF_WORKSPACE_FOLDER
+            CompiledPipelineManager.DEF_WORKSPACE_FOLDER
 
         Log.blank()
     }
