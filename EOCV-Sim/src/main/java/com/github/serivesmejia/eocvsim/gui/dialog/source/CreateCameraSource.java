@@ -174,6 +174,7 @@ public class CreateCameraSource {
                 nameTextField.setText(sourceName);
             }
 
+            state = State.INITIAL;
             updateCreateBtt();
         });
 
