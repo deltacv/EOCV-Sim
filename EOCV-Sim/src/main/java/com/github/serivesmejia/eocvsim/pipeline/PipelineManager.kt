@@ -383,8 +383,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
         captureSnapshot()
 
-        var nextPipeline: OpenCvPipeline? = null
-        var nextTelemetry: Telemetry? = null
+        var nextPipeline: OpenCvPipeline?
+        var nextTelemetry: Telemetry?
         val pipelineClass = pipelines[index].clazz
 
         Log.info(TAG, "Changing to pipeline " + pipelineClass.name)
