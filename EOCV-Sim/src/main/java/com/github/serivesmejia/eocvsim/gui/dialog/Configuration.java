@@ -66,7 +66,7 @@ public class Configuration {
         Config config = this.eocvSim.configManager.getConfig();
         configuration.setModal(true);
         configuration.setTitle("Settings");
-        configuration.setSize(350, 300);
+        configuration.setSize(350, 320);
 
         JPanel themePanel = new JPanel(new FlowLayout());
         JLabel themeLabel = new JLabel("Theme: ");

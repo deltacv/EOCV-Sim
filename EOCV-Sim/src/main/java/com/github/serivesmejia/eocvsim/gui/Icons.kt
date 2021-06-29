@@ -31,7 +31,7 @@ import javax.swing.ImageIcon
 
 object Icons {
 
-    private val bufferedImages = HashMap<String, BufferedImage>()
+    private val bufferedImages = HashMap<String, Image>()
 
     private val icons = HashMap<String, ImageIcon>()
     private val resizedIcons = HashMap<String, ImageIcon>()
@@ -43,7 +43,7 @@ object Icons {
     private const val TAG = "Icons"
 
     init {
-        addFutureImage("ico_eocvsim", "/images/icon/ico_eocvsim.png")
+        addFutureImage("ico_eocvsim", "/images/icon/ico_eocvsim.png", false)
 
         addFutureImage("ico_img", "/images/icon/ico_img.png")
         addFutureImage("ico_cam", "/images/icon/ico_cam.png")
@@ -64,7 +64,7 @@ object Icons {
         for(futureIcon in futureIcons.toTypedArray()) {
             if(futureIcon.name == name) {
                 Log.info(TAG, "Loading future icon $name")
-                addImage(futureIcon.name, futureIcon.resourcePath)
+                addImage(futureIcon.name, futureIcon.resourcePath, futureIcon.allowInvert)
 
                 futureIcons.remove(futureIcon)
             }
@@ -97,15 +97,17 @@ object Icons {
         return icon!!
     }
 
-    fun addFutureImage(name: String, path: String) = futureIcons.add(FutureIcon(name, path))
+    fun addFutureImage(name: String, path: String, allowInvert: Boolean = true) = futureIcons.add(
+        FutureIcon(name, path, allowInvert)
+    )
 
-    fun addImage(name: String, path: String) {
+    fun addImage(name: String, path: String, allowInvert: Boolean = true) {
         val buffImg = GuiUtil.loadBufferedImage(path)
-        if(colorsInverted) {
+        if(colorsInverted && allowInvert) {
             GuiUtil.invertBufferedImageColors(buffImg)
         }
 
-        bufferedImages[name] = buffImg
+        bufferedImages[name] = Image(buffImg, allowInvert)
         icons[name] = ImageIcon(buffImg)
     }
 
@@ -124,11 +126,15 @@ object Icons {
     }
 
     private fun invertAll() {
-        for((_, img) in bufferedImages) {
-            GuiUtil.invertBufferedImageColors(img)
+        for((_, image) in bufferedImages) {
+            if(image.allowInvert) {
+                GuiUtil.invertBufferedImageColors(image.img)
+            }
         }
     }
 
-    data class FutureIcon(val name: String, val resourcePath: String)
+    data class Image(val img: BufferedImage, val allowInvert: Boolean)
+
+    data class FutureIcon(val name: String, val resourcePath: String, val allowInvert: Boolean)
 
 }

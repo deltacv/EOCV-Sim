@@ -41,6 +41,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
         private set
 
     val exceptionsThrown = mutableMapOf<Throwable, PipelineException>()
+    val messages = mutableMapOf<String, Long>()
 
     val onPipelineException      = EventHandler("OnPipelineException")
     val onNewPipelineException   = EventHandler("OnNewPipelineException")
@@ -101,6 +102,13 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
             }
         }
 
+        for((message, millisAdded) in messages.entries.toTypedArray()) {
+            val timeElapsed = System.currentTimeMillis() - millisAdded
+            if(timeElapsed >= millisExceptionExpire) {
+                messages.remove(message)
+            }
+        }
+
         onUpdate.run()
     }
 
@@ -116,8 +124,6 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
                 .append("**Pipeline $pipelineName is throwing ${exceptionsThrown.size} exception(s)**")
                 .appendLine("\n")
         } else {
-
-
             messageBuilder.append("**Pipeline $pipelineName ")
 
             if(pipelineManager.paused) {
@@ -144,10 +150,19 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
                 .appendLine()
         }
 
+        for((message, _) in messages) {
+            messageBuilder.appendLine(message)
+        }
+
         return messageBuilder.toString().trim()
     }
 
     fun clear() = exceptionsThrown.clear()
+
+    fun addMessage(s: String) {
+        messages[s] = System.currentTimeMillis()
+        onNewPipelineException.run()
+    }
 
     data class PipelineException(var count: Int,
                                  val stacktrace: String,

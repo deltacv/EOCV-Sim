@@ -23,9 +23,9 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog.source;
 
+import com.github.sarxos.webcam.Webcam;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields;
-import com.github.serivesmejia.eocvsim.gui.util.GuiUtil;
 import com.github.serivesmejia.eocvsim.input.source.CameraSource;
 import com.github.serivesmejia.eocvsim.util.CvUtil;
 import com.github.serivesmejia.eocvsim.util.Log;
@@ -42,20 +42,17 @@ public class CreateCameraSource {
 
     public JDialog createCameraSource = null;
 
-    public JTextField cameraIdField = null;
-    public JButton createButton = null;
-
+    public JComboBox<String> camerasComboBox = null;
     public SizeFields sizeFieldsInput = null;
-
     public JTextField nameTextField = null;
 
+    public JButton createButton = null;
+
     public boolean wasCancelled = false;
-    private boolean validCameraIdNumber = true;
 
     private final EOCVSim eocvSim;
 
     private State state = State.INITIAL;
-    private int camId = 0;
 
     JLabel statusLabel = new JLabel();
 
@@ -71,25 +68,30 @@ public class CreateCameraSource {
     }
 
     public void initCreateImageSource() {
+        java.util.List<Webcam> webcams = Webcam.getWebcams();
 
         createCameraSource.setModal(true);
 
         createCameraSource.setTitle("Create camera source");
-        createCameraSource.setSize(350, 230);
+        createCameraSource.setSize(350, 250);
 
         JPanel contentsPanel = new JPanel(new GridLayout(5, 1));
 
         // Camera id part
-
         JPanel idPanel = new JPanel(new FlowLayout());
 
-        JLabel idLabel = new JLabel("Camera Index: ");
-        idLabel.setHorizontalAlignment(JLabel.CENTER);
+        JLabel idLabel = new JLabel("Camera: ");
+        idLabel.setHorizontalAlignment(JLabel.LEFT);
 
-        cameraIdField = new JTextField("0", 4);
+        camerasComboBox = new JComboBox<>();
+        for(Webcam webcam : webcams) {
+            camerasComboBox.addItem(webcam.getName());
+        }
+
+        SwingUtilities.invokeLater(() -> camerasComboBox.setSelectedIndex(0));
 
         idPanel.add(idLabel);
-        idPanel.add(cameraIdField);
+        idPanel.add(camerasComboBox);
 
         contentsPanel.add(idPanel);
 
@@ -131,27 +133,25 @@ public class CreateCameraSource {
         contentsPanel.add(buttonsPanel);
 
         //Add contents
-
         contentsPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
 
         createCameraSource.getContentPane().add(contentsPanel, BorderLayout.CENTER);
 
         // Additional stuff & events
-
-        GuiUtil.jTextFieldOnlyNumbers(cameraIdField, -100, 0);
-
         createButton.addActionListener(e -> {
             if(state == State.TEST_SUCCESSFUL) {
-                createSource(nameTextField.getText(), camId, sizeFieldsInput.getCurrentSize());
+                createSource(
+                        nameTextField.getText(),
+                        camerasComboBox.getSelectedIndex(),
+                        sizeFieldsInput.getCurrentSize()
+                );
                 close();
             } else {
-                camId = Integer.parseInt(cameraIdField.getText());
-
                 state = State.CLICKED_TEST;
                 updateState();
 
                 eocvSim.onMainUpdate.doOnce(() -> {
-                    if (testCamera(camId)) {
+                    if (testCamera(camerasComboBox.getSelectedIndex())) {
                         if (wasCancelled) return;
 
                         SwingUtilities.invokeLater(() -> {
@@ -168,32 +168,14 @@ public class CreateCameraSource {
             }
         });
 
-        cameraIdField.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) {
-                changed();
-            }
-            public void removeUpdate(DocumentEvent e) {
-                changed();
-            }
-            public void insertUpdate(DocumentEvent e) {
-                changed();
+        camerasComboBox.addActionListener((e) -> {
+            String sourceName = (String)camerasComboBox.getSelectedItem();
+            if(!eocvSim.inputSourceManager.isNameOnUse(sourceName)) {
+                nameTextField.setText(sourceName);
             }
 
-            public void changed() {
-                try {
-                    Integer.parseInt(cameraIdField.getText());
-
-                    String sourceName = "Camera " + cameraIdField.getText();
-                    if(!eocvSim.inputSourceManager.isNameOnUse(sourceName)) {
-                        nameTextField.setText(sourceName);
-                    }
-
-                    validCameraIdNumber = true;
-                } catch (Exception ex) {
-                    validCameraIdNumber = false;
-                }
-                updateCreateBtt();
-            }
+            state = State.INITIAL;
+            updateCreateBtt();
         });
 
         nameTextField.getDocument().addDocumentListener(new DocumentListener() {
@@ -208,8 +190,6 @@ public class CreateCameraSource {
                 updateCreateBtt();
             }
         });
-
-        SwingUtilities.invokeLater(() -> cameraIdField.setText("0"));
 
         cancelButton.addActionListener(e -> {
             wasCancelled = true;
@@ -228,7 +208,7 @@ public class CreateCameraSource {
 
     public boolean testCamera(int camIndex) {
         VideoCapture camera = new VideoCapture();
-        camera.open(camIndex);
+        camera.open(camerasComboBox.getSelectedIndex());
 
         boolean wasOpened = camera.isOpened();
 
@@ -264,21 +244,21 @@ public class CreateCameraSource {
 
             case CLICKED_TEST:
                 statusLabel.setText("Trying to open camera, please wait...");
-                cameraIdField.setEditable(false);
+                camerasComboBox.setEnabled(false);
                 createButton.setEnabled(false);
                 break;
 
             case TEST_SUCCESSFUL:
-                cameraIdField.setEditable(true);
+                camerasComboBox.setEnabled(true);
                 createButton.setEnabled(true);
                 statusLabel.setText("Camera was opened successfully.");
                 createButton.setText("Create");
                 break;
 
             case TEST_FAILED:
-                cameraIdField.setEditable(true);
+                camerasComboBox.setEnabled(true);
                 createButton.setEnabled(true);
-                statusLabel.setText("Failed to open camera, try with another index.");
+                statusLabel.setText("Failed to open camera, try another one.");
                 createButton.setText("Test");
                 break;
         }
@@ -293,7 +273,6 @@ public class CreateCameraSource {
 
     public void updateCreateBtt() {
         createButton.setEnabled(!nameTextField.getText().trim().equals("")
-                && validCameraIdNumber
                 && sizeFieldsInput.getValid()
                 && !eocvSim.inputSourceManager.isNameOnUse(nameTextField.getText()));
 
