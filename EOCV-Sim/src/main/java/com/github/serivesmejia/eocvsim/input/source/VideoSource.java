@@ -57,6 +57,8 @@ public class VideoSource extends InputSource {
 
     private transient double lastFramePosition = 0;
 
+    private transient long capTimeNanos = 0;
+
     public VideoSource(String videoPath, Size size) {
         this.videoPath = videoPath;
         this.size = size;
@@ -143,6 +145,7 @@ public class VideoSource extends InputSource {
         MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
 
         video.read(newFrame);
+        capTimeNanos = System.nanoTime();
 
         //with videocapture for video files, when an empty mat is returned
         //the most likely reason is that the video ended, so we set the
@@ -200,6 +203,11 @@ public class VideoSource extends InputSource {
     @Override
     public FileFilter getFileFilters() {
         return FileFilters.videoMediaFilter;
+    }
+
+    @Override
+    public long getCaptureTimeNanos() {
+        return capTimeNanos;
     }
 
     @Override

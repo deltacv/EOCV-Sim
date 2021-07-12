@@ -232,7 +232,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     fun destroy(reason: DestroyReason) {
-        Log.warn(TAG, "Destroying current EOCVSim ($hexCode) due to $reason")
+        Log.warn(TAG, "Destroying current EOCVSim ($hexCode) due to $reason, it is normal to see InterruptedExceptions and other kinds of stack traces blow")
 
         //stop recording session if there's currently an ongoing one
         currentRecordingSession?.stopRecordingSession()

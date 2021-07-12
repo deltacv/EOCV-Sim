@@ -165,6 +165,11 @@ public class ImageSource extends InputSource {
     }
 
     @Override
+    public long getCaptureTimeNanos() {
+        return System.nanoTime();
+    }
+
+    @Override
     public String toString() {
         if (size == null) size = new Size();
         return "ImageSource(\"" + imgPath + "\", " + (size != null ? size.toString() : "null") + ")";

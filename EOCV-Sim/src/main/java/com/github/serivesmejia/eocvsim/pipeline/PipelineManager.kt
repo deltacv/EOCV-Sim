@@ -189,7 +189,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
             return
         }
 
-        timestampedPipelineHandler.update(currentPipeline)
+        timestampedPipelineHandler.update(currentPipeline, eocvSim.inputSourceManager.currentInputSource)
 
         lastPipelineAction = if(!hasInitCurrentPipeline) {
             "init/processFrame"

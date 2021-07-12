@@ -80,6 +80,8 @@ public abstract class InputSource implements Comparable<InputSource> {
 
     public abstract FileFilter getFileFilters();
 
+    public abstract long getCaptureTimeNanos();
+
     @Override
     public final int compareTo(InputSource source) {
         return createdOn > source.createdOn ? 1 : -1;
