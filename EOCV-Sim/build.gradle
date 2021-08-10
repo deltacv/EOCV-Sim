@@ -40,7 +40,7 @@ dependencies {
     implementation 'com.github.sarxos:webcam-capture:0.3.12'
 
     implementation 'com.google.code.gson:gson:2.8.7'
-    implementation 'io.github.classgraph:classgraph:4.8.108'
+    implementation 'io.github.classgraph:classgraph:4.8.113'
 
     implementation 'com.formdev:flatlaf:1.2'
     implementation 'com.formdev:flatlaf-intellij-themes:1.2'
