@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
+import com.github.serivesmejia.eocvsim.pipeline.compiler.util.PackageStatementRemover
 import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
@@ -52,6 +53,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         val SOURCES_OUTPUT_FOLDER = File(COMPILER_FOLDER, File.separator + "gen_src").mkdirLazy()
         val CLASSES_OUTPUT_FOLDER = File(COMPILER_FOLDER, File.separator + "out_classes").mkdirLazy()
         val JARS_OUTPUT_FOLDER    = File(COMPILER_FOLDER, File.separator + "out_jars").mkdirLazy()
+        val FLAT_SRC_FOLDER       = File(COMPILER_FOLDER, File.separator + "flat_src").mkdirLazy()
 
         val PIPELINES_OUTPUT_JAR  = File(JARS_OUTPUT_FOLDER, File.separator + "pipelines.jar")
 
@@ -115,8 +117,12 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
         val runtime = ElapsedTime()
 
+        val (files, sourcesPath) = if(workspaceManager.workspaceConfig.ignorePackages) {
+            PackageStatementRemover.processFiles(workspaceManager.sourceFiles)
+        } else Pair(workspaceManager.sourceFiles, absoluteSourcesPath)
+
         val compiler = PipelineCompiler(
-            absoluteSourcesPath, workspaceManager.sourceFiles,
+            sourcesPath, files,
             workspaceManager.resourcesAbsolutePath.toFile(), workspaceManager.resourceFiles
         )
         
@@ -201,7 +207,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
     fun compile(fixSelectedPipeline: Boolean = true) = try {
         runBlocking { uncheckedCompile(fixSelectedPipeline) }
-    } catch(e: Exception) {
+    } catch(e: Throwable) {
         isBuildRunning = false
         onBuildEnd.run()
 

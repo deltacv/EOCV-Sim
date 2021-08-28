@@ -27,6 +27,8 @@ import java.util.ArrayList;
 
 public class WorkspaceConfig {
 
+    public boolean ignorePackages = true;
+
     public String sourcesPath = ".";
     public String resourcesPath = ".";
 

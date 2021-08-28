@@ -56,7 +56,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
     }
 
     private fun loadClass(entry: ZipEntry): Class<*> {
-        val name = entry.name.removeFromEnd(".class").replace(File.pathSeparatorChar, '.')
+        val name = entry.name.removeFromEnd(".class").replace(File.separatorChar, '.')
 
         zipFile.getInputStream(entry).use { inStream ->
             ByteArrayOutputStream().use { outStream ->
@@ -73,7 +73,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
 
         if(clazz == null) {
             try {
-                clazz = loadClass(zipFile.getEntry(name.replace('.', File.pathSeparatorChar) + ".class"))
+                clazz = loadClass(zipFile.getEntry(name.replace('.', File.separatorChar) + ".class"))
                 if(resolve) resolveClass(clazz)
             } catch(e: Exception) {
                 clazz = super.loadClass(name, resolve)
