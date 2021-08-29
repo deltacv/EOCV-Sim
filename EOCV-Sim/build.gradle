@@ -39,6 +39,7 @@ dependencies {
     implementation 'org.openpnp:opencv:4.3.0-2'
     implementation 'com.github.sarxos:webcam-capture:0.3.12'
 
+    implementation 'info.picocli:picocli:4.6.1'
     implementation 'com.google.code.gson:gson:2.8.7'
     implementation 'io.github.classgraph:classgraph:4.8.108'
 

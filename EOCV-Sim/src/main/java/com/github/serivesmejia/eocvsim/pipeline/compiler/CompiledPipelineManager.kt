@@ -27,7 +27,6 @@ import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
-import com.github.serivesmejia.eocvsim.pipeline.compiler.util.PackageStatementRemover
 import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
@@ -53,7 +52,6 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         val SOURCES_OUTPUT_FOLDER = File(COMPILER_FOLDER, File.separator + "gen_src").mkdirLazy()
         val CLASSES_OUTPUT_FOLDER = File(COMPILER_FOLDER, File.separator + "out_classes").mkdirLazy()
         val JARS_OUTPUT_FOLDER    = File(COMPILER_FOLDER, File.separator + "out_jars").mkdirLazy()
-        val FLAT_SRC_FOLDER       = File(COMPILER_FOLDER, File.separator + "flat_src").mkdirLazy()
 
         val PIPELINES_OUTPUT_JAR  = File(JARS_OUTPUT_FOLDER, File.separator + "pipelines.jar")
 
@@ -75,8 +73,6 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         private set
 
     val workspaceManager get() = pipelineManager.eocvSim.workspaceManager
-
-    private val visualizer get() = pipelineManager.eocvSim.visualizer
 
     fun init() {
         Log.info(TAG, "Initializing...")
@@ -112,17 +108,12 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         workspaceManager.reloadConfig()
 
         val absoluteSourcesPath = workspaceManager.sourcesAbsolutePath.toFile()
-        
         Log.info(TAG, "Building java files in workspace, at ${absoluteSourcesPath.absolutePath}")
 
         val runtime = ElapsedTime()
 
-        val (files, sourcesPath) = if(workspaceManager.workspaceConfig.ignorePackages) {
-            PackageStatementRemover.processFiles(workspaceManager.sourceFiles)
-        } else Pair(workspaceManager.sourceFiles, absoluteSourcesPath)
-
         val compiler = PipelineCompiler(
-            sourcesPath, files,
+            absoluteSourcesPath, workspaceManager.sourceFiles,
             workspaceManager.resourcesAbsolutePath.toFile(), workspaceManager.resourceFiles
         )
         
