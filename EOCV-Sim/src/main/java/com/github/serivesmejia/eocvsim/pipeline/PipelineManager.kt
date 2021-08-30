@@ -371,6 +371,23 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
     }
 
+    fun changePipeline(name: String, source: PipelineSource) {
+        for((i, data) in pipelines.withIndex()) {
+            if(data.clazz.simpleName.equals(name, true) && data.source == source) {
+                changePipeline(i)
+                return
+            }
+        }
+
+        Log.warn(TAG, "Pipeline class with name $name and source $source couldn't be found")
+    }
+
+    fun requestChangePipeline(name: String, source: PipelineSource) {
+        eocvSim.onMainUpdate.doOnce {
+            changePipeline(name, source)
+        }
+    }
+
     /**
      * Changes to the requested pipeline, no matter
      * if we're currently on the same pipeline or not

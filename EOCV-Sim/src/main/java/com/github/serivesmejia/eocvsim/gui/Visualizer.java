@@ -215,6 +215,10 @@ public class Visualizer {
         registerListeners();
 
         hasFinishedInitializing = true;
+
+        if(!PipelineCompiler.Companion.getIS_USABLE()) {
+            compilingUnsupported();
+        }
     }
 
     public void initAsync(Theme simTheme) {
@@ -376,14 +380,18 @@ public class Visualizer {
                 return Unit.INSTANCE;
             });
         } else {
-            asyncPleaseWaitDialog(
-                    "Runtime compilation is not supported on this JVM",
-                    "For further info, check the EOCV-Sim GitHub repo",
-                    "Close",
-                    new Dimension(320, 160),
-                    true, true
-            );
+            compilingUnsupported();
         }
+    }
+
+    public void compilingUnsupported() {
+        asyncPleaseWaitDialog(
+                "Runtime compiling is not supported on this JVM",
+                "For further info, check the EOCV-Sim GitHub repo",
+                "Close",
+                new Dimension(320, 160),
+                true, true
+        );
     }
 
     public void selectPipelinesWorkspace() {

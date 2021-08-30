@@ -169,7 +169,8 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
             }
         }
 
-        val file = File(eocvSim.config.workspacePath)
+        val file = eocvSim.params.initialWorkspace ?: File(eocvSim.config.workspacePath)
+
         workspaceFile = if(file.exists())
             file
         else

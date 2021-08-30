@@ -1,13 +1,18 @@
 @file:JvmName("Main")
 package com.github.serivesmejia.eocvsim
 
+import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
+import com.github.serivesmejia.eocvsim.util.Log
 import picocli.CommandLine
+import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     val result = CommandLine(
         EOCVSimCommandInterface()
-    ).execute(*args)
+    ).setCaseInsensitiveEnumValuesAllowed(true).execute(*args)
 
     exitProcess(result)
 }
@@ -15,17 +20,47 @@ fun main(args: Array<String>) {
 @CommandLine.Command(name = "eocvsim", mixinStandardHelpOptions = true, version = [Build.versionString])
 class EOCVSimCommandInterface : Runnable {
 
-    @CommandLine.Option(names = ["-w", "--workspace"])
+    @CommandLine.Option(names = ["-w", "--workspace"], description = ["Specifies the workspace that will be used only during this run, path can be relative and absolute"])
     @JvmField var workspacePath = ""
 
-    @CommandLine.Option(names = ["-p", "--pipeline"])
+    @CommandLine.Option(names = ["-p", "--pipeline"], description = ["Specifies the pipeline selected when the simulator starts, and the initial runtime build finishes if it was running"])
     @JvmField var initialPipeline = ""
 
-    override fun run() {
-        println(workspacePath)
-        println(initialPipeline)
+    @CommandLine.Option(names = ["-s", "--source"], description = ["Specifies the source of the pipeline that will be selected when the simulator starts, from the --pipeline argument. Defaults to CLASSPATH. Possible values: \${COMPLETION-CANDIDATES}"])
+    @JvmField var source = PipelineSource.CLASSPATH
 
-        EOCVSim().init()
+    override fun run() {
+        val parameters = EOCVSim.Parameters()
+
+        if(workspacePath.trim() != "") {
+            var file = File(workspacePath)
+
+            if(!file.exists()) {
+                file = Paths.get(System.getProperty("user.dir"), workspacePath).toFile()
+
+                if(!file.exists()) {
+                    Log.error("Workspace path is not valid, folder doesn't exist (tried in \"$workspacePath\" and \"${file.absolutePath})\"")
+
+                    exitProcess(1)
+                }
+            }
+
+            if(!file.isDirectory) {
+                Log.error("Workspace path is not valid, the specified path is not a folder")
+                exitProcess(1)
+            }
+
+            Log.info("Workspace from command line: ${file.absolutePath}")
+
+            parameters.initialWorkspace = file
+        }
+
+        if(initialPipeline.trim() != "") {
+            parameters.initialPipelineName = initialPipeline
+            parameters.initialPipelineSource = PipelineSource.CLASSPATH
+        }
+
+        EOCVSim(parameters).init()
     }
 
 }

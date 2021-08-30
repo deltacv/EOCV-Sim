@@ -31,6 +31,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.Log
@@ -176,6 +177,16 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     private fun start() {
+        if(params.initialPipelineName != null && params.initialPipelineSource != null) {
+            if(pipelineManager.compiledPipelineManager.isBuildRunning) {
+                pipelineManager.compiledPipelineManager.onBuildEnd {
+                    pipelineManager.requestChangePipeline(params.initialPipelineName!!, params.initialPipelineSource!!)
+                }
+            } else {
+                pipelineManager.changePipeline(params.initialPipelineName!!, params.initialPipelineSource!!)
+            }
+        }
+
         Log.info(TAG, "Begin EOCVSim loop")
         Log.blank()
 
@@ -338,7 +349,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     private fun updateVisualizerTitle() {
         val isBuildRunning = if (pipelineManager.compiledPipelineManager.isBuildRunning) "(Building)" else ""
 
-        val workspaceMsg = " - ${config.workspacePath} $isBuildRunning"
+        val workspaceMsg = " - ${workspaceManager.workspaceFile.absolutePath} $isBuildRunning"
 
         val pipelineFpsMsg = " (${pipelineManager.pipelineFpsCounter.fps} Pipeline FPS)"
         val posterFpsMsg = " (${visualizer.viewport.matPoster.fpsCounter.fps} Poster FPS)"
@@ -357,6 +368,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
     class Parameters {
         var scanForPipelinesIn = "org.firstinspires"
         var scanForTunableFieldsIn = "com.github.serivesmejia"
+
+        var initialWorkspace: File? = null
+
+        var initialPipelineName: String? = null
+        var initialPipelineSource: PipelineSource? = null
     }
 
 }
