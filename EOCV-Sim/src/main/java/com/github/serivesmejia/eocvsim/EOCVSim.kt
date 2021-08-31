@@ -177,16 +177,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     private fun start() {
-        if(params.initialPipelineName != null && params.initialPipelineSource != null) {
-            if(pipelineManager.compiledPipelineManager.isBuildRunning) {
-                pipelineManager.compiledPipelineManager.onBuildEnd {
-                    pipelineManager.requestChangePipeline(params.initialPipelineName!!, params.initialPipelineSource!!)
-                }
-            } else {
-                pipelineManager.changePipeline(params.initialPipelineName!!, params.initialPipelineSource!!)
-            }
-        }
-
         Log.info(TAG, "Begin EOCVSim loop")
         Log.blank()
 
@@ -273,7 +263,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         Log.blank()
 
         Thread(
-            { EOCVSim().init() },
+            { EOCVSim(params).init() },
             "main"
         ).start() //run next instance on a separate thread for the old one to get interrupted and ended
     }

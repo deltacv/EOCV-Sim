@@ -27,7 +27,7 @@ class EOCVSimCommandInterface : Runnable {
     @JvmField var initialPipeline = ""
 
     @CommandLine.Option(names = ["-s", "--source"], description = ["Specifies the source of the pipeline that will be selected when the simulator starts, from the --pipeline argument. Defaults to CLASSPATH. Possible values: \${COMPLETION-CANDIDATES}"])
-    @JvmField var source = PipelineSource.CLASSPATH
+    @JvmField var initialPipelineSource = PipelineSource.CLASSPATH
 
     override fun run() {
         val parameters = EOCVSim.Parameters()
@@ -57,7 +57,9 @@ class EOCVSimCommandInterface : Runnable {
 
         if(initialPipeline.trim() != "") {
             parameters.initialPipelineName = initialPipeline
-            parameters.initialPipelineSource = PipelineSource.CLASSPATH
+            parameters.initialPipelineSource = initialPipelineSource
+
+            Log.info("Initial pipeline from command line: $initialPipeline coming from $initialPipelineSource")
         }
 
         EOCVSim(parameters).init()

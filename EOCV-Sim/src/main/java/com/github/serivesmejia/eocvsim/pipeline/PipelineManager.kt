@@ -38,7 +38,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.TimestampedPipelineHandler
-import java.awt.Dimension
 import java.lang.reflect.Constructor
 import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
@@ -133,6 +132,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
         compiledPipelineManager.init()
 
+        // changing to initial pipeline
         onUpdate.doOnce {
             if(compiledPipelineManager.isBuildRunning)
                 compiledPipelineManager.onBuildEnd.doOnce(::applyStaticSnapOrDef)
@@ -162,8 +162,16 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     private fun applyStaticSnapOrDef() {
         onUpdate.doOnce {
-            if(!applyStaticSnapshot())
-                forceChangePipeline(0)
+            if(!applyStaticSnapshot()) {
+                val params = eocvSim.params
+
+                // changing to the initial pipeline, defined by the eocv sim parameters or the default pipeline
+                if(params.initialPipelineName != null) {
+                    changePipeline(params.initialPipelineName!!, params.initialPipelineSource ?: PipelineSource.CLASSPATH)
+                } else {
+                    forceChangePipeline(0)
+                }
+            }
 
             eocvSim.visualizer.pipelineSelectorPanel.allowPipelineSwitching = true
         }
@@ -374,6 +382,11 @@ class PipelineManager(var eocvSim: EOCVSim) {
     fun changePipeline(name: String, source: PipelineSource) {
         for((i, data) in pipelines.withIndex()) {
             if(data.clazz.simpleName.equals(name, true) && data.source == source) {
+                changePipeline(i)
+                return
+            }
+
+            if(data.clazz.name.equals(name, true) && data.source == source) {
                 changePipeline(i)
                 return
             }

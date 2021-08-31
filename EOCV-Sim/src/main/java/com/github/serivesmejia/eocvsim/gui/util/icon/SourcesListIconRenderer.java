@@ -31,20 +31,16 @@ import java.awt.*;
 
 public class SourcesListIconRenderer extends DefaultListCellRenderer {
 
-    private ImageIcon imgIcon = null;
-    private ImageIcon camIcon = null;
-    private ImageIcon vidIcon = null;
-
     public static final int ICO_W = 15;
     public static final int ICO_H = 15;
 
     public InputSourceManager sourceManager = null;
 
-    public SourcesListIconRenderer(InputSourceManager sourceManager) {
-        imgIcon = Icons.INSTANCE.getImageResized("ico_img", 15, 15);
-        camIcon = Icons.INSTANCE.getImageResized("ico_cam", 15, 15);
-        vidIcon = Icons.INSTANCE.getImageResized("ico_vid", 15, 15);
+    ImageIcon imageIcon = null;
+    ImageIcon camIcon = null;
+    ImageIcon vidIcon = null;
 
+    public SourcesListIconRenderer(InputSourceManager sourceManager) {
         this.sourceManager = sourceManager;
     }
 
@@ -62,12 +58,21 @@ public class SourcesListIconRenderer extends DefaultListCellRenderer {
 
         switch (sourceManager.getSourceType((String) value)) {
             case IMAGE:
-                label.setIcon(imgIcon);
+                if(imageIcon == null) {
+                    imageIcon = Icons.INSTANCE.getImageResized("ico_img", 15, 15);
+                }
+                label.setIcon(imageIcon);
                 break;
             case CAMERA:
+                if(camIcon == null) {
+                    camIcon = Icons.INSTANCE.getImageResized("ico_cam", 15, 15);
+                }
                 label.setIcon(camIcon);
                 break;
             case VIDEO:
+                if(vidIcon == null) {
+                    vidIcon = Icons.INSTANCE.getImageResized("ico_vid", 15, 15);
+                }
                 label.setIcon(vidIcon);
                 break;
         }

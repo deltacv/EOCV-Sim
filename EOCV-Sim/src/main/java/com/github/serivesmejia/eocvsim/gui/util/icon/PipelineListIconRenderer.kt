@@ -12,8 +12,8 @@ class PipelineListIconRenderer(
     private val pipelineManager: PipelineManager
 ) : DefaultListCellRenderer() {
 
-    private val gearsIcon = Icons.getImageResized("ico_gears", 15, 15)
-    private val hammerIcon = Icons.getImageResized("ico_hammer", 15, 15)
+    private val gearsIcon  by Icons.lazyGetImageResized("ico_gears", 15, 15)
+    private val hammerIcon by Icons.lazyGetImageResized("ico_hammer", 15, 15)
 
     override fun getListCellRendererComponent(
         list: JList<*>,
@@ -33,10 +33,10 @@ class PipelineListIconRenderer(
         if(runtimePipelinesAmount > 0) {
             val source = pipelineManager.pipelines[index].source
 
-            label.setIcon(when(source) {
+            label.icon = when(source) {
                 PipelineSource.COMPILED_ON_RUNTIME -> gearsIcon
                 else -> hammerIcon
-            })
+            }
         }
 
         return label
