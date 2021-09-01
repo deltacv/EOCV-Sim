@@ -267,7 +267,8 @@ public class CreateCameraSource {
     public void createSource(String sourceName, int index, Size size) {
         eocvSim.onMainUpdate.doOnce(() -> eocvSim.inputSourceManager.addInputSource(
                 sourceName,
-                new CameraSource(index, size)
+                new CameraSource(index, size),
+                true
         ));
     }
 

@@ -5,9 +5,11 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.util.Log
 import picocli.CommandLine
 import java.io.File
-import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
+
+val jvmMainThread: Thread = Thread.currentThread()
+var currentMainThread: Thread = jvmMainThread
 
 fun main(args: Array<String>) {
     val result = CommandLine(
@@ -20,7 +22,7 @@ fun main(args: Array<String>) {
 @CommandLine.Command(name = "eocvsim", mixinStandardHelpOptions = true, version = [Build.versionString])
 class EOCVSimCommandInterface : Runnable {
 
-    @CommandLine.Option(names = ["-w", "--workspace"], description = ["Specifies the workspace that will be used only during this run, path can be relative and absolute"])
+    @CommandLine.Option(names = ["-w", "--workspace"], description = ["Specifies the workspace that will be used only during this run, path can be relative or absolute"])
     @JvmField var workspacePath = ""
 
     @CommandLine.Option(names = ["-p", "--pipeline"], description = ["Specifies the pipeline selected when the simulator starts, and the initial runtime build finishes if it was running"])
@@ -40,7 +42,6 @@ class EOCVSimCommandInterface : Runnable {
 
                 if(!file.exists()) {
                     Log.error("Workspace path is not valid, folder doesn't exist (tried in \"$workspacePath\" and \"${file.absolutePath})\"")
-
                     exitProcess(1)
                 }
             }

@@ -177,7 +177,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
     }
 
-    fun update(inputMat: Mat) {
+    fun update(inputMat: Mat?) {
         onUpdate.run()
 
         if(activePipelineContexts.size > MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS) {
@@ -217,7 +217,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 //a different pipeline at this point. we also call init if we
                 //haven't done so.
 
-                if(!hasInitCurrentPipeline) {
+                if(!hasInitCurrentPipeline && inputMat != null) {
                     currentPipeline?.init(inputMat)
 
                     Log.info("PipelineManager", "Initialized pipeline $currentPipelineName")
@@ -228,24 +228,28 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
                 //check if we're still active (not timeouted)
                 //after initialization
-                currentPipeline?.processFrame(inputMat)?.let { outputMat ->
-                    if (isActive) {
-                        pipelineFpsCounter.update()
+                if(inputMat != null) {
+                    currentPipeline?.processFrame(inputMat)?.let { outputMat ->
+                        if (isActive) {
+                            pipelineFpsCounter.update()
 
-                        for (poster in pipelineOutputPosters.toTypedArray()) {
-                            try {
-                                poster.post(outputMat)
-                            } catch (ex: Exception) {
-                                Log.error(
-                                    TAG,
-                                    "Uncaught exception thrown while posting pipeline output Mat to ${poster.name} poster",
-                                    ex
-                                )
+                            for (poster in pipelineOutputPosters.toTypedArray()) {
+                                try {
+                                    poster.post(outputMat)
+                                } catch (ex: Exception) {
+                                    Log.error(
+                                        TAG,
+                                        "Uncaught exception thrown while posting pipeline output Mat to ${poster.name} poster",
+                                        ex
+                                    )
+                                }
                             }
                         }
-                    } else {
-                        activePipelineContexts.remove(this.coroutineContext)
                     }
+                }
+
+                if(!isActive) {
+                    activePipelineContexts.remove(this.coroutineContext)
                 }
 
                 updateExceptionTracker()

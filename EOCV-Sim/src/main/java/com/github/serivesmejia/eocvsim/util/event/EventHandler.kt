@@ -54,7 +54,12 @@ class EventHandler(val name: String) : Runnable {
             try {
                 runListener(listener, false)
             } catch (ex: Exception) {
-                Log.warn("${name}-EventHandler", "Error while running listener ${listener.javaClass.name}", ex)
+                if(ex is InterruptedException) {
+                    Log.warn("${name}-EventHandler", "Rethrowing InterruptedException...")
+                    throw ex
+                } else {
+                    Log.warn("${name}-EventHandler", "Error while running listener ${listener.javaClass.name}", ex)
+                }
             }
         }
 
@@ -65,7 +70,12 @@ class EventHandler(val name: String) : Runnable {
             try {
                 runListener(listener, true)
             } catch (ex: Exception) {
-                Log.warn("${name}-EventHandler", "Error while running \"once\" ${listener.javaClass.name}", ex)
+                if(ex is InterruptedException) {
+                    Log.warn("${name}-EventHandler", "Rethrowing InterruptedException...")
+                    throw ex
+                } else {
+                    Log.warn("${name}-EventHandler", "Error while running \"once\" ${listener.javaClass.name}", ex)
+                }
             }
 
             toRemoveOnceListeners.add(listener)
