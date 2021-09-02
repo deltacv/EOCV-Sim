@@ -50,6 +50,7 @@ import java.io.File
 import javax.swing.SwingUtilities
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
+import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 class EOCVSim(val params: Parameters = Parameters()) {
@@ -230,7 +231,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             //updating displayed telemetry
             visualizer.telemetryPanel.updateTelemetry(pipelineManager.currentTelemetry)
 
-            //limit FPS
+            //limit FPG
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
             fpsLimiter.sync()
         }
