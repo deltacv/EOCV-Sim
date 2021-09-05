@@ -72,6 +72,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     @Volatile var currentPipeline: OpenCvPipeline? = null
         private set
+    @Volatile var currentPipelineData: PipelineData? = null
+        private set
     var currentPipelineName = ""
         private set
     var currentPipelineIndex = -1
@@ -459,6 +461,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
 
         currentPipeline      = nextPipeline
+        currentPipelineData  = pipelines[index]
         currentTelemetry     = nextTelemetry
         currentPipelineIndex = index
         currentPipelineName  = currentPipeline!!.javaClass.simpleName
@@ -544,11 +547,12 @@ class PipelineManager(var eocvSim: EOCVSim) {
         return false
     }
 
-    fun getIndexOf(pipeline: OpenCvPipeline) = getIndexOf(pipeline::class.java)
+    fun getIndexOf(pipeline: OpenCvPipeline, source: PipelineSource = PipelineSource.CLASSPATH) =
+        getIndexOf(pipeline::class.java, source)
 
-    fun getIndexOf(pipelineClass: Class<out OpenCvPipeline>): Int? {
+    fun getIndexOf(pipelineClass: Class<out OpenCvPipeline>, source: PipelineSource = PipelineSource.CLASSPATH): Int? {
         for((i, pipelineData) in pipelines.withIndex()) {
-            if(pipelineData.clazz.name == pipelineClass.name) {
+            if(pipelineData.clazz.name == pipelineClass.name && pipelineData.source == source) {
                 return i
             }
         }

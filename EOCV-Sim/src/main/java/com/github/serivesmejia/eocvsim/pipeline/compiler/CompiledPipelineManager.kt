@@ -156,14 +156,14 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             }
         }
 
-        val beforePipeline = pipelineManager.currentPipeline
+        val beforePipeline = pipelineManager.currentPipelineData
 
         pipelineManager.onUpdate.doOnce {
             pipelineManager.refreshGuiPipelineList()
 
             if(fixSelectedPipeline) {
                 if(beforePipeline != null) {
-                    val pipeline = pipelineManager.getIndexOf(beforePipeline)
+                    val pipeline = pipelineManager.getIndexOf(beforePipeline.clazz, beforePipeline.source)
 
                     pipelineManager.forceChangePipeline(pipeline, true)
                 } else {

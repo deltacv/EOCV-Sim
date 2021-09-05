@@ -84,6 +84,8 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
     }
 
     override fun getResourceAsStream(name: String): InputStream? {
+        println("trying to load $name")
+
         val entry = zipFile.getEntry(name)
 
         if(entry != null) {
