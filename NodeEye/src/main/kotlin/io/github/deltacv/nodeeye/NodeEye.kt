@@ -3,22 +3,29 @@ package io.github.deltacv.nodeeye
 import imgui.ImGui
 import imgui.app.Application
 import imgui.app.Configuration
-import imgui.extension.nodeditor.NodeEditor
-import imgui.extension.nodeditor.NodeEditorConfig
-import imgui.extension.nodeditor.NodeEditorContext
-import imgui.extension.nodeditor.flag.NodeEditorPinKind
+import imgui.extension.imnodes.ImNodes
+import imgui.type.ImInt
+import io.github.deltacv.nodeeye.node.Link
+import io.github.deltacv.nodeeye.node.Node
+import io.github.deltacv.nodeeye.node.OutputTestNode
+import io.github.deltacv.nodeeye.node.InputTestNode
 
 class NodeEye : Application() {
 
-    private lateinit var context: NodeEditorContext
-
     fun start() {
-        val config = NodeEditorConfig()
-        config.settingsFile = null
+        ImNodes.createContext()
 
-        context = NodeEditorContext(config)
+        val a = InputTestNode()
+        a.enable()
+
+        val b = OutputTestNode()
+        b.enable()
+
+        val c = OutputTestNode()
+        c.enable()
 
         launch(this)
+        ImNodes.destroyContext()
     }
 
     override fun configure(config: Configuration) {
@@ -26,26 +33,42 @@ class NodeEye : Application() {
     }
 
     override fun process() {
-        NodeEditor.setCurrentEditor(context)
-        NodeEditor.begin("Editor")
+        ImGui.begin("Editor")
 
-        var uniqueId = 0L
+        ImNodes.beginNodeEditor()
 
-        NodeEditor.beginNode(uniqueId++)
-            ImGui.text("Node A")
+        for(node in Node.nodes) {
+            node.draw()
+        }
+        for(link in Link.links) {
+            link.draw()
+        }
 
-            NodeEditor.beginPin(uniqueId++, NodeEditorPinKind.Input)
-                ImGui.text("-> In")
-            NodeEditor.endPin()
+        ImNodes.endNodeEditor()
+        checkLinkCreated()
 
-            ImGui.sameLine()
+        ImGui.end()
+    }
 
-            NodeEditor.beginPin(uniqueId++, NodeEditorPinKind.Output)
-                ImGui.text("Out ->")
-            NodeEditor.endPin()
-        NodeEditor.endNode()
+    private val startAttr = ImInt()
+    private val endAttr = ImInt()
 
-        NodeEditor.end()
+    private fun checkLinkCreated() {
+        if(ImNodes.isLinkCreated(startAttr, endAttr)) {
+            val start = startAttr.get()
+            val end = endAttr.get()
+
+            for(link in Link.links) {
+                if(link.a == start || link.a == end || link.b == start ||  link.b == end) {
+                    link.delete()
+                    break
+                }
+            }
+
+            Link(start, end).enable()
+
+            println("link to $start ${Node.attributes[start]} and $end ${Node.attributes[end]}")
+        }
     }
 
 }
