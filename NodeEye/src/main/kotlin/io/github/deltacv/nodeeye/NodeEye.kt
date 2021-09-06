@@ -5,24 +5,18 @@ import imgui.app.Application
 import imgui.app.Configuration
 import imgui.extension.imnodes.ImNodes
 import imgui.type.ImInt
-import io.github.deltacv.nodeeye.node.Link
-import io.github.deltacv.nodeeye.node.Node
-import io.github.deltacv.nodeeye.node.OutputTestNode
-import io.github.deltacv.nodeeye.node.InputTestNode
+import io.github.deltacv.nodeeye.node.*
+import io.github.deltacv.nodeeye.node.attribute.AttributeMode
+import io.github.deltacv.nodeeye.node.vision.InputMatNode
+import io.github.deltacv.nodeeye.node.vision.OutputMatNode
 
 class NodeEye : Application() {
 
     fun start() {
         ImNodes.createContext()
 
-        val a = InputTestNode()
-        a.enable()
-
-        val b = OutputTestNode()
-        b.enable()
-
-        val c = OutputTestNode()
-        c.enable()
+        InputMatNode().enable()
+        OutputMatNode().enable()
 
         launch(this)
         ImNodes.destroyContext()
@@ -58,16 +52,26 @@ class NodeEye : Application() {
             val start = startAttr.get()
             val end = endAttr.get()
 
-            for(link in Link.links) {
-                if(link.a == start || link.a == end || link.b == start ||  link.b == end) {
-                    link.delete()
-                    break
-                }
+            val startAttrib = Node.attributes[start]!!
+            val endAttrib = Node.attributes[end]!!
+
+            if(startAttrib == endAttrib) {
+                return // linked attributes cannot be of the same type
             }
 
-            Link(start, end).enable()
+            if(!startAttrib.acceptLink(endAttrib) ||!endAttrib.acceptLink(startAttrib)) {
+                return // one or both of the attributes didn't accept the link, abort.
+            }
 
-            println("link to $start ${Node.attributes[start]} and $end ${Node.attributes[end]}")
+            val inputLink = Link.getLinkOf(
+                // determines which, the start or end, of this new link is the input attribute
+                if(startAttrib.mode == AttributeMode.INPUT)
+                    start
+                else end
+            )
+            inputLink?.delete() // delete the existing link of the input attribute if there's any
+
+            Link(start, end).enable() // create the link and enable it
         }
     }
 

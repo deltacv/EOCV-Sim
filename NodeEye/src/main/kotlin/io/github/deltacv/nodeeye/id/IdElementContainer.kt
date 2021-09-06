@@ -1,6 +1,6 @@
 package io.github.deltacv.nodeeye.id
 
-class IdElementContainer<T>(var nextIdCallback: ((Int) -> Unit)? = null) : Iterable<T> {
+class IdElementContainer<T> : Iterable<T> {
 
     private val e = ArrayList<T?>()
 
@@ -18,30 +18,12 @@ class IdElementContainer<T>(var nextIdCallback: ((Int) -> Unit)? = null) : Itera
         e.add(element)
         elements.add(element)
 
-        val index = e.lastIndexOf(element)
-
-        if(nextIdCallback != null) {
-            nextIdCallback!!(index)
-        }
-
-        index
+        e.lastIndexOf(element)
     }
 
     fun nextId() = lazy {
         e.add(null)
-
-        val index = e.lastIndexOf(null)
-
-        if(nextIdCallback != null) {
-            nextIdCallback!!(index)
-        }
-
-        index
-    }
-
-    fun nextIdDontTrigger(): Int {
-        e.add(null)
-        return e.lastIndexOf(null)
+        e.lastIndexOf(null)
     }
 
     fun removeId(id: Int) {

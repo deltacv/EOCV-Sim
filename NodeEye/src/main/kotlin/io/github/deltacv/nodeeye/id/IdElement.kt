@@ -10,8 +10,11 @@ interface DrawableIdElement : IdElement {
 
     fun delete()
 
+    fun onEnable() { }
+
     fun enable(): DrawableIdElement {
         ::id.get()
+        onEnable()
         return this
     }
 
