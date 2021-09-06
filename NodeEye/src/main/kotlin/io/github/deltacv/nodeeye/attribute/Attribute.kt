@@ -1,4 +1,4 @@
-package io.github.deltacv.nodeeye.node.attribute
+package io.github.deltacv.nodeeye.attribute
 
 import imgui.extension.imnodes.ImNodes
 import io.github.deltacv.nodeeye.id.DrawableIdElement

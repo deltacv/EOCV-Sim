@@ -1,8 +1,9 @@
 package io.github.deltacv.nodeeye.node
 
+import imgui.ImGui
 import io.github.deltacv.nodeeye.id.DrawableIdElement
 import io.github.deltacv.nodeeye.id.IdElementContainer
-import io.github.deltacv.nodeeye.node.attribute.Attribute
+import io.github.deltacv.nodeeye.attribute.Attribute
 
 abstract class Node : DrawableIdElement {
 
@@ -18,6 +19,7 @@ abstract class Node : DrawableIdElement {
     fun drawAttributes() {
         for(attribute in nodeAttributes) {
             attribute.draw()
+            //ImGui.separator() TODO separate
         }
     }
 

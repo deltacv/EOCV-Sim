@@ -1,6 +1,7 @@
 package io.github.deltacv.nodeeye.node
 
 import imgui.extension.imnodes.ImNodes
+import io.github.deltacv.nodeeye.attribute.Attribute
 import io.github.deltacv.nodeeye.id.DrawableIdElement
 import io.github.deltacv.nodeeye.id.IdElementContainer
 
@@ -18,6 +19,8 @@ class Link(val a: Int, val b: Int) : DrawableIdElement {
 
             return null
         }
+
+        val Attribute.hasLink get() = getLinkOf(id) != null
     }
 
     override val id by links.nextId { this }
