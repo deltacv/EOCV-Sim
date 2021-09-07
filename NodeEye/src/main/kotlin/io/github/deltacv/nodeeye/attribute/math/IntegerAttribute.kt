@@ -17,7 +17,7 @@ class IntAttribute(
         super.drawAttribute()
 
         if(!hasLink && mode == AttributeMode.INPUT) {
-            ImGui.pushItemWidth(100.0f)
+            ImGui.pushItemWidth(110.0f)
             ImGui.inputInt("", value)
             ImGui.popItemWidth()
         }

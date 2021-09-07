@@ -12,6 +12,9 @@ abstract class Attribute : DrawableIdElement {
 
     override val id by Node.attributes.nextId { this }
 
+    var parentNode: Node? = null
+        internal set
+
     abstract fun drawAttribute()
 
     override fun draw() {
