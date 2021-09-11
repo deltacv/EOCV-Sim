@@ -40,6 +40,8 @@ import java.awt.*;
 
 public class CreateCameraSource {
 
+    public static int VISIBLE_CHARACTERS_COMBO_BOX = 22;
+
     public JDialog createCameraSource = null;
 
     public JComboBox<String> camerasComboBox = null;
@@ -56,7 +58,7 @@ public class CreateCameraSource {
 
     JLabel statusLabel = new JLabel();
 
-    enum State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED }
+    enum State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED, NO_WEBCAMS }
 
     public CreateCameraSource(JFrame parent, EOCVSim eocvSim) {
         createCameraSource = new JDialog(parent);
@@ -73,7 +75,7 @@ public class CreateCameraSource {
         createCameraSource.setModal(true);
 
         createCameraSource.setTitle("Create camera source");
-        createCameraSource.setSize(350, 250);
+        createCameraSource.setSize(350, 280);
 
         JPanel contentsPanel = new JPanel(new GridLayout(5, 1));
 
@@ -84,11 +86,22 @@ public class CreateCameraSource {
         idLabel.setHorizontalAlignment(JLabel.LEFT);
 
         camerasComboBox = new JComboBox<>();
-        for(Webcam webcam : webcams) {
-            camerasComboBox.addItem(webcam.getName());
-        }
+        if(webcams.isEmpty()) {
+            camerasComboBox.addItem("No Cameras Detected");
+            state = State.NO_WEBCAMS;
+        } else {
+            for(Webcam webcam : webcams) {
+                // limit the webcam name to certain characters and append dots in the end if needed
+                String dots = webcam.getName().length() > VISIBLE_CHARACTERS_COMBO_BOX ? "..." : "";
 
-        SwingUtilities.invokeLater(() -> camerasComboBox.setSelectedIndex(0));
+                camerasComboBox.addItem(
+                        // https://stackoverflow.com/a/27060643
+                        String.format("%1." + VISIBLE_CHARACTERS_COMBO_BOX + "s", webcam.getName()).trim() + dots
+                );
+            }
+
+            SwingUtilities.invokeLater(() -> camerasComboBox.setSelectedIndex(0));
+        }
 
         idPanel.add(idLabel);
         idPanel.add(camerasComboBox);
@@ -169,7 +182,7 @@ public class CreateCameraSource {
         });
 
         camerasComboBox.addActionListener((e) -> {
-            String sourceName = (String)camerasComboBox.getSelectedItem();
+            String sourceName = webcams.get(camerasComboBox.getSelectedIndex()).getName();
             if(!eocvSim.inputSourceManager.isNameOnUse(sourceName)) {
                 nameTextField.setText(sourceName);
             }
@@ -195,6 +208,8 @@ public class CreateCameraSource {
             wasCancelled = true;
             close();
         });
+
+        updateState();
 
         createCameraSource.setResizable(false);
         createCameraSource.setLocationRelativeTo(null);
@@ -260,6 +275,18 @@ public class CreateCameraSource {
                 createButton.setEnabled(true);
                 statusLabel.setText("Failed to open camera, try another one.");
                 createButton.setText("Test");
+                break;
+
+            case NO_WEBCAMS:
+                statusLabel.setText("No cameras detected.");
+                createButton.setText("Test");
+                nameTextField.setText("");
+
+                createButton.setEnabled(false);
+                nameTextField.setEnabled(false);
+                camerasComboBox.setEnabled(false);
+                sizeFieldsInput.getWidthTextField().setEnabled(false);
+                sizeFieldsInput.getHeightTextField().setEnabled(false);
                 break;
         }
     }
