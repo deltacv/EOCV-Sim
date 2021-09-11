@@ -160,7 +160,20 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 # Change logs
 
-### [v3.0.0 - Compiling on the fly! Yay!](https://github.com/serivesmejia/EOCV-Sim/releases/tag/v3.0.0)
+### [v3.1.0 - Better Error Handling](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.1.0)
+
+   - This is the 10th release for EOCV-Sim
+ 
+      - Changelog:
+        - Improved pipeline error handling and error output gui
+        - Build output was improved and unified with the pipeline error output gui
+        - Added a SplashScreen with the EOCV-Sim logo while the sim loads
+        - Settings for changing the max FPS of the video recordings and pipelines, and the max pipeline processing time before it's considered "stuck on processFrame"
+        - Improved camera source creation dialog by providing a list of the available cameras
+        - Added file locking so that two EOCV-Sim instances can't exist at the same time
+        - Updated links to reflect the change to the deltacv organization
+
+### [v3.0.0 - Compiling on the fly! Yay!](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.0.0)
 
    - This is the 9th release for EOCV-Sim
 
