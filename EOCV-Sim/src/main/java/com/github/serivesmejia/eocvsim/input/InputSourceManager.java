@@ -52,6 +52,8 @@ public class InputSourceManager {
     public InputSourceLoader inputSourceLoader = new InputSourceLoader();
     public SourceSelectorPanel selectorPanel;
 
+    private String defaultSource = "";
+
     public InputSourceManager(EOCVSim eocvSim) {
         this.eocvSim = eocvSim;
         selectorPanel = eocvSim.visualizer.sourceSelectorPanel;
@@ -69,7 +71,7 @@ public class InputSourceManager {
         createDefaultImgInputSource("/images/ug_1.jpg", "ug_eocvsim_1.jpg", "Ultimate Goal 1 Ring", size);
         createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size);
 
-        setInputSource("Ultimate Goal 4 Ring");
+        setInputSource("Ultimate Goal 4 Ring", true);
 
         inputSourceLoader.loadInputSourcesFromFile();
 
@@ -99,13 +101,17 @@ public class InputSourceManager {
 
     public void update(boolean isPaused) {
         if(currentInputSource == null) return;
-        currentInputSource.setPaused(isPaused);
 
         try {
+            currentInputSource.setPaused(isPaused);
+
             Mat m = currentInputSource.update();
             if(m != null && !m.empty()) m.copyTo(lastMatFromSource);
         } catch(Exception ex) {
             Log.error("InputSourceManager", "Error while processing current source", ex);
+            Log.warn("InputSourceManager", "Changing to default source");
+
+            setInputSource(defaultSource);
         }
     }
 
@@ -165,7 +171,7 @@ public class InputSourceManager {
             });
         }
 
-        Log.info("InputSourceManager", "Adding InputSource " + inputSource.toString() + " (" + inputSource.getClass().getSimpleName() + ")");
+        Log.info("InputSourceManager", "Adding InputSource " + inputSource + " (" + inputSource.getClass().getSimpleName() + ")");
     }
 
     public void deleteInputSource(String sourceName) {
@@ -178,6 +184,16 @@ public class InputSourceManager {
 
         inputSourceLoader.deleteInputSource(sourceName);
         inputSourceLoader.saveInputSourcesToFile();
+    }
+
+    public boolean setInputSource(String sourceName, boolean makeDefault) {
+        boolean result = setInputSource(sourceName);
+
+        if(result && makeDefault) {
+            defaultSource = sourceName;
+        }
+
+        return result;
     }
 
     public boolean setInputSource(String sourceName) {

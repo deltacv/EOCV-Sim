@@ -53,8 +53,6 @@ object GradleWorkspaceTemplate : WorkspaceTemplate() {
 
             Log.info(TAG, "Successfully extracted template")
             reformatTemplate(folder) //format necessary template files in the folder
-
-            VSCodeLauncher.asyncLaunch(folder) // launch vs code
             true
         } catch(ex: IOException) {
             Log.warn(TAG, "Failed to extract workspace template to ${folder.absolutePath}", ex)

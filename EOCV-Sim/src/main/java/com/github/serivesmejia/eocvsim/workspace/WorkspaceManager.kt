@@ -32,12 +32,14 @@ import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfig
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfigLoader
 import com.github.serivesmejia.eocvsim.workspace.util.WorkspaceTemplate
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.io.File
 import java.nio.file.Paths
 
+@OptIn(DelicateCoroutinesApi::class)
 class WorkspaceManager(val eocvSim: EOCVSim) {
 
     companion object {
@@ -152,12 +154,18 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
         return true
     }
 
-    fun createWorkspaceWithTemplateAsync(folder: File, template: WorkspaceTemplate) = GlobalScope.launch(Dispatchers.IO) {
+    @JvmOverloads fun createWorkspaceWithTemplateAsync(
+        folder: File,
+        template: WorkspaceTemplate,
+        finishCallback: (() -> Unit)? = null
+    ) = GlobalScope.launch(Dispatchers.IO) {
         if(!folder.isDirectory) return@launch
         if(!template.extractToIfEmpty(folder)) return@launch
 
         eocvSim.onMainUpdate.doOnce {
             workspaceFile = folder
+            if(finishCallback != null) finishCallback()
+
             eocvSim.visualizer.asyncCompilePipelines()
         }
     }
