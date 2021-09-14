@@ -2,6 +2,7 @@ package io.github.deltacv.easyvision.attribute
 
 import imgui.extension.imnodes.ImNodes
 import io.github.deltacv.easyvision.id.DrawableIdElement
+import io.github.deltacv.easyvision.node.Link
 import io.github.deltacv.easyvision.node.Node
 
 enum class AttributeMode { INPUT, OUTPUT }
@@ -14,6 +15,10 @@ abstract class Attribute : DrawableIdElement {
 
     var parentNode: Node? = null
         internal set
+
+    val links = mutableListOf<Link>()
+
+    val hasLink get() = links.isNotEmpty()
 
     abstract fun drawAttribute()
 

@@ -41,16 +41,17 @@ class NodeEditor(val easyVision: EasyVision) {
             val startAttrib = Node.attributes[start]!!
             val endAttrib = Node.attributes[end]!!
 
-            val input = if(startAttrib.mode == AttributeMode.INPUT) start else end
+            val input  = if(startAttrib.mode == AttributeMode.INPUT) start else end
+            val output = if(startAttrib.mode == AttributeMode.OUTPUT) start else end
 
             val inputAttrib = Node.attributes[input]!!
-            val outputAttrib = if(startAttrib.mode == AttributeMode.OUTPUT) start else end
+            val outputAttrib = Node.attributes[output]!!
 
             if(startAttrib.mode == endAttrib.mode) {
                 return // linked attributes cannot be of the same mode
             }
 
-            if(!startAttrib.acceptLink(endAttrib) ||!endAttrib.acceptLink(startAttrib)) {
+            if(!startAttrib.acceptLink(endAttrib) || !endAttrib.acceptLink(startAttrib)) {
                 return // one or both of the attributes didn't accept the link, abort.
             }
 
@@ -58,10 +59,16 @@ class NodeEditor(val easyVision: EasyVision) {
                 return // we can't link a node to itself!
             }
 
-            val inputLink = Link.getLinkOf(input)
-            inputLink?.delete() // delete the existing link of the input attribute if there's any
+            inputAttrib.links.forEach {
+                it.delete() // delete the existing link(s) of the input attribute if there's any
+            }
 
-            Link(start, end).enable() // create the link and enable it
+            val link = Link(start, end).enable() // create the link and enable it
+
+            if(Node.checkRecursion(inputAttrib.parentNode!!, outputAttrib.parentNode!!)) {
+                // remove the link if a recursion case was detected (e.g both nodes were attached to each other)
+                link.delete()
+            }
         }
     }
 

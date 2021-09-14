@@ -4,7 +4,6 @@ import imgui.ImGui
 import imgui.type.ImInt
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.TypedAttribute
-import io.github.deltacv.easyvision.node.Link.Companion.hasLink
 
 class IntAttribute(
     override val mode: AttributeMode,

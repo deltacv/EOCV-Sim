@@ -10,6 +10,7 @@ class SumIntegerNode : DrawNode("Sum Integer") {
         + IntAttribute(INPUT, "B")
 
         + IntAttribute(OUTPUT, "Result")
+        + IntAttribute(OUTPUT, "Result")
     }
 
 }

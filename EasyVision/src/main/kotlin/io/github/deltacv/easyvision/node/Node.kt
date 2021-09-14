@@ -8,14 +8,6 @@ import io.github.deltacv.easyvision.attribute.AttributeMode
 
 abstract class Node(protected var allowDelete: Boolean = true) : DrawableIdElement {
 
-    companion object {
-        val nodes = IdElementContainer<Node>()
-        val attributes = IdElementContainer<Attribute>()
-
-        @JvmStatic protected val INPUT = AttributeMode.INPUT
-        @JvmStatic protected val OUTPUT = AttributeMode.OUTPUT
-    }
-
     override val id by nodes.nextId { this }
 
     val nodeAttributes = mutableListOf<Attribute>()
@@ -33,17 +25,11 @@ abstract class Node(protected var allowDelete: Boolean = true) : DrawableIdEleme
 
     override fun delete() {
         if(allowDelete) {
-            for(link in Link.links.elements.toTypedArray()) {
-                for (attribute in nodeAttributes) {
-                    if(link.a == attribute.id || link.b == attribute.id) {
-                        // deleting links that were attached
-                        // to any of this node's attributes
-                        link.delete()
-                    }
-                }
-            }
-
             for (attribute in nodeAttributes.toTypedArray()) {
+                for(link in attribute.links.toTypedArray()) {
+                    link.delete()
+                }
+
                 attribute.delete()
                 nodeAttributes.remove(attribute)
             }
@@ -53,5 +39,38 @@ abstract class Node(protected var allowDelete: Boolean = true) : DrawableIdEleme
     }
 
     operator fun Attribute.unaryPlus() = nodeAttributes.add(this)
+
+    companion object {
+        val nodes = IdElementContainer<Node>()
+        val attributes = IdElementContainer<Attribute>()
+
+        @JvmStatic protected val INPUT = AttributeMode.INPUT
+        @JvmStatic protected val OUTPUT = AttributeMode.OUTPUT
+
+        fun checkRecursion(from: Node, to: Node): Boolean {
+            val linksBetween = Link.getLinksBetween(from, to)
+
+            var hasOutputToInput = false
+            var hasInputToOutput = false
+
+            for(link in linksBetween) {
+                val aNode = link.aAttrib.parentNode!!
+
+                val fromAttrib = if(aNode == from) link.aAttrib else link.bAttrib
+                val toAttrib   = if(aNode == to) link.aAttrib else link.bAttrib
+
+                if(!hasOutputToInput)
+                    hasOutputToInput = fromAttrib.mode == OUTPUT && toAttrib.mode == INPUT
+
+                if(!hasInputToOutput)
+                    hasInputToOutput = fromAttrib.mode == INPUT && toAttrib.mode == OUTPUT
+
+                if(hasOutputToInput && hasInputToOutput)
+                    break
+            }
+
+            return hasOutputToInput && hasInputToOutput
+        }
+    }
 
 }
