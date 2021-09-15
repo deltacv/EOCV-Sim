@@ -8,6 +8,7 @@ class SumIntegerNode : DrawNode("Sum Integer") {
 
     override fun onEnable() {
         + ListAttribute(INPUT, IntAttribute, "Numbers")
+        + ListAttribute(OUTPUT, IntAttribute, "A")
 
         + IntAttribute(OUTPUT,"Result")
     }

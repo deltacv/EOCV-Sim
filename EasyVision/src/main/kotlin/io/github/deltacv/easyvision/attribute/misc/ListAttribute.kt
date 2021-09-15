@@ -15,10 +15,6 @@ class ListAttribute(
     companion object: Type {
         override val name = "List"
         override val allowsNew = false
-
-        override fun new(mode: AttributeMode, variableName: String): TypedAttribute {
-            throw UnsupportedOperationException("Cannot instantiate a List attribute with new")
-        }
     }
 
     val listAttributes = mutableListOf<TypedAttribute>()
@@ -55,9 +51,12 @@ class ListAttribute(
         if(!hasLink && elementType.allowsNew && mode == AttributeMode.INPUT) {
             // idk wat the frame height is, i just stole it from
             // https://github.com/ocornut/imgui/blob/7b8bc864e9af6c6c9a22125d65595d526ba674c5/imgui_widgets.cpp#L3439
+
             val buttonSize = ImGui.getFrameHeight()
 
-            ImGui.sameLine()
+            val style = ImGui.getStyle()
+
+            ImGui.sameLine(0.0f, style.itemInnerSpacingX * 2.0f)
 
             if(ImGui.button("+", buttonSize, buttonSize)) { // creates a new element with the + button
                 // uses the "new" function from the attribute's companion Type
@@ -75,7 +74,7 @@ class ListAttribute(
 
             // display the - button only if the attributes list is not empty
             if(listAttributes.isNotEmpty()) {
-                ImGui.sameLine()
+                ImGui.sameLine(0.0f, style.itemInnerSpacingX)
 
                 if(ImGui.button("-", buttonSize, buttonSize)) {
                     // remove the last element from the list when - is pressed

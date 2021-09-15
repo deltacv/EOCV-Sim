@@ -5,6 +5,7 @@ import imgui.extension.imnodes.ImNodes
 import imgui.flag.ImGuiMouseButton
 import imgui.type.ImInt
 import io.github.deltacv.easyvision.EasyVision
+import io.github.deltacv.easyvision.PopupBuilder
 import io.github.deltacv.easyvision.attribute.AttributeMode
 
 class NodeEditor(val easyVision: EasyVision) {
@@ -52,6 +53,7 @@ class NodeEditor(val easyVision: EasyVision) {
             }
 
             if(!startAttrib.acceptLink(endAttrib) || !endAttrib.acceptLink(startAttrib)) {
+                PopupBuilder.addWarningToolTip("Couldn't link nodes: Types didn't match")
                 return // one or both of the attributes didn't accept the link, abort.
             }
 
@@ -66,6 +68,7 @@ class NodeEditor(val easyVision: EasyVision) {
             val link = Link(start, end).enable() // create the link and enable it
 
             if(Node.checkRecursion(inputAttrib.parentNode, outputAttrib.parentNode)) {
+                PopupBuilder.addWarningToolTip("Couldn't link nodes: Recursion problem detected")
                 // remove the link if a recursion case was detected (e.g both nodes were attached to each other)
                 link.delete()
             }

@@ -8,6 +8,7 @@ import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiWindowFlags
 import io.github.deltacv.easyvision.node.NodeEditor
 import io.github.deltacv.easyvision.node.math.SumIntegerNode
+import io.github.deltacv.easyvision.node.vision.CvtColorNode
 import io.github.deltacv.easyvision.node.vision.InputMatNode
 import io.github.deltacv.easyvision.node.vision.OutputMatNode
 import org.lwjgl.BufferUtils
@@ -18,16 +19,20 @@ import org.lwjgl.glfw.GLFWKeyCallback
 
 class EasyVision : Application() {
 
-    private val w = BufferUtils.createIntBuffer(1)
-    private val h = BufferUtils.createIntBuffer(1)
+    companion object {
+        private var ptr = 0L
 
-    val windowSize: ImVec2 get() {
-        w.position(0)
-        h.position(0)
+        private val w = BufferUtils.createIntBuffer(1)
+        private val h = BufferUtils.createIntBuffer(1)
 
-        glfwGetWindowSize(handle, w, h)
+        val windowSize: ImVec2 get() {
+            w.position(0)
+            h.position(0)
 
-        return ImVec2(w.get(0).toFloat(), h.get(0).toFloat())
+            glfwGetWindowSize(ptr, w, h)
+
+            return ImVec2(w.get(0).toFloat(), h.get(0).toFloat())
+        }
     }
 
     private var prevKeyCallback: GLFWKeyCallback? = null
@@ -43,6 +48,8 @@ class EasyVision : Application() {
         SumIntegerNode().enable()
         SumIntegerNode().enable()
 
+        CvtColorNode().enable()
+
         launch(this)
 
         editor.destroy()
@@ -54,6 +61,7 @@ class EasyVision : Application() {
 
     override fun process() {
         if(prevKeyCallback == null) {
+            ptr = handle
             // register a new key callback that will call the previous callback and handle some special keys
             prevKeyCallback = glfwSetKeyCallback(handle, ::keyCallback)
         }
@@ -70,6 +78,8 @@ class EasyVision : Application() {
         editor.draw()
 
         ImGui.end()
+
+        PopupBuilder.draw()
 
         isDeleteReleased = false
     }

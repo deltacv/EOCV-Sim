@@ -6,7 +6,9 @@ interface Type {
     val name: String
     val allowsNew: Boolean get() = true
 
-    fun new(mode: AttributeMode, variableName: String): TypedAttribute
+    fun new(mode: AttributeMode, variableName: String): TypedAttribute {
+        throw UnsupportedOperationException("Cannot instantiate a List attribute with new")
+    }
 }
 
 abstract class TypedAttribute(var type: Type) : Attribute() {
@@ -16,7 +18,7 @@ abstract class TypedAttribute(var type: Type) : Attribute() {
     var drawDescriptiveText = true
     var drawType = true
 
-    private val finalVarName by lazy {
+    protected val finalVarName by lazy {
         variableName ?: if (mode == AttributeMode.INPUT) "Input" else "Output"
     }
 
