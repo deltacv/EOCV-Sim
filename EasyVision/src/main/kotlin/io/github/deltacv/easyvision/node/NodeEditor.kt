@@ -65,7 +65,7 @@ class NodeEditor(val easyVision: EasyVision) {
 
             val link = Link(start, end).enable() // create the link and enable it
 
-            if(Node.checkRecursion(inputAttrib.parentNode!!, outputAttrib.parentNode!!)) {
+            if(Node.checkRecursion(inputAttrib.parentNode, outputAttrib.parentNode)) {
                 // remove the link if a recursion case was detected (e.g both nodes were attached to each other)
                 link.delete()
             }

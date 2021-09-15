@@ -6,15 +6,19 @@ import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.AttributeMode
 
-abstract class Node(protected var allowDelete: Boolean = true) : DrawableIdElement {
+interface Type {
+    val name: String
+}
+
+abstract class Node(private var allowDelete: Boolean = true) : DrawableIdElement {
 
     override val id by nodes.nextId { this }
 
-    val nodeAttributes = mutableListOf<Attribute>()
+    private val attribs = mutableListOf<Attribute>() // internal mutable list
+    val nodeAttributes = attribs as List<Attribute> // public read-only
 
     protected fun drawAttributes() {
         for((i, attribute) in nodeAttributes.withIndex()) {
-            attribute.parentNode = this
             attribute.draw()
 
             if(i < nodeAttributes.size - 1) {
@@ -31,14 +35,34 @@ abstract class Node(protected var allowDelete: Boolean = true) : DrawableIdEleme
                 }
 
                 attribute.delete()
-                nodeAttributes.remove(attribute)
+                attribs.remove(attribute)
             }
 
             nodes.removeId(id)
         }
     }
 
-    operator fun Attribute.unaryPlus() = nodeAttributes.add(this)
+    override fun restore() {
+        if(allowDelete) {
+            for (attribute in nodeAttributes.toTypedArray()) {
+                for(link in attribute.links.toTypedArray()) {
+                    link.restore()
+                }
+
+                attribute.restore()
+                attribs.add(attribute)
+            }
+
+            nodes[id] = this
+        }
+    }
+
+    fun addAttribute(attribute: Attribute) {
+        attribute.parentNode = this
+        attribs.add(attribute)
+    }
+
+    operator fun Attribute.unaryPlus() = addAttribute(this)
 
     companion object {
         val nodes = IdElementContainer<Node>()
@@ -54,7 +78,7 @@ abstract class Node(protected var allowDelete: Boolean = true) : DrawableIdEleme
             var hasInputToOutput = false
 
             for(link in linksBetween) {
-                val aNode = link.aAttrib.parentNode!!
+                val aNode = link.aAttrib.parentNode
 
                 val fromAttrib = if(aNode == from) link.aAttrib else link.bAttrib
                 val toAttrib   = if(aNode == to) link.aAttrib else link.bAttrib

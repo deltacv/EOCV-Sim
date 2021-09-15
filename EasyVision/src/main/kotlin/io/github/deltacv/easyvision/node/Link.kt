@@ -29,6 +29,13 @@ class Link(val a: Int, val b: Int) : DrawableIdElement {
         links.removeId(id)
     }
 
+    override fun restore() {
+        links[id] = this
+
+        aAttrib.links.add(this)
+        bAttrib.links.add(this)
+    }
+
     companion object {
         val links = IdElementContainer<Link>()
 
@@ -36,12 +43,11 @@ class Link(val a: Int, val b: Int) : DrawableIdElement {
             val l = mutableListOf<Link>()
 
             for(link in links) {
-                val linkNodeA = link.aAttrib.parentNode!!
-                val linkNodeB = link.bAttrib.parentNode!!
+                val linkNodeA = link.aAttrib.parentNode
+                val linkNodeB = link.bAttrib.parentNode
 
                 if (
-                    (a == linkNodeA && b == linkNodeB)
-                    || (b == linkNodeA && a == linkNodeB)
+                    (a == linkNodeA && b == linkNodeB) || (b == linkNodeA && a == linkNodeB)
                 ) {
                     l.add(link)
                 }

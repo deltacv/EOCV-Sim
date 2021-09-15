@@ -33,5 +33,12 @@ class IdElementContainer<T> : Iterable<T> {
 
     operator fun get(id: Int) = e[id]
 
+    operator fun set(id: Int, element: T) {
+        e[id] = element
+
+        if(!elements.contains(element))
+            elements.add(element)
+    }
+
     override fun iterator() = elements.listIterator()
 }

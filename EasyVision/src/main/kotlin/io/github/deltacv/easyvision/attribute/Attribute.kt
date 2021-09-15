@@ -13,11 +13,10 @@ abstract class Attribute : DrawableIdElement {
 
     override val id by Node.attributes.nextId { this }
 
-    var parentNode: Node? = null
+    lateinit var parentNode: Node
         internal set
 
     val links = mutableListOf<Link>()
-
     val hasLink get() = links.isNotEmpty()
 
     abstract fun drawAttribute()
@@ -40,6 +39,15 @@ abstract class Attribute : DrawableIdElement {
 
     override fun delete() {
         Node.attributes.removeId(id)
+
+        for(link in links.toTypedArray()) {
+            link.delete()
+            links.remove(link)
+        }
+    }
+
+    override fun restore() {
+        Node.attributes[id] = this
     }
 
     abstract fun acceptLink(other: Attribute): Boolean

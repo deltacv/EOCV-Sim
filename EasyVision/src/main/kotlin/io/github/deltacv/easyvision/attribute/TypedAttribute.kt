@@ -2,14 +2,34 @@ package io.github.deltacv.easyvision.attribute
 
 import imgui.ImGui
 
-abstract class TypedAttribute(var typeName: String) : Attribute() {
+interface Type {
+    val name: String
+    val allowsNew: Boolean get() = true
+
+    fun new(mode: AttributeMode, variableName: String): TypedAttribute
+}
+
+abstract class TypedAttribute(var type: Type) : Attribute() {
 
     abstract var variableName: String?
 
-    protected val finalVarName get() = variableName ?: if(mode == AttributeMode.INPUT) "Input" else "Output"
+    var drawDescriptiveText = true
+    var drawType = true
+
+    private val finalVarName by lazy {
+        variableName ?: if (mode == AttributeMode.INPUT) "Input" else "Output"
+    }
 
     override fun drawAttribute() {
-        ImGui.text("($typeName) $finalVarName")
+        if(drawDescriptiveText) {
+            val t = if(drawType) {
+                "(${type.name}) "
+            } else ""
+
+            ImGui.text("$t$finalVarName")
+        } else {
+            ImGui.text("")
+        }
     }
 
     override fun acceptLink(other: Attribute) = this::class == other::class
