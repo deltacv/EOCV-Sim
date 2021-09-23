@@ -14,7 +14,7 @@ transfer it onto your robot!
 
 <img src='doc/images/eocvsim_screenshot_1.png' width='75%' height='75%'>
 
-### If you'd like to learn how to use the simulator, you can find a complete usage explaination [here](https://github.com/serivesmejia/EOCV-Sim/blob/master/USAGE.md)
+## Learn how to install and use the simulator in the [documentation here](https://deltacv.gitbook.io/eocv-sim/)
 
 # Compatibility
 
@@ -25,101 +25,6 @@ Since OpenCV in Java uses a native library, which is platform specific, the simu
 * MacOS x64 (tested)
 * Linux x64 (tested for Ubuntu 20.04)<br/>
 
-# Installation
-
-1) **Download & install the Java Development Kit if you haven't already:**<br/><br/>
-      JDK 8 is the minimum required one, any JDK above that version will probably work fine.<br/>
-      You can download it from [the Oracle webpage](https://www.oracle.com/java/technologies/javase-downloads.html),
-      and here is a [step by step video](https://www.youtube.com/watch?v=IJ-PJbvJBGs) of the installation process<br/>
-
-## Recommended method
-
-1) **Make sure you have downloaded a JDK as mentioned above**
-
-2) **Go to the releases page on this repo and find the latest version ([or click here](https://github.com/deltacv/EOCV-Sim/releases/latest))**
-
-3) **Download the jar file, named `EOCV-Sim-X.X.X-all.jar`, available at the bottom on the "assets" section**
-
-4) **Choose and install an IDE/text editor**<br/><br/>
-      The recommended text editor is VS Code, with the Java Extension Pack. EOCV-Sim provides direct support for it, for creating a "VS Code Workspace" from a template, although it can also be imported into IntelliJ IDEA since it's just a normal Gradle project.
-      
-      This installation method provides the benefit of "runtime compiling", which means that the user pipelines are compiled and loaded on the fly and therefore the changes made in code can be reflected immediately, as opposed to the [old IntelliJ IDEA method](#altenative-installation-method-intellij-idea) in which the simulator had to be closed, compiled and then opened again to apply the smallest change made in a pipeline. Plus, VS Code is a lightweight editor which provides Java syntax highlighting and IntelliSense with the Java Extension Pack, making development of pipelines easy with tools like code completion.
-
-     You can download and install VS Code from the [Visual Studio page](https://code.visualstudio.com/). The [Java Extension Pack](https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack) can be installed from the [VS Code extension marketplace](https://code.visualstudio.com/docs/introvideos/extend).
-     
-     Here's a [tutorial video](https://www.youtube.com/watch?v=KwnavHTOBiA) explaining how to download and install VS Code & the Java Extension Pack
-
-5) **Running EOCV-Sim**<br/><br/>
-     For running the sim, simply double click the jar file downloaded from the releases page, or it can also be executed from the command line:
-     ```python
-     java -jar "EOCV-Sim-X.X.X-all.jar"
-     ```
-     
-     When running on Linux (distros such as Ubuntu, Linux Mint, etc) or Unix-like secure operating systems, it might prohibit you to run it by double clicking the file from a file explorer. This can be fixed by giving execute permissions to the jar file with the following command
-     ```bash
-     chmod +x EOCV-Sim-X.X.X-all.jar
-     ```
-    
-**Now the sim should be running without any issues! If you find any problem feel free to open an issue, and check the [usage explanation](https://github.com/deltacv/EOCV-Sim/blob/master/USAGE.md) for more details about how to use the simulator (and VS Code).**
-
-## Altenative installation method (IntelliJ IDEA)
-
-No complicated setup is required for this method either, it's straight up importing the EOCV-Sim project into IntelliJ IDEA:
-
-\**The downside of this method is that this repo has grown to a considerable amount of space, due to a bloated history, and takes some time to clone, and also builds can be slower depending on your device.*
-
-1) **Make sure you have downloaded a JDK as mentioned [here](#installation)**
-
-2) **Download & install IntelliJ IDEA Community IDE if you haven't already:**<br/><br/>
-      You can download it from the [JetBrains webpage](https://www.jetbrains.com/idea/download/)<br/>
-      Here is another great [step by step video](https://www.youtube.com/watch?v=E2okEJIbUYs) for IntelliJ installation.
-     
-3) **Clone and import the project:**<br/>
-
-      1) Open IntelliJ IDEA and in the main screen click on "Get from Version Control"<br/>
-      
-            <img src='doc/images/eocvsim_screenshot_installation_1.png' width='399' height='249'><br/><br/>
-         Alternatively, if you already had another project opened, go to File > New > Project from Version Control...<br/><br/>
-            <img src='doc/images/eocvsim_screenshot_installation_2.png' width='419' height='76'>
-            
-      2) Another window will show up for cloning and importing a repository into IntelliJ<br/>
-      
-         1) In the "URL" field, enter: ```https://github.com/deltacv/EOCV-Sim.git```<br/>
-         2) The directory can be changed, but it will be automatically filled so it's not necessary.
-         3) Make sure the "Version control" is set to "Git".<br/><br/>
-			<img src='doc/images/eocvsim_screenshot_installation_3.png' width='50%' height='50%'><br/>
-         4) After that, click on the "Clone" button, located at the bottom right and the cloning process will begin...<br/>    
-			<img src='doc/images/eocvsim_screenshot_installation_4.png' width='50%' height='50%'><br/>
-         5) After the cloning finishes, the project should automatically import and you'll have something like this:<br/><br/>
-            <img src='doc/images/eocvsim_screenshot_installation_5.png' width='75%' height='75%'><br/>
-            
-### And you're ready to go! Refer to the [usage explanation](https://github.com/deltacv/EOCV-Sim/blob/master/USAGE.md) for further details on how to utilize the simulator.<br/>
-
-## From the command-line
-
-   1) Clone EOCV-Sim repo and cd to the cloned folder
-   
-	 git clone https://github.com/deltacv/EOCV-Sim.git
-	 cd EOCV-Sim
-   \**Or it can also be manually downloaded as a ZIP file from GitHub*<br/>
-
-   2) Run EOCV-Sim through gradle:
-  
-	 gradlew runSim
-	 
-   \**On some command lines (such as Windows PowerShell and macOS) you might need to execute "./gradlew" instead*<br/>
-	 
-#### And that's it! You might need to wait a bit for gradle to download all the dependencies but EOCV-Sim will open eventually.
-	 
-## From repl.it
-
-   1) Click [here](https://repl.it/github/deltacv/EOCV-Sim) to go to repl.it, you might require to create an account if you haven't already. Once you do that, it will automatically create a new project and start cloning the EOCV-Sim repo.
- 
-   2) After the cloning is finished, click on the green "Run" button at the top and EOCV-Sim should start.
-  
-   \**Please note that this method is not widely supported and you might run into some issues or lack of some functionality.*<br/>
-	 
-	
 ## Adding EOCV-Sim as a dependency
 
    ### Gradle
@@ -129,7 +34,7 @@ No complicated setup is required for this method either, it's straight up import
    }
    
    dependencies {
-      implementation 'com.github.deltacv:EOCV-Sim:3.0.0' //add the EOCV-Sim dependency
+      implementation 'com.github.deltacv:EOCV-Sim:3.2.0' //add the EOCV-Sim dependency
    }
    ```
    
@@ -150,13 +55,12 @@ No complicated setup is required for this method either, it's straight up import
     <dependency>
 	    <groupId>com.github.deltacv</groupId>
 	    <artifactId>EOCV-Sim</artifactId>
-	    <version>3.0.0</version>
+	    <version>3.2.0</version>
 	</dependency>
    ```
 
 # Contact
-For any quick troubleshooting or help, you can find me on Discord as *serivesmejia#8237* and on the FTC discord server. I'll be happy to assist you in any issue you might have :)<br/><br/>
-For bug reporting or feature requesting, use the [issues tab](https://github.com/serivesmejia/EOCV-Sim/issues) in this repository.
+For bug reporting or feature requesting, use the [issues tab](https://github.com/deltacv/EOCV-Sim/issues) in this repository.
 
 # Change logs
 
