@@ -110,4 +110,4 @@ fabric.properties
 
 *.DS_Store
 
-**/imgui.ini
+imgui.ini
