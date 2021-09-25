@@ -6,6 +6,7 @@ import imgui.app.Application
 import imgui.app.Configuration
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiWindowFlags
+import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.Scope
 import io.github.deltacv.easyvision.codegen.Visibility
 import io.github.deltacv.easyvision.node.NodeEditor
@@ -99,12 +100,14 @@ class EasyVision : Application() {
 }
 
 fun main() {
-    val scope = Scope()
-    scope.instanceVariable(Visibility.PUBLIC, "int", "number", "0", isFinal = true)
-    scope.localVariable("Mat", "input", "new Mat()")
-    scope.methodCall("Imgproc", "cvtColor", "yes", "no", "maybe")
+    val codeGen = CodeGen("TestPipeline")
 
-    println(scope.get())
+    codeGen.processFrameScope.methodCall(
+        "Imgproc", "cvtColor",
+        "input", "mat", "Imgproc.COLOR_RGBA2YCrCb"
+    )
+
+    println(codeGen.gen())
 
     EasyVision().start()
 }
