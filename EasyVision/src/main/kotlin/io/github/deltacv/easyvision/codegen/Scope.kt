@@ -1,6 +1,8 @@
 package io.github.deltacv.easyvision.codegen
 
-open class Scope(private val tabsCount: Int = 1) {
+import io.github.deltacv.easyvision.codegen.dsl.ScopeContext
+
+class Scope(private val tabsCount: Int = 1) {
 
     private var builder = StringBuilder()
 
@@ -56,6 +58,12 @@ open class Scope(private val tabsCount: Int = 1) {
         builder.append("$className.$methodName(${parameters.csv()});")
     }
 
+    fun methodCall(methodName: String, vararg parameters: String) {
+        newStatement()
+
+        builder.append("$methodName(${parameters.csv()});")
+    }
+
     fun method(
         vis: Visibility, returnType: String, name: String, body: Scope,
         vararg parameters: Parameter,
@@ -99,6 +107,12 @@ open class Scope(private val tabsCount: Int = 1) {
         """.trimMargin())
     }
 
+    fun enumClass(name: String, vararg values: String) {
+        newStatement()
+
+        builder.append("enum $name { ${values.csv()} }")
+    }
+
     fun scope(scope: Scope) {
         newStatement()
         builder.appendLine().append(scope)
@@ -117,6 +131,12 @@ open class Scope(private val tabsCount: Int = 1) {
     fun get() = builder.toString()
 
     override fun toString() = get()
+
+    private val context = ScopeContext(this)
+
+    operator fun invoke(block: ScopeContext.() -> Unit) {
+        block(context)
+    }
 
 }
 

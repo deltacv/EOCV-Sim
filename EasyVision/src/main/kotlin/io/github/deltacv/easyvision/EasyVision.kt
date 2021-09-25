@@ -102,10 +102,13 @@ class EasyVision : Application() {
 fun main() {
     val codeGen = CodeGen("TestPipeline")
 
-    codeGen.processFrameScope.methodCall(
-        "Imgproc", "cvtColor",
-        "input", "mat", "Imgproc.COLOR_RGBA2YCrCb"
-    )
+    codeGen {
+        enum("Result", "A", "B", "C")
+
+        processFrame {
+            "Imgproc.cvtColor"("input", "mat", "Imgproc.COLOR_RGBA2GRAY")
+        }
+    }
 
     println(codeGen.gen())
 

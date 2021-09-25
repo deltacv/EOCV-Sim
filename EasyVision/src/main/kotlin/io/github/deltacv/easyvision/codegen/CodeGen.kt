@@ -1,5 +1,7 @@
 package io.github.deltacv.easyvision.codegen
 
+import io.github.deltacv.easyvision.codegen.dsl.CodeGenContext
+
 enum class Visibility {
     PUBLIC, PRIVATE, PROTECTED
 }
@@ -15,8 +17,8 @@ class CodeGen(var className: String) {
 
     init {
         importScope.import("org.openftc.easyopencv.OpenCvPipeline")
+        importScope.import("org.openftc.easyopencv.OpenCvPipeline")
     }
-
 
     fun gen(): String {
         val mainScope = Scope(0)
@@ -58,4 +60,18 @@ class CodeGen(var className: String) {
         return mainScope.get()
     }
 
+    private val context = CodeGenContext(this)
+
+    operator fun invoke(block: CodeGenContext.() -> Unit) {
+        block(context)
+    }
+
+}
+
+fun constructor(type: String, vararg parameters: String) = Constructor(type, parameters)
+
+data class Constructor(val type: String, val parameters: Array<out String>) {
+    fun value() = parameters[0]
+
+    fun new() = "new $type(${parameters.csv()})"
 }
