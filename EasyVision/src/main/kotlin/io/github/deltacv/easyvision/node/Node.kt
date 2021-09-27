@@ -7,7 +7,7 @@ import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
-import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.exception.NodeGenException
 
 interface Type {
@@ -73,20 +73,19 @@ abstract class Node<S: CodeGenSession>(
 
     operator fun Attribute.unaryPlus() = addAttribute(this)
 
-    abstract fun genCode(codeGen: CodeGen): S
+    abstract fun genCode(current: CodeGen.Current): S
 
-    /**
-     * The index corresponds to the order the attributes were added
-     * starting from 0 of course
-     */
-    abstract fun getOutputValueOf(codeGen: CodeGen, attrib: Attribute): GenValue
+    open fun getOutputValueOf(current: CodeGen.Current, attrib: Attribute): GenValue {
+        raise("Node doesn't have output attributes")
+    }
 
     @Suppress("UNCHECKED_CAST")
-    fun genCodeIfNecessary(codeGen: CodeGen) {
+    fun genCodeIfNecessary(current: CodeGen.Current) {
+        val codeGen = current.codeGen
         val session = codeGen.sessions[this]
 
         if(session == null) {
-            genSession = genCode(codeGen)
+            genSession = genCode(current)
             codeGen.sessions[this] = genSession!!
         } else {
             genSession = session as S

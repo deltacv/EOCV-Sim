@@ -6,7 +6,7 @@ import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
-import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.codegen.GenValue
 
 class ListAttribute(
     override val mode: AttributeMode,
@@ -47,7 +47,7 @@ class ListAttribute(
         beforeHasLink = hasLink
     }
 
-    override fun value(codeGen: CodeGen): GenValue {
+    override fun value(current: CodeGen.Current): GenValue {
         TODO("Not yet implemented")
     }
 

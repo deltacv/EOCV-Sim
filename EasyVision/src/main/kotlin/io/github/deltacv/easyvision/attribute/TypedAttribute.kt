@@ -2,7 +2,7 @@ package io.github.deltacv.easyvision.attribute
 
 import imgui.ImGui
 import io.github.deltacv.easyvision.codegen.CodeGen
-import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.exception.AttributeGenException
 import io.github.deltacv.easyvision.node.Link
 

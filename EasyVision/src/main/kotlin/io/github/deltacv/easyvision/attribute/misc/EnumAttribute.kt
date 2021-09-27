@@ -7,7 +7,7 @@ import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
-import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.codegen.GenValue
 
 class EnumAttribute<T: Enum<T>>(
     override val mode: AttributeMode,
@@ -39,7 +39,9 @@ class EnumAttribute<T: Enum<T>>(
     override fun acceptLink(other: Attribute) = other is EnumAttribute<*> && values[0]::class == other.values[0]::class
 
     @Suppress("UNCHECKED_CAST")
-    override fun value(codeGen: CodeGen): GenValue.Enum<T> {
+    override fun value(current: CodeGen.Current): GenValue.Enum<T> {
+        val expectedClass = values[0]::class
+
         if(isInput) {
             if(hasLink) {
                 val linkedAttrib = linkedAttribute()
@@ -49,11 +51,10 @@ class EnumAttribute<T: Enum<T>>(
                     "Enum attribute must have another attribute attached"
                 )
 
-                val value = linkedAttrib!!.value(codeGen)
+                val value = linkedAttrib!!.value(current)
                 raiseAssert(value is GenValue.Enum<*>, "Attribute attached is not a valid Enum")
 
                 val valueEnum = value as GenValue.Enum<*>
-                val expectedClass = values[0]::class
 
                 raiseAssert(
                     value.clazz == expectedClass,
@@ -66,9 +67,18 @@ class EnumAttribute<T: Enum<T>>(
 
                 return GenValue.Enum(value, value::class.java)
             }
-        }
+        } else {
+            val value = getOutputValue(current)
+            raiseAssert(value is GenValue.Enum<*>, "Value returned from the node is not an enum")
 
-        raise("Unexpected point reached while processing enum attribute")
+            val valueEnum = value as GenValue.Enum<T>
+            raiseAssert(
+                value.clazz == expectedClass,
+                "Enum attribute returned from the node (${value.clazz}) is not the expected type of enum ($expectedClass)"
+            )
+
+            return valueEnum
+        }
     }
 
 }

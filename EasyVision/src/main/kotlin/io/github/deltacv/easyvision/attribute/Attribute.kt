@@ -2,7 +2,7 @@ package io.github.deltacv.easyvision.attribute
 
 import imgui.extension.imnodes.ImNodes
 import io.github.deltacv.easyvision.codegen.CodeGen
-import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.exception.AttributeGenException
 import io.github.deltacv.easyvision.id.DrawableIdElement
 import io.github.deltacv.easyvision.node.Link
@@ -82,8 +82,8 @@ abstract class Attribute : DrawableIdElement {
 
     abstract fun acceptLink(other: Attribute): Boolean
 
-    abstract fun value(codeGen: CodeGen): GenValue
+    abstract fun value(current: CodeGen.Current): GenValue
 
-    protected fun getOutputValue(codeGen: CodeGen) = parentNode.getOutputValueOf(codeGen, this)
+    protected fun getOutputValue(current: CodeGen.Current) = parentNode.getOutputValueOf(current, this)
 
 }

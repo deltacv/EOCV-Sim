@@ -6,7 +6,7 @@ import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
-import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.codegen.GenValue
 
 class BooleanAttribute(
     override val mode: AttributeMode,
@@ -29,7 +29,7 @@ class BooleanAttribute(
         }
     }
 
-    override fun value(codeGen: CodeGen): GenValue.Boolean {
+    override fun value(current: CodeGen.Current): GenValue.Boolean {
         if(isInput) {
             if(hasLink) {
                 val linkedAttrib = linkedAttribute()
@@ -39,7 +39,7 @@ class BooleanAttribute(
                     "Boolean attribute must have another attribute attached"
                 )
 
-                val value = linkedAttrib!!.value(codeGen)
+                val value = linkedAttrib!!.value(current)
                 raiseAssert(value is GenValue.Boolean, "Attribute attached is not a Boolean")
 
                 return value as GenValue.Boolean

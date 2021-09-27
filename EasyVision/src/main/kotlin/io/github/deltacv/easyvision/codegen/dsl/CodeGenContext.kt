@@ -1,6 +1,7 @@
 package io.github.deltacv.easyvision.codegen.dsl
 
 import io.github.deltacv.easyvision.codegen.*
+import io.github.deltacv.easyvision.codegen.build.*
 
 class CodeGenContext(val codeGen: CodeGen) {
 
@@ -32,6 +33,8 @@ class CodeGenContext(val codeGen: CodeGen) {
 
     fun protected(name: String, v: Value) =
         codeGen.classStartScope.instanceVariable(Visibility.PROTECTED, name, v)
+
+    fun tryName(name: String) = codeGen.classStartScope.tryName(name)
 
     operator fun String.invoke(
         vis: Visibility, returnType: String,

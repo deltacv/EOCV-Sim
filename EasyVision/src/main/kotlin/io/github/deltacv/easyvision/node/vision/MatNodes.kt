@@ -5,8 +5,8 @@ import io.github.deltacv.easyvision.node.DrawNode
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
-import io.github.deltacv.easyvision.codegen.type.GenValue
-import io.github.deltacv.easyvision.codegen.v
+import io.github.deltacv.easyvision.codegen.GenValue
+import io.github.deltacv.easyvision.codegen.build.v
 
 class InputMatNode : DrawNode<CodeGenSession>("Pipeline Input", allowDelete = false) {
 
@@ -14,11 +14,12 @@ class InputMatNode : DrawNode<CodeGenSession>("Pipeline Input", allowDelete = fa
         + MatAttribute(OUTPUT, "Input")
     }
 
-    override fun genCode(codeGen: CodeGen): CodeGenSession {
+    override fun genCode(current: CodeGen.Current): CodeGenSession {
         raise("Input Mat node cannot generate code")
     }
 
-    override fun getOutputValueOf(codeGen: CodeGen, attrib: Attribute) = GenValue.Mat("input".v, Colors.RGB)
+    override fun getOutputValueOf(current: CodeGen.Current, attrib: Attribute) =
+        GenValue.Mat("input".v, Colors.RGB)
 }
 
 class OutputMatNode : DrawNode<CodeGenSession>("Pipeline Output", allowDelete = false) {
@@ -29,13 +30,14 @@ class OutputMatNode : DrawNode<CodeGenSession>("Pipeline Output", allowDelete = 
         + input
     }
 
-    override fun genCode(codeGen: CodeGen) = codeGen {
-        processFrame {
-            returnMethod(input.value(codeGen).value) // start code gen!
+    override fun genCode(current: CodeGen.Current) = current {
+        current.scope {
+            returnMethod(input.value(current).value) // start code gen!
+            appendWhiteline = false
         }
 
         CodeGenSession()
     }
 
-    override fun getOutputValueOf(codeGen: CodeGen, attrib: Attribute) = GenValue.None
+    override fun getOutputValueOf(current: CodeGen.Current, attrib: Attribute) = GenValue.None
 }

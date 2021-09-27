@@ -1,5 +1,8 @@
 package io.github.deltacv.easyvision.codegen
 
+import io.github.deltacv.easyvision.codegen.build.Parameter
+import io.github.deltacv.easyvision.codegen.build.Value
+
 fun Array<out String>.csv(): String {
     val builder = StringBuilder()
 

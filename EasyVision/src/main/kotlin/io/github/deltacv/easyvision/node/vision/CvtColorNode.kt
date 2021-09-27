@@ -4,7 +4,8 @@ import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.misc.EnumAttribute
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
 import io.github.deltacv.easyvision.codegen.*
-import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.codegen.CodeGenSession
+import io.github.deltacv.easyvision.codegen.build.*
 import io.github.deltacv.easyvision.node.DrawNode
 
 enum class Colors {
@@ -25,21 +26,23 @@ class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
         + output
     }
 
-    override fun genCode(codeGen: CodeGen) = codeGen {
+    override fun genCode(current: CodeGen.Current) = current {
         val session = Session()
 
-        val inputMat = input.value(codeGen)
+        val inputMat = input.value(current)
 
+        val targetColor = convertTo.value(current).value
         val matColor = inputMat.color
-        val targetColor = convertTo.value(codeGen).value
 
-        if(inputMat.color != targetColor) {
-            val matName = "${targetColor.name.lowercase()}Mat"
+        import("org.opencv.imgproc.Imgproc")
+
+        if(matColor != targetColor) {
+            val matName = tryName("${targetColor.name.lowercase()}Mat")
 
             // create mat instance variable
             private(matName, new("Mat"))
 
-            processFrame { // add a cvtColor step in processFrame
+            current.scope { // add a cvtColor step in processFrame
                 "Imgproc.cvtColor"(inputMat.value, matName.v, cvtColorValue(matColor, targetColor))
             }
 
@@ -53,8 +56,8 @@ class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
         session
     }
 
-    override fun getOutputValueOf(codeGen: CodeGen, attrib: Attribute): GenValue {
-        genCodeIfNecessary(codeGen)
+    override fun getOutputValueOf(current: CodeGen.Current, attrib: Attribute): GenValue {
+        genCodeIfNecessary(current)
 
         if(attrib == output) {
             return genSession!!.outputMatValue

@@ -1,5 +1,7 @@
 package io.github.deltacv.easyvision.codegen
 
+import io.github.deltacv.easyvision.codegen.build.Parameter
+import io.github.deltacv.easyvision.codegen.build.Scope
 import io.github.deltacv.easyvision.codegen.dsl.CodeGenContext
 import io.github.deltacv.easyvision.node.Node
 
@@ -13,14 +15,22 @@ class CodeGen(var className: String) {
     val classStartScope = Scope(1)
     val classEndScope   = Scope(1)
 
-    val initScope           = Scope(2)
-    val processFrameScope   = Scope(2)
-    val viewportTappedScope = Scope(2)
+    val initScope     = Scope(2)
+    val currScopeInit = Current(this, initScope)
+
+    val processFrameScope     = Scope(2)
+    val currScopeProcessFrame = Current(this, processFrameScope)
+
+    val viewportTappedScope     = Scope(2)
+    val currScopeViewportTapped = Current(this, viewportTappedScope)
 
     val sessions = mutableMapOf<Node<*>, CodeGenSession>()
 
     init {
-        importScope.import("org.openftc.easyopencv.OpenCvPipeline")
+        importScope.run {
+            import("org.openftc.easyopencv.OpenCvPipeline")
+            import("org.opencv.core.Mat")
+        }
     }
 
     fun gen(): String {
@@ -76,4 +86,10 @@ class CodeGen(var className: String) {
 
     operator fun <T> invoke(block: CodeGenContext.() -> T) = block(context)
 
+    data class Current(val codeGen: CodeGen, val scope: Scope) {
+        operator fun <T> invoke(scopeBlock: CodeGenContext.() -> T) = codeGen.invoke(scopeBlock)
+    }
+
 }
+
+open class CodeGenSession

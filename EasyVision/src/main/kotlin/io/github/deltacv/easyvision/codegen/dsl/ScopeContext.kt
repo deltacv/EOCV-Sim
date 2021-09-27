@@ -1,10 +1,14 @@
 package io.github.deltacv.easyvision.codegen.dsl
 
-import io.github.deltacv.easyvision.codegen.Scope
-import io.github.deltacv.easyvision.codegen.Value
+import io.github.deltacv.easyvision.codegen.build.Scope
+import io.github.deltacv.easyvision.codegen.build.Value
 import io.github.deltacv.easyvision.codegen.Visibility
 
 class ScopeContext(val scope: Scope) {
+
+    var appendWhiteline: Boolean
+        get() = scope.appendWhiteline
+        set(value) { scope.appendWhiteline = value }
 
     operator fun String.invoke(vararg parameters: Value) {
         scope.methodCall(this, *parameters)
