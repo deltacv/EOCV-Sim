@@ -1,6 +1,7 @@
 package io.github.deltacv.easyvision.codegen
 
 import io.github.deltacv.easyvision.codegen.dsl.CodeGenContext
+import io.github.deltacv.easyvision.node.Node
 
 enum class Visibility {
     PUBLIC, PRIVATE, PROTECTED
@@ -10,11 +11,13 @@ class CodeGen(var className: String) {
 
     val importScope     = Scope(0)
     val classStartScope = Scope(1)
-    val classEndScope = Scope(1)
+    val classEndScope   = Scope(1)
 
     val initScope           = Scope(2)
     val processFrameScope   = Scope(2)
     val viewportTappedScope = Scope(2)
+
+    val sessions = mutableMapOf<Node<*>, CodeGenSession>()
 
     init {
         importScope.import("org.openftc.easyopencv.OpenCvPipeline")
@@ -71,8 +74,6 @@ class CodeGen(var className: String) {
 
     private val context = CodeGenContext(this)
 
-    operator fun invoke(block: CodeGenContext.() -> Unit) {
-        block(context)
-    }
+    operator fun <T> invoke(block: CodeGenContext.() -> T) = block(context)
 
 }

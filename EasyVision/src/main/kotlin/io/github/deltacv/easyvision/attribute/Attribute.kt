@@ -16,10 +16,7 @@ abstract class Attribute : DrawableIdElement {
 
     override val id by Node.attributes.nextId { this }
 
-    lateinit var parentNode: Node
-        internal set
-
-    var relativeIndex = 0
+    lateinit var parentNode: Node<*>
         internal set
 
     val links = mutableListOf<Link>()
@@ -87,6 +84,6 @@ abstract class Attribute : DrawableIdElement {
 
     abstract fun value(codeGen: CodeGen): GenValue
 
-    protected fun getOutputValue(codeGen: CodeGen) = parentNode.getOutputValueOf(codeGen, relativeIndex)
+    protected fun getOutputValue(codeGen: CodeGen) = parentNode.getOutputValueOf(codeGen, this)
 
 }

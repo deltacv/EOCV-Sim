@@ -6,6 +6,8 @@ import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
+import io.github.deltacv.easyvision.codegen.CodeGen
+import io.github.deltacv.easyvision.codegen.type.GenValue
 
 class EnumAttribute<T: Enum<*>>(
     override val mode: AttributeMode,
@@ -33,5 +35,9 @@ class EnumAttribute<T: Enum<*>>(
     }
 
     override fun acceptLink(other: Attribute) = other is EnumAttribute<*> && values[0]::class == other.values[0]::class
+
+    override fun value(codeGen: CodeGen): GenValue {
+        TODO("Not yet implemented")
+    }
 
 }

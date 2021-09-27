@@ -8,17 +8,23 @@ import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.exception.NodeGenException
 
 interface Type {
     val name: String
 }
 
-abstract class Node(private var allowDelete: Boolean = true) : DrawableIdElement {
+abstract class Node<S: CodeGenSession>(
+    private var allowDelete: Boolean = true
+) : DrawableIdElement {
 
     override val id by nodes.nextId { this }
 
     private val attribs = mutableListOf<Attribute>() // internal mutable list
     val nodeAttributes = attribs as List<Attribute> // public read-only
+
+    var genSession: S? = null
+        private set
 
     protected fun drawAttributes() {
         for((i, attribute) in nodeAttributes.withIndex()) {
@@ -62,28 +68,46 @@ abstract class Node(private var allowDelete: Boolean = true) : DrawableIdElement
 
     fun addAttribute(attribute: Attribute) {
         attribute.parentNode = this
-        attribute.relativeIndex = attribs.size
         attribs.add(attribute)
     }
 
     operator fun Attribute.unaryPlus() = addAttribute(this)
 
-    abstract fun genCode(codeGen: CodeGen): CodeGenSession
+    abstract fun genCode(codeGen: CodeGen): S
 
     /**
      * The index corresponds to the order the attributes were added
      * starting from 0 of course
      */
-    abstract fun getOutputValueOf(codeGen: CodeGen, index: Int): GenValue
+    abstract fun getOutputValueOf(codeGen: CodeGen, attrib: Attribute): GenValue
+
+    @Suppress("UNCHECKED_CAST")
+    fun genCodeIfNecessary(codeGen: CodeGen) {
+        val session = codeGen.sessions[this]
+
+        if(session == null) {
+            codeGen.sessions[this] = genCode(codeGen)
+        } else {
+            genSession = session as S
+        }
+    }
+
+    fun raise(message: String): Nothing = throw NodeGenException(this, message)
+
+    fun raiseAssert(condition: Boolean, message: String) {
+        if(condition) {
+            raise(message)
+        }
+    }
 
     companion object {
-        val nodes = IdElementContainer<Node>()
+        val nodes = IdElementContainer<Node<*>>()
         val attributes = IdElementContainer<Attribute>()
 
         @JvmStatic protected val INPUT = AttributeMode.INPUT
         @JvmStatic protected val OUTPUT = AttributeMode.OUTPUT
 
-        fun checkRecursion(from: Node, to: Node): Boolean {
+        fun checkRecursion(from: Node<*>, to: Node<*>): Boolean {
             val linksBetween = Link.getLinksBetween(from, to)
 
             var hasOutputToInput = false
