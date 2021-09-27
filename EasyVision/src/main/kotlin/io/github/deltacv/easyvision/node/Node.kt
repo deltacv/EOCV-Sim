@@ -86,7 +86,8 @@ abstract class Node<S: CodeGenSession>(
         val session = codeGen.sessions[this]
 
         if(session == null) {
-            codeGen.sessions[this] = genCode(codeGen)
+            genSession = genCode(codeGen)
+            codeGen.sessions[this] = genSession!!
         } else {
             genSession = session as S
         }

@@ -39,7 +39,7 @@ class Link(val a: Int, val b: Int) : DrawableIdElement {
     companion object {
         val links = IdElementContainer<Link>()
 
-        fun getLinksBetween(a: Node, b: Node): List<Link> {
+        fun getLinksBetween(a: Node<*>, b: Node<*>): List<Link> {
             val l = mutableListOf<Link>()
 
             for(link in links) {

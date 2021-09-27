@@ -22,8 +22,8 @@ abstract class Attribute : DrawableIdElement {
     val links = mutableListOf<Link>()
     val hasLink get() = links.isNotEmpty()
 
-    val isInput = mode == AttributeMode.INPUT
-    val isOutput = !isInput
+    val isInput by lazy { mode == AttributeMode.INPUT }
+    val isOutput by lazy { !isInput }
 
     abstract fun drawAttribute()
 
@@ -68,14 +68,14 @@ abstract class Attribute : DrawableIdElement {
         val link = links[0]
 
         return if(link.aAttrib == this) {
-            link.aAttrib
-        } else link.bAttrib
+            link.bAttrib
+        } else link.aAttrib
     }
 
     fun raise(message: String): Nothing = throw AttributeGenException(this, message)
 
     fun raiseAssert(condition: Boolean, message: String) {
-        if(condition) {
+        if(!condition) {
             raise(message)
         }
     }

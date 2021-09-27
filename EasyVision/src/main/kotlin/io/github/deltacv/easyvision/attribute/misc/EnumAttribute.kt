@@ -9,7 +9,7 @@ import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.type.GenValue
 
-class EnumAttribute<T: Enum<*>>(
+class EnumAttribute<T: Enum<T>>(
     override val mode: AttributeMode,
     val values: Array<T>,
     override var variableName: String?
@@ -29,15 +29,46 @@ class EnumAttribute<T: Enum<*>>(
     override fun drawAttribute() {
         super.drawAttribute()
 
-        ImGui.pushItemWidth(110.0f)
-        ImGui.combo("", currentItem, valuesStrings)
-        ImGui.popItemWidth()
+        if(!hasLink) {
+            ImGui.pushItemWidth(110.0f)
+            ImGui.combo("", currentItem, valuesStrings)
+            ImGui.popItemWidth()
+        }
     }
 
     override fun acceptLink(other: Attribute) = other is EnumAttribute<*> && values[0]::class == other.values[0]::class
 
-    override fun value(codeGen: CodeGen): GenValue {
-        TODO("Not yet implemented")
+    @Suppress("UNCHECKED_CAST")
+    override fun value(codeGen: CodeGen): GenValue.Enum<T> {
+        if(isInput) {
+            if(hasLink) {
+                val linkedAttrib = linkedAttribute()
+
+                raiseAssert(
+                    linkedAttrib != null,
+                    "Enum attribute must have another attribute attached"
+                )
+
+                val value = linkedAttrib!!.value(codeGen)
+                raiseAssert(value is GenValue.Enum<*>, "Attribute attached is not a valid Enum")
+
+                val valueEnum = value as GenValue.Enum<*>
+                val expectedClass = values[0]::class
+
+                raiseAssert(
+                    value.clazz == expectedClass,
+                    "Enum attribute attached (${value.clazz}) is not the expected type of enum ($expectedClass)"
+                )
+
+                return valueEnum as GenValue.Enum<T>
+            } else {
+                val value = values[currentItem.get()]
+
+                return GenValue.Enum(value, value::class.java)
+            }
+        }
+
+        raise("Unexpected point reached while processing enum attribute")
     }
 
 }

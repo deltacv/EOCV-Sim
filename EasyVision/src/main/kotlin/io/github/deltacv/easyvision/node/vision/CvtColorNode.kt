@@ -3,8 +3,7 @@ package io.github.deltacv.easyvision.node.vision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.misc.EnumAttribute
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
-import io.github.deltacv.easyvision.codegen.CodeGen
-import io.github.deltacv.easyvision.codegen.CodeGenSession
+import io.github.deltacv.easyvision.codegen.*
 import io.github.deltacv.easyvision.codegen.type.GenValue
 import io.github.deltacv.easyvision.node.DrawNode
 
@@ -31,8 +30,24 @@ class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
 
         val inputMat = input.value(codeGen)
 
-        processFrame {
+        val matColor = inputMat.color
+        val targetColor = convertTo.value(codeGen).value
 
+        if(inputMat.color != targetColor) {
+            val matName = "${targetColor.name.lowercase()}Mat"
+
+            // create mat instance variable
+            private(matName, new("Mat"))
+
+            processFrame { // add a cvtColor step in processFrame
+                "Imgproc.cvtColor"(inputMat.value, matName.v, cvtColorValue(matColor, targetColor))
+            }
+
+            session.outputMatValue = GenValue.Mat(matName.v, targetColor) // store data in the current session
+        } else {
+            // we don't need to do any processing if the mat is
+            // already of the color the user specified to convert to
+            session.outputMatValue = inputMat
         }
 
         session

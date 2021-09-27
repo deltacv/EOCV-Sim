@@ -2,10 +2,11 @@ package io.github.deltacv.easyvision.attribute.math
 
 import imgui.ImGui
 import imgui.type.ImBoolean
-import imgui.type.ImInt
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
+import io.github.deltacv.easyvision.codegen.CodeGen
+import io.github.deltacv.easyvision.codegen.type.GenValue
 
 class BooleanAttribute(
     override val mode: AttributeMode,
@@ -26,6 +27,30 @@ class BooleanAttribute(
         if(!hasLink && mode == AttributeMode.INPUT) {
             ImGui.checkbox("", value)
         }
+    }
+
+    override fun value(codeGen: CodeGen): GenValue.Boolean {
+        if(isInput) {
+            if(hasLink) {
+                val linkedAttrib = linkedAttribute()
+
+                raiseAssert(
+                    linkedAttrib != null,
+                    "Boolean attribute must have another attribute attached"
+                )
+
+                val value = linkedAttrib!!.value(codeGen)
+                raiseAssert(value is GenValue.Boolean, "Attribute attached is not a Boolean")
+
+                return value as GenValue.Boolean
+            } else {
+                return if (value.get()) {
+                    GenValue.Boolean.True
+                } else GenValue.Boolean.False
+            }
+        }
+
+        raise("Unexpected point reached while processing boolean attribute")
     }
 
 }

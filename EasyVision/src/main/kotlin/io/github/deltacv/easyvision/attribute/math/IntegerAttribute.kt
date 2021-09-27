@@ -5,6 +5,8 @@ import imgui.type.ImInt
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
+import io.github.deltacv.easyvision.codegen.CodeGen
+import io.github.deltacv.easyvision.codegen.type.GenValue
 
 class IntAttribute(
     override val mode: AttributeMode,
@@ -29,6 +31,28 @@ class IntAttribute(
             ImGui.inputInt("", value)
             ImGui.popItemWidth()
         }
+    }
+
+    override fun value(codeGen: CodeGen): GenValue.Int {
+        if(isInput) {
+            return if(hasLink) {
+                val linkedAttrib = linkedAttribute()
+
+                raiseAssert(
+                    linkedAttrib != null,
+                    "Int attribute must have another attribute attached"
+                )
+
+                val value = linkedAttrib!!.value(codeGen)
+                raiseAssert(value is GenValue.Int, "Attribute attached is not a Int")
+
+                value as GenValue.Int
+            } else {
+                GenValue.Int(value.get())
+            }
+        }
+
+        raise("Unexpected point reached while processing int attribute")
     }
 
 }

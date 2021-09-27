@@ -145,8 +145,6 @@ class Scope(private val tabsCount: Int = 1) {
     fun newLineIfNotBlank() {
         val str = get()
 
-        println(str)
-
         if(!str.endsWith("\n\n") && str.endsWith("\n")) {
             builder.appendLine()
         } else if(!str.endsWith("\n\n")) {

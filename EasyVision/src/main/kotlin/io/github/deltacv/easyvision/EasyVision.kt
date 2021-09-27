@@ -6,6 +6,7 @@ import imgui.app.Application
 import imgui.app.Configuration
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiKey
+import imgui.flag.ImGuiMouseButton
 import imgui.flag.ImGuiWindowFlags
 import io.github.deltacv.easyvision.codegen.*
 import io.github.deltacv.easyvision.node.NodeEditor
@@ -14,6 +15,7 @@ import io.github.deltacv.easyvision.node.vision.Colors
 import io.github.deltacv.easyvision.node.vision.CvtColorNode
 import io.github.deltacv.easyvision.node.vision.InputMatNode
 import io.github.deltacv.easyvision.node.vision.OutputMatNode
+import io.github.deltacv.easyvision.util.ElapsedTime
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFW.glfwGetWindowSize
@@ -89,11 +91,14 @@ class EasyVision : Application() {
 
         isDeleteReleased = false
 
-        if(ImGui.isKeyReleased(ImGuiKey.Z)) {
+        if(ImGui.isMouseReleased(ImGuiMouseButton.Right)) {
+            val timer = ElapsedTime()
+
             val codeGen = CodeGen("TestPipeline")
             outputNode.genCode(codeGen)
 
-            println(codeGen)
+            println(codeGen.gen())
+            println("took ${timer.seconds}")
         }
     }
 
