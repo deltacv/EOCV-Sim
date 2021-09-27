@@ -25,6 +25,10 @@ Since OpenCV in Java uses a native library, which is platform specific, the simu
 * MacOS x64 (tested)
 * Linux x64 (tested for Ubuntu 20.04)<br/>
 
+## Downloading and documentation
+
+Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downloading-eocv-sim) to download the sim. The rest of the documentation can also be found [there](https://deltacv.gitbook.io/eocv-sim/).
+
 ## Adding EOCV-Sim as a dependency
 
    ### Gradle
