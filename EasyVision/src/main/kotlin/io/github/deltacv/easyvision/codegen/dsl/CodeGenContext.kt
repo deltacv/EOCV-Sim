@@ -1,6 +1,6 @@
 package io.github.deltacv.easyvision.codegen.dsl
 
-import io.github.deltacv.easyvision.codegen.CodeGen
+import io.github.deltacv.easyvision.codegen.*
 
 class CodeGenContext(val codeGen: CodeGen) {
 
@@ -22,6 +22,30 @@ class CodeGenContext(val codeGen: CodeGen) {
 
     fun onViewportTapped(block: ScopeContext.() -> Unit) {
         codeGen.viewportTappedScope(block)
+    }
+
+    fun public(name: String, v: Value) =
+        codeGen.classStartScope.instanceVariable(Visibility.PUBLIC, name, v)
+
+    fun private(name: String, v: Value) =
+        codeGen.classStartScope.instanceVariable(Visibility.PRIVATE, name, v)
+
+    fun protected(name: String, v: Value) =
+        codeGen.classStartScope.instanceVariable(Visibility.PROTECTED, name, v)
+
+    operator fun String.invoke(
+        vis: Visibility, returnType: String,
+        vararg parameters: Parameter,
+        isStatic: Boolean = false, isFinal: Boolean = false, isOverride: Boolean = true,
+        scopeBlock: ScopeContext.() -> Unit
+    ) {
+        val s = Scope(2)
+        scopeBlock(s.context)
+
+        codeGen.classEndScope.method(
+            vis, returnType, this, s, *parameters,
+            isStatic = isStatic, isFinal = isFinal, isOverride = isOverride
+        )
     }
 
 }

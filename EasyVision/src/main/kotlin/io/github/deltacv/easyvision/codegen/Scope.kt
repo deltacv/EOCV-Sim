@@ -28,49 +28,57 @@ class Scope(private val tabsCount: Int = 1) {
         }
     }
 
-    fun instanceVariable(vis: Visibility, type: String, name: String,
-                         defaultValue: String? = null,
+    fun instanceVariable(vis: Visibility, name: String,
+                         variable: Value,
                          isStatic: Boolean = false, isFinal: Boolean = false) {
         newStatement()
 
-        val modifiers = if(isStatic) "static " else "" +
-                        if(isFinal) "final " else " "
+        val modifiers = if(isStatic) " static" else "" +
+                        if(isFinal) " final" else ""
 
-        val ending = if(defaultValue != null) "= $defaultValue;" else ";"
+        val ending = if(variable.value != null) "= ${variable.value};" else ";"
 
-        builder.append("${vis.name.lowercase()} $modifiers$type $name $ending")
+        builder.append("$tabs${vis.name.lowercase()}$modifiers ${variable.type} $name $ending")
     }
     
-    fun localVariable(
-        type: String, name: String,
-        defaultValue: String? = null
-    ) {
+    fun localVariable(name: String, variable: Value) {
         newStatement()
+
+        val ending = if(variable.value != null) "= ${variable.value};" else ";"
         
-        val ending = if(defaultValue != null) "= $defaultValue;" else ";"
-        
-        builder.append("$type $name $ending")
+        builder.append("$tabs${variable.type} $name $ending")
     }
 
-    fun methodCall(className: String, methodName: String, vararg parameters: String) {
+    fun variableSet(name: String, v: Value) {
         newStatement()
-        
-        builder.append("$className.$methodName(${parameters.csv()});")
+
+        builder.append("$tabs$name = ${v.value!!};")
     }
 
-    fun methodCall(methodName: String, vararg parameters: String) {
+    fun instanceVariableSet(name: String, v: Value) {
         newStatement()
 
-        builder.append("$methodName(${parameters.csv()});")
+        builder.append("${tabs}this.$name = ${v.value!!};")
+    }
+
+    fun methodCall(className: String, methodName: String, vararg parameters: Value) {
+        newStatement()
+        
+        builder.append("$tabs$className.$methodName(${parameters.csv()});")
+    }
+
+    fun methodCall(methodName: String, vararg parameters: Value) {
+        newStatement()
+
+        builder.append("$tabs$methodName(${parameters.csv()});")
     }
 
     fun method(
         vis: Visibility, returnType: String, name: String, body: Scope,
         vararg parameters: Parameter,
-        isStatic: Boolean = false, isFinal: Boolean = false, isOverride: Boolean = true
+        isStatic: Boolean = false, isFinal: Boolean = false, isOverride: Boolean = false
     ) {
-        newStatement()
-        builder.appendLine()
+        newLineIfNotBlank()
 
         val static = if(isStatic) "static " else ""
         val final = if(isFinal) "final " else ""
@@ -81,9 +89,19 @@ class Scope(private val tabsCount: Int = 1) {
 
         builder.append("""
             |$tabs${vis.name.lowercase()} $static$final$returnType $name(${parameters.csv()}) {
-            |$tabs$body
+            |$body
             |$tabs}
         """.trimMargin())
+    }
+
+    fun returnMethod(value: Value? = null) {
+        newStatement()
+
+        if(value != null) {
+            builder.append("${tabs}return ${value.value!!};")
+        } else {
+            builder.append("${tabs}return;")
+        }
     }
 
     fun clazz(vis: Visibility, name: String, body: Scope,
@@ -102,7 +120,7 @@ class Scope(private val tabsCount: Int = 1) {
 
         builder.append("""
             |$tabs${vis.name.lowercase()} $static$final$name $e$i{
-            |$tabs$body$endWhitespaceLine
+            |$body$endWhitespaceLine
             |$tabs}
         """.trimMargin())
     }
@@ -110,20 +128,30 @@ class Scope(private val tabsCount: Int = 1) {
     fun enumClass(name: String, vararg values: String) {
         newStatement()
 
-        builder.append("enum $name { ${values.csv()} }")
+        builder.append("${tabs}enum $name { ${values.csv()} }")
     }
 
     fun scope(scope: Scope) {
-        newStatement()
-        builder.appendLine().append(scope)
+        newLineIfNotBlank()
+        builder.append(scope)
     }
 
     fun newStatement() {
         if(builder.isNotEmpty()) {
             builder.appendLine()
         }
+    }
 
-        builder.append(tabs)
+    fun newLineIfNotBlank() {
+        val str = get()
+
+        println(str)
+
+        if(!str.endsWith("\n\n") && str.endsWith("\n")) {
+            builder.appendLine()
+        } else if(!str.endsWith("\n\n")) {
+            builder.append("\n")
+        }
     }
 
     fun clear() = builder.clear()
@@ -132,7 +160,7 @@ class Scope(private val tabsCount: Int = 1) {
 
     override fun toString() = get()
 
-    private val context = ScopeContext(this)
+    internal val context = ScopeContext(this)
 
     operator fun invoke(block: ScopeContext.() -> Unit) {
         block(context)
@@ -141,22 +169,3 @@ class Scope(private val tabsCount: Int = 1) {
 }
 
 data class Parameter(val type: String, val name: String)
-
-fun Array<out String>.csv(): String {
-    val builder = StringBuilder()
-
-    for((i, parameter) in this.withIndex()) {
-        builder.append(parameter)
-
-        if(i < this.size - 1) {
-            builder.append(", ")
-        }
-    }
-
-    return builder.toString()
-}
-
-fun Array<out Parameter>.csv(): String {
-    val stringArray = this.map { "${it.type} ${it.name}" }.toTypedArray()
-    return stringArray.csv()
-}

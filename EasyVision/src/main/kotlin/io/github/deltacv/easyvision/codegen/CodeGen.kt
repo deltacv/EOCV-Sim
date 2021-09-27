@@ -10,13 +10,13 @@ class CodeGen(var className: String) {
 
     val importScope     = Scope(0)
     val classStartScope = Scope(1)
+    val classEndScope = Scope(1)
 
-    val initScope           = Scope(1)
-    val processFrameScope   = Scope(1)
-    val viewportTappedScope = Scope(1)
+    val initScope           = Scope(2)
+    val processFrameScope   = Scope(2)
+    val viewportTappedScope = Scope(2)
 
     init {
-        importScope.import("org.openftc.easyopencv.OpenCvPipeline")
         importScope.import("org.openftc.easyopencv.OpenCvPipeline")
     }
 
@@ -27,6 +27,7 @@ class CodeGen(var className: String) {
         val start = classStartScope.get()
         if(start.isNotBlank()) {
             bodyScope.scope(classStartScope)
+            bodyScope.newStatement()
         }
 
         val init = initScope.get()
@@ -35,6 +36,7 @@ class CodeGen(var className: String) {
                 Visibility.PUBLIC, "void", "init", initScope,
                 Parameter("Mat", "input"), isOverride = true
             )
+            bodyScope.newStatement()
         }
 
         val process = processFrameScope.get()
@@ -47,10 +49,17 @@ class CodeGen(var className: String) {
 
         val viewportTapped = viewportTappedScope.get()
         if(viewportTapped.isNotBlank()) {
+            bodyScope.newStatement()
+
             bodyScope.method(
                 Visibility.PUBLIC, "Mat", "onViewportTapped", viewportTappedScope,
                 isOverride = true
             )
+        }
+
+        val end = classEndScope.get()
+        if(end.isNotBlank()) {
+            bodyScope.scope(classEndScope)
         }
 
         mainScope.scope(importScope)
@@ -66,12 +75,4 @@ class CodeGen(var className: String) {
         block(context)
     }
 
-}
-
-fun constructor(type: String, vararg parameters: String) = Constructor(type, parameters)
-
-data class Constructor(val type: String, val parameters: Array<out String>) {
-    fun value() = parameters[0]
-
-    fun new() = "new $type(${parameters.csv()})"
 }

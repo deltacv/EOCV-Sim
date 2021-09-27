@@ -5,6 +5,9 @@ import io.github.deltacv.easyvision.id.DrawableIdElement
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.AttributeMode
+import io.github.deltacv.easyvision.codegen.CodeGen
+import io.github.deltacv.easyvision.codegen.CodeGenSession
+import io.github.deltacv.easyvision.codegen.type.GenValue
 
 interface Type {
     val name: String
@@ -59,10 +62,19 @@ abstract class Node(private var allowDelete: Boolean = true) : DrawableIdElement
 
     fun addAttribute(attribute: Attribute) {
         attribute.parentNode = this
+        attribute.relativeIndex = attribs.size
         attribs.add(attribute)
     }
 
     operator fun Attribute.unaryPlus() = addAttribute(this)
+
+    abstract fun genCode(codeGen: CodeGen): CodeGenSession
+
+    /**
+     * The index corresponds to the order the attributes were added
+     * starting from 0 of course
+     */
+    abstract fun getOutputValueOf(codeGen: CodeGen, index: Int): GenValue
 
     companion object {
         val nodes = IdElementContainer<Node>()

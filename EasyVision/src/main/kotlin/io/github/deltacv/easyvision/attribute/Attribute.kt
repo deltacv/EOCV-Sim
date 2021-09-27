@@ -1,6 +1,9 @@
 package io.github.deltacv.easyvision.attribute
 
 import imgui.extension.imnodes.ImNodes
+import io.github.deltacv.easyvision.codegen.CodeGen
+import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.exception.AttributeGenException
 import io.github.deltacv.easyvision.id.DrawableIdElement
 import io.github.deltacv.easyvision.node.Link
 import io.github.deltacv.easyvision.node.Node
@@ -16,8 +19,14 @@ abstract class Attribute : DrawableIdElement {
     lateinit var parentNode: Node
         internal set
 
+    var relativeIndex = 0
+        internal set
+
     val links = mutableListOf<Link>()
     val hasLink get() = links.isNotEmpty()
+
+    val isInput = mode == AttributeMode.INPUT
+    val isOutput = !isInput
 
     abstract fun drawAttribute()
 
@@ -50,6 +59,34 @@ abstract class Attribute : DrawableIdElement {
         Node.attributes[id] = this
     }
 
+    fun linkedAttribute(): Attribute? {
+        if(!isInput) {
+            raise("Output attributes might have more than one link, so linkedAttribute() is not allowed")
+        }
+
+        if(!hasLink) {
+            return null
+        }
+
+        val link = links[0]
+
+        return if(link.aAttrib == this) {
+            link.aAttrib
+        } else link.bAttrib
+    }
+
+    fun raise(message: String): Nothing = throw AttributeGenException(this, message)
+
+    fun raiseAssert(condition: Boolean, message: String) {
+        if(condition) {
+            raise(message)
+        }
+    }
+
     abstract fun acceptLink(other: Attribute): Boolean
+
+    abstract fun value(codeGen: CodeGen): GenValue
+
+    protected fun getOutputValue(codeGen: CodeGen) = parentNode.getOutputValueOf(codeGen, relativeIndex)
 
 }

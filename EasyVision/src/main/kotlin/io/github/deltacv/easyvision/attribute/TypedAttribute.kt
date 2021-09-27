@@ -1,6 +1,10 @@
 package io.github.deltacv.easyvision.attribute
 
 import imgui.ImGui
+import io.github.deltacv.easyvision.codegen.CodeGen
+import io.github.deltacv.easyvision.codegen.type.GenValue
+import io.github.deltacv.easyvision.exception.AttributeGenException
+import io.github.deltacv.easyvision.node.Link
 
 interface Type {
     val name: String
@@ -18,7 +22,7 @@ abstract class TypedAttribute(var type: Type) : Attribute() {
     var drawDescriptiveText = true
     var drawType = true
 
-    protected val finalVarName by lazy {
+    private val finalVarName by lazy {
         variableName ?: if (mode == AttributeMode.INPUT) "Input" else "Output"
     }
 

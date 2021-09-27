@@ -5,12 +5,12 @@ import imgui.ImVec2
 import imgui.app.Application
 import imgui.app.Configuration
 import imgui.flag.ImGuiCond
+import imgui.flag.ImGuiKey
 import imgui.flag.ImGuiWindowFlags
-import io.github.deltacv.easyvision.codegen.CodeGen
-import io.github.deltacv.easyvision.codegen.Scope
-import io.github.deltacv.easyvision.codegen.Visibility
+import io.github.deltacv.easyvision.codegen.*
 import io.github.deltacv.easyvision.node.NodeEditor
 import io.github.deltacv.easyvision.node.math.SumIntegerNode
+import io.github.deltacv.easyvision.node.vision.Colors
 import io.github.deltacv.easyvision.node.vision.CvtColorNode
 import io.github.deltacv.easyvision.node.vision.InputMatNode
 import io.github.deltacv.easyvision.node.vision.OutputMatNode
@@ -42,11 +42,14 @@ class EasyVision : Application() {
 
     val editor = NodeEditor(this)
 
+    val inputNode = InputMatNode()
+    val outputNode = OutputMatNode()
+
     fun start() {
         editor.init()
 
-        InputMatNode().enable()
-        OutputMatNode().enable()
+        inputNode.enable()
+        outputNode.enable()
 
         SumIntegerNode().enable()
         SumIntegerNode().enable()
@@ -85,6 +88,13 @@ class EasyVision : Application() {
         PopupBuilder.draw()
 
         isDeleteReleased = false
+
+        if(ImGui.isKeyReleased(ImGuiKey.Z)) {
+            val codeGen = CodeGen("TestPipeline")
+            outputNode.genCode(codeGen)
+
+            println(codeGen)
+        }
     }
 
     var isDeleteReleased = false
@@ -100,17 +110,5 @@ class EasyVision : Application() {
 }
 
 fun main() {
-    val codeGen = CodeGen("TestPipeline")
-
-    codeGen {
-        enum("Result", "A", "B", "C")
-
-        processFrame {
-            "Imgproc.cvtColor"("input", "mat", "Imgproc.COLOR_RGBA2GRAY")
-        }
-    }
-
-    println(codeGen.gen())
-
     EasyVision().start()
 }
