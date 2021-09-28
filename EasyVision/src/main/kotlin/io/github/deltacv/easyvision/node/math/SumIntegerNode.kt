@@ -11,15 +11,14 @@ import io.github.deltacv.easyvision.codegen.GenValue
 class SumIntegerNode : DrawNode<SumIntegerNode.Session>("Sum Integer") {
 
     val numbers = ListAttribute(INPUT, IntAttribute, "Numbers")
-    val result  = IntAttribute(OUTPUT,"Result")
+    val result  = IntAttribute(OUTPUT, "Result")
 
     override fun onEnable() {
         + numbers
         + result
     }
 
-    class Session : CodeGenSession() {
-
+    class Session : CodeGenSession {
     }
 
     override fun genCode(current: CodeGen.Current): Session {

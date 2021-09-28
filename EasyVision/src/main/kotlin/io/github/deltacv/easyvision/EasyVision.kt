@@ -9,12 +9,11 @@ import imgui.flag.ImGuiKey
 import imgui.flag.ImGuiMouseButton
 import imgui.flag.ImGuiWindowFlags
 import io.github.deltacv.easyvision.codegen.*
+import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.node.NodeEditor
 import io.github.deltacv.easyvision.node.math.SumIntegerNode
 import io.github.deltacv.easyvision.node.vision.Colors
-import io.github.deltacv.easyvision.node.vision.CvtColorNode
-import io.github.deltacv.easyvision.node.vision.InputMatNode
-import io.github.deltacv.easyvision.node.vision.OutputMatNode
+import io.github.deltacv.easyvision.node.vision.*
 import io.github.deltacv.easyvision.util.ElapsedTime
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
@@ -38,6 +37,8 @@ class EasyVision : Application() {
 
             return ImVec2(w.get(0).toFloat(), h.get(0).toFloat())
         }
+
+        val miscIds = IdElementContainer<Any>()
     }
 
     private var prevKeyCallback: GLFWKeyCallback? = null
@@ -58,6 +59,8 @@ class EasyVision : Application() {
 
         CvtColorNode().enable()
         CvtColorNode().enable()
+
+        ThresholdNode().enable()
 
         launch(this)
 

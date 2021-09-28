@@ -8,8 +8,9 @@ import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.build.*
 import io.github.deltacv.easyvision.node.DrawNode
 
-enum class Colors {
-    RGB, BGR, HSV, YCrCb, LAB, GRAY
+enum class Colors(channels: Int) {
+    RGBA(4), RGB(3), BGR(3), HSV(3),
+    YCrCb(3), LAB(3), GRAY(1)
 }
 
 class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
@@ -66,7 +67,7 @@ class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
         raise("Attribute $attrib is not an output of this node or not handled by this")
     }
 
-    class Session : CodeGenSession() {
+    class Session : CodeGenSession {
         lateinit var outputMatValue: GenValue.Mat
     }
 

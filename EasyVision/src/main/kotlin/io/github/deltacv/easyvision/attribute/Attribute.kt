@@ -24,10 +24,17 @@ abstract class Attribute : DrawableIdElement {
 
     val isInput by lazy { mode == AttributeMode.INPUT }
     val isOutput by lazy { !isInput }
+    
+    private var isFirstDraw = true
 
     abstract fun drawAttribute()
 
     override fun draw() {
+        if(isFirstDraw) {
+            enable()
+            isFirstDraw = false
+        }
+        
         if(mode == AttributeMode.INPUT) {
             ImNodes.beginInputAttribute(id)
         } else {

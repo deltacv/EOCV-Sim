@@ -8,10 +8,12 @@ import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
 
-class ListAttribute(
+open class ListAttribute(
     override val mode: AttributeMode,
     val elementType: Type,
-    override var variableName: String? = null
+    override var variableName: String? = null,
+    length: Int? = null,
+    private val allowAddOrDelete: Boolean = true
 ) : TypedAttribute(Companion) {
 
     companion object: Type {
@@ -20,9 +22,59 @@ class ListAttribute(
     }
 
     val listAttributes = mutableListOf<TypedAttribute>()
+    val deleteQueue = mutableListOf<TypedAttribute>()
 
     private var beforeHasLink = false
-    private var firstDraw = false
+
+    private var previousLength: Int? = 0
+    var fixedLength = length
+        set(value) {
+            field = value
+            onEnable()
+        }
+
+    private val allowAod get() = allowAddOrDelete && fixedLength == null
+
+    override fun onEnable() {
+        // oh god... (it's been only 10 minutes and i have already forgotten how this works)
+        if(previousLength != fixedLength) {
+            if(fixedLength != null && (previousLength == null || previousLength == 0)) {
+                repeat(fixedLength!!) {
+                    createElement()
+                }
+            } else if(previousLength != null || previousLength != 0) {
+                val delta = (fixedLength ?: 0) - (previousLength ?: 0)
+
+                if(delta < 0) {
+                    repeat(-delta) {
+                        val last = listAttributes[listAttributes.size - 1]
+                        last.delete()
+
+                        listAttributes.remove(last)
+                        deleteQueue.add(last)
+                    }
+                } else {
+                    repeat(delta) {
+                        if(deleteQueue.isNotEmpty()) {
+                            val last = deleteQueue[deleteQueue.size - 1]
+                            last.restore()
+
+                            listAttributes.add(last)
+                            deleteQueue.remove(last)
+                        } else {
+                            createElement()
+                        }
+                    }
+                }
+            } else {
+                for(attribute in listAttributes.toTypedArray()) {
+                    attribute.delete()
+                }
+            }
+        }
+
+        previousLength = fixedLength
+    }
 
     override fun draw() {
         super.draw()
@@ -54,7 +106,7 @@ class ListAttribute(
     override fun drawAttribute() {
         ImGui.text("[${elementType.name}] $variableName")
 
-        if(!hasLink && elementType.allowsNew && mode == AttributeMode.INPUT) {
+        if(!hasLink && elementType.allowsNew && allowAod && mode == AttributeMode.INPUT) {
             // idk wat the frame height is, i just stole it from
             // https://github.com/ocornut/imgui/blob/7b8bc864e9af6c6c9a22125d65595d526ba674c5/imgui_widgets.cpp#L3439
 
@@ -66,16 +118,7 @@ class ListAttribute(
 
             if(ImGui.button("+", buttonSize, buttonSize)) { // creates a new element with the + button
                 // uses the "new" function from the attribute's companion Type
-                val count = listAttributes.size.toString()
-                val elementName = count + if(count.length == 1) " " else ""
-
-                val element = elementType.new(AttributeMode.INPUT, elementName)
-                element.enable() //enables the new element
-
-                element.parentNode = parentNode
-                element.drawType = false // hides the variable type
-
-                listAttributes.add(element)
+                createElement()
             }
 
             // display the - button only if the attributes list is not empty
@@ -93,4 +136,16 @@ class ListAttribute(
 
     override fun acceptLink(other: Attribute) = other is ListAttribute && other.elementType == elementType
 
+    private fun createElement() {
+        val count = listAttributes.size.toString()
+        val elementName = count + if(count.length == 1) " " else ""
+
+        val element = elementType.new(AttributeMode.INPUT, elementName)
+        element.enable() //enables the new element
+
+        element.parentNode = parentNode
+        element.drawType = false // hides the variable type
+
+        listAttributes.add(element)
+    }
 }

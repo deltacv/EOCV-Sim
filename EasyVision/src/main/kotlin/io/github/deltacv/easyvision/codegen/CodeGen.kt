@@ -92,4 +92,6 @@ class CodeGen(var className: String) {
 
 }
 
-open class CodeGenSession
+interface CodeGenSession
+
+object NoSession : CodeGenSession
