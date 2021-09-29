@@ -61,7 +61,7 @@ class NodeEditor(val easyVision: EasyVision) {
                 return // we can't link a node to itself!
             }
 
-            inputAttrib.links.forEach {
+            inputAttrib.links.toTypedArray().forEach {
                 it.delete() // delete the existing link(s) of the input attribute if there's any
             }
 

@@ -36,7 +36,7 @@ apply from: '../test-logging.gradle'
 dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
-    implementation 'org.openpnp:opencv:4.5.1-2'
+    implementation "org.openpnp:opencv:$opencv_version"
     implementation 'com.github.sarxos:webcam-capture:0.3.12'
 
     implementation 'info.picocli:picocli:4.6.1'

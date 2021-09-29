@@ -37,8 +37,16 @@ class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
 
         val inputMat = input.value(current)
 
-        val targetColor = convertTo.value(current).value
-        val matColor = inputMat.color
+        var targetColor = convertTo.value(current).value
+        var matColor = inputMat.color
+
+        if(matColor != targetColor) {
+            if(matColor == Colors.RGBA && targetColor != Colors.RGB) {
+                matColor = Colors.RGB
+            } else if(matColor != Colors.RGB && targetColor == Colors.RGBA) {
+                targetColor = Colors.RGB
+            }
+        }
 
         import("org.opencv.imgproc.Imgproc")
 

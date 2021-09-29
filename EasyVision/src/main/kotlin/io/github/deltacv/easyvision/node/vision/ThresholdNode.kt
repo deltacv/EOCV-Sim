@@ -58,23 +58,30 @@ class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
         val range = scalar.value(current)
 
         var inputMat = input.value(current)
-        val matColor = inputMat.color
+        
+        var matColor = inputMat.color
+        var targetColor = lastColor
 
-        val needsCvt = matColor != lastColor
+        if(matColor != targetColor) {
+            if(matColor == Colors.RGBA && targetColor != Colors.RGB) {
+                matColor = Colors.RGB
+            } else if(matColor != Colors.RGB && targetColor == Colors.RGBA) {
+                targetColor = Colors.RGB
+            }
+        }
+        
+        val needsCvt = matColor != targetColor
 
-        val cvtMat = tryName("${lastColor.name.lowercase()}Mat")
-        val thresholdTargetMat = tryName("${lastColor.name.lowercase()}BinaryMat")
+        val cvtMat = tryName("${targetColor.name.lowercase()}Mat")
+        val thresholdTargetMat = tryName("${targetColor.name.lowercase()}BinaryMat")
 
-        val lowerScalar = tryName("lower${lastColor.name}")
-        val upperScalar = tryName("upper${lastColor.name}")
+        val lowerScalar = tryName("lower${targetColor.name}")
+        val upperScalar = tryName("upper${targetColor.name}")
 
         // add necessary imports
         import("org.opencv.imgproc.Imgproc")
         import("org.opencv.core.Scalar")
         import("org.opencv.core.Core")
-
-        // output mat target
-        private(thresholdTargetMat, new("Mat"))
 
         // lower color scalar
         public(lowerScalar,
@@ -99,17 +106,19 @@ class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
         if(needsCvt) {
             private(cvtMat, new("Mat"))
         }
+        // output mat target
+        private(thresholdTargetMat, new("Mat"))
 
         current.scope {
             if(needsCvt) {
-                "Imgproc.cvtColor"(inputMat.value, cvtMat.v, cvtColorValue(matColor, lastColor))
-                inputMat = GenValue.Mat(cvtMat.v, lastColor)
+                "Imgproc.cvtColor"(inputMat.value, cvtMat.v, cvtColorValue(matColor, targetColor))
+                inputMat = GenValue.Mat(cvtMat.v, targetColor)
             }
 
             "Core.inRange"(inputMat.value, lowerScalar.v, upperScalar.v, thresholdTargetMat.v)
         }
 
-        session.outputMat = GenValue.Mat(thresholdTargetMat.v, lastColor)
+        session.outputMat = GenValue.Mat(thresholdTargetMat.v, targetColor)
 
         session
     }

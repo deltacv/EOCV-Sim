@@ -20,7 +20,7 @@ class InputMatNode : DrawNode<NoSession>("Pipeline Input", allowDelete = false) 
     }
 
     override fun getOutputValueOf(current: CodeGen.Current, attrib: Attribute) =
-        GenValue.Mat("input".v, Colors.RGB)
+        GenValue.Mat("input".v, Colors.RGBA)
 }
 
 class OutputMatNode : DrawNode<NoSession>("Pipeline Output", allowDelete = false) {
