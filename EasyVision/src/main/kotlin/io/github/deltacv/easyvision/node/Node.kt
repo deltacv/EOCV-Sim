@@ -30,7 +30,7 @@ abstract class Node<S: CodeGenSession>(
         for((i, attribute) in nodeAttributes.withIndex()) {
             attribute.draw()
 
-            if(i < nodeAttributes.size - 1) {
+            if(i < nodeAttributes.size - 1 && !attribute.wasLastDrawCancelled) {
                 ImGui.newLine() // make a new blank line if this isn't the last attribute
             }
         }

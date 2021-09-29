@@ -79,7 +79,7 @@ open class ListAttribute(
     override fun draw() {
         super.draw()
 
-        for(attrib in listAttributes) {
+        for((i, attrib) in listAttributes.withIndex()) {
             if(beforeHasLink != hasLink) {
                 if(hasLink) {
                     // delete attributes if a link has been created
@@ -92,6 +92,7 @@ open class ListAttribute(
             }
 
             if(!hasLink) { // only draw attributes if there's not a link attached
+                drawAttributeText(i)
                 attrib.draw()
             }
         }
@@ -99,9 +100,12 @@ open class ListAttribute(
         beforeHasLink = hasLink
     }
 
-    override fun value(current: CodeGen.Current): GenValue {
-        TODO("Not yet implemented")
-    }
+    open fun drawAttributeText(index: Int) { }
+
+    override fun value(current: CodeGen.Current): GenValue =
+        // get the values of all the attributes and return a
+        // GenValue.List with the attribute values in an array
+        GenValue.List(listAttributes.map { it.value(current) }.toTypedArray())
 
     override fun drawAttribute() {
         ImGui.text("[${elementType.name}] $variableName")

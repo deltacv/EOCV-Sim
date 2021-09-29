@@ -19,4 +19,25 @@ object ExtraWidgets {
         ImGui.popItemWidth()
     }
 
+    private val valuesStringCache = mutableMapOf<Class<*>, Array<String>>()
+
+    fun <T: Enum<T>> enumCombo(values: Array<T>, currentItem: ImInt): T {
+        val clazz = values[0]::class.java
+
+        val valuesStrings = if (valuesStringCache.containsKey(clazz)) {
+            valuesStringCache[clazz]!!
+        } else {
+            val v = values.map {
+                it.name
+            }.toTypedArray()
+            valuesStringCache[clazz] = v
+
+            v
+        }
+
+        ImGui.combo("", currentItem, valuesStrings)
+
+        return values[currentItem.get()]
+    }
+
 }

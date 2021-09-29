@@ -50,9 +50,12 @@ class IntAttribute(
             } else {
                 GenValue.Int(value.get())
             }
-        }
+        } else {
+            val value = getOutputValue(current)
+            raiseAssert(value is GenValue.Int, "Value returned from the node is not an Int")
 
-        raise("Unexpected point reached while processing int attribute")
+            return value as GenValue.Int
+        }
     }
 
 }

@@ -13,10 +13,24 @@ sealed class GenValue {
     data class Float(val value: kotlin.Float) : GenValue()
     data class Double(val value: kotlin.Double) : GenValue()
 
+    data class Range(val min: kotlin.Double, val max: kotlin.Double) : GenValue(){
+        companion object {
+            val ZERO = Range(0.0, 0.0)
+        }
+    }
+
+    data class ScalarRange(val a: Range, val b: Range, val c: Range, val d: Range) : GenValue() {
+        companion object {
+            val ZERO = ScalarRange(Range.ZERO, Range.ZERO, Range.ZERO, Range.ZERO)
+        }
+    }
+
     sealed class Boolean(val value: kotlin.Boolean) : GenValue() {
         object True : Boolean(true)
         object False : Boolean(false)
     }
+
+    data class List(val elements: Array<GenValue>) : GenValue()
 
     object None : GenValue()
 

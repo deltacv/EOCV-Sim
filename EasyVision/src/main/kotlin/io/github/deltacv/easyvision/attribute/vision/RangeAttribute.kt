@@ -50,8 +50,32 @@ class RangeAttribute(
         }
     }
 
-    override fun value(current: CodeGen.Current): GenValue {
-        TODO("Not yet implemented")
+    override fun value(current: CodeGen.Current): GenValue.Range {
+        if(isInput) {
+            return if(hasLink) {
+                val linkedAttrib = linkedAttribute()
+
+                raiseAssert(
+                    linkedAttrib != null,
+                    "Range attribute must have another attribute attached"
+                )
+
+                val value = linkedAttrib!!.value(current)
+                raiseAssert(value is GenValue.Range, "Attribute attached is not a Range")
+
+                value as GenValue.Range
+            } else {
+                GenValue.Range(
+                    minValue.get().toDouble(),
+                    maxValue.get().toDouble()
+                )
+            }
+        } else {
+            val value = getOutputValue(current)
+            raiseAssert(value is GenValue.Range, "Value returned from the node is not a Range")
+
+            return value as GenValue.Range
+        }
     }
 
 

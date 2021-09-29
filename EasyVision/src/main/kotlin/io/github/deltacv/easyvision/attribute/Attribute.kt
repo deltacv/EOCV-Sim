@@ -27,9 +27,28 @@ abstract class Attribute : DrawableIdElement {
     
     private var isFirstDraw = true
 
+    private var cancelNextDraw = false
+    var wasLastDrawCancelled = false
+        private set
+
     abstract fun drawAttribute()
 
+    fun drawHere() {
+        draw()
+        cancelNextDraw = true
+    }
+
     override fun draw() {
+        if(cancelNextDraw) {
+            cancelNextDraw = false
+            wasLastDrawCancelled = true
+            return
+        }
+
+        if(wasLastDrawCancelled) {
+            wasLastDrawCancelled = false
+        }
+
         if(isFirstDraw) {
             enable()
             isFirstDraw = false

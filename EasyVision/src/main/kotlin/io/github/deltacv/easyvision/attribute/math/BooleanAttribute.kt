@@ -48,9 +48,12 @@ class BooleanAttribute(
                     GenValue.Boolean.True
                 } else GenValue.Boolean.False
             }
-        }
+        } else {
+            val value = getOutputValue(current)
+            raiseAssert(value is GenValue.Boolean, "Value returned from the node is not a Boolean")
 
-        raise("Unexpected point reached while processing boolean attribute")
+            return value as GenValue.Boolean
+        }
     }
 
 }
