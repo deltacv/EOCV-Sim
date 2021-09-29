@@ -14,12 +14,16 @@ class InputMatNode : DrawNode<NoSession>("Pipeline Input", allowDelete = false) 
         + MatAttribute(OUTPUT, "Input")
     }
 
-    override fun genCode(current: CodeGen.Current): NoSession {
-        raise("Input Mat node cannot generate code")
+    override fun genCode(current: CodeGen.Current) = NoSession
+
+    fun startGen(current: CodeGen.Current) {
+        propagate(current)
     }
 
-    override fun getOutputValueOf(current: CodeGen.Current, attrib: Attribute) =
-        GenValue.Mat("input".v, Colors.RGBA)
+    val value = GenValue.Mat("input".v, Colors.RGBA)
+
+    override fun getOutputValueOf(current: CodeGen.Current,
+                                  attrib: Attribute) = value
 }
 
 class OutputMatNode : DrawNode<NoSession>("Pipeline Output", allowDelete = false) {

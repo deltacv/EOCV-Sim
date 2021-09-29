@@ -54,13 +54,11 @@ class EasyVision : Application() {
         inputNode.enable()
         outputNode.enable()
 
-        SumIntegerNode().enable()
-        SumIntegerNode().enable()
-
-        CvtColorNode().enable()
         CvtColorNode().enable()
 
         ThresholdNode().enable()
+
+        MaskNode().enable()
 
         launch(this)
 
@@ -99,7 +97,7 @@ class EasyVision : Application() {
             val timer = ElapsedTime()
 
             val codeGen = CodeGen("TestPipeline")
-            outputNode.genCode(codeGen.currScopeProcessFrame)
+            inputNode.startGen(codeGen.currScopeProcessFrame)
 
             println(codeGen.gen())
             println("took ${timer.seconds}")

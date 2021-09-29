@@ -18,7 +18,7 @@ class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
 
     val input = MatAttribute(INPUT, "Input")
     val scalar = ScalarAttribute(INPUT, Colors.values()[0], "Threshold")
-    val output = MatAttribute(OUTPUT, "Output")
+    val output = MatAttribute(OUTPUT, "Binary Output")
 
     override fun onEnable() {
         + input
@@ -55,6 +55,7 @@ class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
         val range = scalar.value(current)
 
         var inputMat = input.value(current)
+        inputMat.requireNonBinary(input)
         
         var matColor = inputMat.color
         var targetColor = lastColor
@@ -115,7 +116,7 @@ class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
             "Core.inRange"(inputMat.value, lowerScalar.v, upperScalar.v, thresholdTargetMat.v)
         }
 
-        session.outputMat = GenValue.Mat(thresholdTargetMat.v, targetColor)
+        session.outputMat = GenValue.Mat(thresholdTargetMat.v, targetColor, true)
 
         session
     }

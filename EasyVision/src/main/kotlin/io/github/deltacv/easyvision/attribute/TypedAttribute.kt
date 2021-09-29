@@ -28,6 +28,7 @@ abstract class TypedAttribute(var type: Type) : Attribute() {
 
     override fun drawAttribute() {
         if(drawDescriptiveText) {
+            ImGui.alignTextToFramePadding()
             val t = if(drawType) {
                 "(${type.name}) "
             } else ""

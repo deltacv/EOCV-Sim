@@ -80,6 +80,11 @@ abstract class Node<S: CodeGenSession>(
     }
 
     @Suppress("UNCHECKED_CAST")
+    /**
+     * Generates code if there's not a session in the current CodeGen
+     * Automatically propagates to all the nodes attached to the output
+     * attributes after genCode finishes. Called by default on onPropagateReceive()
+    */
     fun genCodeIfNecessary(current: CodeGen.Current) {
         val codeGen = current.codeGen
         val session = codeGen.sessions[this]
@@ -87,16 +92,41 @@ abstract class Node<S: CodeGenSession>(
         if(session == null) {
             genSession = genCode(current)
             codeGen.sessions[this] = genSession!!
+            propagate(current)
         } else {
             genSession = session as S
         }
     }
 
+    fun propagate(current: CodeGen.Current) {
+        for(attribute in attribs) {
+            if(attribute.mode == AttributeMode.OUTPUT) {
+                for(linkedAttribute in attribute.linkedAttributes()) {
+                    linkedAttribute.parentNode.onPropagateReceive(current)
+                }
+            }
+        }
+    }
+
+    open fun onPropagateReceive(current: CodeGen.Current) {
+        genCodeIfNecessary(current)
+    }
+
     fun raise(message: String): Nothing = throw NodeGenException(this, message)
 
+    fun warn(message: String) {
+        println("WARN: $message") // TODO: Warnings system...
+    }
+
     fun raiseAssert(condition: Boolean, message: String) {
-        if(condition) {
+        if(!condition) {
             raise(message)
+        }
+    }
+
+    fun warnAssert(condition: Boolean, message: String) {
+        if(!condition) {
+            warn(message)
         }
     }
 

@@ -1,11 +1,26 @@
 package io.github.deltacv.easyvision.codegen
 
+import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.codegen.parse.Value
 import io.github.deltacv.easyvision.node.vision.Colors
 
 sealed class GenValue {
 
-    data class Mat(val value: Value, val color: Colors) : GenValue()
+    data class Mat(val value: Value, val color: Colors, val isBinary: kotlin.Boolean = false) : GenValue() {
+        fun requireBinary(attribute: Attribute) {
+            attribute.warnAssert(
+                isBinary,
+                "Input Mat is not binary as required, this might cause runtime issues."
+            )
+        }
+
+        fun requireNonBinary(attribute: Attribute) {
+            attribute.warnAssert(
+                !isBinary,
+                "Input Mat is binary where it shouldn't be, this might cause runtime issues."
+            )
+        }
+    }
 
     data class Enum<E: kotlin.Enum<E>>(val value: E, val clazz: Class<*>) : GenValue()
 

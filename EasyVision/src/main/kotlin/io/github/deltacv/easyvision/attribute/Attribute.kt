@@ -98,11 +98,27 @@ abstract class Attribute : DrawableIdElement {
         } else link.aAttrib
     }
 
+    fun linkedAttributes() = links.map {
+        if(it.aAttrib == this) {
+            it.bAttrib
+        } else it.aAttrib
+    }
+
     fun raise(message: String): Nothing = throw AttributeGenException(this, message)
+
+    fun warn(message: String) {
+        println("WARN: $message") // TODO: Warnings system...
+    }
 
     fun raiseAssert(condition: Boolean, message: String) {
         if(!condition) {
             raise(message)
+        }
+    }
+
+    fun warnAssert(condition: Boolean, message: String) {
+        if(!condition) {
+            warn(message)
         }
     }
 

@@ -36,6 +36,7 @@ class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
         val session = Session()
 
         val inputMat = input.value(current)
+        inputMat.requireNonBinary(input)
 
         var targetColor = convertTo.value(current).value
         var matColor = inputMat.color
