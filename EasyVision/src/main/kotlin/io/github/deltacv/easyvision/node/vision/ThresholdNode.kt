@@ -3,24 +3,21 @@ package io.github.deltacv.easyvision.node.vision
 import imgui.ImGui
 import imgui.type.ImInt
 import io.github.deltacv.easyvision.attribute.Attribute
-import io.github.deltacv.easyvision.attribute.misc.EnumAttribute
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
-import io.github.deltacv.easyvision.attribute.vision.RangeAttribute
 import io.github.deltacv.easyvision.attribute.vision.ScalarAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.GenValue
-import io.github.deltacv.easyvision.codegen.NoSession
-import io.github.deltacv.easyvision.codegen.build.cvtColorValue
-import io.github.deltacv.easyvision.codegen.build.new
-import io.github.deltacv.easyvision.codegen.build.v
+import io.github.deltacv.easyvision.codegen.parse.cvtColorValue
+import io.github.deltacv.easyvision.codegen.parse.new
+import io.github.deltacv.easyvision.codegen.parse.v
 import io.github.deltacv.easyvision.gui.ExtraWidgets
 import io.github.deltacv.easyvision.node.DrawNode
 
 class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
 
     val input = MatAttribute(INPUT, "Input")
-    val scalar = ScalarAttribute(INPUT, Colors.values()[0], "Test")
+    val scalar = ScalarAttribute(INPUT, Colors.values()[0], "Threshold")
     val output = MatAttribute(OUTPUT, "Output")
 
     override fun onEnable() {

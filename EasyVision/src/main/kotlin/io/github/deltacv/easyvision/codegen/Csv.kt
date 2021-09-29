@@ -1,7 +1,7 @@
 package io.github.deltacv.easyvision.codegen
 
-import io.github.deltacv.easyvision.codegen.build.Parameter
-import io.github.deltacv.easyvision.codegen.build.Value
+import io.github.deltacv.easyvision.codegen.parse.Parameter
+import io.github.deltacv.easyvision.codegen.parse.Value
 
 fun Array<out String>.csv(): String {
     val builder = StringBuilder()

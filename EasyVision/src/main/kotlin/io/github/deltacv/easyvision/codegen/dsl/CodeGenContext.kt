@@ -1,7 +1,7 @@
 package io.github.deltacv.easyvision.codegen.dsl
 
 import io.github.deltacv.easyvision.codegen.*
-import io.github.deltacv.easyvision.codegen.build.*
+import io.github.deltacv.easyvision.codegen.parse.*
 
 class CodeGenContext(val codeGen: CodeGen) {
 

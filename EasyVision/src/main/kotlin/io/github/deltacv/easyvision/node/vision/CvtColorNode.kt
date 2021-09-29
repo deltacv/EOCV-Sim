@@ -5,7 +5,7 @@ import io.github.deltacv.easyvision.attribute.misc.EnumAttribute
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
 import io.github.deltacv.easyvision.codegen.*
 import io.github.deltacv.easyvision.codegen.CodeGenSession
-import io.github.deltacv.easyvision.codegen.build.*
+import io.github.deltacv.easyvision.codegen.parse.*
 import io.github.deltacv.easyvision.node.DrawNode
 
 enum class Colors(val channels: Int, val channelNames: Array<String>) {

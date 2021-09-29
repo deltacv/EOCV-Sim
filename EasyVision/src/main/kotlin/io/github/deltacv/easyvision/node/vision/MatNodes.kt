@@ -4,10 +4,9 @@ import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.node.DrawNode
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
-import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.codegen.NoSession
-import io.github.deltacv.easyvision.codegen.build.v
+import io.github.deltacv.easyvision.codegen.parse.v
 
 class InputMatNode : DrawNode<NoSession>("Pipeline Input", allowDelete = false) {
 

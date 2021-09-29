@@ -1,7 +1,7 @@
 package io.github.deltacv.easyvision.codegen.dsl
 
-import io.github.deltacv.easyvision.codegen.build.Scope
-import io.github.deltacv.easyvision.codegen.build.Value
+import io.github.deltacv.easyvision.codegen.parse.Scope
+import io.github.deltacv.easyvision.codegen.parse.Value
 import io.github.deltacv.easyvision.codegen.Visibility
 
 class ScopeContext(val scope: Scope) {

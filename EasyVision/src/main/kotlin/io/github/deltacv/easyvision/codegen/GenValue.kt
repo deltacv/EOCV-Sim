@@ -1,6 +1,6 @@
 package io.github.deltacv.easyvision.codegen
 
-import io.github.deltacv.easyvision.codegen.build.Value
+import io.github.deltacv.easyvision.codegen.parse.Value
 import io.github.deltacv.easyvision.node.vision.Colors
 
 sealed class GenValue {

@@ -1,7 +1,7 @@
 package io.github.deltacv.easyvision.codegen
 
-import io.github.deltacv.easyvision.codegen.build.Parameter
-import io.github.deltacv.easyvision.codegen.build.Scope
+import io.github.deltacv.easyvision.codegen.parse.Parameter
+import io.github.deltacv.easyvision.codegen.parse.Scope
 import io.github.deltacv.easyvision.codegen.dsl.CodeGenContext
 import io.github.deltacv.easyvision.node.Node
 
