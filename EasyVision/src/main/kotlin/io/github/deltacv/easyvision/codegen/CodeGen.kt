@@ -53,12 +53,10 @@ class CodeGen(var className: String) {
         }
 
         val process = processFrameScope.get()
-        if(process.isNotBlank()) {
-            bodyScope.method(
-                Visibility.PUBLIC, "Mat", "processFrame", processFrameScope,
-                Parameter("Mat", "input"), isOverride = true
-            )
-        }
+        bodyScope.method(
+            Visibility.PUBLIC, "Mat", "processFrame", processFrameScope,
+            Parameter("Mat", "input"), isOverride = true
+        )
 
         val viewportTapped = viewportTappedScope.get()
         if(viewportTapped.isNotBlank()) {

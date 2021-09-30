@@ -3,6 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
 }
 
+apply from: '../build.common.gradle'
+
 version = "1.0.0"
 
 dependencies {

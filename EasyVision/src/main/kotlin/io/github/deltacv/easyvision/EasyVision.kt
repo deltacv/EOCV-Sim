@@ -1,16 +1,18 @@
 package io.github.deltacv.easyvision
 
+import imgui.ImFont
 import imgui.ImGui
 import imgui.ImVec2
 import imgui.app.Application
 import imgui.app.Configuration
-import imgui.flag.ImGuiCond
-import imgui.flag.ImGuiKey
-import imgui.flag.ImGuiMouseButton
-import imgui.flag.ImGuiWindowFlags
+import imgui.flag.*
+import imgui.type.ImFloat
 import io.github.deltacv.easyvision.codegen.*
+import io.github.deltacv.easyvision.gui.ExtraWidgets
+import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.node.NodeEditor
+import io.github.deltacv.easyvision.node.NodeList
 import io.github.deltacv.easyvision.node.math.SumIntegerNode
 import io.github.deltacv.easyvision.node.vision.Colors
 import io.github.deltacv.easyvision.node.vision.*
@@ -44,7 +46,10 @@ class EasyVision : Application() {
     private var prevKeyCallback: GLFWKeyCallback? = null
 
     val editor = NodeEditor(this)
+    val nodeList = NodeList()
 
+    lateinit var defaultFont: ImFont
+    
     val inputNode = InputMatNode()
     val outputNode = OutputMatNode()
 
@@ -69,6 +74,16 @@ class EasyVision : Application() {
         config.title = "EasyVision"
     }
 
+    override fun initImGui(config: Configuration?) {
+        super.initImGui(config)
+        defaultFont = makeFont(13f)
+        nodeList.init()
+    }
+
+    val splitterId by miscIds.nextId()
+    val splitterSize1 = ImFloat(300f)
+    val splitterSize2 = ImFloat(300f)
+
     override fun process() {
         if(prevKeyCallback == null) {
             ptr = handle
@@ -81,15 +96,22 @@ class EasyVision : Application() {
         val size = windowSize
         ImGui.setNextWindowSize(size.x, size.y, ImGuiCond.Always)
 
+        ImGui.pushFont(defaultFont)
         ImGui.begin("Editor",
-            ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoCollapse
+            ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
+                    or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoBringToFrontOnFocus
         )
 
         editor.draw()
 
         ImGui.end()
+        ImGui.popFont()
 
+        nodeList.draw()
+
+        ImGui.pushFont(defaultFont)
         PopupBuilder.draw()
+        ImGui.popFont()
 
         isDeleteReleased = false
 
