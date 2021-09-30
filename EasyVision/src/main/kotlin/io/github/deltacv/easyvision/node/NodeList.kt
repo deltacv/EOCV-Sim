@@ -52,7 +52,9 @@ class NodeList(val easyVision: EasyVision) {
         }
 
         ImGui.setNextWindowPos(size.x - plusFontSize * 2f, size.y - plusFontSize * 2f)
-        ImGui.setNextWindowFocus()
+        if(isNodesListOpen) {
+            ImGui.setNextWindowFocus()
+        }
 
         ImGui.begin(
             "floating", ImGuiWindowFlags.NoBackground
@@ -60,7 +62,6 @@ class NodeList(val easyVision: EasyVision) {
         )
 
         ImGui.pushFont(buttonFont)
-
         val buttonSize = ImGui.getFrameHeight()
 
         val button = ImGui.button(if(isNodesListOpen) "x" else "+", buttonSize, buttonSize)

@@ -80,10 +80,6 @@ class EasyVision : Application() {
         nodeList.init()
     }
 
-    val splitterId by miscIds.nextId()
-    val splitterSize1 = ImFloat(300f)
-    val splitterSize2 = ImFloat(300f)
-
     override fun process() {
         if(prevKeyCallback == null) {
             ptr = handle
@@ -96,7 +92,7 @@ class EasyVision : Application() {
         val size = windowSize
         ImGui.setNextWindowSize(size.x, size.y, ImGuiCond.Always)
 
-        //ImGui.pushFont(defaultFont)
+        ImGui.pushFont(defaultFont)
         ImGui.begin("Editor",
             ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
                     or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoBringToFrontOnFocus
@@ -106,7 +102,7 @@ class EasyVision : Application() {
         editor.draw()
 
         ImGui.end()
-        //ImGui.popFont()
+        ImGui.popFont()
 
         nodeList.draw()
 
