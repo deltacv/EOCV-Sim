@@ -2,6 +2,7 @@ package io.github.deltacv.easyvision.node
 
 import imgui.ImGui
 import imgui.extension.imnodes.ImNodes
+import imgui.extension.imnodes.ImNodesContext
 import imgui.flag.ImGuiMouseButton
 import imgui.type.ImInt
 import io.github.deltacv.easyvision.EasyVision
@@ -10,11 +11,14 @@ import io.github.deltacv.easyvision.attribute.AttributeMode
 
 class NodeEditor(val easyVision: EasyVision) {
 
+    val context = ImNodesContext()
+
     fun init() {
         ImNodes.createContext()
     }
 
     fun draw() {
+        ImNodes.editorContextSet(context)
         ImNodes.beginNodeEditor()
 
         for(node in Node.nodes) {

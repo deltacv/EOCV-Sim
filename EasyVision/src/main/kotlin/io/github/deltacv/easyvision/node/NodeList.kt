@@ -1,8 +1,13 @@
 package io.github.deltacv.easyvision.node
 
+import imgui.ImColor
 import imgui.ImFont
 import imgui.ImGui
 import imgui.extension.imnodes.ImNodes
+import imgui.extension.imnodes.ImNodesContext
+import imgui.extension.imnodes.flag.ImNodesAttributeFlags
+import imgui.extension.imnodes.flag.ImNodesColorStyle
+import imgui.extension.imnodes.flag.ImNodesStyleFlags
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiWindowFlags
@@ -13,10 +18,13 @@ class NodeList(val easyVision: EasyVision) {
 
     lateinit var buttonFont: ImFont
 
-    val plusFontSize = 50f
+    val plusFontSize = 60f
 
     private var isNodesListOpen = false
     private var lastButton = false
+
+
+    private lateinit var listContext: ImNodesContext
 
     fun init() {
         buttonFont = makeFont(plusFontSize)
@@ -31,13 +39,14 @@ class NodeList(val easyVision: EasyVision) {
             isNodesListOpen = false
         }
 
+        // NODES LIST
+
         if(isNodesListOpen) {
             ImGui.setNextWindowPos(0f, 0f)
             ImGui.setNextWindowSize(size.x, size.y, ImGuiCond.Always)
 
-            ImGui.pushStyleColor(ImGuiCol.WindowBg, 0f, 0f, 0f, 0.5f)
+            ImGui.pushStyleColor(ImGuiCol.WindowBg, 0f, 0f, 0f, 0.55f) // transparent dark nodes list window
 
-            //ImGui.setNextWindowFocus()
             ImGui.begin("nodes",
                 ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
                         or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoTitleBar
@@ -51,7 +60,10 @@ class NodeList(val easyVision: EasyVision) {
             ImGui.popStyleColor()
         }
 
-        ImGui.setNextWindowPos(size.x - plusFontSize * 2f, size.y - plusFontSize * 2f)
+        // OPEN/CLOSE BUTTON
+
+        ImGui.setNextWindowPos(size.x - plusFontSize * 1.8f, size.y - plusFontSize * 1.8f)
+
         if(isNodesListOpen) {
             ImGui.setNextWindowFocus()
         }
@@ -68,6 +80,9 @@ class NodeList(val easyVision: EasyVision) {
 
         if (button != lastButton && button) {
             isNodesListOpen = !isNodesListOpen
+            if(isNodesListOpen) {
+                listContext = ImNodesContext()
+            }
         }
 
         lastButton = button
@@ -77,6 +92,26 @@ class NodeList(val easyVision: EasyVision) {
     }
 
     private fun drawNodesList() {
+        ImNodes.editorContextSet(listContext)
+
+        ImNodes.getStyle().gridSpacing = 99999f // lol only way to make grid invisible
+        ImNodes.pushColorStyle(ImNodesColorStyle.GridBackground, ImColor.floatToColor(0f, 0f, 0f, 0f))
+
+        ImNodes.clearNodeSelection()
+
+        ImNodes.beginNodeEditor()
+            ImNodes.beginNode(3213)
+                ImNodes.beginNodeTitleBar()
+                    ImGui.text("yes")
+                ImNodes.endNodeTitleBar()
+
+                ImGui.text("aaaaaaa")
+            ImNodes.endNode()
+
+        ImNodes.endNodeEditor()
+
+        ImNodes.getStyle().gridSpacing = 32f // back to normal
+        ImNodes.popColorStyle()
     }
 
 }
