@@ -46,7 +46,7 @@ class EasyVision : Application() {
     private var prevKeyCallback: GLFWKeyCallback? = null
 
     val editor = NodeEditor(this)
-    val nodeList = NodeList()
+    val nodeList = NodeList(this)
 
     lateinit var defaultFont: ImFont
     
@@ -96,16 +96,17 @@ class EasyVision : Application() {
         val size = windowSize
         ImGui.setNextWindowSize(size.x, size.y, ImGuiCond.Always)
 
-        ImGui.pushFont(defaultFont)
+        //ImGui.pushFont(defaultFont)
         ImGui.begin("Editor",
             ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
                     or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoBringToFrontOnFocus
+                    or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoDecoration
         )
 
         editor.draw()
 
         ImGui.end()
-        ImGui.popFont()
+        //ImGui.popFont()
 
         nodeList.draw()
 
@@ -114,6 +115,8 @@ class EasyVision : Application() {
         ImGui.popFont()
 
         isDeleteReleased = false
+        isEscReleased = false
+        isSpaceReleased = false
 
         if(ImGui.isMouseReleased(ImGuiMouseButton.Right)) {
             val timer = ElapsedTime()
@@ -127,6 +130,11 @@ class EasyVision : Application() {
     }
 
     var isDeleteReleased = false
+        private set
+    var isEscReleased = false
+        private set
+    var isSpaceReleased = false
+        private set
 
     private fun keyCallback(windowId: Long, key: Int, scancode: Int, action: Int, mods: Int) {
         if(prevKeyCallback != null) {
@@ -134,6 +142,8 @@ class EasyVision : Application() {
         }
 
         isDeleteReleased = scancode == 119 && action == GLFW.GLFW_RELEASE
+        isEscReleased = scancode == 9 && action == GLFW.GLFW_RELEASE
+        isSpaceReleased = scancode == 65 && action == GLFW.GLFW_RELEASE
     }
 
 }
