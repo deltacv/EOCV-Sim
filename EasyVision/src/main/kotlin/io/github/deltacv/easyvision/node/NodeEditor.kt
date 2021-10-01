@@ -13,6 +13,9 @@ class NodeEditor(val easyVision: EasyVision) {
 
     val context = ImNodesContext()
 
+    var isNodeFocused = false
+        private set
+
     fun init() {
         ImNodes.createContext()
     }
@@ -35,6 +38,8 @@ class NodeEditor(val easyVision: EasyVision) {
         }
 
         ImNodes.endNodeEditor()
+
+        isNodeFocused = ImNodes.numSelectedNodes() > 0
 
         handleDeleteLink()
         handleCreateLink()

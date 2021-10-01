@@ -37,12 +37,10 @@ class NodeList(val easyVision: EasyVision) {
     var isNodesListOpen = false
         private set
 
-    private var wasNodesListOpen = false
-    val wasJustClosed get() = isNodesListOpen != wasNodesListOpen && !isNodesListOpen
-
     private var lastButton = false
 
     private val openButtonTimeout = ElapsedTime()
+    private val hoveringPlusTime = ElapsedTime()
 
     private lateinit var listContext: ImNodesContext
 
@@ -60,10 +58,12 @@ class NodeList(val easyVision: EasyVision) {
     fun draw() {
         val size = EasyVision.windowSize
 
-        if(easyVision.isSpaceReleased) {
-            isNodesListOpen = true
-        } else if(easyVision.isEscReleased) {
-            isNodesListOpen = false
+        if(!easyVision.editor.isNodeFocused && easyVision.isSpaceReleased) {
+            showList()
+        }
+
+        if(easyVision.isEscReleased) {
+            closeList()
         }
 
         // NODES LIST
@@ -105,18 +105,28 @@ class NodeList(val easyVision: EasyVision) {
 
         val button = ImGui.button(if(isNodesListOpen) "x" else "+", buttonSize, buttonSize)
 
-        if (button != lastButton && button && !isNodesListOpen && openButtonTimeout.millis > 200) {
-            isNodesListOpen = true
+        ImGui.popFont()
 
-            if(isNodesListOpen) {
-                listContext = ImNodesContext()
+        if (button != lastButton && button && !isNodesListOpen && openButtonTimeout.millis > 200) {
+            showList()
+        }
+
+        if(ImGui.isItemHovered()) {
+            if(hoveringPlusTime.millis > 500) {
+                ImGui.beginTooltip()
+                    ImGui.text(
+                        if(isNodesListOpen) {
+                            "Press ESCAPE to close the nodes list"
+                        } else "Press SPACE to open the nodes list"
+                    )
+                ImGui.endTooltip()
             }
+        } else {
+            hoveringPlusTime.reset()
         }
 
         lastButton = button
-        wasNodesListOpen = isNodesListOpen
 
-        ImGui.popFont()
         ImGui.end()
     }
 
@@ -164,8 +174,25 @@ class NodeList(val easyVision: EasyVision) {
                 }
             }
 
-            isNodesListOpen = false
+            closeList()
             openButtonTimeout.reset()
+        }
+    }
+
+    fun showList() {
+        if(!isNodesListOpen) {
+            if(::listContext.isInitialized) {
+                listContext.destroy()
+            }
+            listContext = ImNodesContext()
+
+            isNodesListOpen = true
+        }
+    }
+
+    fun closeList() {
+        if(isNodesListOpen) {
+            isNodesListOpen = false
         }
     }
 
