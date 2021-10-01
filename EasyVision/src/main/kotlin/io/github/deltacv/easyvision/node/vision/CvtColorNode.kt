@@ -6,6 +6,8 @@ import io.github.deltacv.easyvision.attribute.vision.MatAttribute
 import io.github.deltacv.easyvision.codegen.*
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.parse.*
+import io.github.deltacv.easyvision.node.AddNode
+import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.DrawNode
 
 enum class Colors(val channels: Int, val channelNames: Array<String>) {
@@ -15,9 +17,14 @@ enum class Colors(val channels: Int, val channelNames: Array<String>) {
     HSV(3,   arrayOf("H", "S", "V")),
     YCrCb(3, arrayOf("Y", "Cr", "Cb")),
     LAB(3,   arrayOf("L", "A", "B")),
-    GRAY(1,  arrayOf("GRAY"))
+    GRAY(1,  arrayOf("Gray"))
 }
 
+@AddNode(
+    name = "Convert Color",
+    category = Category.CV_BASICS,
+    description = "Converts a Mat from its current color space to the specified color space. If the mat is already in the specified color space, no conversion is made."
+)
 class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
 
     val input  = MatAttribute(INPUT, "Input")

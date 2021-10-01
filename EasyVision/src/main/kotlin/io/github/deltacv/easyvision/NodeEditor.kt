@@ -1,13 +1,14 @@
-package io.github.deltacv.easyvision.node
+package io.github.deltacv.easyvision
 
 import imgui.ImGui
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.ImNodesContext
 import imgui.flag.ImGuiMouseButton
 import imgui.type.ImInt
-import io.github.deltacv.easyvision.EasyVision
-import io.github.deltacv.easyvision.PopupBuilder
+import io.github.deltacv.easyvision.gui.PopupBuilder
 import io.github.deltacv.easyvision.attribute.AttributeMode
+import io.github.deltacv.easyvision.node.Link
+import io.github.deltacv.easyvision.node.Node
 
 class NodeEditor(val easyVision: EasyVision) {
 

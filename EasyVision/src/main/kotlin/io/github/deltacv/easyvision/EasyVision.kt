@@ -6,22 +6,16 @@ import imgui.ImVec2
 import imgui.app.Application
 import imgui.app.Configuration
 import imgui.flag.*
-import imgui.type.ImFloat
 import io.github.deltacv.easyvision.codegen.*
-import io.github.deltacv.easyvision.gui.ExtraWidgets
+import io.github.deltacv.easyvision.gui.PopupBuilder
 import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
-import io.github.deltacv.easyvision.node.NodeEditor
-import io.github.deltacv.easyvision.node.NodeList
-import io.github.deltacv.easyvision.node.math.SumIntegerNode
-import io.github.deltacv.easyvision.node.vision.Colors
 import io.github.deltacv.easyvision.node.vision.*
 import io.github.deltacv.easyvision.util.ElapsedTime
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
-import org.lwjgl.glfw.GLFWMouseButtonCallback
 
 class EasyVision : Application() {
 

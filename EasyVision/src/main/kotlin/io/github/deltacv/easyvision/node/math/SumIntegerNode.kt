@@ -7,8 +7,15 @@ import io.github.deltacv.easyvision.attribute.misc.ListAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.GenValue
+import io.github.deltacv.easyvision.node.AddNode
+import io.github.deltacv.easyvision.node.Category
 
-class SumIntegerNode : DrawNode<SumIntegerNode.Session>("Sum Integer") {
+@AddNode(
+    name = "Sum Integers",
+    category = Category.MATH,
+    description = "Sums a list of integers and outputs the result"
+)
+class SumIntegerNode : DrawNode<SumIntegerNode.Session>("Sum Integers") {
 
     val numbers = ListAttribute(INPUT, IntAttribute, "Numbers")
     val result  = IntAttribute(OUTPUT, "Result")
@@ -18,15 +25,26 @@ class SumIntegerNode : DrawNode<SumIntegerNode.Session>("Sum Integer") {
         + result
     }
 
-    class Session : CodeGenSession {
-    }
+    override fun genCode(current: CodeGen.Current) = current {
+        val session = Session()
 
-    override fun genCode(current: CodeGen.Current): Session {
-        TODO("Not yet implemented")
+
+
+        session
     }
 
     override fun getOutputValueOf(current: CodeGen.Current, attrib: Attribute): GenValue {
-        TODO("Not yet implemented")
+        genCodeIfNecessary()
+
+        if(attrib == result) {
+            return genSession!!.result
+        }
+
+        raise("Attribute $attrib is not an output of this node or not handled by this")
+    }
+
+    class Session : CodeGenSession {
+        lateinit var result: GenValue.Int
     }
 
 }

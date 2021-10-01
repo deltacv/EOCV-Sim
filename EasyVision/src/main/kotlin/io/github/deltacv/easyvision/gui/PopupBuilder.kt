@@ -1,6 +1,7 @@
-package io.github.deltacv.easyvision
+package io.github.deltacv.easyvision.gui
 
 import imgui.ImGui
+import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.util.ElapsedTime
 
 object PopupBuilder {

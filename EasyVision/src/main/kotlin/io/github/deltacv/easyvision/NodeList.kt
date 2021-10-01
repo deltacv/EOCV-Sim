@@ -1,4 +1,4 @@
-package io.github.deltacv.easyvision.node
+package io.github.deltacv.easyvision
 
 import imgui.ImColor
 import imgui.ImFont
@@ -6,22 +6,18 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.ImNodesContext
-import imgui.extension.imnodes.flag.ImNodesAttributeFlags
 import imgui.extension.imnodes.flag.ImNodesColorStyle
-import imgui.extension.imnodes.flag.ImNodesStyleFlags
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiMouseButton
 import imgui.flag.ImGuiWindowFlags
-import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
+import io.github.deltacv.easyvision.node.DrawNode
+import io.github.deltacv.easyvision.node.Node
 import io.github.deltacv.easyvision.node.vision.CvtColorNode
 import io.github.deltacv.easyvision.util.ElapsedTime
-import java.awt.MouseInfo
-import java.awt.Robot
-import java.awt.event.InputEvent
 
 class NodeList(val easyVision: EasyVision) {
 
