@@ -3,6 +3,7 @@ package io.github.deltacv.easyvision.node
 import imgui.ImGui
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
+import imgui.flag.ImGuiMouseButton
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 
 abstract class DrawNode<S: CodeGenSession>(
@@ -12,14 +13,12 @@ abstract class DrawNode<S: CodeGenSession>(
 
     var nextNodePosition: ImVec2? = null
 
+    var pinToMouse = false
+    private var lastPinToMouse = false
+
+    private var pinToMouseOffset = ImVec2()
+
     override fun draw() {
-        nextNodePosition?.let {
-            ImNodes.setNodeScreenSpacePos(id, it.x, it.y)
-            nextNodePosition = null
-        }
-
-        ImNodes.setNodeDraggable(id, true)
-
         ImNodes.beginNode(id)
             if(title != null) {
                 ImNodes.beginNodeTitleBar()
@@ -30,6 +29,36 @@ abstract class DrawNode<S: CodeGenSession>(
             drawNode()
             drawAttributes()
         ImNodes.endNode()
+
+        nextNodePosition?.let {
+            ImNodes.setNodeScreenSpacePos(id, it.x, it.y)
+            nextNodePosition = null
+        }
+
+        if(pinToMouse) {
+            val mousePos = ImGui.getMousePos()
+
+            if(pinToMouse != lastPinToMouse) {
+                val nodeDims = ImVec2()
+                ImNodes.getNodeDimensions(id, nodeDims)
+
+                pinToMouseOffset = ImVec2(
+                    nodeDims.x / 2,
+                    nodeDims.y / 2
+                )
+            }
+
+            val newPosX = mousePos.x - pinToMouseOffset.x
+            val newPosY = mousePos.y - pinToMouseOffset.y
+
+            ImNodes.setNodeEditorSpacePos(id, newPosX, newPosY)
+
+            if(ImGui.isMouseReleased(ImGuiMouseButton.Left)) {
+                pinToMouse = false
+            }
+        }
+
+        lastPinToMouse = pinToMouse
     }
 
     open fun drawNode() { }

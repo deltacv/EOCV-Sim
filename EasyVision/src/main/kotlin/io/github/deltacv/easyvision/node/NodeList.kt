@@ -141,8 +141,6 @@ class NodeList(val easyVision: EasyVision) {
         handleClick()
     }
 
-    private val robit = Robot()
-
     fun handleClick() {
         if(ImGui.isMouseClicked(ImGuiMouseButton.Left)) {
             val hovered = ImNodes.getHoveredNode()
@@ -152,18 +150,17 @@ class NodeList(val easyVision: EasyVision) {
                 val instance = nodeClass.getConstructor().newInstance()
                 instance.enable()
 
-                val nodePos = ImVec2()
-                val nodeDims = ImVec2()
-                ImNodes.getNodeScreenSpacePos(hovered, nodePos)
-                ImNodes.getNodeDimensions(hovered, nodeDims)
-
-                val mousePos = ImGui.getMousePos()
-
-                val newPosX = mousePos.x - nodePos.x
-                val newPosY = mousePos.y - nodePos.y
-
                 if(instance is DrawNode<*>) {
+                    val nodePos = ImVec2()
+                    ImNodes.getNodeScreenSpacePos(hovered, nodePos)
+
+                    val mousePos = ImGui.getMousePos()
+
+                    val newPosX = mousePos.x - nodePos.x
+                    val newPosY = mousePos.y - nodePos.y
+
                     instance.nextNodePosition = ImVec2(newPosX, newPosY)
+                    instance.pinToMouse = true
                 }
             }
 
