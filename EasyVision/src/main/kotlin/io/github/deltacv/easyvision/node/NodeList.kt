@@ -19,6 +19,9 @@ import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.node.vision.CvtColorNode
 import io.github.deltacv.easyvision.util.ElapsedTime
+import java.awt.MouseInfo
+import java.awt.Robot
+import java.awt.event.InputEvent
 
 class NodeList(val easyVision: EasyVision) {
 
@@ -31,7 +34,12 @@ class NodeList(val easyVision: EasyVision) {
 
     val plusFontSize = 60f
 
-    private var isNodesListOpen = false
+    var isNodesListOpen = false
+        private set
+
+    private var wasNodesListOpen = false
+    val wasJustClosed get() = isNodesListOpen != wasNodesListOpen && !isNodesListOpen
+
     private var lastButton = false
 
     private val openButtonTimeout = ElapsedTime()
@@ -106,6 +114,7 @@ class NodeList(val easyVision: EasyVision) {
         }
 
         lastButton = button
+        wasNodesListOpen = isNodesListOpen
 
         ImGui.popFont()
         ImGui.end()
@@ -131,6 +140,8 @@ class NodeList(val easyVision: EasyVision) {
 
         handleClick()
     }
+
+    private val robit = Robot()
 
     fun handleClick() {
         if(ImGui.isMouseClicked(ImGuiMouseButton.Left)) {

@@ -19,6 +19,12 @@ class NodeEditor(val easyVision: EasyVision) {
 
     fun draw() {
         ImNodes.editorContextSet(context)
+
+        if(easyVision.nodeList.isNodesListOpen) {
+            ImNodes.clearLinkSelection()
+            ImNodes.clearNodeSelection()
+        }
+
         ImNodes.beginNodeEditor()
 
         for(node in Node.nodes) {
@@ -95,7 +101,9 @@ class NodeEditor(val easyVision: EasyVision) {
                 ImNodes.getSelectedNodes(selectedNodes)
 
                 for(node in selectedNodes) {
-                    Node.nodes[node]?.delete()
+                    try {
+                        Node.nodes[node]?.delete()
+                    } catch(ignored: IndexOutOfBoundsException) {}
                 }
             }
 

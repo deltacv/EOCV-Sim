@@ -19,9 +19,9 @@ import io.github.deltacv.easyvision.node.vision.*
 import io.github.deltacv.easyvision.util.ElapsedTime
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
-import org.lwjgl.glfw.GLFW.glfwGetWindowSize
-import org.lwjgl.glfw.GLFW.glfwSetKeyCallback
+import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
+import org.lwjgl.glfw.GLFWMouseButtonCallback
 
 class EasyVision : Application() {
 
@@ -93,6 +93,7 @@ class EasyVision : Application() {
         ImGui.setNextWindowSize(size.x, size.y, ImGuiCond.Always)
 
         ImGui.pushFont(defaultFont)
+
         ImGui.begin("Editor",
             ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
                     or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoBringToFrontOnFocus
@@ -141,7 +142,6 @@ class EasyVision : Application() {
         isEscReleased = scancode == 9 && action == GLFW.GLFW_RELEASE
         isSpaceReleased = scancode == 65 && action == GLFW.GLFW_RELEASE
     }
-
 }
 
 fun main() {
