@@ -145,9 +145,9 @@ open class ListAttribute(
         val elementName = count + if(count.length == 1) " " else ""
 
         val element = elementType.new(AttributeMode.INPUT, elementName)
+        element.parentNode = parentNode
         element.enable() //enables the new element
 
-        element.parentNode = parentNode
         element.drawType = false // hides the variable type
 
         listAttributes.add(element)

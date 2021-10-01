@@ -14,7 +14,7 @@ abstract class Attribute : DrawableIdElement {
 
     abstract val mode: AttributeMode
 
-    override val id by Node.attributes.nextId { this }
+    override val id by lazy { parentNode.attributesIdContainer.nextId(this).value }
 
     lateinit var parentNode: Node<*>
         internal set
@@ -53,19 +53,23 @@ abstract class Attribute : DrawableIdElement {
             enable()
             isFirstDraw = false
         }
-        
-        if(mode == AttributeMode.INPUT) {
-            ImNodes.beginInputAttribute(id)
-        } else {
-            ImNodes.beginOutputAttribute(id)
+
+        if(parentNode.drawAttributesCircles) {
+            if (mode == AttributeMode.INPUT) {
+                ImNodes.beginInputAttribute(id)
+            } else {
+                ImNodes.beginOutputAttribute(id)
+            }
         }
 
         drawAttribute()
 
-        if(mode == AttributeMode.INPUT) {
-            ImNodes.endInputAttribute()
-        } else {
-            ImNodes.endOutputAttribute()
+        if(parentNode.drawAttributesCircles) {
+            if (mode == AttributeMode.INPUT) {
+                ImNodes.endInputAttribute()
+            } else {
+                ImNodes.endOutputAttribute()
+            }
         }
     }
 

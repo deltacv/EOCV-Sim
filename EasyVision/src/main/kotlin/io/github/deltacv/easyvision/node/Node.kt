@@ -1,6 +1,7 @@
 package io.github.deltacv.easyvision.node
 
 import imgui.ImGui
+import imgui.ImVec2
 import io.github.deltacv.easyvision.id.DrawableIdElement
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.attribute.Attribute
@@ -18,7 +19,12 @@ abstract class Node<S: CodeGenSession>(
     private var allowDelete: Boolean = true
 ) : DrawableIdElement {
 
-    override val id by nodes.nextId { this }
+    var nodesIdContainer = nodes
+    var attributesIdContainer = attributes
+
+    var drawAttributesCircles = true
+
+    override val id by lazy { nodesIdContainer.nextId(this).value }
 
     private val attribs = mutableListOf<Attribute>() // internal mutable list
     val nodeAttributes = attribs as List<Attribute> // public read-only

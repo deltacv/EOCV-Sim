@@ -3,6 +3,7 @@ package io.github.deltacv.easyvision.node
 import imgui.ImColor
 import imgui.ImFont
 import imgui.ImGui
+import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.ImNodesContext
 import imgui.extension.imnodes.flag.ImNodesAttributeFlags
@@ -10,11 +11,21 @@ import imgui.extension.imnodes.flag.ImNodesColorStyle
 import imgui.extension.imnodes.flag.ImNodesStyleFlags
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
+import imgui.flag.ImGuiMouseButton
 import imgui.flag.ImGuiWindowFlags
 import io.github.deltacv.easyvision.EasyVision
+import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.gui.makeFont
+import io.github.deltacv.easyvision.id.IdElementContainer
+import io.github.deltacv.easyvision.node.vision.CvtColorNode
+import io.github.deltacv.easyvision.util.ElapsedTime
 
 class NodeList(val easyVision: EasyVision) {
+
+    companion object {
+        val listNodes = IdElementContainer<Node<*>>()
+        val listAttributes = IdElementContainer<Attribute>()
+    }
 
     lateinit var buttonFont: ImFont
 
@@ -23,11 +34,19 @@ class NodeList(val easyVision: EasyVision) {
     private var isNodesListOpen = false
     private var lastButton = false
 
+    private val openButtonTimeout = ElapsedTime()
 
     private lateinit var listContext: ImNodesContext
 
+    val testNode = CvtColorNode()
+
     fun init() {
         buttonFont = makeFont(plusFontSize)
+
+        testNode.nodesIdContainer = listNodes
+        testNode.attributesIdContainer = listAttributes
+        testNode.drawAttributesCircles = false
+        testNode.enable()
     }
 
     fun draw() {
@@ -78,8 +97,9 @@ class NodeList(val easyVision: EasyVision) {
 
         val button = ImGui.button(if(isNodesListOpen) "x" else "+", buttonSize, buttonSize)
 
-        if (button != lastButton && button) {
-            isNodesListOpen = !isNodesListOpen
+        if (button != lastButton && button && !isNodesListOpen && openButtonTimeout.millis > 200) {
+            isNodesListOpen = true
+
             if(isNodesListOpen) {
                 listContext = ImNodesContext()
             }
@@ -98,20 +118,47 @@ class NodeList(val easyVision: EasyVision) {
         ImNodes.pushColorStyle(ImNodesColorStyle.GridBackground, ImColor.floatToColor(0f, 0f, 0f, 0f))
 
         ImNodes.clearNodeSelection()
+        ImNodes.clearLinkSelection()
 
         ImNodes.beginNodeEditor()
-            ImNodes.beginNode(3213)
-                ImNodes.beginNodeTitleBar()
-                    ImGui.text("yes")
-                ImNodes.endNodeTitleBar()
-
-                ImGui.text("aaaaaaa")
-            ImNodes.endNode()
-
+            for(node in listNodes) {
+                node.draw()
+            }
         ImNodes.endNodeEditor()
 
         ImNodes.getStyle().gridSpacing = 32f // back to normal
         ImNodes.popColorStyle()
+
+        handleClick()
+    }
+
+    fun handleClick() {
+        if(ImGui.isMouseClicked(ImGuiMouseButton.Left)) {
+            val hovered = ImNodes.getHoveredNode()
+
+            if(hovered >= 0) {
+                val nodeClass = listNodes[hovered]!!::class.java
+                val instance = nodeClass.getConstructor().newInstance()
+                instance.enable()
+
+                val nodePos = ImVec2()
+                val nodeDims = ImVec2()
+                ImNodes.getNodeScreenSpacePos(hovered, nodePos)
+                ImNodes.getNodeDimensions(hovered, nodeDims)
+
+                val mousePos = ImGui.getMousePos()
+
+                val newPosX = mousePos.x - nodePos.x
+                val newPosY = mousePos.y - nodePos.y
+
+                if(instance is DrawNode<*>) {
+                    instance.nextNodePosition = ImVec2(newPosX, newPosY)
+                }
+            }
+
+            isNodesListOpen = false
+            openButtonTimeout.reset()
+        }
     }
 
 }
