@@ -1,4 +1,4 @@
-package io.github.deltacv.easyvision
+package io.github.deltacv.easyvision.node
 
 import imgui.ImColor
 import imgui.ImFont
@@ -11,19 +11,27 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiMouseButton
 import imgui.flag.ImGuiWindowFlags
+import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
-import io.github.deltacv.easyvision.node.DrawNode
-import io.github.deltacv.easyvision.node.Node
 import io.github.deltacv.easyvision.node.vision.CvtColorNode
 import io.github.deltacv.easyvision.util.ElapsedTime
+import kotlinx.coroutines.*
 
 class NodeList(val easyVision: EasyVision) {
 
     companion object {
         val listNodes = IdElementContainer<Node<*>>()
         val listAttributes = IdElementContainer<Attribute>()
+
+        lateinit var annotatedNodes: List<Class<out Node<*>>>
+            private set
+
+        @OptIn(DelicateCoroutinesApi::class)
+        private val annotatedNodesJob = GlobalScope.launch(Dispatchers.IO) {
+            annotatedNodes = NodeScanner.scan()
+        }
     }
 
     lateinit var buttonFont: ImFont
@@ -52,9 +60,15 @@ class NodeList(val easyVision: EasyVision) {
     }
 
     fun draw() {
+        if(!annotatedNodesJob.isCompleted) {
+            runBlocking {
+                annotatedNodesJob.join()
+            }
+        }
+
         val size = EasyVision.windowSize
 
-        if(!easyVision.editor.isNodeFocused && easyVision.isSpaceReleased) {
+        if(!easyVision.nodeEditor.isNodeFocused && easyVision.isSpaceReleased) {
             showList()
         }
 

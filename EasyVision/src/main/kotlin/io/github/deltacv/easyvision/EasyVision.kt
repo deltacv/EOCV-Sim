@@ -33,8 +33,9 @@ import io.github.deltacv.easyvision.codegen.*
 import io.github.deltacv.easyvision.gui.PopupBuilder
 import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
+import io.github.deltacv.easyvision.node.NodeEditor
+import io.github.deltacv.easyvision.node.NodeList
 import io.github.deltacv.easyvision.node.vision.*
-import io.github.deltacv.easyvision.util.ElapsedTime
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFW.*
@@ -62,23 +63,19 @@ class EasyVision : Application() {
 
     private var prevKeyCallback: GLFWKeyCallback? = null
 
-    val editor = NodeEditor(this)
+    val nodeEditor = NodeEditor(this)
     val nodeList = NodeList(this)
 
+    val codeGenManager = CodeGenManager(this)
+
     private lateinit var defaultFont: ImFont
-    
-    private val inputNode = InputMatNode()
-    private val outputNode = OutputMatNode()
 
     fun start() {
-        editor.init()
-
-        inputNode.enable()
-        outputNode.enable()
+        nodeEditor.init()
 
         launch(this)
 
-        editor.destroy()
+        nodeEditor.destroy()
     }
 
     override fun configure(config: Configuration) {
@@ -111,7 +108,7 @@ class EasyVision : Application() {
                     or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoDecoration
         )
 
-        editor.draw()
+        nodeEditor.draw()
 
         ImGui.end()
         ImGui.popFont()
@@ -127,13 +124,7 @@ class EasyVision : Application() {
         isSpaceReleased = false
 
         if(ImGui.isMouseReleased(ImGuiMouseButton.Right)) {
-            val timer = ElapsedTime()
-
-            val codeGen = CodeGen("TestPipeline")
-            inputNode.startGen(codeGen.currScopeProcessFrame)
-
-            println(codeGen.gen())
-            println("took ${timer.seconds}")
+            codeGenManager.build()
         }
     }
 

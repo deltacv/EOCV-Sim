@@ -1,14 +1,15 @@
-package io.github.deltacv.easyvision
+package io.github.deltacv.easyvision.node
 
 import imgui.ImGui
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.ImNodesContext
 import imgui.flag.ImGuiMouseButton
 import imgui.type.ImInt
+import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.gui.PopupBuilder
 import io.github.deltacv.easyvision.attribute.AttributeMode
-import io.github.deltacv.easyvision.node.Link
-import io.github.deltacv.easyvision.node.Node
+import io.github.deltacv.easyvision.node.vision.InputMatNode
+import io.github.deltacv.easyvision.node.vision.OutputMatNode
 
 class NodeEditor(val easyVision: EasyVision) {
 
@@ -17,8 +18,13 @@ class NodeEditor(val easyVision: EasyVision) {
     var isNodeFocused = false
         private set
 
+    val inputNode = InputMatNode()
+    val outputNode = OutputMatNode()
+
     fun init() {
         ImNodes.createContext()
+        inputNode.enable()
+        outputNode.enable()
     }
 
     fun draw() {
