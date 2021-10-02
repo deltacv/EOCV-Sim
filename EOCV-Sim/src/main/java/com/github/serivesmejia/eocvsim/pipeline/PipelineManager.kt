@@ -30,6 +30,7 @@ import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
 import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
@@ -78,6 +79,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         private set
     var currentPipelineIndex = -1
         private set
+    var previousPipelineIndex = 0
 
     val activePipelineContexts = ArrayList<ExecutorCoroutineDispatcher>()
     private var currentPipelineContext: ExecutorCoroutineDispatcher? = null
@@ -256,7 +258,22 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
                 updateExceptionTracker()
             } catch (ex: Exception) { //handling exceptions from pipelines
-                updateExceptionTracker(ex)
+                if(!hasInitCurrentPipeline) {
+                    pipelineExceptionTracker.addMessage("Error while initializing requested pipeline, \"$currentPipelineName\". Falling back to previous one.")
+                    pipelineExceptionTracker.addMessage(
+                        StrUtil.cutStringBy(
+                            StrUtil.fromException(ex), "\n", 9
+                        ).trim()
+                    )
+
+                    eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = previousPipelineIndex
+                    changePipeline(currentPipelineIndex)
+
+                    Log.error(TAG, "Error while initializing requested pipeline, $currentPipelineName", ex)
+                    Log.blank()
+                } else {
+                    updateExceptionTracker(ex)
+                }
             }
         }
 
@@ -356,6 +373,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
             Log.warn(TAG, "Error while adding pipeline class", ex)
             Log.warn(TAG, "Unable to cast " + C.name + " to OpenCvPipeline class.")
             Log.warn(TAG, "Remember that the pipeline class should extend OpenCvPipeline")
+            updateExceptionTracker(ex)
         }
     }
 
@@ -459,6 +477,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
             return
         }
+
+        previousPipelineIndex = currentPipelineIndex
 
         currentPipeline      = nextPipeline
         currentPipelineData  = pipelines[index]
