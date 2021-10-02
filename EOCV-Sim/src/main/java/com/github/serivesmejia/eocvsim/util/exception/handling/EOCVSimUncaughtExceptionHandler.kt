@@ -34,7 +34,7 @@ class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExc
         //Exit if uncaught exception happened in the main thread
         //since we would be basically in a deadlock state if that happened
         //or if we have a lotta uncaught exceptions.
-        if(t == currentMainThread || uncaughtExceptionsCount > MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH) {
+        if(t == currentMainThread || e !is Exception || uncaughtExceptionsCount > MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH) {
             CrashReport(e).saveCrashReport()
 
             Log.warn(TAG, "If this error persists, open an issue on EOCV-Sim's GitHub attaching the crash report file.")

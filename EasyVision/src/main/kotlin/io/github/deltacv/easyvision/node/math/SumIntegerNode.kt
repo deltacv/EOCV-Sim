@@ -34,7 +34,7 @@ class SumIntegerNode : DrawNode<SumIntegerNode.Session>("Sum Integers") {
     }
 
     override fun getOutputValueOf(current: CodeGen.Current, attrib: Attribute): GenValue {
-        genCodeIfNecessary()
+        genCodeIfNecessary(current)
 
         if(attrib == result) {
             return genSession!!.result

@@ -18,6 +18,10 @@ abstract class DrawNode<S: CodeGenSession>(
 
     private var pinToMouseOffset = ImVec2()
 
+    var isFirstDraw = true
+
+    open fun init() {}
+
     override fun draw() {
         ImNodes.beginNode(id)
             if(title != null) {
@@ -29,6 +33,11 @@ abstract class DrawNode<S: CodeGenSession>(
             drawNode()
             drawAttributes()
         ImNodes.endNode()
+
+        if(isFirstDraw) {
+            init()
+            isFirstDraw = false
+        }
 
         nextNodePosition?.let {
             ImNodes.setNodeScreenSpacePos(id, it.x, it.y)

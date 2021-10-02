@@ -7,6 +7,7 @@ buildscript {
         kotlin_version = "1.5.10"
         kotlinx_coroutines_version = "1.5.0-native-mt"
         opencv_version = "4.5.1-2"
+        apriltag_plugin_version = "1.0.0"
 
         env = findProperty('env') == 'release' ? 'release' : 'dev'
 
@@ -23,7 +24,7 @@ buildscript {
 }
 
 allprojects {
-    group 'com.github.serivesmejia'
+    group 'com.github.deltacv'
     version '3.2.0'
 
     ext {
@@ -32,6 +33,8 @@ allprojects {
 
     repositories {
         mavenCentral()
+        mavenLocal()
+        maven { url "https://jitpack.io" }
     }
 
     tasks.withType(Jar) {

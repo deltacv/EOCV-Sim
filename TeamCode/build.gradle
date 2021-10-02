@@ -1,3 +1,5 @@
+import java.nio.file.Paths
+
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm'
@@ -8,6 +10,7 @@ apply from: '../build.common.gradle'
 dependencies {
     implementation "org.openpnp:opencv:$opencv_version"
     implementation project(':EOCV-Sim')
+    implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }

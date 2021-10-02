@@ -1,5 +1,8 @@
 package io.github.deltacv.easyvision.node.vision
 
+import imgui.ImVec2
+import imgui.extension.imnodes.ImNodes
+import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.node.DrawNode
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
@@ -9,6 +12,14 @@ import io.github.deltacv.easyvision.codegen.NoSession
 import io.github.deltacv.easyvision.codegen.parse.v
 
 class InputMatNode : DrawNode<NoSession>("Pipeline Input", allowDelete = false) {
+
+    override fun init() {
+        val windowSize = EasyVision.windowSize
+        val nodeSize = ImVec2()
+        ImNodes.getNodeDimensions(id, nodeSize)
+
+        ImNodes.setNodeScreenSpacePos(id, nodeSize.x * 0.5f, windowSize.y / 2f - nodeSize.y / 2)
+    }
 
     override fun onEnable() {
         + MatAttribute(OUTPUT, "Input")
@@ -27,6 +38,14 @@ class InputMatNode : DrawNode<NoSession>("Pipeline Input", allowDelete = false) 
 }
 
 class OutputMatNode : DrawNode<NoSession>("Pipeline Output", allowDelete = false) {
+
+    override fun init() {
+        val windowSize = EasyVision.windowSize
+        val nodeSize = ImVec2()
+        ImNodes.getNodeDimensions(id, nodeSize)
+
+        ImNodes.setNodeScreenSpacePos(id, windowSize.x - nodeSize.x * 1.5f , windowSize.y / 2f - nodeSize.y / 2)
+    }
 
     val input = MatAttribute(INPUT, "Output")
 
