@@ -6,11 +6,11 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.ImNodesContext
+import imgui.extension.imnodes.flag.ImNodesAttributeFlags
 import imgui.extension.imnodes.flag.ImNodesColorStyle
-import imgui.flag.ImGuiCol
-import imgui.flag.ImGuiCond
-import imgui.flag.ImGuiMouseButton
-import imgui.flag.ImGuiWindowFlags
+import imgui.extension.imnodes.flag.ImNodesStyleFlags
+import imgui.flag.*
+import imgui.type.ImBoolean
 import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.gui.makeFont
@@ -117,7 +117,7 @@ class NodeList(val easyVision: EasyVision) {
 
         ImGui.popFont()
 
-        if (button != lastButton && button && !isNodesListOpen && openButtonTimeout.millis > 200) {
+        if (button != lastButton && !isNodesListOpen && button && openButtonTimeout.millis > 200) {
             showList()
         }
 
@@ -148,20 +148,33 @@ class NodeList(val easyVision: EasyVision) {
 
         ImNodes.clearNodeSelection()
         ImNodes.clearLinkSelection()
+        ImNodes.editorResetPanning(0f, 0f)
+
+        var closeOnClick = true
 
         ImNodes.beginNodeEditor()
-            for(node in listNodes) {
-                node.draw()
+            val flags = ImGuiTreeNodeFlags.DefaultOpen
+
+            for(category in Category.values()) {
+                if(ImGui.collapsingHeader(category.properName, flags)) {
+                    if(ImGui.isItemHovered()) {
+                        closeOnClick = false
+                    }
+
+
+                } else if(ImGui.isItemHovered()) {
+                    closeOnClick = false
+                }
             }
         ImNodes.endNodeEditor()
 
         ImNodes.getStyle().gridSpacing = 32f // back to normal
         ImNodes.popColorStyle()
 
-        handleClick()
+        handleClick(closeOnClick)
     }
 
-    fun handleClick() {
+    fun handleClick(closeOnClick: Boolean) {
         if(ImGui.isMouseClicked(ImGuiMouseButton.Left)) {
             val hovered = ImNodes.getHoveredNode()
 
@@ -182,10 +195,11 @@ class NodeList(val easyVision: EasyVision) {
                     instance.nextNodePosition = ImVec2(newPosX, newPosY)
                     instance.pinToMouse = true
                 }
-            }
 
-            closeList()
-            openButtonTimeout.reset()
+                closeList()
+            } else if(closeOnClick) {
+                closeList()
+            }
         }
     }
 
@@ -203,6 +217,7 @@ class NodeList(val easyVision: EasyVision) {
     fun closeList() {
         if(isNodesListOpen) {
             isNodesListOpen = false
+            openButtonTimeout.reset()
         }
     }
 

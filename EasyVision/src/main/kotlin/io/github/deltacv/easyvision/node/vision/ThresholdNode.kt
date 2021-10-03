@@ -12,11 +12,11 @@ import io.github.deltacv.easyvision.codegen.parse.cvtColorValue
 import io.github.deltacv.easyvision.codegen.parse.new
 import io.github.deltacv.easyvision.codegen.parse.v
 import io.github.deltacv.easyvision.gui.ExtraWidgets
-import io.github.deltacv.easyvision.node.AddNode
+import io.github.deltacv.easyvision.node.RegisterNode
 import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.DrawNode
 
-@AddNode(
+@RegisterNode(
     name = "Color Threshold",
     category = Category.CV_BASICS,
     description = "Performs a threshold in the input image and returns a binary image, discarding the pixels that were outside the range in the color space specified."

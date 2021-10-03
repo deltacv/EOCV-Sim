@@ -7,10 +7,10 @@ import io.github.deltacv.easyvision.attribute.misc.ListAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.GenValue
-import io.github.deltacv.easyvision.node.AddNode
+import io.github.deltacv.easyvision.node.RegisterNode
 import io.github.deltacv.easyvision.node.Category
 
-@AddNode(
+@RegisterNode(
     name = "Sum Integers",
     category = Category.MATH,
     description = "Sums a list of integers and outputs the result"

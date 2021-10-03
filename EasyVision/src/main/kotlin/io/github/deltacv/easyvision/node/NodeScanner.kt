@@ -1,8 +1,6 @@
 package io.github.deltacv.easyvision.node
 
 import io.github.classgraph.ClassGraph
-import io.github.deltacv.easyvision.util.ElapsedTime
-import kotlinx.coroutines.*
 
 object NodeScanner {
 
@@ -26,7 +24,7 @@ object NodeScanner {
             .rejectPackages(*ignoredPackages)
 
         val scanResult = classGraph.scan()
-        val nodeClasses = scanResult.getClassesWithAnnotation(AddNode::class.java.name)
+        val nodeClasses = scanResult.getClassesWithAnnotation(RegisterNode::class.java.name)
 
         for(nodeClass in nodeClasses) {
             val clazz = Class.forName(nodeClass.name)

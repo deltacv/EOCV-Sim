@@ -7,11 +7,11 @@ import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.codegen.parse.new
 import io.github.deltacv.easyvision.codegen.parse.v
-import io.github.deltacv.easyvision.node.AddNode
+import io.github.deltacv.easyvision.node.RegisterNode
 import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.DrawNode
 
-@AddNode(
+@RegisterNode(
     name = "Binary Mask",
     category = Category.CV_BASICS,
     description = "Takes a normal image and performs a mask based on a binary image, discards or includes areas from the normal image based on the binary image."
