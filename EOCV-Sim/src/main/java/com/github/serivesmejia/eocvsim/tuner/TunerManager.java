@@ -37,6 +37,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 public class TunerManager {
@@ -58,12 +59,17 @@ public class TunerManager {
 
     public void init() {
         if(tunableFieldsTypes == null) {
-            AnnotatedTunableFieldScanner.ScanResult result = new AnnotatedTunableFieldScanner(
-                    eocvSim.getParams().getScanForTunableFieldsIn()
-            ).scan();
+            tunableFieldsTypes = new HashMap<>();
+            // ...
+            for(Class<? extends TunableField<?>> clazz : eocvSim.getClasspathScan().getScanResult().getTunableFieldClasses()) {
+                tunableFieldsTypes.put(ReflectUtil.getTypeArgumentsFrom(clazz)[0], clazz);
+            }
+        }
 
-            tunableFieldsTypes = result.getTunableFields();
-            tunableFieldAcceptors = result.getAcceptors();
+        if(tunableFieldAcceptors == null) {
+            tunableFieldAcceptors = new HashMap<>();
+            // oh god...
+            eocvSim.getClasspathScan().getScanResult().getTunableFieldAcceptorClasses().forEach(tunableFieldAcceptors::put);
         }
 
         // for some reason, acceptorManager becomes null after a certain time passes

@@ -166,17 +166,19 @@ class NodeList(val easyVision: EasyVision) {
         ImNodes.beginNodeEditor()
             val flags = ImGuiTreeNodeFlags.DefaultOpen
 
-            for((category, nodes) in nodes) {
-                if(ImGui.collapsingHeader(category.properName, flags)) {
-                    if(ImGui.isItemHovered()) {
-                        closeOnClick = false
-                    }
+            for(category in Category.values()) {
+                if(nodes.containsKey(category)) {
+                    for (node in nodes[category]!!) {
+                        if (ImGui.collapsingHeader(category.properName, flags)) {
+                            if (ImGui.isItemHovered()) {
+                                closeOnClick = false
+                            }
 
-                    for(node in nodes) {
-                        node.draw()
+                            node.draw()
+                        } else if (ImGui.isItemHovered()) {
+                            closeOnClick = false
+                        }
                     }
-                } else if(ImGui.isItemHovered()) {
-                    closeOnClick = false
                 }
             }
         ImNodes.endNodeEditor()

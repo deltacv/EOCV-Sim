@@ -2,6 +2,7 @@
 package com.github.serivesmejia.eocvsim
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
+import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.Log
 import picocli.CommandLine
 import java.io.File
@@ -27,7 +28,6 @@ class EOCVSimCommandInterface : Runnable {
 
     @CommandLine.Option(names = ["-p", "--pipeline"], description = ["Specifies the pipeline selected when the simulator starts, and the initial runtime build finishes if it was running"])
     @JvmField var initialPipeline = ""
-
     @CommandLine.Option(names = ["-s", "--source"], description = ["Specifies the source of the pipeline that will be selected when the simulator starts, from the --pipeline argument. Defaults to CLASSPATH. Possible values: \${COMPLETION-CANDIDATES}"])
     @JvmField var initialPipelineSource = PipelineSource.CLASSPATH
 

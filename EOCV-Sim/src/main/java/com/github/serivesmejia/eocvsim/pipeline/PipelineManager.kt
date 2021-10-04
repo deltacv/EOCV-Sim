@@ -126,15 +126,17 @@ class PipelineManager(var eocvSim: EOCVSim) {
         //add default pipeline
         addPipelineClass(DefaultPipeline::class.java)
 
+        compiledPipelineManager.init()
+
+        eocvSim.classpathScan.join()
+
         //scan for pipelines
-        PipelineScanner(eocvSim.params.scanForPipelinesIn).lookForPipelines {
-            addPipelineClass(it)
+        for(pipelineClass in eocvSim.classpathScan.scanResult.pipelineClasses) {
+            addPipelineClass(pipelineClass)
         }
 
         Log.info(TAG, "Found " + pipelines.size + " pipeline(s)")
         Log.blank()
-
-        compiledPipelineManager.init()
 
         // changing to initial pipeline
         onUpdate.doOnce {

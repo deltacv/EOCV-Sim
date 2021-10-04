@@ -33,6 +33,7 @@ import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
+import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
@@ -101,6 +102,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
     @JvmField
     val workspaceManager = WorkspaceManager(this)
 
+    val classpathScan = ClasspathScan()
+
     val config: Config
         get() = configManager.config
 
@@ -142,6 +145,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         //loading native lib only once in the app runtime
         loadOpenCvLib()
         Log.blank()
+
+        classpathScan.asyncScan()
 
         configManager.init() //load config
 
