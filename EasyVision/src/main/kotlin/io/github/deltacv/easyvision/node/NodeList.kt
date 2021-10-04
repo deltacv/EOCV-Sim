@@ -25,12 +25,12 @@ class NodeList(val easyVision: EasyVision) {
         val listNodes = IdElementContainer<Node<*>>()
         val listAttributes = IdElementContainer<Attribute>()
 
-        lateinit var annotatedNodes: List<Class<out Node<*>>>
+        lateinit var categorizedNodes: CategorizedNodes
             private set
 
         @OptIn(DelicateCoroutinesApi::class)
         private val annotatedNodesJob = GlobalScope.launch(Dispatchers.IO) {
-            annotatedNodes = NodeScanner.scan()
+            categorizedNodes = NodeScanner.scan()
         }
     }
 
@@ -48,24 +48,12 @@ class NodeList(val easyVision: EasyVision) {
 
     private lateinit var listContext: ImNodesContext
 
-    val testNode = CvtColorNode()
 
     fun init() {
         buttonFont = makeFont(plusFontSize)
-
-        testNode.nodesIdContainer = listNodes
-        testNode.attributesIdContainer = listAttributes
-        testNode.drawAttributesCircles = false
-        testNode.enable()
     }
 
     fun draw() {
-        if(!annotatedNodesJob.isCompleted) {
-            runBlocking {
-                annotatedNodesJob.join()
-            }
-        }
-
         val size = EasyVision.windowSize
 
         if(!easyVision.nodeEditor.isNodeFocused && easyVision.isSpaceReleased) {
@@ -140,6 +128,29 @@ class NodeList(val easyVision: EasyVision) {
         ImGui.end()
     }
 
+    val nodes by lazy {
+        val map = mutableMapOf<Category, MutableList<Node<*>>>()
+
+        for((category, nodeClasses) in categorizedNodes) {
+            val list = mutableListOf<Node<*>>()
+
+            for(nodeClass in nodeClasses) {
+                val instance = nodeClass.getConstructor().newInstance()
+
+                instance.nodesIdContainer = listNodes
+                instance.attributesIdContainer = listAttributes
+                instance.drawAttributesCircles = false
+                instance.enable()
+
+                list.add(instance)
+            }
+
+            map[category] = list
+        }
+
+        map
+    }
+
     private fun drawNodesList() {
         ImNodes.editorContextSet(listContext)
 
@@ -155,13 +166,15 @@ class NodeList(val easyVision: EasyVision) {
         ImNodes.beginNodeEditor()
             val flags = ImGuiTreeNodeFlags.DefaultOpen
 
-            for(category in Category.values()) {
+            for((category, nodes) in nodes) {
                 if(ImGui.collapsingHeader(category.properName, flags)) {
                     if(ImGui.isItemHovered()) {
                         closeOnClick = false
                     }
 
-
+                    for(node in nodes) {
+                        node.draw()
+                    }
                 } else if(ImGui.isItemHovered()) {
                     closeOnClick = false
                 }
@@ -205,6 +218,12 @@ class NodeList(val easyVision: EasyVision) {
 
     fun showList() {
         if(!isNodesListOpen) {
+            if(!annotatedNodesJob.isCompleted) {
+                runBlocking {
+                    annotatedNodesJob.join() // wait for the scanning to finish
+                }
+            }
+
             if(::listContext.isInitialized) {
                 listContext.destroy()
             }

@@ -21,6 +21,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -39,19 +40,14 @@ import java.util.ArrayList;
 
 public class AprilTagDetectionPipeline extends OpenCvPipeline
 {
-    private long nativeApriltagPtr;
-    private Mat grey = new Mat();
-    private ArrayList<AprilTagDetection> detections = new ArrayList<>();
+    // STATIC CONSTANTS
 
-    private ArrayList<AprilTagDetection> detectionsUpdate = new ArrayList<>();
-    private final Object detectionsUpdateSync = new Object();
+    public static Scalar blue = new Scalar(7,197,235,255);
+    public static Scalar red = new Scalar(255,0,0,255);
+    public static Scalar green = new Scalar(0,255,0,255);
+    public static Scalar white = new Scalar(255,255,255,255);
 
-    Mat cameraMatrix;
-
-    Scalar blue = new Scalar(7,197,235,255);
-    Scalar red = new Scalar(255,0,0,255);
-    Scalar green = new Scalar(0,255,0,255);
-    Scalar white = new Scalar(255,255,255,255);
+    static final double FEET_PER_METER = 3.28084;
 
     // Lens intrinsics
     // UNITS ARE PIXELS
@@ -63,18 +59,30 @@ public class AprilTagDetectionPipeline extends OpenCvPipeline
     public static double cy = 221.506;
 
     // UNITS ARE METERS
-    public static double tagsize = 0.166;
+    public static double TAG_SIZE = 0.166;
 
-    double tagsizeX;
-    double tagsizeY;
+    // instance variables
+
+    private long nativeApriltagPtr;
+    private Mat grey = new Mat();
+    private ArrayList<AprilTagDetection> detections = new ArrayList<>();
+
+    private ArrayList<AprilTagDetection> detectionsUpdate = new ArrayList<>();
+    private final Object detectionsUpdateSync = new Object();
+
+    Mat cameraMatrix;
+
+    double tagsizeX = TAG_SIZE;
+    double tagsizeY = TAG_SIZE;
 
     private float decimation;
     private boolean needToSetDecimation;
     private final Object decimationSync = new Object();
 
-    public AprilTagDetectionPipeline() {
-        this.tagsizeX = tagsize;
-        this.tagsizeY = tagsize;
+    Telemetry telemetry;
+
+    public AprilTagDetectionPipeline(Telemetry telemetry) {
+        this.telemetry = telemetry;
         constructMatrix();
     }
 
@@ -108,7 +116,7 @@ public class AprilTagDetectionPipeline extends OpenCvPipeline
         }
 
         // Run AprilTag
-        detections = AprilTagDetectorJNI.runAprilTagDetectorSimple(nativeApriltagPtr, grey, tagsize, fx, fy, cx, cy);
+        detections = AprilTagDetectorJNI.runAprilTagDetectorSimple(nativeApriltagPtr, grey, TAG_SIZE, fx, fy, cx, cy);
 
         synchronized (detectionsUpdateSync)
         {
@@ -122,7 +130,17 @@ public class AprilTagDetectionPipeline extends OpenCvPipeline
             Pose pose = poseFromTrapezoid(detection.corners, cameraMatrix, tagsizeX, tagsizeY);
             drawAxisMarker(input, tagsizeY/2.0, 6, pose.rvec, pose.tvec, cameraMatrix);
             draw3dCubeMarker(input, tagsizeX, tagsizeX, tagsizeY, 5, pose.rvec, pose.tvec, cameraMatrix);
+
+            telemetry.addLine(String.format("\nDetected tag ID=%d", detection.id));
+            telemetry.addLine(String.format("Translation X: %.2f feet", detection.pose.x*FEET_PER_METER));
+            telemetry.addLine(String.format("Translation Y: %.2f feet", detection.pose.y*FEET_PER_METER));
+            telemetry.addLine(String.format("Translation Z: %.2f feet", detection.pose.z*FEET_PER_METER));
+            telemetry.addLine(String.format("Rotation Yaw: %.2f degrees", Math.toDegrees(detection.pose.yaw)));
+            telemetry.addLine(String.format("Rotation Pitch: %.2f degrees", Math.toDegrees(detection.pose.pitch)));
+            telemetry.addLine(String.format("Rotation Roll: %.2f degrees", Math.toDegrees(detection.pose.roll)));
         }
+
+        telemetry.update();
 
         return input;
     }

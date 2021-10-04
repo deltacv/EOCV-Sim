@@ -29,6 +29,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 import com.github.serivesmejia.eocvsim.util.SysUtil
+import kotlinx.coroutines.DelicateCoroutinesApi
 import java.io.File
 
 object VSCodeLauncher {
@@ -48,6 +49,7 @@ object VSCodeLauncher {
             Log.info(TAG, "VS Code failed to open")
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun asyncLaunch(workspace: File) = GlobalScope.launch(Dispatchers.IO) { launch(workspace) }
 
 }

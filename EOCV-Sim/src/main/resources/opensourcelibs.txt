@@ -1,8 +1,16 @@
+<html><a href="https://github.com/deltacv/EOCVSim/">EOCV-Sim</a> and its source code is distributed under the MIT License</html>
+<html></html>
 <html><a href="https://github.com/opencv/opencv">OpenCV</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/openpnp/opencv">OpenCV for Desktop Java</a> - Under Apache 2.0 License</html>
 <html><a href="https://github.com/FIRST-Tech-Challenge/FtcRobotController">FTC SDK</a> - Some source code under the BSD License</html>
 <html><a href="https://github.com/OpenFTC/EasyOpenCV">EasyOpenCV</a> - Some source code under MIT License</html>
+<html><a href="https://github.com/OpenFTC/EOCV-AprilTag-Plugin">EOCV-AprilTag-Plugin</a> - Source code under MIT License</html>
+<html><a href="https://github.com/sarxos/webcam-capture">webcam-capture</a> - Under MIT License</html>
 <html><a href="https://github.com/google/gson">Gson</a> - Under Apache 2.0 License</html>
 <html><a href="https://github.com/classgraph/classgraph">ClassGraph</a> - Under MIT License</html>
 <html><a href="https://github.com/JFormDesigner/FlatLaf/">FlatLaf</a> - Under Apache 2.0 License</html>
-<html></html>
-<html><a href="https://github.com/deltacv/EOCVSim/">EOCV-Sim</a> and its source code is distributed under the MIT License</html>
+<html><a href="https://github.com/JetBrains/kotlin">Kotlin stdlib & coroutines</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/remkop/picocli">picocli</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/ocornut/imgui">dear imgui</a> - Under MIT License</html>
+<html><a href="https://github.com/SpaiR/imgui-java">imgui-java</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/LWJGL/lwjgl3">LWJGL</a> - Under BSD 3-Clause License</html>

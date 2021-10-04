@@ -38,6 +38,7 @@ import java.awt.GridBagLayout
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 
+@OptIn(DelicateCoroutinesApi::class)
 class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions,
                               private val eocvSim: EOCVSim) : JPanel() {
 
