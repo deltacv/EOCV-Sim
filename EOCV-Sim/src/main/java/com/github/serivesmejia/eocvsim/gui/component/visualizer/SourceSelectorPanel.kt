@@ -29,7 +29,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
     private var lastCreateSourcePopup: PopupX? = null
 
-    var allowSourceSwitching = true
+    var allowSourceSwitching = false
 
     init {
         layout = GridBagLayout()
@@ -92,38 +92,38 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     private fun registerListeners() {
         //listener for changing input sources
         sourceSelector.addListSelectionListener { evt ->
-            if(!allowSourceSwitching) return@addListSelectionListener
+            if(allowSourceSwitching && !evt.valueIsAdjusting) {
+                try {
+                    if (sourceSelector.selectedIndex != -1) {
+                        val model = sourceSelector.model
+                        val source = model.getElementAt(sourceSelector.selectedIndex)
 
-            try {
-                if (sourceSelector.selectedIndex != -1) {
-                    val model = sourceSelector.model
-                    val source = model.getElementAt(sourceSelector.selectedIndex)
+                        //enable or disable source delete button depending if source is default or not
+                        eocvSim.visualizer.sourceSelectorPanel.sourceSelectorDeleteBtt
+                            .isEnabled = !(eocvSim.inputSourceManager.sources[source]?.isDefault ?: true)
 
-                    //enable or disable source delete button depending if source is default or not
-                    eocvSim.visualizer.sourceSelectorPanel.sourceSelectorDeleteBtt
-                        .isEnabled = !(eocvSim.inputSourceManager.sources[source]?.isDefault ?: true)
-
-                    if (!evt.valueIsAdjusting && source != beforeSelectedSource) {
-                        if (!eocvSim.pipelineManager.paused) {
-                            eocvSim.inputSourceManager.requestSetInputSource(source)
-                            beforeSelectedSource = source
-                            beforeSelectedSourceIndex = sourceSelector.selectedIndex
-                        } else {
-                            //check if the user requested the pause or if it was due to one shoot analysis when selecting images
-                            if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
-                                sourceSelector.setSelectedIndex(beforeSelectedSourceIndex)
-                            } else { //handling pausing
-                                eocvSim.pipelineManager.requestSetPaused(false)
+                        if (!evt.valueIsAdjusting && source != beforeSelectedSource) {
+                            if (!eocvSim.pipelineManager.paused) {
                                 eocvSim.inputSourceManager.requestSetInputSource(source)
                                 beforeSelectedSource = source
                                 beforeSelectedSourceIndex = sourceSelector.selectedIndex
+                            } else {
+                                //check if the user requested the pause or if it was due to one shoot analysis when selecting images
+                                if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
+                                    sourceSelector.setSelectedIndex(beforeSelectedSourceIndex)
+                                } else { //handling pausing
+                                    eocvSim.pipelineManager.requestSetPaused(false)
+                                    eocvSim.inputSourceManager.requestSetInputSource(source)
+                                    beforeSelectedSource = source
+                                    beforeSelectedSourceIndex = sourceSelector.selectedIndex
+                                }
                             }
                         }
+                    } else {
+                        sourceSelector.setSelectedIndex(1)
                     }
-                } else {
-                    sourceSelector.setSelectedIndex(1)
+                } catch (ignored: ArrayIndexOutOfBoundsException) {
                 }
-            } catch (ignored: ArrayIndexOutOfBoundsException) {
             }
         }
 

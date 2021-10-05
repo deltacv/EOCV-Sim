@@ -39,6 +39,10 @@ import javax.swing.JMenuItem
 
 class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
+    companion object {
+        val docsUrl = URI("https://deltacv.gitbook.io/eocv-sim/")
+    }
+
     @JvmField val mFileMenu   = JMenu("File")
     @JvmField val mWorkspMenu = JMenu("Workspace")
     @JvmField val mEditMenu   = JMenu("Edit")
@@ -108,19 +112,21 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         mWorkspMenu.addSeparator()
 
-        val workspVSCode = JMenu("VS Code")
+        val workspVSCode = JMenu("External")
 
-        val workspVSCodeOpen = JMenuItem("Open in current workspace")
+        val workspVSCodeCreate = JMenuItem("Create Gradle workspace")
+
+        workspVSCodeCreate.addActionListener { visualizer.createVSCodeWorkspace() }
+        workspVSCode.add(workspVSCodeCreate)
+
+        workspVSCode.addSeparator()
+
+        val workspVSCodeOpen = JMenuItem("Open VS Code here")
 
         workspVSCodeOpen.addActionListener {
             VSCodeLauncher.asyncLaunch(eocvSim.workspaceManager.workspaceFile)
         }
         workspVSCode.add(workspVSCodeOpen)
-
-        val workspVSCodeCreate = JMenuItem("Create VS Code workspace")
-
-        workspVSCodeCreate.addActionListener { visualizer.createVSCodeWorkspace() }
-        workspVSCode.add(workspVSCodeCreate)
 
         mWorkspMenu.add(workspVSCode)
 
@@ -136,9 +142,9 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         // HELP
 
-        val helpUsage = JMenuItem("Usage")
+        val helpUsage = JMenuItem("Documentation")
         helpUsage.addActionListener {
-            Desktop.getDesktop().browse(URI("https://github.com/deltacv/EOCV-Sim/blob/master/USAGE.md"))
+            Desktop.getDesktop().browse(docsUrl)
         }
 
         helpUsage.isEnabled = Desktop.isDesktopSupported()

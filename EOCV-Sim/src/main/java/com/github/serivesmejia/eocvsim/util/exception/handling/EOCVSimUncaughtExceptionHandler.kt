@@ -1,5 +1,6 @@
 package com.github.serivesmejia.eocvsim.util.exception.handling
 
+import com.github.serivesmejia.eocvsim.currentMainThread
 import com.github.serivesmejia.eocvsim.util.Log
 import kotlin.system.exitProcess
 
@@ -33,7 +34,7 @@ class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExc
         //Exit if uncaught exception happened in the main thread
         //since we would be basically in a deadlock state if that happened
         //or if we have a lotta uncaught exceptions.
-        if(t.name.equals("main", true) || uncaughtExceptionsCount > MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH) {
+        if(t == currentMainThread || e !is Exception || uncaughtExceptionsCount > MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH) {
             CrashReport(e).saveCrashReport()
 
             Log.warn(TAG, "If this error persists, open an issue on EOCV-Sim's GitHub attaching the crash report file.")
@@ -42,6 +43,8 @@ class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExc
 
             exitProcess(1)
         } else {
+            CrashReport(e).saveCrashReport("lasterror-eocvsim")
+
             //if not, eocv sim might still be working (i.e a crash from a MatPoster thread)
             //so we might not need to exit in this point, but we'll need to send a warning
             //to the user

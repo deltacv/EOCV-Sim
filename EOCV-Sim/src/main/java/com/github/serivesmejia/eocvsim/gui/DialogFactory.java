@@ -39,10 +39,31 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.function.IntConsumer;
 
 public class DialogFactory {
 
     private DialogFactory() { }
+
+    public static void createYesOrNo(Component parent, String message, String submessage, IntConsumer result) {
+        JPanel panel = new JPanel();
+
+        JLabel label1 = new JLabel(message);
+        panel.add(label1);
+
+        if (!submessage.trim().equals("")) {
+            JLabel label2 = new JLabel(submessage);
+            panel.add(label2);
+            panel.setLayout(new GridLayout(2, 1));
+        }
+
+        SwingUtilities.invokeLater(() -> result.accept(
+                JOptionPane.showConfirmDialog(parent, panel, "Confirm",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.PLAIN_MESSAGE
+                )
+        ));
+    }
 
     public static FileChooser createFileChooser(Component parent, FileChooser.Mode mode, FileFilter... filters) {
         FileChooser fileChooser = new FileChooser(parent, mode, filters);

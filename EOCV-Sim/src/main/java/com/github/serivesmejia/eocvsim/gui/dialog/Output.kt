@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.gui.dialog
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompileStatus
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -99,6 +100,7 @@ class Output @JvmOverloads constructor(
         output.isVisible = true
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun registerListeners() = GlobalScope.launch(Dispatchers.Swing) {
         output.addWindowListener(object: WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {

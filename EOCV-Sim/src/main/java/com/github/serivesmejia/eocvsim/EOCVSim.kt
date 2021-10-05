@@ -31,7 +31,9 @@ import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
+import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
@@ -49,6 +51,7 @@ import java.io.File
 import javax.swing.SwingUtilities
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
+import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 class EOCVSim(val params: Parameters = Parameters()) {
@@ -99,6 +102,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
     @JvmField
     val workspaceManager = WorkspaceManager(this)
 
+    val classpathScan = ClasspathScan()
+
     val config: Config
         get() = configManager.config
 
@@ -141,6 +146,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         loadOpenCvLib()
         Log.blank()
 
+        classpathScan.asyncScan()
+
         configManager.init() //load config
 
         workspaceManager.init()
@@ -166,6 +173,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         visualizer.sourceSelectorPanel.updateSourcesList() //update sources and pick first one
         visualizer.sourceSelectorPanel.sourceSelector.selectedIndex = 0
+        visualizer.sourceSelectorPanel.allowSourceSwitching = true
+
         visualizer.pipelineSelectorPanel.updatePipelinesList() //update pipelines and pick first one (DefaultPipeline)
         visualizer.pipelineSelectorPanel.selectedIndex = 0
 
@@ -189,7 +198,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
             tunerManager.update()
 
             try {
-                pipelineManager.update(inputSourceManager.lastMatFromSource)
+                pipelineManager.update(
+                    if(inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
+                        inputSourceManager.lastMatFromSource
+                    } else null
+                )
             } catch (ex: MaxActiveContextsException) { //handles when a lot of pipelines are stuck in the background
                 visualizer.asyncPleaseWaitDialog(
                     "There are many pipelines stuck in processFrame running in the background",
@@ -223,7 +236,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             //updating displayed telemetry
             visualizer.telemetryPanel.updateTelemetry(pipelineManager.currentTelemetry)
 
-            //limit FPS
+            //limit FPG
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
             fpsLimiter.sync()
         }
@@ -232,7 +245,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     fun destroy(reason: DestroyReason) {
-        Log.warn(TAG, "Destroying current EOCVSim ($hexCode) due to $reason")
+        Log.warn(TAG, "Destroying current EOCVSim ($hexCode) due to $reason, it is normal to see InterruptedExceptions and other kinds of stack traces below")
 
         //stop recording session if there's currently an ongoing one
         currentRecordingSession?.stopRecordingSession()
@@ -246,6 +259,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
         visualizer.close()
 
         eocvSimThread.interrupt()
+
+        if(reason == DestroyReason.USER_REQUESTED || reason == DestroyReason.CRASH)
+            jvmMainThread.interrupt()
     }
 
     fun destroy() {
@@ -261,10 +277,16 @@ class EOCVSim(val params: Parameters = Parameters()) {
         destroy(DestroyReason.RESTART)
         Log.blank()
 
-        Thread(
-            { EOCVSim().init() },
-            "main"
-        ).start() //run next instance on a separate thread for the old one to get interrupted and ended
+        currentMainThread = Thread(
+            { EOCVSim(params).init() },
+            "new-main"
+        )
+        currentMainThread.start() //run next instance on a new main thread for the old one to get interrupted and ended
+
+        if(Thread.currentThread() == jvmMainThread) {
+            Thread.interrupted() // clear interrupt state
+            Thread.sleep(Long.MAX_VALUE) // hang forever the jvm main thread so that the app doesnt die idk
+        }
     }
 
     fun startRecordingSession() {
@@ -338,7 +360,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     private fun updateVisualizerTitle() {
         val isBuildRunning = if (pipelineManager.compiledPipelineManager.isBuildRunning) "(Building)" else ""
 
-        val workspaceMsg = " - ${config.workspacePath} $isBuildRunning"
+        val workspaceMsg = " - ${workspaceManager.workspaceFile.absolutePath} $isBuildRunning"
 
         val pipelineFpsMsg = " (${pipelineManager.pipelineFpsCounter.fps} Pipeline FPS)"
         val posterFpsMsg = " (${visualizer.viewport.matPoster.fpsCounter.fps} Poster FPS)"
@@ -357,6 +379,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
     class Parameters {
         var scanForPipelinesIn = "org.firstinspires"
         var scanForTunableFieldsIn = "com.github.serivesmejia"
+
+        var initialWorkspace: File? = null
+
+        var initialPipelineName: String? = null
+        var initialPipelineSource: PipelineSource? = null
     }
 
 }

@@ -205,10 +205,9 @@ public class CreateVideoSource {
         eocvSim.onMainUpdate.doOnce(() -> {
             eocvSim.inputSourceManager.addInputSource(
                 sourceName,
-                new VideoSource(videoPath, size)
+                new VideoSource(videoPath, size),
+                true
             );
-
-            eocvSim.inputSourceManager.requestSetInputSource(sourceName);
         });
     }
 

@@ -23,18 +23,14 @@
 
 package org.openftc.easyopencv
 
-import com.qualcomm.robotcore.util.ElapsedTime
+import com.github.serivesmejia.eocvsim.input.InputSource
 
 class TimestampedPipelineHandler {
 
-    private val elapsedTime = ElapsedTime()
-
-    fun update(currentPipeline: OpenCvPipeline?) {
+    fun update(currentPipeline: OpenCvPipeline?, currentInputSource: InputSource?) {
         if(currentPipeline is TimestampedOpenCvPipeline) {
-            currentPipeline.setTimestamp(elapsedTime.nanoseconds())
+            currentPipeline.setTimestamp(currentInputSource?.captureTimeNanos ?: 0L)
         }
-
-        elapsedTime.reset()
     }
 
 }

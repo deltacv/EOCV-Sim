@@ -39,6 +39,7 @@ import com.github.serivesmejia.eocvsim.gui.util.ReflectTaskbar;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompiler;
 import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
+import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher;
 import com.github.serivesmejia.eocvsim.workspace.util.template.GradleWorkspaceTemplate;
 import kotlin.Unit;
 
@@ -215,6 +216,10 @@ public class Visualizer {
         registerListeners();
 
         hasFinishedInitializing = true;
+
+        if(!PipelineCompiler.Companion.getIS_USABLE()) {
+            compilingUnsupported();
+        }
     }
 
     public void initAsync(Theme simTheme) {
@@ -376,14 +381,18 @@ public class Visualizer {
                 return Unit.INSTANCE;
             });
         } else {
-            asyncPleaseWaitDialog(
-                    "Runtime compilation is not supported on this JVM",
-                    "For further info, check the EOCV-Sim GitHub repo",
-                    "Close",
-                    new Dimension(320, 160),
-                    true, true
-            );
+            compilingUnsupported();
         }
+    }
+
+    public void compilingUnsupported() {
+        asyncPleaseWaitDialog(
+                "Runtime compiling is not supported on this JVM",
+                "For further info, check the EOCV-Sim GitHub repo",
+                "Close",
+                new Dimension(320, 160),
+                true, true
+        );
     }
 
     public void selectPipelinesWorkspace() {
@@ -406,9 +415,15 @@ public class Visualizer {
             if(OPTION == JFileChooser.APPROVE_OPTION) {
                 if(!selectedFile.exists()) selectedFile.mkdir();
 
-                if(selectedFile.isDirectory() &&
-                        Objects.requireNonNull(selectedFile.listFiles()).length == 0) {
-                    eocvSim.workspaceManager.createWorkspaceWithTemplateAsync(selectedFile, GradleWorkspaceTemplate.INSTANCE);
+                if(selectedFile.isDirectory() && selectedFile.listFiles().length == 0) {
+                    eocvSim.workspaceManager.createWorkspaceWithTemplateAsync(
+                            selectedFile, GradleWorkspaceTemplate.INSTANCE,
+
+                            () -> {
+                                askOpenVSCode();
+                                return Unit.INSTANCE; // weird kotlin interop
+                            }
+                    );
                 } else {
                     asyncPleaseWaitDialog(
                             "The selected directory must be empty", "Select an empty directory or create a new one",
@@ -417,6 +432,16 @@ public class Visualizer {
                 }
             }
         });
+    }
+
+    public void askOpenVSCode() {
+        DialogFactory.createYesOrNo(frame, "A new workspace was created. Do you wanna open VS Code?", "",
+            (result) -> {
+                if(result == 0) {
+                    VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile());
+                }
+            }
+        );
     }
 
     // PLEASE WAIT DIALOGS

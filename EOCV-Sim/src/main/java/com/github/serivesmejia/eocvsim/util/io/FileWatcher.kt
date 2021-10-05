@@ -65,7 +65,7 @@ class FileWatcher(private val watchingDirectories: List<File>,
                     }
                 }
 
-                Thread.sleep(800) //check every 800 ms
+                Thread.sleep(1200) //check every 800 ms
             }
 
             Log.info(TAG, "Stopping watching directories:\n$directoriesList")

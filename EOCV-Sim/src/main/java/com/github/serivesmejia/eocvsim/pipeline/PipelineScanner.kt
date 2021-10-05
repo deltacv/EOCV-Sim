@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import io.github.classgraph.ClassGraph
 import io.github.classgraph.ScanResult
 import org.openftc.easyopencv.OpenCvPipeline
+import java.lang.reflect.Modifier
 
 @Suppress("UNCHECKED_CAST")
 class PipelineScanner(val scanInPackage: String = "org.firstinspires") {
@@ -46,7 +47,7 @@ class PipelineScanner(val scanInPackage: String = "org.firstinspires") {
                 continue  //continue because we couldn't get the class...
             }
 
-            if(ReflectUtil.hasSuperclass(foundClass, OpenCvPipeline::class.java)) {
+            if(ReflectUtil.hasSuperclass(foundClass, OpenCvPipeline::class.java) && Modifier.isPublic(foundClass.modifiers)) {
                 Log.info("PipelineScanner", "Found pipeline class ${foundClass.canonicalName}")
                 callback(foundClass as Class<OpenCvPipeline>);
             }

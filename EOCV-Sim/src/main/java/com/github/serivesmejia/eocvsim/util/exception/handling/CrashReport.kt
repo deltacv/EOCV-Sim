@@ -106,6 +106,13 @@ class CrashReport(causedByException: Throwable) {
         saveCrashReport(crashLogFile)
     }
 
+    fun saveCrashReport(filename: String) {
+        val workingDir = File(System.getProperty("user.dir"))
+        val crashLogFile = workingDir + "/$filename.log"
+
+        saveCrashReport(crashLogFile)
+    }
+
     override fun toString() = sb.toString()
 
 }

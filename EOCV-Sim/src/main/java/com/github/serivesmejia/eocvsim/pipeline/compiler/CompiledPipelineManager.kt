@@ -74,8 +74,6 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
     val workspaceManager get() = pipelineManager.eocvSim.workspaceManager
 
-    private val visualizer get() = pipelineManager.eocvSim.visualizer
-
     fun init() {
         Log.info(TAG, "Initializing...")
         asyncCompile(false)
@@ -110,7 +108,6 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         workspaceManager.reloadConfig()
 
         val absoluteSourcesPath = workspaceManager.sourcesAbsolutePath.toFile()
-        
         Log.info(TAG, "Building java files in workspace, at ${absoluteSourcesPath.absolutePath}")
 
         val runtime = ElapsedTime()
@@ -159,14 +156,14 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             }
         }
 
-        val beforePipeline = pipelineManager.currentPipeline
+        val beforePipeline = pipelineManager.currentPipelineData
 
         pipelineManager.onUpdate.doOnce {
             pipelineManager.refreshGuiPipelineList()
 
             if(fixSelectedPipeline) {
                 if(beforePipeline != null) {
-                    val pipeline = pipelineManager.getIndexOf(beforePipeline)
+                    val pipeline = pipelineManager.getIndexOf(beforePipeline.clazz, beforePipeline.source)
 
                     pipelineManager.forceChangePipeline(pipeline, true)
                 } else {
@@ -201,7 +198,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
     fun compile(fixSelectedPipeline: Boolean = true) = try {
         runBlocking { uncheckedCompile(fixSelectedPipeline) }
-    } catch(e: Exception) {
+    } catch(e: Throwable) {
         isBuildRunning = false
         onBuildEnd.run()
 

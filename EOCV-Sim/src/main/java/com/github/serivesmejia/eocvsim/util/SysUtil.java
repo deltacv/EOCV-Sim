@@ -206,7 +206,7 @@ public class SysUtil {
             fw.close();
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.error("Exception while trying to save file " + f.getAbsolutePath(), e);
             return false;
         }
     }

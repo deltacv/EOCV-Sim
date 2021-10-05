@@ -76,6 +76,10 @@ object Icons {
         return icons[name]!!
     }
 
+    fun lazyGetImageResized(name: String, width: Int, height: Int) = lazy {
+        getImageResized(name, width, height)
+    }
+
     fun getImageResized(name: String, width: Int, height: Int): ImageIcon {
         //determines the icon name from the:
         //name, widthxheight, is inverted or is original

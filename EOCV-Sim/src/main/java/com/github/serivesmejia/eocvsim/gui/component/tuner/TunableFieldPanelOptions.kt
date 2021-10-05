@@ -39,10 +39,10 @@ import javax.swing.event.AncestorListener
 class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
                                eocvSim: EOCVSim) : JPanel() {
 
-    private val sliderIco    = Icons.getImageResized("ico_slider", 15, 15)
-    private val textBoxIco   = Icons.getImageResized("ico_textbox", 15, 15)
-    private val configIco    = Icons.getImageResized("ico_config", 15, 15)
-    private val colorPickIco = Icons.getImageResized("ico_colorpick", 15, 15)
+    private val sliderIco    by Icons.lazyGetImageResized("ico_slider", 15, 15)
+    private val textBoxIco   by Icons.lazyGetImageResized("ico_textbox", 15, 15)
+    private val configIco    by Icons.lazyGetImageResized("ico_config", 15, 15)
+    private val colorPickIco by Icons.lazyGetImageResized("ico_colorpick", 15, 15)
 
     private val textBoxSliderToggle   = JToggleButton()
     private val configButton          = JButton()

@@ -31,6 +31,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
+import org.opencv.videoio.Videoio;
 import org.openftc.easyopencv.MatRecycler;
 
 import javax.swing.filechooser.FileFilter;
@@ -50,6 +51,8 @@ public class CameraSource extends InputSource {
     private volatile Size size;
 
     private volatile transient MatRecycler matRecycler;
+
+    private transient long capTimeNanos = 0;
 
     public CameraSource(int webcamIndex, Size size) {
         this.webcamIndex = webcamIndex;
@@ -126,6 +129,7 @@ public class CameraSource extends InputSource {
         MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
 
         camera.read(newFrame);
+        capTimeNanos = System.nanoTime();
 
         if (newFrame.empty()) {
             newFrame.returnMat();
@@ -182,6 +186,11 @@ public class CameraSource extends InputSource {
     @Override
     public FileFilter getFileFilters() {
         return null;
+    }
+
+    @Override
+    public long getCaptureTimeNanos() {
+        return capTimeNanos;
     }
 
     @Override

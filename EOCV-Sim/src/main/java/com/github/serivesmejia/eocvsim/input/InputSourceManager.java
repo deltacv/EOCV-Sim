@@ -25,6 +25,7 @@ package com.github.serivesmejia.eocvsim.input;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.SourceSelectorPanel;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager;
 import com.github.serivesmejia.eocvsim.util.Log;
@@ -32,7 +33,7 @@ import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -49,10 +50,15 @@ public class InputSourceManager {
     public volatile HashMap<String, InputSource> sources = new HashMap<>();
 
     public InputSourceLoader inputSourceLoader = new InputSourceLoader();
+    public SourceSelectorPanel selectorPanel;
+
+    private String defaultSource = "";
 
     public InputSourceManager(EOCVSim eocvSim) {
         this.eocvSim = eocvSim;
+        selectorPanel = eocvSim.visualizer.sourceSelectorPanel;
     }
+
     public void init() {
 
         Log.info("InputSourceManager", "Initializing...");
@@ -64,6 +70,8 @@ public class InputSourceManager {
         createDefaultImgInputSource("/images/ug_4.jpg", "ug_eocvsim_4.jpg", "Ultimate Goal 4 Ring", size);
         createDefaultImgInputSource("/images/ug_1.jpg", "ug_eocvsim_1.jpg", "Ultimate Goal 1 Ring", size);
         createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size);
+
+        setInputSource("Ultimate Goal 4 Ring", true);
 
         inputSourceLoader.loadInputSourcesFromFile();
 
@@ -93,23 +101,35 @@ public class InputSourceManager {
 
     public void update(boolean isPaused) {
         if(currentInputSource == null) return;
-        currentInputSource.setPaused(isPaused);
 
         try {
+            currentInputSource.setPaused(isPaused);
+
             Mat m = currentInputSource.update();
             if(m != null && !m.empty()) m.copyTo(lastMatFromSource);
         } catch(Exception ex) {
             Log.error("InputSourceManager", "Error while processing current source", ex);
+            Log.warn("InputSourceManager", "Changing to default source");
+
+            setInputSource(defaultSource);
         }
     }
 
+
     public void addInputSource(String name, InputSource inputSource) {
+        addInputSource(name, inputSource, false);
+    }
+
+    public void addInputSource(String name, InputSource inputSource, boolean dispatchedByUser) {
         if (inputSource == null) {
             return;
         }
 
         if (sources.containsKey(name)) return;
 
+        if(eocvSim.visualizer.sourceSelectorPanel != null) {
+            eocvSim.visualizer.sourceSelectorPanel.setAllowSourceSwitching(false);
+        }
         inputSource.name = name;
 
         sources.put(name, inputSource);
@@ -123,22 +143,35 @@ public class InputSourceManager {
         }
 
         if(eocvSim.visualizer.sourceSelectorPanel != null) {
-            eocvSim.visualizer.sourceSelectorPanel.updateSourcesList();
+            SourceSelectorPanel selectorPanel = eocvSim.visualizer.sourceSelectorPanel;
+
+            selectorPanel.updateSourcesList();
 
             SwingUtilities.invokeLater(() -> {
-                int index = eocvSim.visualizer.sourceSelectorPanel.getIndexOf(name);
+                JList<String> sourceSelector = selectorPanel.getSourceSelector();
 
-                eocvSim.visualizer.sourceSelectorPanel
-                    .getSourceSelector().setSelectedIndex(index);
+                int currentSourceIndex = sourceSelector.getSelectedIndex();
 
-                eocvSim.onMainUpdate.doOnce(() -> {
-                    eocvSim.pipelineManager.requestSetPaused(false);
-                    pauseIfImageTwoFrames();
-                });
+                if(dispatchedByUser) {
+                    int index = selectorPanel.getIndexOf(name);
+
+                    sourceSelector.setSelectedIndex(index);
+
+                    requestSetInputSource(name);
+
+                    eocvSim.onMainUpdate.doOnce(() -> {
+                        eocvSim.pipelineManager.requestSetPaused(false);
+                        pauseIfImageTwoFrames();
+                    });
+                } else {
+                    sourceSelector.setSelectedIndex(currentSourceIndex);
+                }
+
+                selectorPanel.setAllowSourceSwitching(true);
             });
         }
 
-        Log.info("InputSourceManager", "Adding InputSource " + inputSource.toString() + " (" + inputSource.getClass().getSimpleName() + ")");
+        Log.info("InputSourceManager", "Adding InputSource " + inputSource + " (" + inputSource.getClass().getSimpleName() + ")");
     }
 
     public void deleteInputSource(String sourceName) {
@@ -151,6 +184,16 @@ public class InputSourceManager {
 
         inputSourceLoader.deleteInputSource(sourceName);
         inputSourceLoader.saveInputSourcesToFile();
+    }
+
+    public boolean setInputSource(String sourceName, boolean makeDefault) {
+        boolean result = setInputSource(sourceName);
+
+        if(result && makeDefault) {
+            defaultSource = sourceName;
+        }
+
+        return result;
     }
 
     public boolean setInputSource(String sourceName) {
@@ -236,7 +279,7 @@ public class InputSourceManager {
                     new Dimension(300, 150), true
             );
 
-            apwd.onCancel(() -> eocvSim.destroy());
+            apwd.onCancel(eocvSim::destroy);
         }
 
         return apwd;
