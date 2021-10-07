@@ -37,6 +37,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.util.HashMap;
 
 public class CreateCameraSource {
 
@@ -45,7 +46,7 @@ public class CreateCameraSource {
     public JDialog createCameraSource = null;
 
     public JComboBox<String> camerasComboBox = null;
-    public SizeFields sizeFieldsInput = null;
+    public JComboBox<String> dimensionsComboBox = null;
     public JTextField nameTextField = null;
 
     public JButton createButton = null;
@@ -57,6 +58,9 @@ public class CreateCameraSource {
     private State state = State.INITIAL;
 
     JLabel statusLabel = new JLabel();
+
+    private java.util.List<Webcam> webcams = null;
+    private HashMap<Webcam, Dimension[]> sizes = new HashMap<>();
 
     enum State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED, NO_WEBCAMS }
 
@@ -70,7 +74,7 @@ public class CreateCameraSource {
     }
 
     public void initCreateImageSource() {
-        java.util.List<Webcam> webcams = Webcam.getWebcams();
+        webcams = Webcam.getWebcams();
 
         createCameraSource.setModal(true);
 
@@ -93,6 +97,8 @@ public class CreateCameraSource {
             for(Webcam webcam : webcams) {
                 // limit the webcam name to certain characters and append dots in the end if needed
                 String dots = webcam.getName().length() > VISIBLE_CHARACTERS_COMBO_BOX ? "..." : "";
+
+                sizes.put(webcam, webcam.getViewSizes());
 
                 camerasComboBox.addItem(
                         // https://stackoverflow.com/a/27060643
@@ -122,10 +128,16 @@ public class CreateCameraSource {
         contentsPanel.add(namePanel);
 
         // Size part
-        sizeFieldsInput = new SizeFields();
-        sizeFieldsInput.onChange.doPersistent(this::updateCreateBtt);
 
-        contentsPanel.add(sizeFieldsInput);
+        JPanel sizePanel = new JPanel(new FlowLayout());
+
+        JLabel sizeLabel = new JLabel("Size: ");
+        sizePanel.add(sizeLabel);
+
+        dimensionsComboBox = new JComboBox<>();
+        sizePanel.add(dimensionsComboBox);
+
+        contentsPanel.add(sizePanel);
 
         contentsPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
 
@@ -153,10 +165,14 @@ public class CreateCameraSource {
         // Additional stuff & events
         createButton.addActionListener(e -> {
             if(state == State.TEST_SUCCESSFUL) {
+                Dimension dim = sizes.get(
+                        webcams.get(camerasComboBox.getSelectedIndex())
+                )[dimensionsComboBox.getSelectedIndex()]; //oh god again...
+
                 createSource(
                         nameTextField.getText(),
                         camerasComboBox.getSelectedIndex(),
-                        sizeFieldsInput.getCurrentSize()
+                        new Size(dim.width, dim.height)
                 );
                 close();
             } else {
@@ -182,9 +198,16 @@ public class CreateCameraSource {
         });
 
         camerasComboBox.addActionListener((e) -> {
-            String sourceName = webcams.get(camerasComboBox.getSelectedIndex()).getName();
+            Webcam webcam = webcams.get(camerasComboBox.getSelectedIndex());
+
+            String sourceName = webcam.getName();
             if(!eocvSim.inputSourceManager.isNameOnUse(sourceName)) {
                 nameTextField.setText(sourceName);
+            }
+
+            dimensionsComboBox.removeAllItems();
+            for(Dimension dim : sizes.get(webcam)) {
+                dimensionsComboBox.addItem(dim.width + "x" + dim.height);
             }
 
             state = State.INITIAL;
@@ -231,12 +254,6 @@ public class CreateCameraSource {
             Mat m = new Mat();
             try {
                 camera.read(m);
-                Size size = CvUtil.scaleToFit(m.size(), EOCVSim.DEFAULT_EOCV_SIZE);
-
-                SwingUtilities.invokeLater(() -> {
-                    sizeFieldsInput.getWidthTextField().setText(String.format("%.0f", size.width));
-                    sizeFieldsInput.getHeightTextField().setText(String.format("%.0f", size.height));
-                });
             } catch (Exception e) {
                 Log.warn("CreateCameraSource", "Threw exception when trying to open camera", e);
                 wasOpened = false;
@@ -285,8 +302,6 @@ public class CreateCameraSource {
                 createButton.setEnabled(false);
                 nameTextField.setEnabled(false);
                 camerasComboBox.setEnabled(false);
-                sizeFieldsInput.getWidthTextField().setEnabled(false);
-                sizeFieldsInput.getHeightTextField().setEnabled(false);
                 break;
         }
     }
@@ -301,7 +316,6 @@ public class CreateCameraSource {
 
     public void updateCreateBtt() {
         createButton.setEnabled(!nameTextField.getText().trim().equals("")
-                && sizeFieldsInput.getValid()
                 && !eocvSim.inputSourceManager.isNameOnUse(nameTextField.getText()));
 
         updateState();

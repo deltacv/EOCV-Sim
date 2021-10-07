@@ -21,6 +21,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -32,6 +33,7 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import java.util.ArrayList;
 import java.util.List;
 
+@Disabled
 public class StageSwitchingPipeline extends OpenCvPipeline
 {
     Mat yCbCrChan2Mat = new Mat();

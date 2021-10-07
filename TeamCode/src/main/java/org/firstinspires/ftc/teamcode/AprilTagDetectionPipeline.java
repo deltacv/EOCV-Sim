@@ -21,6 +21,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
@@ -38,6 +39,7 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.ArrayList;
 
+@Disabled
 public class AprilTagDetectionPipeline extends OpenCvPipeline
 {
     // STATIC CONSTANTS

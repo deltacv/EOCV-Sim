@@ -21,6 +21,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import org.opencv.core.Core;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Disabled
 public class StoneOrientationAnalysisPipeline extends OpenCvPipeline
 {
     /*

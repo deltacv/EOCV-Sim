@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.util;
 
+import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -36,6 +37,16 @@ public class ReflectUtil {
         } catch (ClassCastException ex) {
             return false;
         }
+    }
+
+    public static boolean hasAnnotation(Class<?> clazz, Class<? extends Annotation> annotation) {
+        for(Annotation ann : clazz.getAnnotations()) {
+            if(ann.getClass() == annotation) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static Type[] getTypeArgumentsFrom(Class<?> clazz) {
