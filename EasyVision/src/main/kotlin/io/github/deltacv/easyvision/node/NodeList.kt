@@ -168,16 +168,16 @@ class NodeList(val easyVision: EasyVision) {
 
             for(category in Category.values()) {
                 if(nodes.containsKey(category)) {
-                    for (node in nodes[category]!!) {
-                        if (ImGui.collapsingHeader(category.properName, flags)) {
-                            if (ImGui.isItemHovered()) {
-                                closeOnClick = false
-                            }
-
-                            node.draw()
-                        } else if (ImGui.isItemHovered()) {
+                    if (ImGui.collapsingHeader(category.properName, flags)) {
+                        if (ImGui.isItemHovered()) {
                             closeOnClick = false
                         }
+
+                        for (node in nodes[category]!!) {
+                            node.draw()
+                        }
+                    } else if (ImGui.isItemHovered()) {
+                        closeOnClick = false
                     }
                 }
             }

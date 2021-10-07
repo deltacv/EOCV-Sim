@@ -68,6 +68,8 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 # Change logs
 
+### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
+
 ### [v3.1.0 - Better Error Handling](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.1.0)
 
    - This is the 10th release for EOCV-Sim
