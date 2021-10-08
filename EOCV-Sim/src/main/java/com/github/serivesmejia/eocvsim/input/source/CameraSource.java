@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.input.source;
 
+import com.github.sarxos.webcam.Webcam;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.util.Log;
@@ -35,11 +36,15 @@ import org.opencv.videoio.Videoio;
 import org.openftc.easyopencv.MatRecycler;
 
 import javax.swing.filechooser.FileFilter;
+import java.util.List;
 
 public class CameraSource extends InputSource {
 
+    protected int webcamIndex;
+
     @Expose
-    private final int webcamIndex;
+    protected String webcamName = null;
+
     private transient VideoCapture camera = null;
 
     private transient MatRecycler.RecyclableMat lastFramePaused = null;
@@ -47,16 +52,24 @@ public class CameraSource extends InputSource {
 
     private transient boolean initialized = false;
 
+    protected boolean isLegacyByIndex = false;
+
     @Expose
-    private volatile Size size;
+    protected volatile Size size;
 
     private volatile transient MatRecycler matRecycler;
 
     private transient long capTimeNanos = 0;
 
+    public CameraSource(String webcamName, Size size) {
+        this.webcamName = webcamName;
+        this.size = size;
+    }
+
     public CameraSource(int webcamIndex, Size size) {
         this.webcamIndex = webcamIndex;
         this.size = size;
+        isLegacyByIndex = true;
     }
 
     @Override
@@ -64,6 +77,17 @@ public class CameraSource extends InputSource {
 
         if (initialized) return false;
         initialized = true;
+
+        if(webcamName != null) {
+            List<Webcam> webcams = Webcam.getWebcams();
+
+            for(int i = 0 ; i < webcams.size() ; i++) {
+                if(webcams.get(i).getName().equals(webcamName)) {
+                    webcamIndex = i;
+                    break;
+                }
+            }
+        }
 
         camera = new VideoCapture();
         camera.open(webcamIndex);
@@ -180,7 +204,7 @@ public class CameraSource extends InputSource {
 
     @Override
     protected InputSource internalCloneSource() {
-        return new CameraSource(webcamIndex, size);
+        return new CameraSource(webcamName, size);
     }
 
     @Override

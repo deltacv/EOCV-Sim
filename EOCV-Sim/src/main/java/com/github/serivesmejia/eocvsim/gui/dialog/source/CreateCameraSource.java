@@ -165,13 +165,15 @@ public class CreateCameraSource {
         // Additional stuff & events
         createButton.addActionListener(e -> {
             if(state == State.TEST_SUCCESSFUL) {
+                Webcam webcam = webcams.get(camerasComboBox.getSelectedIndex());
+
                 Dimension dim = sizes.get(
-                        webcams.get(camerasComboBox.getSelectedIndex())
+                        webcam
                 )[dimensionsComboBox.getSelectedIndex()]; //oh god again...
 
                 createSource(
                         nameTextField.getText(),
-                        camerasComboBox.getSelectedIndex(),
+                        webcam.getName(),
                         new Size(dim.width, dim.height)
                 );
                 close();
@@ -306,10 +308,10 @@ public class CreateCameraSource {
         }
     }
 
-    public void createSource(String sourceName, int index, Size size) {
+    public void createSource(String sourceName, String camName, Size size) {
         eocvSim.onMainUpdate.doOnce(() -> eocvSim.inputSourceManager.addInputSource(
                 sourceName,
-                new CameraSource(index, size),
+                new CameraSource(camName, size),
                 true
         ));
     }

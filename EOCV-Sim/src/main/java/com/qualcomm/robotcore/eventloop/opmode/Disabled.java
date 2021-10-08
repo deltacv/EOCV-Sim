@@ -40,9 +40,8 @@ import java.lang.annotation.Target;
 
 /**
  * Provides a way to temporarily disable an OpMode annotated with
- * Autonomous or TeleOp from showing up
- * on the driver station OpMode list. or an OpenCvPipeline in
- * the case of EOCV-Sim.
+ * Autonomous or TeleOp from showing up on the driver station OpMode
+ * list. or an OpenCvPipeline in the case of EOCV-Sim.
  *
  * This class has been copy pasted as-is from the SDK to
  * follow the portability principle, although it has no effect

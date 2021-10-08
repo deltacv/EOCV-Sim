@@ -82,6 +82,10 @@ public abstract class InputSource implements Comparable<InputSource> {
 
     public abstract long getCaptureTimeNanos();
 
+    public long getCreationTime() {
+        return createdOn;
+    }
+
     @Override
     public final int compareTo(InputSource source) {
         return createdOn > source.createdOn ? 1 : -1;
