@@ -1,10 +1,10 @@
-package com.github.serivesmejia.eocvsim.util
+package com.github.serivesmejia.eocvsim.util.cv
 
 import org.opencv.core.Size
 import org.opencv.videoio.VideoCapture
 import org.opencv.videoio.Videoio
 
-object CameraResolutions {
+object CameraUtil {
 
     val commonResolutions = listOf(
         Size(176.0, 144.0),
@@ -19,7 +19,7 @@ object CameraResolutions {
 
     // adapted from https://www.learnpythonwithrune.org/find-all-possible-webcam-resolutions-with-opencv-in-python/
     // with a predefined list of commonResolutions because pulling from wikipedia is dumb lol
-    @JvmStatic fun get(index: Int): Array<Size> {
+    @JvmStatic fun getResolutionsOf(index: Int): Array<Size> {
         val camera = VideoCapture(index)
 
         val resolutions = mutableListOf<Size>()

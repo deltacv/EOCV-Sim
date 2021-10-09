@@ -26,7 +26,7 @@ package com.github.serivesmejia.eocvsim.gui.dialog.source;
 import com.github.sarxos.webcam.Webcam;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.input.source.CameraSource;
-import com.github.serivesmejia.eocvsim.util.CameraResolutions;
+import com.github.serivesmejia.eocvsim.util.cv.CameraUtil;
 import com.github.serivesmejia.eocvsim.util.Log;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -129,7 +129,7 @@ public class CreateCameraSource {
                     indexes.put(name, index);
 
                     if(!sizes.containsKey(name)) {
-                        sizes.put(name, CameraResolutions.get(index));
+                        sizes.put(name, CameraUtil.getResolutionsOf(index));
                     }
                 }
 
@@ -231,6 +231,7 @@ public class CreateCameraSource {
 
         camerasComboBox.addActionListener((e) -> {
             Webcam webcam = webcams.get(getSelectedIndex());
+            System.out.println(webcam.getDevice().getName());
 
             if(webcam == null) {
                 state = State.UNSUPPORTED;
