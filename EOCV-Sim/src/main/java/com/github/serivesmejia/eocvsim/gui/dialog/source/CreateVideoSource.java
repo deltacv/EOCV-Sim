@@ -175,8 +175,8 @@ public class CreateVideoSource {
         if (videoMat != null && !videoMat.empty()) {
 
             String fileName = StrUtil.getFileBaseName(f.getName());
-            if(!fileName.trim().equals("") && !eocvSim.inputSourceManager.isNameOnUse(fileName)) {
-                nameTextField.setText(fileName);
+            if(!fileName.trim().equals("")) {
+                nameTextField.setText(eocvSim.inputSourceManager.tryName(fileName));
             }
 
             Size newSize = CvUtil.scaleToFit(videoMat.size(), EOCVSim.DEFAULT_EOCV_SIZE);

@@ -247,6 +247,18 @@ public class InputSourceManager {
         return sources.containsKey(name);
     }
 
+    public String tryName(String name) {
+        String sourceName = name;
+        int count = 0;
+
+        while(eocvSim.inputSourceManager.isNameOnUse(sourceName)) {
+            count++;
+            sourceName = name + " (" + count + ")";
+        }
+
+        return sourceName;
+    }
+
     public void pauseIfImage() {
         //if the new input source is an image, we will pause the next frame
         //to execute one shot analysis on images and save resources.

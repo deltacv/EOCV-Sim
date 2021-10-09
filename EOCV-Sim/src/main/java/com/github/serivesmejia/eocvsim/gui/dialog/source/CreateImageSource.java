@@ -168,8 +168,8 @@ public class CreateImageSource {
         if (CvUtil.checkImageValid(fileAbsPath)) {
 
             String fileName = StrUtil.getFileBaseName(f.getName());
-            if(!fileName.trim().equals("") && !eocvSim.inputSourceManager.isNameOnUse(fileName)) {
-                nameTextField.setText(fileName);
+            if(!fileName.trim().equals("")) {
+                nameTextField.setText(eocvSim.inputSourceManager.tryName(fileName));
             }
 
             Size size = CvUtil.scaleToFit(CvUtil.getImageSize(fileAbsPath), EOCVSim.DEFAULT_EOCV_SIZE);

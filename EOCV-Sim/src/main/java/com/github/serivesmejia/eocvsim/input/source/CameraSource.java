@@ -40,6 +40,9 @@ import java.util.List;
 
 public class CameraSource extends InputSource {
 
+    // for global use, -1 means no webcam currently in use
+    public static int currentWebcamIndex = -1;
+
     protected int webcamIndex;
 
     @Expose
@@ -92,6 +95,9 @@ public class CameraSource extends InputSource {
         camera = new VideoCapture();
         camera.open(webcamIndex);
 
+        camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
+        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
+
         if (!camera.isOpened()) {
             Log.error("CameraSource", "Unable to open camera " + webcamIndex);
             return false;
@@ -110,6 +116,8 @@ public class CameraSource extends InputSource {
         }
 
         matRecycler.returnMat(newFrame);
+
+        currentWebcamIndex = webcamIndex;
 
         return true;
 
@@ -134,6 +142,7 @@ public class CameraSource extends InputSource {
     @Override
     public void close() {
         if (camera != null && camera.isOpened()) camera.release();
+        currentWebcamIndex = -1;
     }
 
     @Override
@@ -163,7 +172,6 @@ public class CameraSource extends InputSource {
         if (size == null) size = lastFrame.size();
 
         Imgproc.cvtColor(newFrame, lastFrame, Imgproc.COLOR_BGR2RGB);
-        Imgproc.resize(lastFrame, lastFrame, size, 0.0, 0.0, Imgproc.INTER_AREA);
 
         newFrame.release();
         newFrame.returnMat();
@@ -181,13 +189,13 @@ public class CameraSource extends InputSource {
         camera.read(lastFramePaused);
 
         Imgproc.cvtColor(lastFramePaused, lastFramePaused, Imgproc.COLOR_BGR2RGB);
-        Imgproc.resize(lastFramePaused, lastFramePaused, size, 0.0, 0.0, Imgproc.INTER_AREA);
 
         update();
 
         camera.release();
         camera = null;
 
+        currentWebcamIndex = -1;
     }
 
     @Override
@@ -198,8 +206,12 @@ public class CameraSource extends InputSource {
         camera = new VideoCapture();
         camera.open(webcamIndex);
 
-        apwdCam.destroyDialog();
+        camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
+        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
 
+        currentWebcamIndex = webcamIndex;
+
+        apwdCam.destroyDialog();
     }
 
     @Override
