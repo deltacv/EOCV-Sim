@@ -79,19 +79,6 @@ public class CreateCameraSource {
 
     public void initCreateImageSource() {
         webcams = Webcam.getWebcams();
-        if(CameraSource.currentWebcamIndex >= 0) {
-            ArrayList<Webcam> newWebcams = new ArrayList<>();
-
-            for(int i = 0 ; i < webcams.size() ; i++) {
-                if(i == CameraSource.currentWebcamIndex) {
-                    newWebcams.add(null);
-                } else {
-                    newWebcams.add(webcams.get(i));
-                }
-            }
-
-            webcams = newWebcams;
-        }
 
         createCameraSource.setModal(true);
 
@@ -113,7 +100,7 @@ public class CreateCameraSource {
         } else {
             int index = 0;
 
-            for(Webcam webcam : webcams) {
+            for(Webcam webcam : webcams.toArray(new Webcam[0])) {
                 if(webcam == null) continue;
 
                 // limit the webcam name to certain characters and append dots in the end if needed
@@ -129,7 +116,13 @@ public class CreateCameraSource {
                     indexes.put(name, index);
 
                     if(!sizes.containsKey(name)) {
-                        sizes.put(name, CameraUtil.getResolutionsOf(index));
+                        Size[] resolutions = CameraUtil.getResolutionsOf(index);
+
+                        if(resolutions.length == 0) {
+                            webcams.set(index, null);
+                        }
+
+                        sizes.put(name, resolutions);
                     }
                 }
 
@@ -231,7 +224,6 @@ public class CreateCameraSource {
 
         camerasComboBox.addActionListener((e) -> {
             Webcam webcam = webcams.get(getSelectedIndex());
-            System.out.println(webcam.getDevice().getName());
 
             if(webcam == null) {
                 state = State.UNSUPPORTED;

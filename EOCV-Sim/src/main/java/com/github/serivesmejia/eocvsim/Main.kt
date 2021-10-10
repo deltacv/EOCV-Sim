@@ -2,27 +2,16 @@
 package com.github.serivesmejia.eocvsim
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
-import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.Log
-import com.github.serivesmejia.eocvsim.util.UsbUtil
 import picocli.CommandLine
 import java.io.File
 import java.nio.file.Paths
-import javax.usb.UsbPlatformException
 import kotlin.system.exitProcess
 
 val jvmMainThread: Thread = Thread.currentThread()
 var currentMainThread: Thread = jvmMainThread
 
 fun main(args: Array<String>) {
-    for(device in UsbUtil.peripheriques()) {
-        try {
-            println("$device ${device.productString}")
-        } catch(e: UsbPlatformException) {
-            println(e.message)
-        }
-    }
-
     val result = CommandLine(
         EOCVSimCommandInterface()
     ).setCaseInsensitiveEnumValuesAllowed(true).execute(*args)

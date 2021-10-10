@@ -27,6 +27,7 @@ import com.github.sarxos.webcam.Webcam;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.util.Log;
+import com.github.serivesmejia.eocvsim.util.StrUtil;
 import com.google.gson.annotations.Expose;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -85,7 +86,9 @@ public class CameraSource extends InputSource {
             List<Webcam> webcams = Webcam.getWebcams();
 
             for(int i = 0 ; i < webcams.size() ; i++) {
-                if(webcams.get(i).getName().equals(webcamName)) {
+                String name = webcams.get(i).getName();
+
+                if(name.equals(webcamName) || StrUtil.similarity(name, webcamName) > 0.6) {
                     webcamIndex = i;
                     break;
                 }

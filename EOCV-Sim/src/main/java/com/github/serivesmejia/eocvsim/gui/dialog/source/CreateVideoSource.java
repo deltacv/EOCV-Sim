@@ -24,14 +24,11 @@
 package com.github.serivesmejia.eocvsim.gui.dialog.source;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
-import com.github.serivesmejia.eocvsim.gui.DialogFactory;
 import com.github.serivesmejia.eocvsim.gui.component.input.FileSelector;
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields;
-import com.github.serivesmejia.eocvsim.gui.util.GuiUtil;
 import com.github.serivesmejia.eocvsim.input.source.VideoSource;
-import com.github.serivesmejia.eocvsim.util.CvUtil;
+import com.github.serivesmejia.eocvsim.util.cv.CvUtil;
 import com.github.serivesmejia.eocvsim.util.FileFilters;
-import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -39,7 +36,6 @@ import org.opencv.core.Size;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 

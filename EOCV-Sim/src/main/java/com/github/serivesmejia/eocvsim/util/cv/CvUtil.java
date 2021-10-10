@@ -21,7 +21,7 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.util;
+package com.github.serivesmejia.eocvsim.util.cv;
 
 import com.github.serivesmejia.eocvsim.util.extension.CvExt;
 import org.opencv.core.Mat;
