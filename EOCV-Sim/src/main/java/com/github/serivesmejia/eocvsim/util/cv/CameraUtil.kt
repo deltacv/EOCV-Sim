@@ -42,6 +42,7 @@ object CameraUtil {
             }
         }
 
+        camera.release()
         return resolutions.toTypedArray()
     }
 

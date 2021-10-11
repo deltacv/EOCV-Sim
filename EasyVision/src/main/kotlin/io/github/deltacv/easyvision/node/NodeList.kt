@@ -13,6 +13,7 @@ import imgui.flag.*
 import imgui.type.ImBoolean
 import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
+import io.github.deltacv.easyvision.gui.Table
 import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.node.vision.CvtColorNode
@@ -47,7 +48,6 @@ class NodeList(val easyVision: EasyVision) {
     private val hoveringPlusTime = ElapsedTime()
 
     private lateinit var listContext: ImNodesContext
-
 
     fun init() {
         buttonFont = makeFont(plusFontSize)
@@ -151,6 +151,11 @@ class NodeList(val easyVision: EasyVision) {
         map
     }
 
+    private val tablesCategories = mutableMapOf<Category, Table>()
+
+    private var isFirstDraw = true
+    private var isSecondDraw = false
+
     private fun drawNodesList() {
         ImNodes.editorContextSet(listContext)
 
@@ -168,13 +173,31 @@ class NodeList(val easyVision: EasyVision) {
 
             for(category in Category.values()) {
                 if(nodes.containsKey(category)) {
+                    if(!tablesCategories.containsKey(category)) {
+                        tablesCategories[category] = Table()
+                    }
+
+                    val table = tablesCategories[category]!!
+
                     if (ImGui.collapsingHeader(category.properName, flags)) {
                         if (ImGui.isItemHovered()) {
                             closeOnClick = false
                         }
 
+                        table.draw()
+
                         for (node in nodes[category]!!) {
                             node.draw()
+
+                            if(isSecondDraw) {
+                                val nodeSize = ImVec2()
+                                ImNodes.getNodeDimensions(node.id, nodeSize)
+
+                                table.add(node.id, nodeSize)
+                            } else if(!isFirstDraw) {
+                                val pos = table.getPos(node.id)!!
+                                ImNodes.setNodeScreenSpacePos(node.id, pos.x, pos.y)
+                            }
                         }
                     } else if (ImGui.isItemHovered()) {
                         closeOnClick = false
@@ -185,6 +208,13 @@ class NodeList(val easyVision: EasyVision) {
 
         ImNodes.getStyle().gridSpacing = 32f // back to normal
         ImNodes.popColorStyle()
+
+        isSecondDraw = false
+
+        if(isFirstDraw) {
+            isSecondDraw = true
+            isFirstDraw = false
+        }
 
         handleClick(closeOnClick)
     }

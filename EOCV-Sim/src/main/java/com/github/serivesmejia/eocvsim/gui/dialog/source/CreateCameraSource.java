@@ -119,7 +119,19 @@ public class CreateCameraSource {
                         Size[] resolutions = CameraUtil.getResolutionsOf(index);
 
                         if(resolutions.length == 0) {
-                            webcams.set(index, null);
+                            ArrayList<Webcam> newWebcams = new ArrayList<>();
+
+                            for(int i = 0 ; i < webcams.size() ; i++) {
+                                if(i != index) {
+                                    newWebcams.add(webcams.get(i));
+                                } else {
+                                    newWebcams.add(null);
+                                }
+                            }
+
+                            webcams = newWebcams;
+                            Log.warn("CreateCameraSource", "Webcam " + webcam.getName() + " didn't return any available resolutions, therefore it's unavailable.");
+                            continue;
                         }
 
                         sizes.put(name, resolutions);
