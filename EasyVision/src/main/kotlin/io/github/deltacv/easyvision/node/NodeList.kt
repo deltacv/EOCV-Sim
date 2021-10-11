@@ -180,6 +180,9 @@ class NodeList(val easyVision: EasyVision) {
                     val table = tablesCategories[category]!!
 
                     if (ImGui.collapsingHeader(category.properName, flags)) {
+                        ImGui.newLine()
+                        ImGui.indent(10f)
+
                         if (ImGui.isItemHovered()) {
                             closeOnClick = false
                         }
@@ -187,8 +190,6 @@ class NodeList(val easyVision: EasyVision) {
                         table.draw()
 
                         for (node in nodes[category]!!) {
-                            node.draw()
-
                             if(isSecondDraw) {
                                 val nodeSize = ImVec2()
                                 ImNodes.getNodeDimensions(node.id, nodeSize)
@@ -198,7 +199,12 @@ class NodeList(val easyVision: EasyVision) {
                                 val pos = table.getPos(node.id)!!
                                 ImNodes.setNodeScreenSpacePos(node.id, pos.x, pos.y)
                             }
+                            
+                            node.draw()
                         }
+
+                        ImGui.newLine()
+                        ImGui.unindent(10f)
                     } else if (ImGui.isItemHovered()) {
                         closeOnClick = false
                     }
