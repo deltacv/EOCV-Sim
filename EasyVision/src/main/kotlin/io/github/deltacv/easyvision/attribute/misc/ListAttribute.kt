@@ -1,6 +1,7 @@
 package io.github.deltacv.easyvision.attribute.misc
 
 import imgui.ImGui
+import imgui.ImVec2
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
@@ -20,6 +21,8 @@ open class ListAttribute(
         override val name = "List"
         override val allowsNew = false
     }
+
+    override var typeName = "[${elementType.name}]"
 
     val listAttributes = mutableListOf<TypedAttribute>()
     val deleteQueue = mutableListOf<TypedAttribute>()
@@ -92,7 +95,7 @@ open class ListAttribute(
             }
 
             if(!hasLink) { // only draw attributes if there's not a link attached
-                drawAttributeText(i)
+                drawAttributeText(i, attrib)
                 attrib.draw()
             }
         }
@@ -100,15 +103,43 @@ open class ListAttribute(
         beforeHasLink = hasLink
     }
 
-    open fun drawAttributeText(index: Int) { }
+    open fun drawAttributeText(index: Int, attrib: Attribute) { }
 
-    override fun value(current: CodeGen.Current): GenValue =
-        // get the values of all the attributes and return a
-        // GenValue.List with the attribute values in an array
-        GenValue.List(listAttributes.map { it.value(current) }.toTypedArray())
+    override fun value(current: CodeGen.Current): GenValue {
+        return if(mode == AttributeMode.INPUT) {
+            if(hasLink) {
+                val linkedAttrib = linkedAttribute()
+
+                raiseAssert(
+                    linkedAttrib != null,
+                    "List attribute must have another attribute attached"
+                )
+
+                val value = linkedAttrib!!.value(current)
+                raiseAssert(
+                    value is GenValue.ListOf<*> || value is GenValue.RuntimeListOf<*>,
+                    "Attribute attached is not a list"
+                )
+
+                value
+            } else {
+                // get the values of all the attributes and return a
+                // GenValue.List with the attribute values in an array
+                GenValue.List(listAttributes.map { it.value(current) }.toTypedArray())
+            }
+        } else {
+            val value = getOutputValue(current)
+            raiseAssert(
+                value is GenValue.ListOf<*> || value is GenValue.RuntimeListOf<*>,
+                "Value returned from the node is not a list"
+            )
+
+            value
+        }
+    }
 
     override fun drawAttribute() {
-        ImGui.text("[${elementType.name}] $variableName")
+        super.drawAttribute()
 
         if(!hasLink && elementType.allowsNew && allowAod && mode == AttributeMode.INPUT) {
             // idk wat the frame height is, i just stole it from

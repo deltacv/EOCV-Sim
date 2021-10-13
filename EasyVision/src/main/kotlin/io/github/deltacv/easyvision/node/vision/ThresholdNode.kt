@@ -4,7 +4,7 @@ import imgui.ImGui
 import imgui.type.ImInt
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
-import io.github.deltacv.easyvision.attribute.vision.ScalarAttribute
+import io.github.deltacv.easyvision.attribute.vision.ScalarRangeAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.GenValue
@@ -24,7 +24,7 @@ import io.github.deltacv.easyvision.node.DrawNode
 class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
 
     val input = MatAttribute(INPUT, "Input")
-    val scalar = ScalarAttribute(INPUT, Colors.values()[0], "Threshold")
+    val scalar = ScalarRangeAttribute(INPUT, Colors.values()[0], "Threshold")
     val output = MatAttribute(OUTPUT, "Binary Output")
 
     override fun onEnable() {

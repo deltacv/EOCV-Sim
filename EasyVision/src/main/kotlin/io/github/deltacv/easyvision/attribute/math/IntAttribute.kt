@@ -25,7 +25,9 @@ class IntAttribute(
         super.drawAttribute()
 
         if(!hasLink && mode == AttributeMode.INPUT) {
-            ImGui.sameLine()
+            if(inputSameLine) {
+                ImGui.sameLine()
+            }
 
             ImGui.pushItemWidth(110.0f)
             ImGui.inputInt("", value)
@@ -33,29 +35,8 @@ class IntAttribute(
         }
     }
 
-    override fun value(current: CodeGen.Current): GenValue.Int {
-        if(isInput) {
-            return if(hasLink) {
-                val linkedAttrib = linkedAttribute()
-
-                raiseAssert(
-                    linkedAttrib != null,
-                    "Int attribute must have another attribute attached"
-                )
-
-                val value = linkedAttrib!!.value(current)
-                raiseAssert(value is GenValue.Int, "Attribute attached is not an Int")
-
-                value as GenValue.Int
-            } else {
-                GenValue.Int(value.get())
-            }
-        } else {
-            val value = getOutputValue(current)
-            raiseAssert(value is GenValue.Int, "Value returned from the node is not an Int")
-
-            return value as GenValue.Int
-        }
-    }
+    override fun value(current: CodeGen.Current) = value(
+        current, "an Int", GenValue.Int(value.get())
+    ) { it is GenValue.Int }
 
 }

@@ -22,11 +22,25 @@ sealed class GenValue {
         }
     }
 
+    data class MatOfPoint(val value: Value) : GenValue()
+    data class Points(val value: Value) : GenValue()
+
     data class Enum<E: kotlin.Enum<E>>(val value: E, val clazz: Class<*>) : GenValue()
 
     data class Int(val value: kotlin.Int) : GenValue()
     data class Float(val value: kotlin.Float) : GenValue()
     data class Double(val value: kotlin.Double) : GenValue()
+
+    data class Scalar(
+        val a: kotlin.Double,
+        val b: kotlin.Double,
+        val c: kotlin.Double,
+        val d: kotlin.Double
+    ) : GenValue() {
+        companion object {
+            val ZERO = Scalar(0.0, 0.0, 0.0, 0.0)
+        }
+    }
 
     data class Range(val min: kotlin.Double, val max: kotlin.Double) : GenValue(){
         companion object {
@@ -45,7 +59,10 @@ sealed class GenValue {
         object False : Boolean(false)
     }
 
-    data class List(val elements: Array<GenValue>) : GenValue()
+    open class ListOf<T : GenValue>(val elements: Array<T>) : GenValue()
+    data class List(val elems: Array<GenValue>) : ListOf<GenValue>(elems)
+
+    data class RuntimeListOf<T : GenValue>(val value: Value) : GenValue()
 
     object None : GenValue()
 

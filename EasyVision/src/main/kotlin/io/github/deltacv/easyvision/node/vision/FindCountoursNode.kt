@@ -1,0 +1,77 @@
+package io.github.deltacv.easyvision.node.vision
+
+import io.github.deltacv.easyvision.attribute.Attribute
+import io.github.deltacv.easyvision.attribute.misc.ListAttribute
+import io.github.deltacv.easyvision.attribute.vision.MatAttribute
+import io.github.deltacv.easyvision.attribute.vision.PointsAttribute
+import io.github.deltacv.easyvision.codegen.CodeGen
+import io.github.deltacv.easyvision.codegen.CodeGenSession
+import io.github.deltacv.easyvision.codegen.GenValue
+import io.github.deltacv.easyvision.codegen.parse.new
+import io.github.deltacv.easyvision.codegen.parse.v
+import io.github.deltacv.easyvision.codegen.parse.variable
+import io.github.deltacv.easyvision.node.Category
+import io.github.deltacv.easyvision.node.DrawNode
+import io.github.deltacv.easyvision.node.RegisterNode
+
+@RegisterNode(
+    name = "Simple Find Contours",
+    category = Category.CV_BASICS,
+    description = "Finds all the contours (list of points) of a given binary image."
+)
+class FindContoursNode : DrawNode<FindContoursNode.Session>("Simple Find Contours") {
+
+    val inputMat = MatAttribute(INPUT, "Binary Input")
+    val outputPoints = ListAttribute(OUTPUT, PointsAttribute, "Contours")
+
+    override fun onEnable() {
+        + inputMat
+        + outputPoints
+    }
+
+    override fun genCode(current: CodeGen.Current) = current {
+        val session = Session()
+
+        val input = inputMat.value(current)
+        input.requireBinary(inputMat)
+
+        val listName = tryName("contours")
+        val listValue = listName.v
+
+        val hierarchyMatName = tryName("hierarchy")
+        val hierarchyMatValue = hierarchyMatName.v
+
+        import("org.opencv.imgproc.Imgproc")
+        import("org.opencv.core.MatOfPoint")
+        import("java.util.ArrayList")
+
+        private(listName, new("ArrayList<MatOfPoint>"))
+        private(hierarchyMatName, new("Mat"))
+
+        current.scope {
+            "${listName}.clear"()
+            "${hierarchyMatName}.release"()
+
+            "Imgproc.findContours"(input.value, listValue, hierarchyMatValue, "Imgproc.RETR_LIST".v, "Imgproc.CHAIN_APPROX_SIMPLE".v)
+        }
+
+        session.contoursList = GenValue.RuntimeListOf<GenValue.Points>(listValue)
+
+        session
+    }
+
+    override fun getOutputValueOf(current: CodeGen.Current, attrib: Attribute): GenValue {
+        genCodeIfNecessary(current)
+
+        if(attrib == outputPoints) {
+            return genSession!!.contoursList
+        }
+
+        raise("Attribute $attrib is not an output of this node or not handled by this")
+    }
+
+    class Session : CodeGenSession {
+        lateinit var contoursList: GenValue.RuntimeListOf<GenValue.Points>
+    }
+
+}

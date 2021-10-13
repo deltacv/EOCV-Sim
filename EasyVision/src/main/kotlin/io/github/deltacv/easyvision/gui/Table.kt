@@ -40,13 +40,13 @@ class Table(val maxRows: Int = 4) {
     fun draw() {
         if(rects.isEmpty()) return
 
-        ImGui.columns(if(rects.size >= maxRows) maxRows else rects.size, "##$columnsId", false)
+        ImGui.columns(if(rects.size >= maxRows) maxRows else rects.size, "###$columnsId", false)
 
         for((id, size) in rects) {
             // our dummy element, it's an invisible button because
             // i couldn't find anything better with an adjustable
             // rectangle shape.
-            ImGui.invisibleButton("##$id", size.x, size.y)
+            ImGui.invisibleButton("###$id", size.x, size.y)
             if(!currentRects.containsKey(id)) {
                 currentRects[id] = ImVec2()
             }
