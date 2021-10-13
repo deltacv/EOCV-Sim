@@ -182,5 +182,9 @@ open class ListAttribute(
         element.drawType = false // hides the variable type
 
         listAttributes.add(element)
+
+        onElementCreation(element)
     }
+
+    open fun onElementCreation(element: Attribute) { }
 }

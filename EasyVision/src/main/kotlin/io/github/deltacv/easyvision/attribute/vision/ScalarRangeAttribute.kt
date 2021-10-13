@@ -38,39 +38,21 @@ class ScalarRangeAttribute(
     }
 
     override fun value(current: CodeGen.Current): GenValue.ScalarRange {
-        return if(isInput) {
-            if(hasLink) {
-                val linkedAttrib = linkedAttribute()
+        val values = (super.value(current) as GenValue.List).elements
+        val ZERO = GenValue.Range.ZERO
 
-                raiseAssert(
-                    linkedAttrib != null,
-                    "Scalar attribute must have another attribute attached"
-                )
+        val value = GenValue.ScalarRange(
+            values.getOr(0, ZERO) as GenValue.Range,
+            values.getOr(1, ZERO) as GenValue.Range,
+            values.getOr(2, ZERO) as GenValue.Range,
+            values.getOr(3, ZERO) as GenValue.Range
+        )
 
-                raiseAssert(
-                    linkedAttrib is ScalarRangeAttribute,
-                    "Attribute attached is not a Scalar range"
-                )
-
-                linkedAttrib!!.value(current) as GenValue.ScalarRange
-            } else {
-                val values = (super.value(current) as GenValue.List).elements
-                val ZERO = GenValue.Range.ZERO
-
-                GenValue.ScalarRange(
-                    values.getOr(0, ZERO) as GenValue.Range,
-                    values.getOr(1, ZERO) as GenValue.Range,
-                    values.getOr(2, ZERO) as GenValue.Range,
-                    values.getOr(3, ZERO) as GenValue.Range
-                )
-            }
-        } else {
-            val value = getOutputValue(current)
-            raiseAssert(value is GenValue.ScalarRange, "Value returned from the node is not a scalar range")
-
-            return value as GenValue.ScalarRange
-        }
+        return value(
+            current, "a scalar range", value
+        ) { it is GenValue.ScalarRange }
     }
+
 
 }
 

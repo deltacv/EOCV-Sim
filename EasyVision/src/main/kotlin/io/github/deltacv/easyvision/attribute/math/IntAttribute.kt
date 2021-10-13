@@ -7,6 +7,7 @@ import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
+import io.github.deltacv.easyvision.util.Range2d
 
 class IntAttribute(
     override val mode: AttributeMode,
@@ -21,6 +22,8 @@ class IntAttribute(
 
     val value = ImInt()
 
+    private var range: Range2d? = null
+
     override fun drawAttribute() {
         super.drawAttribute()
 
@@ -33,6 +36,14 @@ class IntAttribute(
             ImGui.inputInt("", value)
             ImGui.popItemWidth()
         }
+    }
+
+    fun sliderMode(range: Range2d) {
+        this.range = range
+    }
+
+    fun normalMode() {
+        this.range = null
     }
 
     override fun value(current: CodeGen.Current) = value(

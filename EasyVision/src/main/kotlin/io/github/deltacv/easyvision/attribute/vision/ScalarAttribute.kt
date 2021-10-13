@@ -9,6 +9,7 @@ import io.github.deltacv.easyvision.attribute.misc.ListAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.node.vision.Colors
+import io.github.deltacv.easyvision.util.Range2d
 
 class ScalarAttribute(
     mode: AttributeMode,
@@ -39,39 +40,9 @@ class ScalarAttribute(
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
-    override fun value(current: CodeGen.Current): GenValue.Scalar {
-        return if(isInput) {
-            if(hasLink) {
-                val linkedAttrib = linkedAttribute()
-
-                raiseAssert(
-                    linkedAttrib != null,
-                    "Scalar attribute must have another attribute attached"
-                )
-
-                raiseAssert(
-                    linkedAttrib is ScalarAttribute,
-                    "Attribute attached is not a Scalar"
-                )
-
-                linkedAttrib!!.value(current) as GenValue.Scalar
-            } else {
-                val values = (super.value(current) as GenValue.List).elements
-                val ZERO = GenValue.Double(0.0)
-
-                GenValue.Scalar(
-                    (values.getOr(0, ZERO) as GenValue.Double).value,
-                    (values.getOr(1, ZERO) as GenValue.Double).value,
-                    (values.getOr(2, ZERO) as GenValue.Double).value,
-                    (values.getOr(3, ZERO) as GenValue.Double).value
-                )
-            }
-        } else {
-            val value = getOutputValue(current)
-            raiseAssert(value is GenValue.Scalar, "Value returned from the node is not a scalar")
-
-            return value as GenValue.Scalar
+    override fun onElementCreation(element: Attribute) {
+        if(element is DoubleAttribute) {
+            element.sliderMode(Range2d(0.0, 255.0))
         }
     }
 
@@ -87,7 +58,7 @@ class ScalarAttribute(
         )
 
         return value(
-            current, "a Points", value
+            current, "a Scalar", value
         ) { it is GenValue.Scalar }
     }
 
