@@ -43,7 +43,9 @@ class MaskNode : DrawNode<MaskNode.Session>("Binary Mask"){
 
         import("org.opencv.core.Core")
 
-        private(output, new("Mat"))
+        group {
+            private(output, new("Mat"))
+        }
 
         current.scope {
             "$output.release"()
@@ -62,7 +64,7 @@ class MaskNode : DrawNode<MaskNode.Session>("Binary Mask"){
             return genSession!!.outputMat
         }
 
-        raise("Attribute $attrib is not an output of this node or not handled by this")
+        noValue(attrib)
     }
 
     class Session : CodeGenSession {

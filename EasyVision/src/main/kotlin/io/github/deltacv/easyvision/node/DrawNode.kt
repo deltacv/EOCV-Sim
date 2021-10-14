@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
 import imgui.flag.ImGuiMouseButton
+import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 
 abstract class DrawNode<S: CodeGenSession>(
@@ -68,6 +69,10 @@ abstract class DrawNode<S: CodeGenSession>(
         }
 
         lastPinToMouse = pinToMouse
+    }
+
+    protected fun noValue(attrib: Attribute): Nothing {
+        raise("Attribute $attrib is not an output of this node or not handled by this")
     }
 
     open fun drawNode() { }

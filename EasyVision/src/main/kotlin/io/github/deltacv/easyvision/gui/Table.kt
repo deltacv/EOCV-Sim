@@ -23,7 +23,7 @@ import io.github.deltacv.easyvision.EasyVision
 // why not use it instead?
 //
 // ...i hate this so much
-class Table(val maxRows: Int = 4) {
+class Table(val maxRows: Int = 4, val keyManager: EasyVision) {
 
     private val rects = mutableMapOf<Int, ImVec2>()
     private val currentRects = mutableMapOf<Int, ImVec2>()
@@ -37,8 +37,21 @@ class Table(val maxRows: Int = 4) {
         rects[id] = size
     }
 
+    //just for name purposes lol
+    fun setSize(id: Int, size: ImVec2) = add(id, size)
+
     fun draw() {
         if(rects.isEmpty()) return
+
+        val scrollValue = if(keyManager.isArrowUpPressed) {
+            1.5f
+        } else if(keyManager.isArrowDownPressed) {
+            -1.5f
+        } else {
+            -ImGui.getIO().mouseWheel.toFloat()
+        }
+
+        ImGui.setScrollY(ImGui.getScrollY() + scrollValue * 20.0f)
 
         ImGui.columns(if(rects.size >= maxRows) maxRows else rects.size, "###$columnsId", false)
 

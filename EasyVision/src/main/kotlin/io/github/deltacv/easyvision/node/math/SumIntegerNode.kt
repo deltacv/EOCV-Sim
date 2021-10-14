@@ -40,7 +40,7 @@ class SumIntegerNode : DrawNode<SumIntegerNode.Session>("Sum Integers") {
             return genSession!!.result
         }
 
-        raise("Attribute $attrib is not an output of this node or not handled by this")
+        noValue(attrib)
     }
 
     class Session : CodeGenSession {

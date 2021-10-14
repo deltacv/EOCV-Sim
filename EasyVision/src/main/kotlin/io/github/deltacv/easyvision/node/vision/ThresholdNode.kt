@@ -88,31 +88,37 @@ class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
         import("org.opencv.core.Scalar")
         import("org.opencv.core.Core")
 
-        // lower color scalar
-        public(lowerScalar,
-            new("Scalar",
-                range.a.min.toString(),
-                range.b.min.toString(),
-                range.c.min.toString(),
-                range.d.min.toString(),
+        group {
+            // lower color scalar
+            public(
+                lowerScalar,
+                new(
+                    "Scalar",
+                    range.a.min.toString(),
+                    range.b.min.toString(),
+                    range.c.min.toString(),
+                    range.d.min.toString(),
+                )
             )
-        )
 
-        // upper color scalar
-        public(upperScalar,
-            new("Scalar",
-                range.a.max.toString(),
-                range.b.max.toString(),
-                range.c.max.toString(),
-                range.d.max.toString(),
+            // upper color scalar
+            public(
+                upperScalar,
+                new(
+                    "Scalar",
+                    range.a.max.toString(),
+                    range.b.max.toString(),
+                    range.c.max.toString(),
+                    range.d.max.toString(),
+                )
             )
-        )
 
-        if(needsCvt) {
-            private(cvtMat, new("Mat"))
+            if (needsCvt) {
+                private(cvtMat, new("Mat"))
+            }
+            // output mat target
+            private(thresholdTargetMat, new("Mat"))
         }
-        // output mat target
-        private(thresholdTargetMat, new("Mat"))
 
         current.scope {
             if(needsCvt) {
@@ -135,7 +141,7 @@ class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
             return genSession!!.outputMat
         }
 
-        raise("Attribute $attrib is not an output of this node or not handled by this")
+        noValue(attrib)
     }
 
     class Session : CodeGenSession {

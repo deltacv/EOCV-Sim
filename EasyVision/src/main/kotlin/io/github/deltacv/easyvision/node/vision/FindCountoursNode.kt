@@ -45,8 +45,10 @@ class FindContoursNode : DrawNode<FindContoursNode.Session>("Simple Find Contour
         import("org.opencv.core.MatOfPoint")
         import("java.util.ArrayList")
 
-        private(listName, new("ArrayList<MatOfPoint>"))
-        private(hierarchyMatName, new("Mat"))
+        group {
+            private(listName, new("ArrayList<MatOfPoint>"))
+            private(hierarchyMatName, new("Mat"))
+        }
 
         current.scope {
             "${listName}.clear"()
@@ -67,7 +69,7 @@ class FindContoursNode : DrawNode<FindContoursNode.Session>("Simple Find Contour
             return genSession!!.contoursList
         }
 
-        raise("Attribute $attrib is not an output of this node or not handled by this")
+        noValue(attrib)
     }
 
     class Session : CodeGenSession {

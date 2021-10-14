@@ -61,8 +61,10 @@ class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
         if(matColor != targetColor) {
             val matName = tryName("${targetColor.name.lowercase()}Mat")
 
-            // create mat instance variable
-            private(matName, new("Mat"))
+            group {
+                // create mat instance variable
+                private(matName, new("Mat"))
+            }
 
             current.scope { // add a cvtColor step in processFrame
                 "Imgproc.cvtColor"(inputMat.value, matName.v, cvtColorValue(matColor, targetColor))
@@ -85,7 +87,7 @@ class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
             return genSession!!.outputMatValue
         }
 
-        raise("Attribute $attrib is not an output of this node or not handled by this")
+        noValue(attrib)
     }
 
     class Session : CodeGenSession {

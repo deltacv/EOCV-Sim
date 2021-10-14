@@ -135,14 +135,24 @@ class EasyVision : Application() {
     var isSpaceReleased = false
         private set
 
+    var isArrowUpPressed = false
+        private set
+    var isArrowDownPressed = false
+        private set
+
     private fun keyCallback(windowId: Long, key: Int, scancode: Int, action: Int, mods: Int) {
         if(prevKeyCallback != null) {
             prevKeyCallback!!.invoke(windowId, key, scancode, action, mods) //invoke the imgui callback
         }
 
-        isDeleteReleased = scancode == 119 && action == GLFW.GLFW_RELEASE
-        isEscReleased = scancode == 9 && action == GLFW.GLFW_RELEASE
-        isSpaceReleased = scancode == 65 && action == GLFW.GLFW_RELEASE
+        isDeleteReleased = scancode == 119 && action == GLFW_RELEASE
+        isEscReleased = scancode == 9 && action == GLFW_RELEASE
+        isSpaceReleased = scancode == 65 && action == GLFW_RELEASE
+
+        isArrowUpPressed = scancode == 111 && action == GLFW_PRESS
+        isArrowDownPressed = scancode == 116 && action == GLFW_PRESS
+
+        println(scancode)
     }
 }
 

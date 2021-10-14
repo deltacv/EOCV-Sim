@@ -96,6 +96,7 @@ class NodeList(val easyVision: EasyVision) {
         ImGui.begin(
             "floating", ImGuiWindowFlags.NoBackground
                     or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove
+                    or ImGuiWindowFlags.AlwaysVerticalScrollbar
         )
 
         ImGui.pushFont(buttonFont)
@@ -174,7 +175,7 @@ class NodeList(val easyVision: EasyVision) {
             for(category in Category.values()) {
                 if(nodes.containsKey(category)) {
                     if(!tablesCategories.containsKey(category)) {
-                        tablesCategories[category] = Table()
+                        tablesCategories[category] = Table(keyManager = easyVision)
                     }
 
                     val table = tablesCategories[category]!!

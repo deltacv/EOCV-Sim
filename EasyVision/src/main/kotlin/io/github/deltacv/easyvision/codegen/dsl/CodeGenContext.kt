@@ -34,6 +34,17 @@ class CodeGenContext(val codeGen: CodeGen) {
     fun protected(name: String, v: Value) =
         codeGen.classStartScope.instanceVariable(Visibility.PROTECTED, name, v)
 
+    private var isFirstGroup = true
+
+    fun group(scope: Scope = codeGen.classStartScope, block: () -> Unit) {
+        if(!isFirstGroup) {
+            scope.newLineIfNotBlank()
+        }
+        isFirstGroup = false
+
+        block()
+    }
+
     fun tryName(name: String) = codeGen.classStartScope.tryName(name)
 
     operator fun String.invoke(
