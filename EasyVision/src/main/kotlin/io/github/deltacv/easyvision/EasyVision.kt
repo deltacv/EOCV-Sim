@@ -33,6 +33,7 @@ import io.github.deltacv.easyvision.codegen.*
 import io.github.deltacv.easyvision.gui.PopupBuilder
 import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
+import io.github.deltacv.easyvision.io.KeyManager
 import io.github.deltacv.easyvision.node.NodeEditor
 import io.github.deltacv.easyvision.node.NodeList
 import io.github.deltacv.easyvision.node.vision.*
@@ -63,10 +64,11 @@ class EasyVision : Application() {
 
     private var prevKeyCallback: GLFWKeyCallback? = null
 
-    val nodeEditor = NodeEditor(this)
-    val nodeList = NodeList(this)
-
+    val keyManager = KeyManager()
     val codeGenManager = CodeGenManager(this)
+
+    val nodeEditor = NodeEditor(this, keyManager)
+    val nodeList = NodeList(this, keyManager)
 
     private lateinit var defaultFont: ImFont
 
@@ -84,6 +86,7 @@ class EasyVision : Application() {
 
     override fun initImGui(config: Configuration?) {
         super.initImGui(config)
+
         defaultFont = makeFont(13f)
         nodeList.init()
     }
@@ -119,40 +122,20 @@ class EasyVision : Application() {
         PopupBuilder.draw()
         ImGui.popFont()
 
-        isDeleteReleased = false
-        isEscReleased = false
-        isSpaceReleased = false
+        keyManager.update()
 
         if(ImGui.isMouseReleased(ImGuiMouseButton.Right)) {
             codeGenManager.build()
         }
     }
 
-    var isDeleteReleased = false
-        private set
-    var isEscReleased = false
-        private set
-    var isSpaceReleased = false
-        private set
-
-    var isArrowUpPressed = false
-        private set
-    var isArrowDownPressed = false
-        private set
-
     private fun keyCallback(windowId: Long, key: Int, scancode: Int, action: Int, mods: Int) {
         if(prevKeyCallback != null) {
             prevKeyCallback!!.invoke(windowId, key, scancode, action, mods) //invoke the imgui callback
         }
 
-        isDeleteReleased = scancode == 119 && action == GLFW_RELEASE
-        isEscReleased = scancode == 9 && action == GLFW_RELEASE
-        isSpaceReleased = scancode == 65 && action == GLFW_RELEASE
-
-        isArrowUpPressed = scancode == 111 && action == GLFW_PRESS
-        isArrowDownPressed = scancode == 116 && action == GLFW_PRESS
-
-        println(scancode)
+        // thanks.
+        keyManager.updateKey(scancode, action)
     }
 }
 

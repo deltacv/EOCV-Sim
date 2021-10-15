@@ -16,11 +16,14 @@ import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.gui.Table
 import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
+import io.github.deltacv.easyvision.io.KeyManager
+import io.github.deltacv.easyvision.io.Keys
 import io.github.deltacv.easyvision.node.vision.CvtColorNode
 import io.github.deltacv.easyvision.util.ElapsedTime
 import kotlinx.coroutines.*
+import org.lwjgl.glfw.GLFW
 
-class NodeList(val easyVision: EasyVision) {
+class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
     companion object {
         val listNodes = IdElementContainer<Node<*>>()
@@ -56,11 +59,11 @@ class NodeList(val easyVision: EasyVision) {
     fun draw() {
         val size = EasyVision.windowSize
 
-        if(!easyVision.nodeEditor.isNodeFocused && easyVision.isSpaceReleased) {
+        if(!easyVision.nodeEditor.isNodeFocused && keyManager.released(Keys.Spacebar)) {
             showList()
         }
 
-        if(easyVision.isEscReleased) {
+        if(keyManager.released(Keys.Escape)) {
             closeList()
         }
 
@@ -175,7 +178,7 @@ class NodeList(val easyVision: EasyVision) {
             for(category in Category.values()) {
                 if(nodes.containsKey(category)) {
                     if(!tablesCategories.containsKey(category)) {
-                        tablesCategories[category] = Table(keyManager = easyVision)
+                        tablesCategories[category] = Table(keyManager = keyManager)
                     }
 
                     val table = tablesCategories[category]!!
@@ -200,7 +203,6 @@ class NodeList(val easyVision: EasyVision) {
                                 val pos = table.getPos(node.id)!!
                                 ImNodes.setNodeScreenSpacePos(node.id, pos.x, pos.y)
                             }
-                            
                             node.draw()
                         }
 

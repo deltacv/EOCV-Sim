@@ -1,6 +1,7 @@
 package io.github.deltacv.easyvision.node
 
 import imgui.ImGui
+import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.ImNodesContext
 import imgui.flag.ImGuiMouseButton
@@ -8,10 +9,18 @@ import imgui.type.ImInt
 import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.gui.PopupBuilder
 import io.github.deltacv.easyvision.attribute.AttributeMode
+import io.github.deltacv.easyvision.io.KeyManager
+import io.github.deltacv.easyvision.io.Keys
 import io.github.deltacv.easyvision.node.vision.InputMatNode
 import io.github.deltacv.easyvision.node.vision.OutputMatNode
+import io.github.deltacv.easyvision.util.ElapsedTime
 
-class NodeEditor(val easyVision: EasyVision) {
+class NodeEditor(val easyVision: EasyVision, val keyManager: KeyManager) {
+
+    companion object {
+        val KEY_PAN_CONSTANT = 5f
+        val PAN_CONSTANT = 25f
+    }
 
     val context = ImNodesContext()
 
@@ -27,12 +36,63 @@ class NodeEditor(val easyVision: EasyVision) {
         outputNode.enable()
     }
 
+    val editorPanning = ImVec2(0f, 0f)
+
+    private var prevMouseX = 0f
+    private var prevMouseY = 0f
+
+    private val scrollTimer = ElapsedTime()
+
     fun draw() {
         ImNodes.editorContextSet(context)
 
         if(easyVision.nodeList.isNodesListOpen) {
             ImNodes.clearLinkSelection()
             ImNodes.clearNodeSelection()
+        } else if(ImNodes.getHoveredNode() < 0 || scrollTimer.millis <= 500) { // not hovering any node
+            var doingKeys = false
+
+            // scrolling
+            if(keyManager.pressing(Keys.ArrowLeft)) {
+                editorPanning.x += KEY_PAN_CONSTANT
+                doingKeys = true
+            } else if(keyManager.pressing(Keys.ArrowRight)) {
+                editorPanning.x -= KEY_PAN_CONSTANT
+                doingKeys = true
+            }
+            if(keyManager.pressing(Keys.ArrowUp)) {
+                editorPanning.y += KEY_PAN_CONSTANT
+                doingKeys = true
+            } else if(keyManager.pressing(Keys.ArrowDown)) {
+                editorPanning.y -= KEY_PAN_CONSTANT
+                doingKeys = true
+            }
+
+            if(doingKeys) {
+                scrollTimer.reset()
+            } else {
+                if (ImGui.isMouseDown(ImGuiMouseButton.Middle)) {
+                    editorPanning.x += (ImGui.getMousePosX() - prevMouseX)
+                    editorPanning.y += (ImGui.getMousePosY() - prevMouseY)
+                } else {
+                    val plusPan = ImGui.getIO().mouseWheel * PAN_CONSTANT
+
+                    if (plusPan != 0f) {
+                        scrollTimer.reset()
+                    }
+
+                    if (keyManager.pressing(Keys.LeftShift) || keyManager.pressing(Keys.RightShift)) {
+                        editorPanning.x += plusPan
+                    } else {
+                        editorPanning.y += plusPan
+                    }
+                }
+            }
+
+            prevMouseX = ImGui.getMousePosX()
+            prevMouseY = ImGui.getMousePosY()
+
+            ImNodes.editorResetPanning(editorPanning.x, editorPanning.y)
         }
 
         ImNodes.beginNodeEditor()
@@ -107,7 +167,7 @@ class NodeEditor(val easyVision: EasyVision) {
     }
 
     private fun handleDeleteSelection() {
-        if(easyVision.isDeleteReleased) {
+        if(keyManager.released(Keys.Delete)) {
             if(ImNodes.numSelectedNodes() > 0) {
                 val selectedNodes = IntArray(ImNodes.numSelectedNodes())
                 ImNodes.getSelectedNodes(selectedNodes)
