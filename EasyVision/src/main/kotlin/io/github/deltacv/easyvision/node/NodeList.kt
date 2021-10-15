@@ -161,6 +161,19 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
     private var isSecondDraw = false
 
     private fun drawNodesList() {
+
+        val scrollValue = when {
+            keyManager.pressed(Keys.ArrowUp) -> {
+                -1.5f
+            }
+            keyManager.pressed(Keys.ArrowDown) -> {
+                1.5f
+            }
+            else -> {
+                -ImGui.getIO().mouseWheel
+            }
+        }
+
         ImNodes.editorContextSet(listContext)
 
         ImNodes.getStyle().gridSpacing = 99999f // lol only way to make grid invisible
@@ -178,7 +191,7 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
             for(category in Category.values()) {
                 if(nodes.containsKey(category)) {
                     if(!tablesCategories.containsKey(category)) {
-                        tablesCategories[category] = Table(keyManager = keyManager)
+                        tablesCategories[category] = Table()
                     }
 
                     val table = tablesCategories[category]!!
@@ -190,6 +203,8 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                         if (ImGui.isItemHovered()) {
                             closeOnClick = false
                         }
+
+                        ImGui.setScrollY(ImGui.getScrollY() + scrollValue * 20.0f)
 
                         table.draw()
 
@@ -235,18 +250,18 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
             if(hovered >= 0) {
                 val nodeClass = listNodes[hovered]!!::class.java
                 val instance = nodeClass.getConstructor().newInstance()
-                instance.enable()
+                //instance.enable()
 
                 if(instance is DrawNode<*>) {
-                    val nodePos = ImVec2()
-                    ImNodes.getNodeScreenSpacePos(hovered, nodePos)
+                    //val nodePos = ImVec2()
+                    //ImNodes.getNodeScreenSpacePos(hovered, nodePos)
 
-                    val mousePos = ImGui.getMousePos()
+                    //val mousePos = ImGui.getMousePos()
 
-                    val newPosX = mousePos.x - nodePos.x
-                    val newPosY = mousePos.y - nodePos.y
+                    //val newPosX = mousePos.x - nodePos.x
+                    //val newPosY = mousePos.y - nodePos.y
 
-                    instance.nextNodePosition = ImVec2(newPosX, newPosY)
+                    //instance.nextNodePosition = ImVec2(newPosX, newPosY)
                     instance.pinToMouse = true
                 }
 

@@ -27,7 +27,7 @@ import org.lwjgl.glfw.GLFW
 // why not use it instead?
 //
 // ...i hate this so much
-class Table(val maxColumns: Int = 4, val keyManager: KeyManager) {
+class Table(val maxColumns: Int = 4) {
 
     private val rects = mutableListOf<Pair<Int, ImVec2>>()
     private val currentRects = mutableMapOf<Int, ImVec2>()
@@ -50,20 +50,6 @@ class Table(val maxColumns: Int = 4, val keyManager: KeyManager) {
 
     fun draw() {
         if(rects.isEmpty()) return
-
-        val scrollValue = when {
-            keyManager.pressed(Keys.ArrowUp) -> {
-                -1.5f
-            }
-            keyManager.pressed(Keys.ArrowDown) -> {
-                1.5f
-            }
-            else -> {
-                -ImGui.getIO().mouseWheel
-            }
-        }
-
-        ImGui.setScrollY(ImGui.getScrollY() + scrollValue * 20.0f)
 
         val columns = if(rects.size >= maxColumns) maxColumns else rects.size
 
