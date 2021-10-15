@@ -204,7 +204,7 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                             closeOnClick = false
                         }
 
-                        ImGui.setScrollY(ImGui.getScrollY() + scrollValue * 20.0f)
+                        //ImGui.setScrollY(ImGui.getScrollY() + scrollValue * 20.0f)
 
                         table.draw()
 
@@ -217,6 +217,7 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                             } else if(!isFirstDraw) {
                                 val pos = table.getPos(node.id)!!
                                 ImNodes.setNodeScreenSpacePos(node.id, pos.x, pos.y)
+
                             }
                             node.draw()
                         }
@@ -250,18 +251,18 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
             if(hovered >= 0) {
                 val nodeClass = listNodes[hovered]!!::class.java
                 val instance = nodeClass.getConstructor().newInstance()
-                //instance.enable()
+                instance.enable()
 
                 if(instance is DrawNode<*>) {
-                    //val nodePos = ImVec2()
-                    //ImNodes.getNodeScreenSpacePos(hovered, nodePos)
+                    val nodePos = ImVec2()
+                    ImNodes.getNodeScreenSpacePos(hovered, nodePos)
 
-                    //val mousePos = ImGui.getMousePos()
+                    val mousePos = ImGui.getMousePos()
 
-                    //val newPosX = mousePos.x - nodePos.x
-                    //val newPosY = mousePos.y - nodePos.y
+                    val newPosX = mousePos.x - nodePos.x
+                    val newPosY = mousePos.y - nodePos.y
 
-                    //instance.nextNodePosition = ImVec2(newPosX, newPosY)
+                    instance.nextNodePosition = ImVec2(newPosX, newPosY)
                     instance.pinToMouse = true
                 }
 

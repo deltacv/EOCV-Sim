@@ -46,10 +46,23 @@ class NodeEditor(val easyVision: EasyVision, val keyManager: KeyManager) {
     fun draw() {
         ImNodes.editorContextSet(context)
 
+        ImNodes.beginNodeEditor()
+
+        for(node in Node.nodes) {
+            node.draw()
+        }
+        for(link in Link.links) {
+            link.draw()
+        }
+
+        ImNodes.endNodeEditor()
+
+        isNodeFocused = ImNodes.numSelectedNodes() >= 0
+
         if(easyVision.nodeList.isNodesListOpen) {
             ImNodes.clearLinkSelection()
             ImNodes.clearNodeSelection()
-        } else if(ImNodes.getHoveredNode() < 0 || scrollTimer.millis <= 500) { // not hovering any node
+        } else if(isNodeFocused || scrollTimer.millis <= 500) { // not hovering any node
             var doingKeys = false
 
             // scrolling
@@ -94,19 +107,6 @@ class NodeEditor(val easyVision: EasyVision, val keyManager: KeyManager) {
 
             ImNodes.editorResetPanning(editorPanning.x, editorPanning.y)
         }
-
-        ImNodes.beginNodeEditor()
-
-        for(node in Node.nodes) {
-            node.draw()
-        }
-        for(link in Link.links) {
-            link.draw()
-        }
-
-        ImNodes.endNodeEditor()
-
-        isNodeFocused = ImNodes.numSelectedNodes() > 0
 
         handleDeleteLink()
         handleCreateLink()
