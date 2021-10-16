@@ -1,8 +1,9 @@
-package io.github.deltacv.easyvision.attribute.vision
+package io.github.deltacv.easyvision.attribute.vision.structs
 
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
+import io.github.deltacv.easyvision.attribute.vision.MatAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
 
@@ -17,8 +18,8 @@ class PointsAttribute (
         override fun new(mode: AttributeMode, variableName: String) = PointsAttribute(mode, variableName)
     }
 
-    override fun value(current: CodeGen.Current) = value<GenValue.Points>(
+    override fun value(current: CodeGen.Current) = value<GenValue.GPoints.Points>(
         current, "a Points"
-    ) { it is GenValue.Points }
+    ) { it is GenValue.GPoints.Points }
 
 }

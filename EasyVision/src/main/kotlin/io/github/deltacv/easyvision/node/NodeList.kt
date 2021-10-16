@@ -204,7 +204,7 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                             closeOnClick = false
                         }
 
-                        //ImGui.setScrollY(ImGui.getScrollY() + scrollValue * 20.0f)
+                        ImGui.setScrollY(ImGui.getScrollY() + scrollValue * 20.0f)
 
                         table.draw()
 

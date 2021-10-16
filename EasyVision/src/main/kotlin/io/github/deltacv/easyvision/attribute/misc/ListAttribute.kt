@@ -117,7 +117,7 @@ open class ListAttribute(
 
                 val value = linkedAttrib!!.value(current)
                 raiseAssert(
-                    value is GenValue.ListOf<*> || value is GenValue.RuntimeListOf<*>,
+                    value is GenValue.GLists.ListOf<*> || value is GenValue.GLists.RuntimeListOf<*>,
                     "Attribute attached is not a list"
                 )
 
@@ -125,12 +125,12 @@ open class ListAttribute(
             } else {
                 // get the values of all the attributes and return a
                 // GenValue.List with the attribute values in an array
-                GenValue.List(listAttributes.map { it.value(current) }.toTypedArray())
+                GenValue.GLists.List(listAttributes.map { it.value(current) }.toTypedArray())
             }
         } else {
             val value = getOutputValue(current)
             raiseAssert(
-                value is GenValue.ListOf<*> || value is GenValue.RuntimeListOf<*>,
+                value is GenValue.GLists.ListOf<*> || value is GenValue.GLists.RuntimeListOf<*>,
                 "Value returned from the node is not a list"
             )
 

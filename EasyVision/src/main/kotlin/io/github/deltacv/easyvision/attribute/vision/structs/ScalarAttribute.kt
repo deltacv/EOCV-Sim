@@ -1,26 +1,29 @@
-package io.github.deltacv.easyvision.attribute.vision
+package io.github.deltacv.easyvision.attribute.vision.structs
 
 import imgui.ImGui
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.TypedAttribute
-import io.github.deltacv.easyvision.attribute.math.RangeAttribute
+import io.github.deltacv.easyvision.attribute.math.DoubleAttribute
 import io.github.deltacv.easyvision.attribute.misc.ListAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.node.vision.Colors
+import io.github.deltacv.easyvision.util.Range2d
 
-class ScalarRangeAttribute(
+class ScalarAttribute(
     mode: AttributeMode,
     color: Colors,
     variableName: String? = null
-) : ListAttribute(mode, RangeAttribute, variableName, color.channels) {
+) : ListAttribute(mode, DoubleAttribute, variableName, color.channels) {
 
     var color = color
         set(value) {
             fixedLength = value.channels
             field = value
         }
+
+    override var typeName = "(Scalar)"
 
     override fun drawAttributeText(index: Int, attrib: Attribute) {
         if(index < color.channelNames.size) {
@@ -37,27 +40,26 @@ class ScalarRangeAttribute(
         }
     }
 
-    override fun value(current: CodeGen.Current): GenValue.ScalarRange {
-        val values = (super.value(current) as GenValue.List).elements
-        val ZERO = GenValue.Range.ZERO
+    override fun onElementCreation(element: Attribute) {
+        if(element is DoubleAttribute) {
+            element.sliderMode(Range2d(0.0, 255.0))
+        }
+    }
 
-        val value = GenValue.ScalarRange(
-            values.getOr(0, ZERO) as GenValue.Range,
-            values.getOr(1, ZERO) as GenValue.Range,
-            values.getOr(2, ZERO) as GenValue.Range,
-            values.getOr(3, ZERO) as GenValue.Range
+    override fun value(current: CodeGen.Current): GenValue.Scalar {
+        val values = (super.value(current) as GenValue.GLists.List).elements
+        val ZERO = GenValue.Double(0.0)
+
+        val value = GenValue.Scalar(
+            (values.getOr(0, ZERO) as GenValue.Double).value,
+            (values.getOr(1, ZERO) as GenValue.Double).value,
+            (values.getOr(2, ZERO) as GenValue.Double).value,
+            (values.getOr(3, ZERO) as GenValue.Double).value
         )
 
         return value(
-            current, "a scalar range", value
-        ) { it is GenValue.ScalarRange }
+            current, "a Scalar", value
+        ) { it is GenValue.Scalar }
     }
 
-
-}
-
-fun <T> Array<T>.getOr(index: Int, or: T) = try {
-    this[index]
-} catch(ignored: ArrayIndexOutOfBoundsException) {
-    or
 }

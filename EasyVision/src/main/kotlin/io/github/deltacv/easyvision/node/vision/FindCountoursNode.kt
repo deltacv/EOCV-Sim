@@ -3,13 +3,12 @@ package io.github.deltacv.easyvision.node.vision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.misc.ListAttribute
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
-import io.github.deltacv.easyvision.attribute.vision.PointsAttribute
+import io.github.deltacv.easyvision.attribute.vision.structs.PointsAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.codegen.parse.new
 import io.github.deltacv.easyvision.codegen.parse.v
-import io.github.deltacv.easyvision.codegen.parse.variable
 import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.DrawNode
 import io.github.deltacv.easyvision.node.RegisterNode
@@ -57,7 +56,7 @@ class FindContoursNode : DrawNode<FindContoursNode.Session>("Simple Find Contour
             "Imgproc.findContours"(input.value, listValue, hierarchyMatValue, "Imgproc.RETR_LIST".v, "Imgproc.CHAIN_APPROX_SIMPLE".v)
         }
 
-        session.contoursList = GenValue.RuntimeListOf<GenValue.Points>(listValue)
+        session.contoursList = GenValue.GLists.RuntimeListOf<GenValue.Points>(listValue)
 
         session
     }
@@ -73,7 +72,7 @@ class FindContoursNode : DrawNode<FindContoursNode.Session>("Simple Find Contour
     }
 
     class Session : CodeGenSession {
-        lateinit var contoursList: GenValue.RuntimeListOf<GenValue.Points>
+        lateinit var contoursList: GenValue.GLists.RuntimeListOf<GenValue.Points>
     }
 
 }

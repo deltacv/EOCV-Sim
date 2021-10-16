@@ -4,8 +4,8 @@ import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.math.IntAttribute
 import io.github.deltacv.easyvision.attribute.misc.ListAttribute
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
-import io.github.deltacv.easyvision.attribute.vision.PointsAttribute
-import io.github.deltacv.easyvision.attribute.vision.ScalarAttribute
+import io.github.deltacv.easyvision.attribute.vision.structs.PointsAttribute
+import io.github.deltacv.easyvision.attribute.vision.structs.ScalarAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.GenValue
@@ -59,7 +59,7 @@ open class DrawContoursNode
 
         val output = tryName("${input.value.value!!}Contours")
 
-        if(contoursList !is GenValue.RuntimeListOf<*>) {
+        if(contoursList !is GenValue.GLists.RuntimeListOf<*>) {
             contours.raise("")
         }
 
@@ -94,7 +94,7 @@ open class DrawContoursNode
 
             "Imgproc.drawContours"(
                 drawMat,
-                (contoursList as GenValue.RuntimeListOf<*>).value,
+                contoursList.value,
                 (-1).v, colorScalar.v, thickness.v
             )
         }

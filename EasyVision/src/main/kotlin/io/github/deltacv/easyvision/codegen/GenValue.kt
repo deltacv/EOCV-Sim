@@ -3,6 +3,7 @@ package io.github.deltacv.easyvision.codegen
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.codegen.parse.Value
 import io.github.deltacv.easyvision.node.vision.Colors
+import kotlin.reflect.KClass
 
 sealed class GenValue {
 
@@ -22,8 +23,22 @@ sealed class GenValue {
         }
     }
 
-    data class MatOfPoint(val value: Value) : GenValue()
-    data class Points(val value: Value) : GenValue()
+    data class Point(val x: Double, val y: Double) : GenValue()
+
+    sealed class GPoints : GenValue() {
+        data class Points(val points: Array<Point>) : GPoints()
+        data class RuntimePoints(val value: Value) : GPoints()
+    }
+
+    sealed class GRects : GenValue() {
+        data class Rect(val x: Double, val y: Double, val w: Double, val h: Double) : GRects()
+        data class RotatedRect(val x: Double, val y: Double,
+                               val w: Double, val h: Double,
+                               val angle: Double) : GRects()
+
+        data class RuntimeRect(val value: Value) : GRects()
+        data class RuntimeRotatedRect(val value: Value) : GRects()
+    }
 
     data class Enum<E: kotlin.Enum<E>>(val value: E, val clazz: Class<*>) : GenValue()
 
@@ -58,11 +73,13 @@ sealed class GenValue {
         object True : Boolean(true)
         object False : Boolean(false)
     }
+    
+    sealed class GLists : GenValue() {
+        open class ListOf<T : GenValue>(val elements: Array<T>) : GLists()
+        data class List(val elems: Array<GenValue>) : ListOf<GenValue>(elems)
 
-    open class ListOf<T : GenValue>(val elements: Array<T>) : GenValue()
-    data class List(val elems: Array<GenValue>) : ListOf<GenValue>(elems)
-
-    data class RuntimeListOf<T : GenValue>(val value: Value) : GenValue()
+        data class RuntimeListOf<T : GenValue>(val value: Value, val typeClass: KClass<T>) : GLists()
+    }
 
     object None : GenValue()
 

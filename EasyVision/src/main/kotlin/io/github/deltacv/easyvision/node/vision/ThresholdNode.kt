@@ -4,7 +4,7 @@ import imgui.ImGui
 import imgui.type.ImInt
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
-import io.github.deltacv.easyvision.attribute.vision.ScalarRangeAttribute
+import io.github.deltacv.easyvision.attribute.vision.structs.ScalarRangeAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.CodeGenSession
 import io.github.deltacv.easyvision.codegen.GenValue
