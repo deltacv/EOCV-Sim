@@ -12,13 +12,13 @@ class RectAttribute (
 ) : TypedAttribute(Companion) {
 
     companion object : Type {
-        override val name = "REct"
+        override val name = "Rect"
 
         override fun new(mode: AttributeMode, variableName: String) = RectAttribute(mode, variableName)
     }
 
     override fun value(current: CodeGen.Current) = value<GenValue.GRects.RuntimeRect>(
-        current, "a Points"
+        current, "a Rect"
     ) { it is GenValue.GRects.RuntimeRect }
 
 }

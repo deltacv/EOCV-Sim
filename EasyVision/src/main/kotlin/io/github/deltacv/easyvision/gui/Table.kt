@@ -2,12 +2,8 @@ package io.github.deltacv.easyvision.gui
 
 import imgui.ImGui
 import imgui.ImVec2
-import imgui.flag.ImGuiTableFlags
 import imgui.internal.ImRect
 import io.github.deltacv.easyvision.EasyVision
-import io.github.deltacv.easyvision.io.KeyManager
-import io.github.deltacv.easyvision.io.Keys
-import org.lwjgl.glfw.GLFW
 
 // this is an extremely hacky "dummy" table which uses the columns api.
 // mostly used for the nodes list, because nodes don't respect any sort of
@@ -27,10 +23,13 @@ import org.lwjgl.glfw.GLFW
 // why not use it instead?
 //
 // ...i hate this so much
-class Table(val maxColumns: Int = 4) {
+class Table(val maxColumns: Int = 4, val drawCallback: ((Int, ImVec2) -> Unit)? = null) {
 
     private val rects = mutableListOf<Pair<Int, ImVec2>>()
-    private val currentRects = mutableMapOf<Int, ImVec2>()
+    private val currentPositions = mutableMapOf<Int, ImVec2>()
+
+    private val _currentRects = mutableMapOf<Int, ImRect>()
+    val currentRects = _currentRects as Map<Int, ImRect>
 
     private val columnsId by EasyVision.miscIds.nextId()
 
@@ -41,10 +40,12 @@ class Table(val maxColumns: Int = 4) {
         rects.add(Pair(id, size))
     }
 
-    //just for name purposes lol
     fun setSize(id: Int, size: ImVec2) {
         for((index, pair) in rects.toTypedArray().withIndex()) {
-            rects[index] = Pair(pair.first, size)
+            if(pair.first == id) {
+                rects[index] = Pair(pair.first, size)
+                break
+            }
         }
     }
 
@@ -73,12 +74,19 @@ class Table(val maxColumns: Int = 4) {
                     // i couldn't find anything better with an adjustable
                     // rectangle shape.
                     ImGui.invisibleButton("###$id", size.x, size.y)
-                    if(!currentRects.containsKey(id)) {
-                        currentRects[id] = ImVec2()
+                    if(!currentPositions.containsKey(id)) {
+                        currentPositions[id] = ImVec2()
                     }
 
+                    val pos = ImGui.getItemRectMin()
+
                     // store the invisible button position
-                    currentRects[id] = ImGui.getItemRectMin()
+                    currentPositions[id] = pos
+
+                    _currentRects[id] = ImRect(ImGui.getItemRectMin(), ImGui.getItemRectMax())
+
+                    // call the callback if there's one
+                    drawCallback?.invoke(id, pos)
 
                     index++
                     currentColumn++
@@ -92,6 +100,6 @@ class Table(val maxColumns: Int = 4) {
     /**
      * Gets the absolute position of a dummy rectangle with the specified id
      */
-    fun getPos(id: Int) = currentRects[id]
+    fun getPos(id: Int) = currentPositions[id]
 
 }

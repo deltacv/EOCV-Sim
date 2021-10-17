@@ -1,0 +1,9 @@
+plugins {
+    id 'java'
+}
+
+apply from: '../build.common.gradle'
+
+dependencies {
+    implementation "org.openpnp:opencv:$opencv_version"
+}

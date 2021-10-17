@@ -28,7 +28,7 @@ import com.github.serivesmejia.eocvsim.gui.util.MatPoster;
 import com.github.serivesmejia.eocvsim.util.image.DynamicBufferedImageRecycler;
 import com.github.serivesmejia.eocvsim.util.cv.CvUtil;
 import com.github.serivesmejia.eocvsim.util.Log;
-import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.eventloop.util.Range;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;

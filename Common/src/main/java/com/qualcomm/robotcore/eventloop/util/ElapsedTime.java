@@ -23,7 +23,7 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-package com.qualcomm.robotcore.util;
+package com.qualcomm.robotcore.eventloop.util;
 
 import com.github.serivesmejia.eocvsim.util.Log;
 
@@ -62,7 +62,7 @@ public class ElapsedTime {
     //------------------------------------------------------------------------------------------------
     protected volatile long nsStartTime;
     /**
-     * Creates a timer with resolution {@link com.qualcomm.robotcore.util.ElapsedTime.Resolution#SECONDS Resolution.Seconds}
+     * Creates a timer with resolution {@link com.qualcomm.robotcore.eventloop.util.ElapsedTime.Resolution#SECONDS Resolution.Seconds}
      * that is initialized with the now-current time.
      *
      * @see #ElapsedTime(long)
@@ -78,7 +78,7 @@ public class ElapsedTime {
     //------------------------------------------------------------------------------------------------
 
     /**
-     * Creates a timer with resolution {@link com.qualcomm.robotcore.util.ElapsedTime.Resolution#SECONDS Resolution.Seconds}.
+     * Creates a timer with resolution {@link com.qualcomm.robotcore.eventloop.util.ElapsedTime.Resolution#SECONDS Resolution.Seconds}.
      * The timer is initialized with the provided start time. Zero is often a useful value to provide
      * here: in common usage such timers will often be processed by application logic virtually immediately.
      *

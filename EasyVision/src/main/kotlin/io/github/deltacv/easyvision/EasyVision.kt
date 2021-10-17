@@ -23,15 +23,18 @@
 
 package io.github.deltacv.easyvision
 
+import com.github.serivesmejia.eocvsim.util.Log
 import imgui.ImFont
 import imgui.ImGui
 import imgui.ImVec2
 import imgui.app.Application
 import imgui.app.Configuration
+import imgui.extension.imnodes.ImNodes
 import imgui.flag.*
 import io.github.deltacv.easyvision.codegen.*
 import io.github.deltacv.easyvision.gui.PopupBuilder
 import io.github.deltacv.easyvision.gui.makeFont
+import io.github.deltacv.easyvision.gui.style.imnodes.ImNodesDarkStyle
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.io.KeyManager
 import io.github.deltacv.easyvision.node.NodeEditor
@@ -45,6 +48,10 @@ import org.lwjgl.glfw.GLFWKeyCallback
 class EasyVision : Application() {
 
     companion object {
+        val TAG = "EasyVision"
+
+        var imnodesStyle = ImNodesDarkStyle
+
         private var ptr = 0L
 
         private val w = BufferUtils.createIntBuffer(1)
@@ -73,6 +80,8 @@ class EasyVision : Application() {
     private lateinit var defaultFont: ImFont
 
     fun start() {
+        Log.info(TAG, "Starting EasyVision...")
+        Log.blank()
         nodeEditor.init()
 
         launch(this)

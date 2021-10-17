@@ -6,11 +6,8 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.ImNodesContext
-import imgui.extension.imnodes.flag.ImNodesAttributeFlags
 import imgui.extension.imnodes.flag.ImNodesColorStyle
-import imgui.extension.imnodes.flag.ImNodesStyleFlags
 import imgui.flag.*
-import imgui.type.ImBoolean
 import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.gui.Table
@@ -18,10 +15,8 @@ import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.io.KeyManager
 import io.github.deltacv.easyvision.io.Keys
-import io.github.deltacv.easyvision.node.vision.CvtColorNode
 import io.github.deltacv.easyvision.util.ElapsedTime
 import kotlinx.coroutines.*
-import org.lwjgl.glfw.GLFW
 
 class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
@@ -143,7 +138,7 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
                 instance.nodesIdContainer = listNodes
                 instance.attributesIdContainer = listAttributes
-                instance.drawAttributesCircles = false
+                //instance.drawAttributesCircles = false
                 instance.enable()
 
                 list.add(instance)
@@ -159,6 +154,14 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
     private var isFirstDraw = true
     private var isSecondDraw = false
+
+    var currentScroll = 0f
+
+    var hoveredNode = -1
+        private set
+
+    var isHoverManuallyDetected = false
+        private set
 
     private fun drawNodesList() {
 
@@ -181,7 +184,6 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
         ImNodes.clearNodeSelection()
         ImNodes.clearLinkSelection()
-        ImNodes.editorResetPanning(0f, 0f)
 
         var closeOnClick = true
 
@@ -204,7 +206,8 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                             closeOnClick = false
                         }
 
-                        ImGui.setScrollY(ImGui.getScrollY() + scrollValue * 20.0f)
+                        currentScroll = ImGui.getScrollY() + scrollValue * 20.0f;
+                        ImGui.setScrollY(currentScroll)
 
                         table.draw()
 
@@ -217,9 +220,19 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                             } else if(!isFirstDraw) {
                                 val pos = table.getPos(node.id)!!
                                 ImNodes.setNodeScreenSpacePos(node.id, pos.x, pos.y)
-
                             }
+
+                            if(isHoverManuallyDetected && hoveredNode == node.id) {
+                                ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackground, EasyVision.imnodesStyle.nodeBackgroundHovered)
+                                ImNodes.pushColorStyle(ImNodesColorStyle.TitleBar, EasyVision.imnodesStyle.titleBarHovered)
+                            }
+
                             node.draw()
+
+                            if(isHoverManuallyDetected && hoveredNode == node.id) {
+                                ImNodes.popColorStyle()
+                                ImNodes.popColorStyle()
+                            }
                         }
 
                         ImGui.newLine()
@@ -230,6 +243,26 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                 }
             }
         ImNodes.endNodeEditor()
+
+        ImNodes.editorResetPanning(0f, 0f)
+
+        hoveredNode = ImNodes.getHoveredNode()
+        isHoverManuallyDetected = false
+
+        if(hoveredNode < 0) {
+            val mousePos = ImGui.getMousePos()
+
+            tableLoop@ for((_, table) in tablesCategories) {
+                for((id, rect) in table.currentRects) {
+                    if(mousePos.x > rect.min.x && mousePos.x < rect.max.x &&
+                            mousePos.y > rect.min.y && mousePos.y < rect.max.y) {
+                        hoveredNode = id
+                        isHoverManuallyDetected = true
+                        break@tableLoop
+                    }
+                }
+            }
+        }
 
         ImNodes.getStyle().gridSpacing = 32f // back to normal
         ImNodes.popColorStyle()
@@ -246,16 +279,14 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
     fun handleClick(closeOnClick: Boolean) {
         if(ImGui.isMouseClicked(ImGuiMouseButton.Left)) {
-            val hovered = ImNodes.getHoveredNode()
-
-            if(hovered >= 0) {
-                val nodeClass = listNodes[hovered]!!::class.java
+            if(hoveredNode >= 0) {
+                val nodeClass = listNodes[hoveredNode]!!::class.java
                 val instance = nodeClass.getConstructor().newInstance()
                 instance.enable()
 
                 if(instance is DrawNode<*>) {
                     val nodePos = ImVec2()
-                    ImNodes.getNodeScreenSpacePos(hovered, nodePos)
+                    ImNodes.getNodeScreenSpacePos(hoveredNode, nodePos)
 
                     val mousePos = ImGui.getMousePos()
 
