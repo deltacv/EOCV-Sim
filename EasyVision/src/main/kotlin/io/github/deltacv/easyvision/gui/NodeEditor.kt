@@ -70,14 +70,16 @@ class NodeEditor(val easyVision: EasyVision, val keyManager: KeyManager) {
             if(keyManager.pressing(Keys.ArrowLeft)) {
                 editorPanning.x += KEY_PAN_CONSTANT
                 doingKeys = true
-            } else if(keyManager.pressing(Keys.ArrowRight)) {
+            }
+            if(keyManager.pressing(Keys.ArrowRight)) {
                 editorPanning.x -= KEY_PAN_CONSTANT
                 doingKeys = true
             }
             if(keyManager.pressing(Keys.ArrowUp)) {
                 editorPanning.y += KEY_PAN_CONSTANT
                 doingKeys = true
-            } else if(keyManager.pressing(Keys.ArrowDown)) {
+            }
+            if(keyManager.pressing(Keys.ArrowDown)) {
                 editorPanning.y -= KEY_PAN_CONSTANT
                 doingKeys = true
             }

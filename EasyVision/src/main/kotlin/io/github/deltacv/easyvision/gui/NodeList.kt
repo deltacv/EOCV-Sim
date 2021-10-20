@@ -34,7 +34,6 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
     }
 
     lateinit var buttonFont: ImFont
-
     val plusFontSize = 60f
 
     var isNodesListOpen = false
@@ -72,13 +71,13 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
         ImGui.setNextWindowPos(size.x - plusFontSize * 1.8f, size.y - plusFontSize * 1.8f)
 
-        if(isNodesListOpen) {
+        if(isNodesListOpen && !isHoveringScrollBar) {
             ImGui.setNextWindowFocus()
         }
 
         ImGui.begin(
-            "floating", ImGuiWindowFlags.NoBackground
-                    or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove
+            "floating", ImGuiWindowFlags.NoBackground or ImGuiWindowFlags.NoTitleBar
+                    or ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove
         )
 
         ImGui.pushFont(buttonFont)
@@ -136,28 +135,27 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
     private val tablesCategories = mutableMapOf<Category, Table>()
 
-    private var isFirstDraw = true
-    private var isSecondDraw = false
-
     var currentScroll = 0f
+    private var previousScroll = 0f
 
     var hoveredNode = -1
         private set
 
     var isHoverManuallyDetected = false
         private set
+    var isHoveringScrollBar = false
+        private set
 
     private val categoriesState = mutableMapOf<Category, Boolean>()
     private val drawnNodes = mutableListOf<Int>()
 
     private fun drawNodesList(size: ImVec2) {
-
         val scrollValue = when {
-            keyManager.pressed(Keys.ArrowUp) -> {
-                -1.5f
+            keyManager.pressing(Keys.ArrowUp) -> {
+                -0.8f
             }
-            keyManager.pressed(Keys.ArrowDown) -> {
-                1.5f
+            keyManager.pressing(Keys.ArrowDown) -> {
+                0.8f
             }
             else -> {
                 -ImGui.getIO().mouseWheel
@@ -263,11 +261,15 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                 if(isOpen) {
                     val table = tablesCategories[category]!!
 
+                    if(previousScroll != currentScroll) {
+                        currentScroll = ImGui.getScrollY() + scrollValue * 20.0f
+                        ImGui.setScrollY(currentScroll)
+                    } else {
+                        currentScroll = ImGui.getScrollY()
+                    }
+
                     ImGui.newLine()
                     ImGui.indent(10f)
-
-                    currentScroll = ImGui.getScrollY() + scrollValue * 20.0f
-                    ImGui.setScrollY(currentScroll)
 
                     table.draw()
 
@@ -279,18 +281,22 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
         ImGui.end()
         ImGui.popStyleColor()
 
+        val mousePos = ImGui.getMousePos()
+
+        isHoveringScrollBar = mousePos.x >= (size.x - 15f)
+
         hoveredNode = ImNodes.getHoveredNode()
         isHoverManuallyDetected = false
 
         if(hoveredNode < 0) {
-            val mousePos = ImGui.getMousePos()
-
             tableLoop@ for((_, table) in tablesCategories) {
                 for((id, rect) in table.currentRects) {
+                    // AABB collision check
                     if(mousePos.x > rect.min.x && mousePos.x < rect.max.x &&
                             mousePos.y > rect.min.y && mousePos.y < rect.max.y) {
                         hoveredNode = id
                         isHoverManuallyDetected = true
+
                         break@tableLoop
                     }
                 }
@@ -300,10 +306,12 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
         ImNodes.getStyle().gridSpacing = 32f // back to normal
         ImNodes.popColorStyle()
 
+        previousScroll = scrollValue
+
         handleClick(closeOnClick)
     }
 
-    fun handleClick(closeOnClick: Boolean) {
+   private fun handleClick(closeOnClick: Boolean) {
         if(ImGui.isMouseClicked(ImGuiMouseButton.Left)) {
             if(hoveredNode >= 0) {
                 val nodeClass = listNodes[hoveredNode]!!::class.java
@@ -324,7 +332,7 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                 }
 
                 closeList()
-            } else if(closeOnClick) {
+            } else if(closeOnClick && !isHoveringScrollBar) { // don't close when the scroll bar is clicked
                 closeList()
             }
         }

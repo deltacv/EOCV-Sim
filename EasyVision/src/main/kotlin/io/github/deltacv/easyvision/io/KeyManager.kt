@@ -9,22 +9,6 @@ class KeyManager {
     private val releasedKeys = mutableMapOf<Int, Boolean>()
 
     fun update() {
-        for((k, v) in pressedKeys) {
-            if(v) {
-                println("pressed $k")
-            }
-        }
-        for((k, v) in pressingKeys) {
-            if(v) {
-                println("pressing $k")
-            }
-        }
-        for((k, v) in releasedKeys) {
-            if(v) {
-                println("released $k")
-            }
-        }
-
         if(pressedKeys.isNotEmpty()) {
             for (key in pressedKeys.keys.toTypedArray()) {
                 pressedKeys[key] = false
