@@ -31,8 +31,8 @@ import imgui.app.Application
 import imgui.app.Configuration
 import imgui.flag.*
 import io.github.deltacv.easyvision.codegen.*
-import io.github.deltacv.easyvision.gui.PopupBuilder
-import io.github.deltacv.easyvision.gui.makeFont
+import io.github.deltacv.easyvision.gui.util.PopupBuilder
+import io.github.deltacv.easyvision.gui.util.makeFont
 import io.github.deltacv.easyvision.gui.style.imnodes.ImNodesDarkStyle
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.io.KeyManager

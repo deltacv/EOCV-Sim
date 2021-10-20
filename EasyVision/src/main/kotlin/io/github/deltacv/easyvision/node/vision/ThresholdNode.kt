@@ -11,7 +11,7 @@ import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.codegen.parse.cvtColorValue
 import io.github.deltacv.easyvision.codegen.parse.new
 import io.github.deltacv.easyvision.codegen.parse.v
-import io.github.deltacv.easyvision.gui.ExtraWidgets
+import io.github.deltacv.easyvision.gui.util.ExtraWidgets
 import io.github.deltacv.easyvision.node.RegisterNode
 import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.DrawNode

@@ -8,6 +8,7 @@ import imgui.flag.ImGuiMouseButton
 import imgui.type.ImInt
 import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.AttributeMode
+import io.github.deltacv.easyvision.gui.util.PopupBuilder
 import io.github.deltacv.easyvision.io.KeyManager
 import io.github.deltacv.easyvision.io.Keys
 import io.github.deltacv.easyvision.node.Link

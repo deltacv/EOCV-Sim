@@ -3,7 +3,7 @@ package io.github.deltacv.easyvision.gui.style
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.flag.ImNodesColorStyle
 
-interface ImNodesStyle {
+interface ImNodesStyle : Style {
     val nodeBackground: Int
     val nodeBackgroundHovered: Int
     val nodeBackgroundSelected: Int
@@ -23,7 +23,7 @@ interface ImNodesStyle {
     val boxSelector: Int
     val boxSelectorOutline: Int
 
-    fun apply() {
+    override fun apply() {
         ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackground, nodeBackground)
         ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackgroundHovered, nodeBackgroundHovered)
         ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackgroundSelected, nodeBackgroundSelected)

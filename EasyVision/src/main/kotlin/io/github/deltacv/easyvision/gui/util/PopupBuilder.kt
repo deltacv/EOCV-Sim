@@ -1,4 +1,4 @@
-package io.github.deltacv.easyvision.gui
+package io.github.deltacv.easyvision.gui.util
 
 import imgui.ImGui
 import io.github.deltacv.easyvision.EasyVision

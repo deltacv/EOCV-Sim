@@ -1,13 +1,11 @@
-package io.github.deltacv.easyvision.gui
+package io.github.deltacv.easyvision.gui.util
 
 import imgui.ImFont
 import imgui.ImFontConfig
 import imgui.ImGui
-import imgui.internal.ImRect
 import imgui.internal.flag.ImGuiAxis
 import imgui.type.ImFloat
 import imgui.type.ImInt
-import java.lang.Math.random
 
 object ExtraWidgets {
 
