@@ -10,19 +10,9 @@ import io.github.deltacv.easyvision.node.RegisterNode
 import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.DrawNode
 
-enum class Colors(val channels: Int, val channelNames: Array<String>) {
-    RGBA(4,  arrayOf("R", "G", "B", "A")),
-    RGB(3,   arrayOf("R", "G", "B")),
-    BGR(3,   arrayOf("B", "G", "R")),
-    HSV(3,   arrayOf("H", "S", "V")),
-    YCrCb(3, arrayOf("Y", "Cr", "Cb")),
-    LAB(3,   arrayOf("L", "A", "B")),
-    GRAY(1,  arrayOf("Gray"))
-}
-
 @RegisterNode(
     name = "Convert Color",
-    category = Category.CV_BASICS,
+    category = Category.COLOR_OP,
     description = "Converts a Mat from its current color space to the specified color space. If the mat is already in the specified color space, no conversion is made."
 )
 class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {

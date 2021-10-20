@@ -26,6 +26,13 @@ class ScopeContext(val scope: Scope) {
     infix fun String.instanceSet(v: Value) =
         scope.instanceVariableSet(this, v)
 
+    fun foreach(variable: Value, list: Value, block: ScopeContext.(Value) -> Unit) {
+        val loopScope = Scope(scope.tabsCount + 1)
+        block(loopScope.context, variable)
+
+        scope.foreachLoop(variable, list, loopScope)
+    }
+
     fun returnMethod(value: Value? = null) = scope.returnMethod(value)
 
 }

@@ -16,6 +16,11 @@ fun cvtColorValue(a: Colors, b: Colors) = Value("int", "Imgproc.COLOR_${a.name}2
 
 fun variable(type: String) = Value(type, null)
 
+/**
+ * Only for foreach
+ */
+fun variableName(type: String, name: String) = Value(type, name)
+
 val String.v get() = Value("", this)
 
 val Number.v get() = toString().v

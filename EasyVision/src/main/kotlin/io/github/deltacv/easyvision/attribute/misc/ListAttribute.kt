@@ -130,7 +130,7 @@ open class ListAttribute(
         } else {
             val value = getOutputValue(current)
             raiseAssert(
-                value is GenValue.GLists.ListOf<*> || value is GenValue.GLists.RuntimeListOf<*>,
+                value is GenValue.GLists,
                 "Value returned from the node is not a list"
             )
 

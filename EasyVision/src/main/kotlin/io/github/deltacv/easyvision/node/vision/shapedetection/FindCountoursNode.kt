@@ -1,4 +1,4 @@
-package io.github.deltacv.easyvision.node.vision
+package io.github.deltacv.easyvision.node.vision.shapedetection
 
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.misc.ListAttribute
@@ -15,7 +15,7 @@ import io.github.deltacv.easyvision.node.RegisterNode
 
 @RegisterNode(
     name = "Simple Find Contours",
-    category = Category.CV_BASICS,
+    category = Category.SHAPE_DET,
     description = "Finds all the contours (list of points) of a given binary image."
 )
 class FindContoursNode : DrawNode<FindContoursNode.Session>("Simple Find Contours") {

@@ -3,7 +3,7 @@ package io.github.deltacv.easyvision.codegen.parse
 import io.github.deltacv.easyvision.codegen.dsl.ScopeContext
 import io.github.deltacv.easyvision.codegen.*
 
-class Scope(private val tabsCount: Int = 1) {
+class Scope(val tabsCount: Int = 1) {
 
     private var builder = StringBuilder()
 
@@ -153,6 +153,21 @@ class Scope(private val tabsCount: Int = 1) {
 
         builder.append("${tabs}enum $name { ${values.csv()} }")
     }
+
+    fun loop(loopDeclaration: String, loopScope: Scope) {
+        newStatement()
+
+        builder.append("${tabs}$loopDeclaration {")
+        scope(loopScope)
+        builder.appendLine().appendLine("$tabs}") // we need double appendLine for some reason
+    }
+
+    fun whileLoop(condition: Value, scope: Scope) = loop("while($condition)", scope)
+
+    fun foreachLoop(variable: Value, list: Value, scope: Scope) = loop(
+        "for(${variable.type} ${variable.value} : ${list.value})",
+        scope
+    )
 
     fun scope(scope: Scope) {
         newLineIfNotBlank()

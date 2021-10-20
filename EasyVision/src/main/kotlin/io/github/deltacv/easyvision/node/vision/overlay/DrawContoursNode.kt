@@ -60,7 +60,7 @@ open class DrawContoursNode
         val output = tryName("${input.value.value!!}Contours")
 
         if(contoursList !is GenValue.GLists.RuntimeListOf<*>) {
-            contours.raise("")
+            contours.raise("") // TODO: Handle non-runtime lists
         }
 
         var drawMat = input.value
