@@ -40,6 +40,16 @@ class Table(val maxColumns: Int = 4, val drawCallback: ((Int, ImVec2) -> Unit)? 
         rects.add(Pair(id, size))
     }
 
+    fun contains(id: Int): Boolean {
+        for((rectId, _) in rects) {
+            if(rectId == id) {
+                return true
+            }
+        }
+
+        return false
+    }
+
     fun setSize(id: Int, size: ImVec2) {
         for((index, pair) in rects.toTypedArray().withIndex()) {
             if(pair.first == id) {

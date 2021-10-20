@@ -29,7 +29,6 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.app.Application
 import imgui.app.Configuration
-import imgui.extension.imnodes.ImNodes
 import imgui.flag.*
 import io.github.deltacv.easyvision.codegen.*
 import io.github.deltacv.easyvision.gui.PopupBuilder
@@ -37,11 +36,9 @@ import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.gui.style.imnodes.ImNodesDarkStyle
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.io.KeyManager
-import io.github.deltacv.easyvision.node.NodeEditor
-import io.github.deltacv.easyvision.node.NodeList
-import io.github.deltacv.easyvision.node.vision.*
+import io.github.deltacv.easyvision.gui.NodeEditor
+import io.github.deltacv.easyvision.gui.NodeList
 import org.lwjgl.BufferUtils
-import org.lwjgl.glfw.GLFW
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
 

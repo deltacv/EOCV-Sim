@@ -1,4 +1,4 @@
-package io.github.deltacv.easyvision.node
+package io.github.deltacv.easyvision.gui
 
 import imgui.ImGui
 import imgui.ImVec2
@@ -7,10 +7,11 @@ import imgui.extension.imnodes.ImNodesContext
 import imgui.flag.ImGuiMouseButton
 import imgui.type.ImInt
 import io.github.deltacv.easyvision.EasyVision
-import io.github.deltacv.easyvision.gui.PopupBuilder
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.io.KeyManager
 import io.github.deltacv.easyvision.io.Keys
+import io.github.deltacv.easyvision.node.Link
+import io.github.deltacv.easyvision.node.Node
 import io.github.deltacv.easyvision.node.vision.InputMatNode
 import io.github.deltacv.easyvision.node.vision.OutputMatNode
 import io.github.deltacv.easyvision.util.ElapsedTime

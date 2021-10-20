@@ -1,4 +1,4 @@
-package io.github.deltacv.easyvision.node
+package io.github.deltacv.easyvision.gui
 
 import imgui.ImColor
 import imgui.ImFont
@@ -7,14 +7,14 @@ import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.ImNodesContext
 import imgui.extension.imnodes.flag.ImNodesColorStyle
+import imgui.extension.imnodes.flag.ImNodesStyleFlags
 import imgui.flag.*
 import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
-import io.github.deltacv.easyvision.gui.Table
-import io.github.deltacv.easyvision.gui.makeFont
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.io.KeyManager
 import io.github.deltacv.easyvision.io.Keys
+import io.github.deltacv.easyvision.node.*
 import io.github.deltacv.easyvision.util.ElapsedTime
 import kotlinx.coroutines.*
 
@@ -65,22 +65,7 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
         // NODES LIST
 
         if(isNodesListOpen) {
-            ImGui.setNextWindowPos(0f, 0f)
-            ImGui.setNextWindowSize(size.x, size.y, ImGuiCond.Always)
-
-            ImGui.pushStyleColor(ImGuiCol.WindowBg, 0f, 0f, 0f, 0.55f) // transparent dark nodes list window
-
-            ImGui.begin("nodes",
-                ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
-                        or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoTitleBar
-                        or ImGuiWindowFlags.NoDecoration //or ImGuiWindowFlags.NoBringToFrontOnFocus
-            )
-
-            drawNodesList()
-
-            ImGui.end()
-
-            ImGui.popStyleColor()
+            drawNodesList(size)
         }
 
         // OPEN/CLOSE BUTTON
@@ -94,7 +79,6 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
         ImGui.begin(
             "floating", ImGuiWindowFlags.NoBackground
                     or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove
-                    or ImGuiWindowFlags.AlwaysVerticalScrollbar
         )
 
         ImGui.pushFont(buttonFont)
@@ -163,7 +147,10 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
     var isHoverManuallyDetected = false
         private set
 
-    private fun drawNodesList() {
+    private val categoriesState = mutableMapOf<Category, Boolean>()
+    private val drawnNodes = mutableListOf<Int>()
+
+    private fun drawNodesList(size: ImVec2) {
 
         val scrollValue = when {
             keyManager.pressed(Keys.ArrowUp) -> {
@@ -177,7 +164,11 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
             }
         }
 
+        var closeOnClick = true
+
         ImNodes.editorContextSet(listContext)
+
+        // NODES WINDOW
 
         ImNodes.getStyle().gridSpacing = 99999f // lol only way to make grid invisible
         ImNodes.pushColorStyle(ImNodesColorStyle.GridBackground, ImColor.floatToColor(0f, 0f, 0f, 0f))
@@ -185,66 +176,108 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
         ImNodes.clearNodeSelection()
         ImNodes.clearLinkSelection()
 
-        var closeOnClick = true
+        ImGui.setNextWindowPos(0f, 0f)
+        ImGui.setNextWindowSize(size.x, size.y, ImGuiCond.Always)
+
+        ImGui.pushStyleColor(ImGuiCol.WindowBg, 0f, 0f, 0f, 0.55f) // transparent dark nodes list window
+
+        ImGui.begin("nodes",
+            ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
+                    or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoTitleBar
+                    or ImGuiWindowFlags.NoDecoration
+        )
 
         ImNodes.beginNodeEditor()
-            val flags = ImGuiTreeNodeFlags.DefaultOpen
+        for(category in Category.values()) {
+            if(nodes.containsKey(category)) {
+                val table = tablesCategories[category] ?: continue
 
-            for(category in Category.values()) {
-                if(nodes.containsKey(category)) {
-                    if(!tablesCategories.containsKey(category)) {
-                        tablesCategories[category] = Table()
-                    }
-
-                    val table = tablesCategories[category]!!
-
-                    if (ImGui.collapsingHeader(category.properName, flags)) {
-                        ImGui.newLine()
-                        ImGui.indent(10f)
-
-                        if (ImGui.isItemHovered()) {
-                            closeOnClick = false
-                        }
-
-                        currentScroll = ImGui.getScrollY() + scrollValue * 20.0f;
-                        ImGui.setScrollY(currentScroll)
-
-                        table.draw()
-
-                        for (node in nodes[category]!!) {
-                            if(isSecondDraw) {
+                if (categoriesState[category] == true) {
+                    for (node in nodes[category]!!) {
+                        if(drawnNodes.contains(node.id)) {
+                            if (!table.contains(node.id)) {
                                 val nodeSize = ImVec2()
                                 ImNodes.getNodeDimensions(node.id, nodeSize)
 
                                 table.add(node.id, nodeSize)
-                            } else if(!isFirstDraw) {
+                            } else {
                                 val pos = table.getPos(node.id)!!
                                 ImNodes.setNodeScreenSpacePos(node.id, pos.x, pos.y)
                             }
-
-                            if(isHoverManuallyDetected && hoveredNode == node.id) {
-                                ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackground, EasyVision.imnodesStyle.nodeBackgroundHovered)
-                                ImNodes.pushColorStyle(ImNodesColorStyle.TitleBar, EasyVision.imnodesStyle.titleBarHovered)
-                            }
-
-                            node.draw()
-
-                            if(isHoverManuallyDetected && hoveredNode == node.id) {
-                                ImNodes.popColorStyle()
-                                ImNodes.popColorStyle()
-                            }
                         }
 
-                        ImGui.newLine()
-                        ImGui.unindent(10f)
-                    } else if (ImGui.isItemHovered()) {
-                        closeOnClick = false
+                        if(isHoverManuallyDetected && hoveredNode == node.id) {
+                            ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackground, EasyVision.imnodesStyle.nodeBackgroundHovered)
+                            ImNodes.pushColorStyle(ImNodesColorStyle.TitleBar, EasyVision.imnodesStyle.titleBarHovered)
+                        }
+
+                        node.draw()
+                        if(!drawnNodes.contains(node.id)) {
+                            drawnNodes.add(node.id)
+                        }
+
+                        if(isHoverManuallyDetected && hoveredNode == node.id) {
+                            ImNodes.popColorStyle()
+                            ImNodes.popColorStyle()
+                        }
                     }
                 }
             }
+        }
         ImNodes.endNodeEditor()
+        ImGui.end()
+        ImGui.popStyleColor()
 
         ImNodes.editorResetPanning(0f, 0f)
+
+        // HEADERS WINDOW
+
+        ImGui.setNextWindowPos(0f, 0f)
+        ImGui.setNextWindowSize(size.x, size.y, ImGuiCond.Always)
+
+        ImGui.pushStyleColor(ImGuiCol.WindowBg, 0f, 0f, 0f, 0.0f) // transparent headers window
+
+        ImGui.begin("headers",
+            ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
+                    or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoTitleBar
+                    or ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.AlwaysVerticalScrollbar
+        )
+
+        ImGui.setCursorPos(0f, 0f) // draw the node editor on top of the collapisng headers
+
+        for(category in Category.values()) {
+            if(nodes.containsKey(category)) {
+                if (!tablesCategories.containsKey(category)) {
+                    tablesCategories[category] = Table()
+                }
+
+                val isOpen = ImGui.collapsingHeader(
+                    category.properName, ImGuiTreeNodeFlags.DefaultOpen
+                )
+                categoriesState[category] = isOpen
+
+                if (ImGui.isItemHovered()) {
+                    closeOnClick = false
+                }
+
+                if(isOpen) {
+                    val table = tablesCategories[category]!!
+
+                    ImGui.newLine()
+                    ImGui.indent(10f)
+
+                    currentScroll = ImGui.getScrollY() + scrollValue * 20.0f
+                    ImGui.setScrollY(currentScroll)
+
+                    table.draw()
+
+                    ImGui.newLine()
+                    ImGui.unindent(10f)
+                }
+            }
+        }
+        ImGui.end()
+        ImGui.popStyleColor()
 
         hoveredNode = ImNodes.getHoveredNode()
         isHoverManuallyDetected = false
@@ -266,13 +299,6 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
         ImNodes.getStyle().gridSpacing = 32f // back to normal
         ImNodes.popColorStyle()
-
-        isSecondDraw = false
-
-        if(isFirstDraw) {
-            isSecondDraw = true
-            isFirstDraw = false
-        }
 
         handleClick(closeOnClick)
     }
