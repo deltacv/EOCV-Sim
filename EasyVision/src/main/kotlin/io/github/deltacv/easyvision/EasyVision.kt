@@ -31,6 +31,7 @@ import imgui.app.Application
 import imgui.app.Configuration
 import imgui.flag.*
 import io.github.deltacv.easyvision.codegen.*
+import io.github.deltacv.easyvision.gui.Font
 import io.github.deltacv.easyvision.gui.util.PopupBuilder
 import io.github.deltacv.easyvision.gui.util.makeFont
 import io.github.deltacv.easyvision.gui.style.imnodes.ImNodesDarkStyle
@@ -38,6 +39,7 @@ import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.io.KeyManager
 import io.github.deltacv.easyvision.gui.NodeEditor
 import io.github.deltacv.easyvision.gui.NodeList
+import io.github.deltacv.easyvision.gui.FontManager
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
@@ -70,11 +72,13 @@ class EasyVision : Application() {
 
     val keyManager = KeyManager()
     val codeGenManager = CodeGenManager(this)
+    val fontManager = FontManager()
 
     val nodeEditor = NodeEditor(this, keyManager)
     val nodeList = NodeList(this, keyManager)
 
-    private lateinit var defaultFont: ImFont
+    lateinit var defaultFont: Font
+        private set
 
     fun start() {
         Log.info(TAG, "Starting EasyVision...")
@@ -93,7 +97,10 @@ class EasyVision : Application() {
     override fun initImGui(config: Configuration?) {
         super.initImGui(config)
 
-        defaultFont = makeFont(13f)
+        // initializing fonts right after the imgui context is created
+        // we can't create fonts mid-frame so that's kind of a problem
+        defaultFont = fontManager.makeFont("/fonts/Calcutta-Regular.otf", "Calcutta", 13f)
+
         nodeList.init()
     }
 
@@ -109,7 +116,7 @@ class EasyVision : Application() {
         val size = windowSize
         ImGui.setNextWindowSize(size.x, size.y, ImGuiCond.Always)
 
-        ImGui.pushFont(defaultFont)
+        ImGui.pushFont(defaultFont.imfont)
 
         ImGui.begin("Editor",
             ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
@@ -124,7 +131,7 @@ class EasyVision : Application() {
 
         nodeList.draw()
 
-        ImGui.pushFont(defaultFont)
+        ImGui.pushFont(defaultFont.imfont)
         PopupBuilder.draw()
         ImGui.popFont()
 

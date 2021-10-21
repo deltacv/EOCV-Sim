@@ -25,6 +25,8 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
         val listNodes = IdElementContainer<Node<*>>()
         val listAttributes = IdElementContainer<Attribute>()
 
+        val plusFontSize = 60f
+
         lateinit var categorizedNodes: CategorizedNodes
             private set
 
@@ -34,21 +36,19 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
         }
     }
 
-    lateinit var buttonFont: ImFont
-    val plusFontSize = 60f
+    lateinit var buttonFont: Font
 
     var isNodesListOpen = false
         private set
 
     private var lastButton = false
-
     private val openButtonTimeout = ElapsedTime()
     private val hoveringPlusTime = ElapsedTime()
 
     private lateinit var listContext: ImNodesContext
 
     fun init() {
-        buttonFont = makeFont(plusFontSize)
+        buttonFont = easyVision.fontManager.makeFont("/fonts/icons/Open-Close.ttf", "Icons-Open-Close", plusFontSize)
     }
 
     fun draw() {
@@ -81,12 +81,14 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                     or ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoMove
         )
 
-        ImGui.pushFont(buttonFont)
+        ImGui.pushFont(buttonFont.imfont)
         val buttonSize = ImGui.getFrameHeight()
 
         val button = ImGui.button(if(isNodesListOpen) "x" else "+", buttonSize, buttonSize)
 
         ImGui.popFont()
+
+        ImGui.pushFont(easyVision.defaultFont.imfont)
 
         if (button != lastButton && !isNodesListOpen && button && openButtonTimeout.millis > 200) {
             showList()
@@ -107,6 +109,8 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
         }
 
         lastButton = button
+
+        ImGui.popFont()
 
         ImGui.end()
     }
