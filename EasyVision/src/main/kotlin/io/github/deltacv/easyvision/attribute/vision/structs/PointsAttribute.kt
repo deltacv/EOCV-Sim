@@ -6,6 +6,7 @@ import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.attribute.vision.MatAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
+import io.github.deltacv.easyvision.gui.style.rgbaColor
 
 class PointsAttribute (
     override val mode: AttributeMode,
@@ -14,6 +15,12 @@ class PointsAttribute (
 
     companion object : Type {
         override val name = "Points"
+
+        override val styleColor = rgbaColor(212, 175, 55, 180)
+        override val styleHoveredColor = rgbaColor(212, 175, 55, 255)
+
+        override val listStyleColor = rgbaColor(207, 181, 59,  180)
+        override val listStyleHoveredColor = rgbaColor(207, 181, 59, 255)
 
         override fun new(mode: AttributeMode, variableName: String) = PointsAttribute(mode, variableName)
     }

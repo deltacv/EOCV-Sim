@@ -2,6 +2,8 @@ package io.github.deltacv.easyvision.attribute.misc
 
 import imgui.ImGui
 import imgui.ImVec2
+import imgui.extension.imnodes.ImNodes
+import imgui.extension.imnodes.flag.ImNodesColorStyle
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
@@ -23,6 +25,9 @@ open class ListAttribute(
     }
 
     override var typeName = "[${elementType.name}]"
+
+    override val styleColor get() = elementType.styleColor
+    override val styleHoveredColor get() = elementType.styleHoveredColor
 
     val listAttributes = mutableListOf<TypedAttribute>()
     val deleteQueue = mutableListOf<TypedAttribute>()
@@ -81,6 +86,9 @@ open class ListAttribute(
 
     override fun draw() {
         super.draw()
+
+        ImNodes.popColorStyle()
+        ImNodes.popColorStyle()
 
         for((i, attrib) in listAttributes.withIndex()) {
             if(beforeHasLink != hasLink) {

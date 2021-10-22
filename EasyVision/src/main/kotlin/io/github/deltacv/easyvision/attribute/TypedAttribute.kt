@@ -3,23 +3,35 @@ package io.github.deltacv.easyvision.attribute
 import imgui.ImGui
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
+import imgui.extension.imnodes.flag.ImNodesColorStyle
+import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
-import io.github.deltacv.easyvision.exception.AttributeGenException
-import io.github.deltacv.easyvision.node.Link
 
 interface Type {
     val name: String
     val allowsNew: Boolean get() = true
+
+    val styleColor: Int get() = EasyVision.imnodesStyle.pin
+    val styleHoveredColor: Int get() = EasyVision.imnodesStyle.pinHovered
+
+    val listStyleColor: Int get() = EasyVision.imnodesStyle.pin
+    val listStyleHoveredColor: Int get() = EasyVision.imnodesStyle.pinHovered
 
     fun new(mode: AttributeMode, variableName: String): TypedAttribute {
         throw UnsupportedOperationException("Cannot instantiate a List attribute with new")
     }
 }
 
-abstract class TypedAttribute(var type: Type) : Attribute() {
+abstract class TypedAttribute(val type: Type) : Attribute() {
 
     abstract var variableName: String?
+
+    open val styleColor get() = type.styleColor
+    open val styleHoveredColor get() = type.styleHoveredColor
+
+    open val linkColor get() = styleColor
+    open val linkHoveredColor get() = styleHoveredColor
 
     var drawDescriptiveText = true
     var drawType = true
@@ -36,6 +48,16 @@ abstract class TypedAttribute(var type: Type) : Attribute() {
     }
 
     val nodeSize = ImVec2()
+
+    override fun draw() {
+        ImNodes.pushColorStyle(ImNodesColorStyle.Pin, styleColor)
+        ImNodes.pushColorStyle(ImNodesColorStyle.PinHovered, styleHoveredColor)
+
+        super.draw()
+
+        ImNodes.popColorStyle()
+        ImNodes.popColorStyle()
+    }
 
     override fun drawAttribute() {
         if(isSecondDraw) {

@@ -8,6 +8,7 @@ import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
+import io.github.deltacv.easyvision.gui.style.rgbaColor
 
 class EnumAttribute<T: Enum<T>>(
     override val mode: AttributeMode,
@@ -18,6 +19,9 @@ class EnumAttribute<T: Enum<T>>(
     companion object: Type {
         override val name = "Enum"
         override val allowsNew = false
+
+        override val styleColor = rgbaColor(46, 139, 87, 180)
+        override val styleHoveredColor = rgbaColor(46, 139, 87, 255)
     }
 
     private val valuesStrings = values.map {

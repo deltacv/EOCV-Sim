@@ -111,6 +111,8 @@ class EasyVision : Application() {
             prevKeyCallback = glfwSetKeyCallback(handle, ::keyCallback)
         }
 
+        imnodesStyle.apply()
+
         ImGui.setNextWindowPos(0f, 0f, ImGuiCond.Always)
 
         val size = windowSize

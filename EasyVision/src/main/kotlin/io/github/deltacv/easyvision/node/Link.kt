@@ -1,7 +1,9 @@
 package io.github.deltacv.easyvision.node
 
 import imgui.extension.imnodes.ImNodes
+import imgui.extension.imnodes.flag.ImNodesColorStyle
 import io.github.deltacv.easyvision.attribute.Attribute
+import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.id.DrawableIdElement
 import io.github.deltacv.easyvision.id.IdElementContainer
 
@@ -19,7 +21,25 @@ class Link(val a: Int, val b: Int) : DrawableIdElement {
         if(!bAttrib.links.contains(this))
             bAttrib.links.add(this)
 
+        val typedAttrib = if(aAttrib is TypedAttribute) {
+            aAttrib
+        } else if(bAttrib is TypedAttribute) {
+            bAttrib
+        } else null
+
+        typedAttrib?.run {
+            ImNodes.pushColorStyle(ImNodesColorStyle.Link, styleColor)
+            ImNodes.pushColorStyle(ImNodesColorStyle.LinkHovered, styleHoveredColor)
+            ImNodes.pushColorStyle(ImNodesColorStyle.LinkSelected, styleHoveredColor)
+        }
+
         ImNodes.link(id, a, b)
+
+        if(typedAttrib != null) {
+            ImNodes.popColorStyle()
+            ImNodes.popColorStyle()
+            ImNodes.popColorStyle()
+        }
     }
 
     override fun delete() {

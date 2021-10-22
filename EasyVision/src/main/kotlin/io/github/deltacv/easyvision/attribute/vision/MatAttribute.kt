@@ -5,6 +5,7 @@ import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
+import io.github.deltacv.easyvision.gui.style.rgbaColor
 
 class MatAttribute(
     override val mode: AttributeMode,
@@ -13,6 +14,9 @@ class MatAttribute(
 
     companion object: Type {
         override val name = "Image"
+
+        override val styleColor = rgbaColor(255, 165, 0, 180)
+        override val styleHoveredColor = rgbaColor(255, 165, 0, 255)
 
         override fun new(mode: AttributeMode, variableName: String) = MatAttribute(mode, variableName)
     }

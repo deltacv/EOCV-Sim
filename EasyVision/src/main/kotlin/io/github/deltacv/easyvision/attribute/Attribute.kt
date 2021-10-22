@@ -38,7 +38,7 @@ abstract class Attribute : DrawableIdElement {
         cancelNextDraw = true
     }
 
-    override fun draw() {
+    override open fun draw() {
         if(cancelNextDraw) {
             cancelNextDraw = false
             wasLastDrawCancelled = true
