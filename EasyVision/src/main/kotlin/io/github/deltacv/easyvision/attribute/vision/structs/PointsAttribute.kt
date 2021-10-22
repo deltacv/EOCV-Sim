@@ -16,11 +16,11 @@ class PointsAttribute (
     companion object : Type {
         override val name = "Points"
 
-        override val styleColor = rgbaColor(212, 175, 55, 180)
-        override val styleHoveredColor = rgbaColor(212, 175, 55, 255)
+        override val styleColor = rgbaColor(0, 255, 255, 180)
+        override val styleHoveredColor = rgbaColor(0, 255, 255, 255)
 
-        override val listStyleColor = rgbaColor(255,140,0, 180)
-        override val listStyleHoveredColor = rgbaColor(255,140,0, 255)
+        override val listStyleColor = rgbaColor(127, 255, 212, 180)
+        override val listStyleHoveredColor = rgbaColor(127, 255, 212, 255)
 
         override fun new(mode: AttributeMode, variableName: String) = PointsAttribute(mode, variableName)
     }
