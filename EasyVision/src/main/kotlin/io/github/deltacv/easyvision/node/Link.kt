@@ -21,11 +21,11 @@ class Link(val a: Int, val b: Int) : DrawableIdElement {
         if(!bAttrib.links.contains(this))
             bAttrib.links.add(this)
 
-        val typedAttrib = if(aAttrib is TypedAttribute) {
-            aAttrib
-        } else if(bAttrib is TypedAttribute) {
-            bAttrib
-        } else null
+        val typedAttrib = when {
+            aAttrib is TypedAttribute -> aAttrib
+            bAttrib is TypedAttribute -> bAttrib
+            else -> null
+        }
 
         typedAttrib?.run {
             ImNodes.pushColorStyle(ImNodesColorStyle.Link, styleColor)

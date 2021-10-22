@@ -20,7 +20,7 @@ import io.github.deltacv.easyvision.node.RegisterNode
     category = Category.SHAPE_DET,
     description = "Calculates the bounding rectangles of a given list of points."
 )
-class BoundingRectsNode : DrawNode<BoundingRectsNode.Session>("Bounding Rectangles") {
+class BoundingRectsNode : DrawNode<BoundingRectsNode.Session>() {
 
     val inputContours = ListAttribute(INPUT, PointsAttribute, "Contours")
     val outputRects   = ListAttribute(OUTPUT, RectAttribute, "Bounding Rects")

@@ -15,7 +15,7 @@ import io.github.deltacv.easyvision.node.DrawNode
     category = Category.COLOR_OP,
     description = "Converts a Mat from its current color space to the specified color space. If the mat is already in the specified color space, no conversion is made."
 )
-class CvtColorNode : DrawNode<CvtColorNode.Session>("Convert Color") {
+class CvtColorNode : DrawNode<CvtColorNode.Session>() {
 
     val input  = MatAttribute(INPUT, "Input")
     val output = MatAttribute(OUTPUT, "Output")

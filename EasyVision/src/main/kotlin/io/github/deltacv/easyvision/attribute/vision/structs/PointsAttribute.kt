@@ -19,8 +19,8 @@ class PointsAttribute (
         override val styleColor = rgbaColor(212, 175, 55, 180)
         override val styleHoveredColor = rgbaColor(212, 175, 55, 255)
 
-        override val listStyleColor = rgbaColor(207, 181, 59,  180)
-        override val listStyleHoveredColor = rgbaColor(207, 181, 59, 255)
+        override val listStyleColor = rgbaColor(255,140,0, 180)
+        override val listStyleHoveredColor = rgbaColor(255,140,0, 255)
 
         override fun new(mode: AttributeMode, variableName: String) = PointsAttribute(mode, variableName)
     }

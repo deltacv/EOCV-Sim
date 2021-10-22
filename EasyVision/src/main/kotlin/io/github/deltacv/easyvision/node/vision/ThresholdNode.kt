@@ -21,7 +21,7 @@ import io.github.deltacv.easyvision.node.DrawNode
     category = Category.COLOR_OP,
     description = "Performs a threshold in the input image and returns a binary image, discarding the pixels that were outside the range in the color space specified."
 )
-class ThresholdNode : DrawNode<ThresholdNode.Session>("Color Threshold") {
+class ThresholdNode : DrawNode<ThresholdNode.Session>() {
 
     val input = MatAttribute(INPUT, "Input")
     val scalar = ScalarRangeAttribute(INPUT, Colors.values()[0], "Threshold")

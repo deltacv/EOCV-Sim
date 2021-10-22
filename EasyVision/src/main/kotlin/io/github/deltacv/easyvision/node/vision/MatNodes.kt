@@ -10,8 +10,15 @@ import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
 import io.github.deltacv.easyvision.codegen.NoSession
 import io.github.deltacv.easyvision.codegen.parse.v
+import io.github.deltacv.easyvision.node.Category
+import io.github.deltacv.easyvision.node.RegisterNode
 
-class InputMatNode : DrawNode<NoSession>("Pipeline Input", allowDelete = false) {
+@RegisterNode(
+    name = "Pipeline Input",
+    category = Category.FLOW,
+    showInList = false
+)
+class InputMatNode : DrawNode<NoSession>(allowDelete = false) {
 
     override fun init() {
         val windowSize = EasyVision.windowSize
@@ -37,7 +44,12 @@ class InputMatNode : DrawNode<NoSession>("Pipeline Input", allowDelete = false) 
                                   attrib: Attribute) = value
 }
 
-class OutputMatNode : DrawNode<NoSession>("Pipeline Output", allowDelete = false) {
+@RegisterNode(
+    name = "Pipeline Output",
+    category = Category.FLOW,
+    showInList = false
+)
+class OutputMatNode : DrawNode<NoSession>(allowDelete = false) {
 
     override fun init() {
         val windowSize = EasyVision.windowSize

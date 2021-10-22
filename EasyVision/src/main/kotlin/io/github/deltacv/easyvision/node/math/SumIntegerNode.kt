@@ -15,7 +15,7 @@ import io.github.deltacv.easyvision.node.Category
     category = Category.MATH,
     description = "Sums a list of integers and outputs the result"
 )
-class SumIntegerNode : DrawNode<SumIntegerNode.Session>("Sum Integers") {
+class SumIntegerNode : DrawNode<SumIntegerNode.Session>() {
 
     val numbers = ListAttribute(INPUT, IntAttribute, "Numbers")
     val result  = IntAttribute(OUTPUT, "Result")

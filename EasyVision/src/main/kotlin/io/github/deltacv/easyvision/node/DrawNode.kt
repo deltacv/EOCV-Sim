@@ -3,12 +3,13 @@ package io.github.deltacv.easyvision.node
 import imgui.ImGui
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
+import imgui.extension.imnodes.flag.ImNodesColorStyle
 import imgui.flag.ImGuiMouseButton
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.codegen.CodeGenSession
+import java.lang.IllegalArgumentException
 
 abstract class DrawNode<S: CodeGenSession>(
-    var title: String? = null,
     allowDelete: Boolean = true
 ) : Node<S>(allowDelete) {
 
@@ -16,24 +17,41 @@ abstract class DrawNode<S: CodeGenSession>(
 
     var pinToMouse = false
     private var lastPinToMouse = false
-
     private var pinToMouseOffset = ImVec2()
 
-    var isFirstDraw = true
+    private var isFirstDraw = true
+
+    val annotationData by lazy {
+        val annotation = this.javaClass.getAnnotation(RegisterNode::class.java)
+            ?: throw IllegalArgumentException("Node ${javaClass.typeName} needs to have a @RegisterNode annotation")
+
+        AnnotationData(annotation.name, annotation.description, annotation.category, annotation.showInList)
+    }
+
+    var titleColor = annotationData.category.color
+    var titleHoverColor = annotationData.category.colorSelected
 
     open fun init() {}
 
     override fun draw() {
+        val title = annotationData.name
+
+        ImNodes.pushColorStyle(ImNodesColorStyle.TitleBar, titleColor)
+        ImNodes.pushColorStyle(ImNodesColorStyle.TitleBarHovered, titleHoverColor)
+        ImNodes.pushColorStyle(ImNodesColorStyle.TitleBarSelected, titleHoverColor)
+
         ImNodes.beginNode(id)
-            if(title != null) {
-                ImNodes.beginNodeTitleBar()
-                    ImGui.textUnformatted(title!!)
-                ImNodes.endNodeTitleBar()
-            }
+            ImNodes.beginNodeTitleBar()
+                ImGui.textUnformatted(title)
+            ImNodes.endNodeTitleBar()
 
             drawNode()
             drawAttributes()
         ImNodes.endNode()
+
+        ImNodes.popColorStyle()
+        ImNodes.popColorStyle()
+        ImNodes.popColorStyle()
 
         if(isFirstDraw) {
             init()
@@ -76,5 +94,10 @@ abstract class DrawNode<S: CodeGenSession>(
     }
 
     open fun drawNode() { }
+
+    data class AnnotationData(val name: String,
+                              val description: String,
+                              val category: Category,
+                              val showInList: Boolean)
 
 }

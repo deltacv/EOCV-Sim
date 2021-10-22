@@ -10,6 +10,7 @@ import io.github.deltacv.easyvision.attribute.Type
 import io.github.deltacv.easyvision.attribute.TypedAttribute
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
+import io.github.deltacv.easyvision.gui.style.rgbaColor
 
 open class ListAttribute(
     override val mode: AttributeMode,
@@ -22,12 +23,20 @@ open class ListAttribute(
     companion object: Type {
         override val name = "List"
         override val allowsNew = false
+
+        override val styleColor = rgbaColor(95,158,160, 180)
+        override val styleHoveredColor = rgbaColor(95,158,160, 180)
     }
 
     override var typeName = "[${elementType.name}]"
 
-    override val styleColor get() = elementType.styleColor
-    override val styleHoveredColor get() = elementType.styleHoveredColor
+    override val styleColor get() = if(elementType.isDefaultListColor) {
+        Companion.styleColor
+    } else elementType.listStyleColor
+
+    override val styleHoveredColor get() = if(elementType.isDefaultListColor) {
+        Companion.styleHoveredColor
+    } else elementType.listStyleHoveredColor
 
     val listAttributes = mutableListOf<TypedAttribute>()
     val deleteQueue = mutableListOf<TypedAttribute>()
@@ -86,9 +95,6 @@ open class ListAttribute(
 
     override fun draw() {
         super.draw()
-
-        ImNodes.popColorStyle()
-        ImNodes.popColorStyle()
 
         for((i, attrib) in listAttributes.withIndex()) {
             if(beforeHasLink != hasLink) {

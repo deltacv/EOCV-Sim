@@ -18,7 +18,7 @@ import io.github.deltacv.easyvision.node.RegisterNode
     category = Category.SHAPE_DET,
     description = "Finds all the contours (list of points) of a given binary image."
 )
-class FindContoursNode : DrawNode<FindContoursNode.Session>("Simple Find Contours") {
+class FindContoursNode : DrawNode<FindContoursNode.Session>() {
 
     val inputMat = MatAttribute(INPUT, "Binary Input")
     val outputPoints = ListAttribute(OUTPUT, PointsAttribute, "Contours")

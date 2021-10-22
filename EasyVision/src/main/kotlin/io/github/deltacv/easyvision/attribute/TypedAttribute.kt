@@ -7,6 +7,7 @@ import imgui.extension.imnodes.flag.ImNodesColorStyle
 import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
+import jdk.jfr.Category
 
 interface Type {
     val name: String
@@ -17,6 +18,10 @@ interface Type {
 
     val listStyleColor: Int get() = EasyVision.imnodesStyle.pin
     val listStyleHoveredColor: Int get() = EasyVision.imnodesStyle.pinHovered
+
+    val isDefaultListColor: Boolean get() =
+        listStyleColor == EasyVision.imnodesStyle.pin
+            && listStyleHoveredColor == EasyVision.imnodesStyle.pinHovered
 
     fun new(mode: AttributeMode, variableName: String): TypedAttribute {
         throw UnsupportedOperationException("Cannot instantiate a List attribute with new")

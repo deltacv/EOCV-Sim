@@ -22,8 +22,8 @@ import io.github.deltacv.easyvision.node.vision.Colors
     description = "Draws the contours on a copy of the given image and outputs the result."
 )
 open class DrawContoursNode
-@JvmOverloads constructor(val name: String = "Draw Contours", val isDrawOnInput: Boolean = false)
-    : DrawNode<DrawContoursNode.Session>(name)  {
+@JvmOverloads constructor(val isDrawOnInput: Boolean = false)
+    : DrawNode<DrawContoursNode.Session>()  {
 
     val inputMat = MatAttribute(INPUT, "Input")
     val contours = ListAttribute(INPUT, PointsAttribute, "Contours")
@@ -123,4 +123,4 @@ open class DrawContoursNode
     category = Category.OVERLAY,
     description = "Draws the contours list in the passed image."
 )
-class DrawContoursOnImageNode : DrawContoursNode("Draw Contours on Image", true)
+class DrawContoursOnImageNode : DrawContoursNode(true)

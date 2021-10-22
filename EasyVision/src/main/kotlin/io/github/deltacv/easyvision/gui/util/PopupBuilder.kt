@@ -1,30 +1,24 @@
 package io.github.deltacv.easyvision.gui.util
 
 import imgui.ImGui
+import imgui.ImVec2
 import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.util.ElapsedTime
 
 object PopupBuilder {
 
     private val tooltips = mutableListOf<ToolTip>()
-
     private val labels = mutableMapOf<String, Label>()
 
     fun addWarningToolTip(message: String, w: Float? = null, h: Float? = null) {
         deleteLabel("WARN")
-
-        val windowSize = EasyVision.windowSize
-
-        var x = windowSize.x * 0.5f
-        var y = windowSize.y * 0.85f
-
-        val wW = w ?: message.length * 7.5f
-        val wH = h ?: 30f
-
-        x -= wW / 2f
-        y += wH / 2f
-
-        addToolTip(x, y, wW, wH, message, 6.0, label = "WARN")
+        addToolTip(
+            ImGui.getMousePosX(),
+            ImGui.getMousePosY(),
+            null, null,
+            message,
+            4.0, label = "WARN"
+        )
     }
 
     fun addToolTip(x: Float, y: Float, w: Float? = null, h: Float? = null,
@@ -52,14 +46,22 @@ object PopupBuilder {
 
     fun draw() {
         for(tooltip in tooltips.toTypedArray()) {
-            if(tooltip.time != null && tooltip.elapsedTime.seconds >= tooltip.time) {
-                tooltips.remove(tooltip)
+            var tooltipLabel: Label? = null
+            var tooltipLabelName: String? = null
 
-                for(label in labels.values.toTypedArray()) {
-                    if(label.any == tooltip) {
-                        label.deleteCall()
-                    }
+            for((name, label) in labels) {
+                if(label.any == tooltip) {
+                    tooltipLabel = label
+                    tooltipLabelName = name
+                    break
                 }
+            }
+
+            if((tooltipLabel != null && tooltipLabelName == "WARN" && ImGui.isAnyMouseDown()) // deleting WARN tooltip when mouse is clicked
+                || (tooltip.time != null && tooltip.elapsedTime.seconds >= tooltip.time)
+            ) {
+                tooltips.remove(tooltip)
+                tooltipLabel!!.deleteCall()
 
                 continue
             }

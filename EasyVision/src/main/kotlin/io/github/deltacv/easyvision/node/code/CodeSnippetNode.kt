@@ -11,7 +11,7 @@ import io.github.deltacv.easyvision.node.RegisterNode
     category = Category.CODE,
     description = "A user-written snippet of Java code that will be inlined in the final pipeline, with configurable parameters and outputs."
 )
-class CodeSnippetNode : DrawNode<CodeSnippetNode.Session>("Code Snippet") {
+class CodeSnippetNode : DrawNode<CodeSnippetNode.Session>() {
 
     override fun drawNode() {
 

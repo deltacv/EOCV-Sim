@@ -123,6 +123,9 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
 
             for(nodeClass in nodeClasses) {
                 val instance = nodeClass.getConstructor().newInstance()
+                if(instance is DrawNode && !instance.annotationData.showInList) {
+                    continue
+                }
 
                 instance.nodesIdContainer = listNodes
                 instance.attributesIdContainer = listAttributes
@@ -132,7 +135,9 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                 list.add(instance)
             }
 
-            map[category] = list
+            if(list.isNotEmpty()) {
+                map[category] = list
+            }
         }
 
         map
@@ -209,9 +214,17 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                             }
                         }
 
+                        var titleColor = 0
+
                         if(isHoverManuallyDetected && hoveredNode == node.id) {
+                            if(node is DrawNode<*>) {
+                                titleColor = node.titleColor
+                                node.titleColor = node.titleHoverColor
+                            } else {
+                                ImNodes.pushColorStyle(ImNodesColorStyle.TitleBar, EasyVision.imnodesStyle.titleBarHovered)
+                            }
+
                             ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackground, EasyVision.imnodesStyle.nodeBackgroundHovered)
-                            ImNodes.pushColorStyle(ImNodesColorStyle.TitleBar, EasyVision.imnodesStyle.titleBarHovered)
                         }
 
                         node.draw()
@@ -220,7 +233,12 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                         }
 
                         if(isHoverManuallyDetected && hoveredNode == node.id) {
-                            ImNodes.popColorStyle()
+                            if(node is DrawNode<*>) {
+                                node.titleColor = titleColor
+                            } else {
+                                ImNodes.popColorStyle()
+                            }
+
                             ImNodes.popColorStyle()
                         }
                     }
