@@ -35,6 +35,7 @@ apply from: '../test-logging.gradle'
 
 dependencies {
     implementation project(':Common')
+    implementation project(':Common')
 
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 

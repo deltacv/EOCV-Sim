@@ -1,9 +1,6 @@
 package io.github.deltacv.easyvision.gui
 
-import imgui.ImColor
-import imgui.ImFont
-import imgui.ImGui
-import imgui.ImVec2
+import imgui.*
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.ImNodesContext
 import imgui.extension.imnodes.flag.ImNodesColorStyle
@@ -272,10 +269,18 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                     tablesCategories[category] = Table()
                 }
 
+                ImGui.pushStyleColor(ImGuiCol.Header, category.color)
+                ImGui.pushStyleColor(ImGuiCol.HeaderActive, category.colorSelected)
+                ImGui.pushStyleColor(ImGuiCol.HeaderHovered, category.colorSelected)
+
                 val isOpen = ImGui.collapsingHeader(
                     category.properName, ImGuiTreeNodeFlags.DefaultOpen
                 )
                 categoriesState[category] = isOpen
+
+                ImGui.popStyleColor()
+                ImGui.popStyleColor()
+                ImGui.popStyleColor()
 
                 if (ImGui.isItemHovered()) {
                     closeOnClick = false

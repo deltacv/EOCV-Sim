@@ -8,3 +8,5 @@ fun rgbaColor(r: Int, g: Int, b: Int, a: Int) = ImColor.floatToColor(
     b.toFloat() / 255f,
     a.toFloat() / 255f
 )
+
+fun hexColor(hex: String) = ImColor.rgbToColor(hex)

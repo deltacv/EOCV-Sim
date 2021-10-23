@@ -15,12 +15,11 @@ class MatAttribute(
     companion object: Type {
         override val name = "Image"
 
-        override val styleColor = rgbaColor(255, 165, 0, 180)
-        override val styleHoveredColor = rgbaColor(255, 165, 0, 255)
+        override val styleColor = rgbaColor(255, 213, 79, 180)
+        override val styleHoveredColor = rgbaColor(255, 213, 79, 255)
 
         override fun new(mode: AttributeMode, variableName: String) = MatAttribute(mode, variableName)
     }
-
 
     override fun value(current: CodeGen.Current) = value<GenValue.Mat>(
         current, "a Mat"

@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.ImVec2
 import imgui.extension.imnodes.ImNodes
 import imgui.extension.imnodes.flag.ImNodesColorStyle
+import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.Type
@@ -109,7 +110,10 @@ open class ListAttribute(
             }
 
             if(!hasLink) { // only draw attributes if there's not a link attached
+                ImGui.pushFont(EasyVision.defaultImGuiFont.imfont)
                 drawAttributeText(i, attrib)
+                ImGui.popFont()
+
                 attrib.draw()
             }
         }

@@ -1,26 +1,33 @@
 package io.github.deltacv.easyvision.node
 
 import io.github.deltacv.easyvision.EasyVision
+import io.github.deltacv.easyvision.gui.style.hexColor
 import io.github.deltacv.easyvision.gui.style.rgbaColor
 
 enum class Category(val properName: String,
                     val color: Int = EasyVision.imnodesStyle.titleBar,
                     val colorSelected: Int = EasyVision.imnodesStyle.titleBarHovered) {
 
-    FLOW("Pipeline Flow"),
+    FLOW("Pipeline Flow",
+        hexColor("#00838f"), // material cyan
+        hexColor("#0097a7")),
+
     CODE("Coding"),
     HIGH_LEVEL_CV("High Level"),
 
     COLOR_OP("Basic Color Operations",
-        rgbaColor(255, 140, 0, 255), // normal color
-        rgbaColor(255, 165, 0, 255)), // hovered/selected color
+        hexColor("#ff6f00"), // material amber
+        hexColor("#ff8f00")),
 
     SHAPE_DET("Basic Shape Detection",
-        rgbaColor(0, 128, 128, 255),
-        rgbaColor(0, 139, 139, 255)),
+        hexColor("#3949ab"), // material indigo
+        hexColor("#3f51b5")),
 
-    OVERLAY("Overlay Drawing"),
-    MATH("Math Operations"),
+    OVERLAY("Overlay Drawing",
+        hexColor("#00897b"), // material cyan
+        hexColor("#009688")),
+
+    MATH("Math"),
     MISC("Miscellaneous")
 
 }

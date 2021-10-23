@@ -50,6 +50,8 @@ class EasyVision : Application() {
         val TAG = "EasyVision"
 
         var imnodesStyle = ImNodesDarkStyle
+        lateinit var defaultImGuiFont: Font
+            private set
 
         private var ptr = 0L
 
@@ -100,6 +102,7 @@ class EasyVision : Application() {
         // initializing fonts right after the imgui context is created
         // we can't create fonts mid-frame so that's kind of a problem
         defaultFont = fontManager.makeFont("/fonts/Calcutta-Regular.otf", "Calcutta", 13f)
+        defaultImGuiFont = fontManager.makeDefaultFont(13f)
 
         nodeList.init()
     }
