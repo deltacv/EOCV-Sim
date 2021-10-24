@@ -16,7 +16,7 @@ import io.github.deltacv.easyvision.node.DrawNode
 import io.github.deltacv.easyvision.node.RegisterNode
 
 @RegisterNode(
-    name = "Bounding Rectangles",
+    name = "nod_boundingrect",
     category = Category.SHAPE_DET,
     description = "Calculates the bounding rectangles of a given list of points."
 )

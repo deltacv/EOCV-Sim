@@ -11,7 +11,7 @@ import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.DrawNode
 
 @RegisterNode(
-    name = "Convert Color",
+    name = "nod_cvtcolor",
     category = Category.COLOR_OP,
     description = "Converts a Mat from its current color space to the specified color space. If the mat is already in the specified color space, no conversion is made."
 )

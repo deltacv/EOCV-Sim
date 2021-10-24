@@ -14,7 +14,7 @@ import io.github.deltacv.easyvision.node.DrawNode
 import io.github.deltacv.easyvision.node.RegisterNode
 
 @RegisterNode(
-    name = "Simple Find Contours",
+    name = "nod_findcontours",
     category = Category.SHAPE_DET,
     description = "Finds all the contours (list of points) of a given binary image."
 )

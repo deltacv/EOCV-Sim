@@ -40,6 +40,7 @@ import io.github.deltacv.easyvision.io.KeyManager
 import io.github.deltacv.easyvision.gui.NodeEditor
 import io.github.deltacv.easyvision.gui.NodeList
 import io.github.deltacv.easyvision.gui.FontManager
+import io.github.deltacv.easyvision.i18n.tr
 import org.lwjgl.BufferUtils
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWKeyCallback
@@ -47,7 +48,7 @@ import org.lwjgl.glfw.GLFWKeyCallback
 class EasyVision : Application() {
 
     companion object {
-        val TAG = "EasyVision"
+        const val TAG = "EasyVision"
 
         var imnodesStyle = ImNodesDarkStyle
         lateinit var defaultImGuiFont: Font

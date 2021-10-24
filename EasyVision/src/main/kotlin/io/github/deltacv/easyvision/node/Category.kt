@@ -8,26 +8,26 @@ enum class Category(val properName: String,
                     val color: Int = EasyVision.imnodesStyle.titleBar,
                     val colorSelected: Int = EasyVision.imnodesStyle.titleBarHovered) {
 
-    FLOW("Pipeline Flow",
+    FLOW("cat_pipeline_flow",
         hexColor("#00838f"), // material cyan
         hexColor("#00acc1")),
 
-    CODE("Coding"),
-    HIGH_LEVEL_CV("High Level"),
+    CODE("cat_coding"),
+    HIGH_LEVEL_CV("cat_high_level_cv"),
 
-    COLOR_OP("Basic Color Operations",
+    COLOR_OP("cat_color_op",
         hexColor("#ff6f00"), // material amber
         hexColor("#ffa000")),
 
-    SHAPE_DET("Basic Shape Detection",
+    SHAPE_DET("cat_shape_det",
         hexColor("#3949ab"), // material indigo
         hexColor("#5c6bc0")),
 
-    OVERLAY("Overlay Drawing",
+    OVERLAY("cat_overlay",
         hexColor("#00897b"), // material teal
         hexColor("#26a69a")),
 
-    MATH("Math"),
-    MISC("Miscellaneous")
+    MATH("cat_math"),
+    MISC("cat_misc")
 
 }

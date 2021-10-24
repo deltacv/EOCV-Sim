@@ -7,6 +7,7 @@ import imgui.extension.imnodes.flag.ImNodesColorStyle
 import imgui.flag.ImGuiMouseButton
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.codegen.CodeGenSession
+import io.github.deltacv.easyvision.i18n.tr
 import java.lang.IllegalArgumentException
 
 abstract class DrawNode<S: CodeGenSession>(
@@ -42,7 +43,7 @@ abstract class DrawNode<S: CodeGenSession>(
 
         ImNodes.beginNode(id)
             ImNodes.beginNodeTitleBar()
-                ImGui.textUnformatted(title)
+                ImGui.textUnformatted(tr(title))
             ImNodes.endNodeTitleBar()
 
             drawNode()

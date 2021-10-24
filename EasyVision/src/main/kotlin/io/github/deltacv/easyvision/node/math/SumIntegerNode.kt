@@ -11,7 +11,7 @@ import io.github.deltacv.easyvision.node.RegisterNode
 import io.github.deltacv.easyvision.node.Category
 
 @RegisterNode(
-    name = "Sum Integers",
+    name = "nod_sumintegers",
     category = Category.MATH,
     description = "Sums a list of integers and outputs the result"
 )

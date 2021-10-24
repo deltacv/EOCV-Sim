@@ -17,7 +17,7 @@ import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.DrawNode
 
 @RegisterNode(
-    name = "Color Threshold",
+    name = "nod_colorthresh",
     category = Category.COLOR_OP,
     description = "Performs a threshold in the input image and returns a binary image, discarding the pixels that were outside the range in the color space specified."
 )

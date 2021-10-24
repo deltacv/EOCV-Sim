@@ -12,7 +12,7 @@ import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.DrawNode
 
 @RegisterNode(
-    name = "Binary Mask",
+    name = "nod_binarymask",
     category = Category.COLOR_OP,
     description = "Takes a normal image and performs a mask based on a binary image, discards or includes areas from the normal image based on the binary image."
 )

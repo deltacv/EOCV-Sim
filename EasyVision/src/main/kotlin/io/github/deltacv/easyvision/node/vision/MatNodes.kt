@@ -14,7 +14,7 @@ import io.github.deltacv.easyvision.node.Category
 import io.github.deltacv.easyvision.node.RegisterNode
 
 @RegisterNode(
-    name = "Pipeline Input",
+    name = "nod_pipelineinput",
     category = Category.FLOW,
     showInList = false
 )
@@ -45,7 +45,7 @@ class InputMatNode : DrawNode<NoSession>(allowDelete = false) {
 }
 
 @RegisterNode(
-    name = "Pipeline Output",
+    name = "nod_pipelineoutput",
     category = Category.FLOW,
     showInList = false
 )

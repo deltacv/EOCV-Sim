@@ -17,7 +17,7 @@ import io.github.deltacv.easyvision.node.RegisterNode
 import io.github.deltacv.easyvision.node.vision.Colors
 
 @RegisterNode(
-    name = "Draw Contours",
+    name = "nod_drawcontours",
     category = Category.OVERLAY,
     description = "Draws the contours on a copy of the given image and outputs the result."
 )
@@ -119,7 +119,7 @@ open class DrawContoursNode
 }
 
 @RegisterNode(
-    name = "Draw Contours on Image",
+    name = "nod_drawcontours_onimage",
     category = Category.OVERLAY,
     description = "Draws the contours list in the passed image."
 )

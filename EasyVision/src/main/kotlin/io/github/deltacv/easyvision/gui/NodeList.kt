@@ -9,6 +9,7 @@ import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.gui.util.Table
 import io.github.deltacv.easyvision.gui.util.makeFont
+import io.github.deltacv.easyvision.i18n.tr
 import io.github.deltacv.easyvision.id.IdElementContainer
 import io.github.deltacv.easyvision.io.KeyManager
 import io.github.deltacv.easyvision.io.Keys
@@ -274,7 +275,7 @@ class NodeList(val easyVision: EasyVision, val keyManager: KeyManager) {
                 ImGui.pushStyleColor(ImGuiCol.HeaderHovered, category.colorSelected)
 
                 val isOpen = ImGui.collapsingHeader(
-                    category.properName, ImGuiTreeNodeFlags.DefaultOpen
+                    tr(category.properName), ImGuiTreeNodeFlags.DefaultOpen
                 )
                 categoriesState[category] = isOpen
 
