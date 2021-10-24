@@ -3,7 +3,7 @@ package com.github.serivesmejia.eocvsim.util
 import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
-import com.qualcomm.robotcore.opmode.Disabled
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.classgraph.ClassGraph
 import kotlinx.coroutines.*

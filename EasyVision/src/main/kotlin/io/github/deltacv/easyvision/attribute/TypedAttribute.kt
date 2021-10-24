@@ -76,6 +76,10 @@ abstract class TypedAttribute(val type: Type) : Attribute() {
             isFirstDraw = false
         }
 
+        if(inputSameLine) {
+            ImGui.pushFont(EasyVision.defaultImGuiFont.imfont)
+        }
+
         if(drawDescriptiveText) {
             val t: String
 
@@ -97,6 +101,10 @@ abstract class TypedAttribute(val type: Type) : Attribute() {
             ImGui.text(t)
         } else if(!inputSameLine) {
             ImGui.text("")
+        }
+
+        if(inputSameLine) {
+            ImGui.popFont()
         }
     }
 

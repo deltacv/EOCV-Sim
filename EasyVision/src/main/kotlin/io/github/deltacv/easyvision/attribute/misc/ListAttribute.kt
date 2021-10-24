@@ -18,7 +18,8 @@ open class ListAttribute(
     val elementType: Type,
     override var variableName: String? = null,
     length: Int? = null,
-    private val allowAddOrDelete: Boolean = true
+    val allowAddOrDelete: Boolean = true,
+    var sameLine: Boolean = false
 ) : TypedAttribute(Companion) {
 
     companion object: Type {
@@ -110,9 +111,14 @@ open class ListAttribute(
             }
 
             if(!hasLink) { // only draw attributes if there's not a link attached
-                ImGui.pushFont(EasyVision.defaultImGuiFont.imfont)
+                isDrawAttributeTextOverriden = true
                 drawAttributeText(i, attrib)
-                ImGui.popFont()
+
+                if(isDrawAttributeTextOverriden) {
+                    ImGui.sameLine()
+                } else {
+                    attrib.inputSameLine = true
+                }
 
                 attrib.draw()
             }
@@ -121,7 +127,11 @@ open class ListAttribute(
         beforeHasLink = hasLink
     }
 
-    open fun drawAttributeText(index: Int, attrib: Attribute) { }
+    private var isDrawAttributeTextOverriden = false
+
+    open fun drawAttributeText(index: Int, attrib: Attribute) {
+        isDrawAttributeTextOverriden = false
+    }
 
     override fun value(current: CodeGen.Current): GenValue {
         return if(mode == AttributeMode.INPUT) {

@@ -10,22 +10,22 @@ enum class Category(val properName: String,
 
     FLOW("Pipeline Flow",
         hexColor("#00838f"), // material cyan
-        hexColor("#0097a7")),
+        hexColor("#00acc1")),
 
     CODE("Coding"),
     HIGH_LEVEL_CV("High Level"),
 
     COLOR_OP("Basic Color Operations",
         hexColor("#ff6f00"), // material amber
-        hexColor("#ff8f00")),
+        hexColor("#ffa000")),
 
     SHAPE_DET("Basic Shape Detection",
         hexColor("#3949ab"), // material indigo
-        hexColor("#3f51b5")),
+        hexColor("#5c6bc0")),
 
     OVERLAY("Overlay Drawing",
-        hexColor("#00897b"), // material cyan
-        hexColor("#009688")),
+        hexColor("#00897b"), // material teal
+        hexColor("#26a69a")),
 
     MATH("Math"),
     MISC("Miscellaneous")

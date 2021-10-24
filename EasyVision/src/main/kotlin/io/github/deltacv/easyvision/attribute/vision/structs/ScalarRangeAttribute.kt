@@ -1,6 +1,7 @@
 package io.github.deltacv.easyvision.attribute.vision.structs
 
 import imgui.ImGui
+import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.attribute.Attribute
 import io.github.deltacv.easyvision.attribute.AttributeMode
 import io.github.deltacv.easyvision.attribute.TypedAttribute
@@ -14,7 +15,7 @@ class ScalarRangeAttribute(
     mode: AttributeMode,
     color: Colors,
     variableName: String? = null
-) : ListAttribute(mode, RangeAttribute, variableName, color.channels) {
+) : ListAttribute(mode, RangeAttribute, variableName, color.channels, sameLine = true) {
 
     var color = color
         set(value) {
@@ -32,8 +33,9 @@ class ScalarRangeAttribute(
                 attrib.inputSameLine = true
             }
 
+            ImGui.pushFont(EasyVision.defaultImGuiFont.imfont)
             ImGui.text(elementName)
-            ImGui.sameLine()
+            ImGui.popFont()
         }
     }
 

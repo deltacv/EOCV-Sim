@@ -48,7 +48,6 @@ class DoubleAttribute(
         }
     }
 
-
     fun sliderMode(range: Range2d) {
         this.range = range
     }

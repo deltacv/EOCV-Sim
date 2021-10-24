@@ -28,9 +28,7 @@ class IntAttribute(
         super.drawAttribute()
 
         if(!hasLink && mode == AttributeMode.INPUT) {
-            if(inputSameLine) {
-                ImGui.sameLine()
-            }
+            sameLineIfNeeded()
 
             ImGui.pushItemWidth(110.0f)
             ImGui.inputInt("", value)
