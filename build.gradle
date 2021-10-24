@@ -28,7 +28,7 @@ buildscript {
 
 allprojects {
     group 'com.github.deltacv'
-    version '3.2.0'
+    version '3.2.1'
 
     ext {
         standardVersion = version

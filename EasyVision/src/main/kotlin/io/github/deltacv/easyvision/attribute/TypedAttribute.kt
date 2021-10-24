@@ -7,6 +7,7 @@ import imgui.extension.imnodes.flag.ImNodesColorStyle
 import io.github.deltacv.easyvision.EasyVision
 import io.github.deltacv.easyvision.codegen.CodeGen
 import io.github.deltacv.easyvision.codegen.GenValue
+import io.github.deltacv.easyvision.i18n.tr
 import jdk.jfr.Category
 
 interface Type {
@@ -98,7 +99,7 @@ abstract class TypedAttribute(val type: Type) : Attribute() {
                 } else finalVarName
             }
 
-            ImGui.text(t)
+            ImGui.text(tr(t))
         } else if(!inputSameLine) {
             ImGui.text("")
         }
