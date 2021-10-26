@@ -70,6 +70,13 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+### [v3.3.1 - Common module hotfix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.3.0)
+
+   - This is the 12th release for EOCV-Sim
+ 
+      - Bug fixes:
+        - Includes the common module in the jitpack build
+
 ### [v3.3.0 - AprilTags on windows](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.3.0)
 
    - This is the 11th release for EOCV-Sim
