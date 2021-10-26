@@ -43,7 +43,7 @@ dependencies {
     implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"
 
     implementation 'info.picocli:picocli:4.6.1'
-    implementation 'com.google.code.gson:gson:2.8.7'
+    implementation 'com.google.code.gson:gson:2.8.8'
     implementation "io.github.classgraph:classgraph:$classgraph_version"
 
     implementation 'com.formdev:flatlaf:1.2'
