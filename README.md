@@ -1,7 +1,7 @@
 <img src='/EOCV-Sim/src/main/resources/images/icon/ico_eocvsim_letters_transparent.png' height='128px'>
 
 ![Java CI with Gradle](https://github.com/deltacv/EOCV-Sim/workflows/Build%20and%20test%20with%20Gradle/badge.svg)
-[![](https://jitpack.io/v/deltacvvesmejia/EOCV-Sim.svg)](https://jitpack.io/#deltacv/EOCV-Sim)
+[![](https://jitpack.io/v/deltacv/EOCV-Sim.svg)](https://jitpack.io/#deltacv/EOCV-Sim)
 [![Run on Repl.it](https://repl.it/badge/github/deltacv/EOCV-Sim)](https://repl.it/github/deltacv/EOCV-Sim)
 
 
@@ -67,6 +67,33 @@ Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downl
 For bug reporting or feature requesting, use the [issues tab](https://github.com/deltacv/EOCV-Sim/issues) in this repository.
 
 # Change logs
+
+### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
+
+### [v3.3.0 - Windows AprilTag!](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.3.0)
+
+   - This is the 11th release for EOCV-Sim
+ 
+      - Changelog:
+        - Support for AprilTags in windows! Thanks so much to Windowoes (NPE) for providing us with the Windows native library as well!
+        - Improves webcam support using names instead of indexes when opening cameras. A legacy mechanism was added for stored cameras still using indexes
+        - The UI for webcam source creation was also improved, now it only shows the supported resolutions of a webcam instead of two free textboxes for possibly unsupported resolutions
+        - Adds the FTC SDK @Disabled annotation for preventing pipelines from being registered when looking up in the classpath
+
+### [v3.2.0 - Partial AprilTag support!](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.2.0)
+
+   - This is the 11th release for EOCV-Sim
+ 
+      - Changelog:
+        - Improved pipeline error handling and error output gui
+        - Partial support AprilTags! Only on Linux for now, based on the [EOCV-AprilTag-Plugin](https://github.com/OpenFTC/EOCV-AprilTag-Plugin) by Windwoes (NPE). Thanks so much to him for making the plugin and providing us with the Linux native library!
+        - Updated the OpenPnP OpenCV package to the 4.5.1 following the OpenCV update that was made in Android EasyOpenCV. 
+        - ...EasyVision?
+
+     - Bugfixes:
+        - Fixed the camera source creation dialog when there's not any webcam plugged and improved state handling
+        - Fixes a crash with workspaces when a pipeline contains an inner class and it's placed on a different package as the `package;` statement specifies.
+        - Fixes the IntelliSense of the gradle workspace template by including the openpnp opencv implementation line.
 
 ### [v3.1.0 - Better Error Handling](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.1.0)
 

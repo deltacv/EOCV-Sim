@@ -31,7 +31,7 @@ import java.io.File;
 public enum SourceType {
 
     IMAGE(new ImageSource(""), "Image"),
-    CAMERA(new CameraSource(0, null), "Camera"),
+    CAMERA(new CameraSource("", null), "Camera"),
     VIDEO(new VideoSource("", null), "Video"),
     UNKNOWN(null, "Unknown");
 

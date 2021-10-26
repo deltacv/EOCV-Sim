@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.input;
 
 import com.github.serivesmejia.eocvsim.input.source.CameraSource;
+import com.github.serivesmejia.eocvsim.input.source.CameraSourceAdapter;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
 import com.github.serivesmejia.eocvsim.input.source.VideoSource;
 import com.github.serivesmejia.eocvsim.util.Log;
@@ -38,7 +39,10 @@ import java.util.Map;
 
 public class InputSourceLoader {
 
-    public static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    public static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(CameraSource.class, new CameraSourceAdapter())
+            .setPrettyPrinting()
+            .create();
 
     public static final String SOURCES_SAVEFILE_NAME = "eocvsim_sources.json";
 

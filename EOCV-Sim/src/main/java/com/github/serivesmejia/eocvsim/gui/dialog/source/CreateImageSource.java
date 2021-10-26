@@ -27,7 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.input.FileSelector;
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
-import com.github.serivesmejia.eocvsim.util.CvUtil;
+import com.github.serivesmejia.eocvsim.util.cv.CvUtil;
 import com.github.serivesmejia.eocvsim.util.FileFilters;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import org.opencv.core.Size;
@@ -168,8 +168,8 @@ public class CreateImageSource {
         if (CvUtil.checkImageValid(fileAbsPath)) {
 
             String fileName = StrUtil.getFileBaseName(f.getName());
-            if(!fileName.trim().equals("") && !eocvSim.inputSourceManager.isNameOnUse(fileName)) {
-                nameTextField.setText(fileName);
+            if(!fileName.trim().equals("")) {
+                nameTextField.setText(eocvSim.inputSourceManager.tryName(fileName));
             }
 
             Size size = CvUtil.scaleToFit(CvUtil.getImageSize(fileAbsPath), EOCVSim.DEFAULT_EOCV_SIZE);

@@ -2,7 +2,6 @@
 package com.github.serivesmejia.eocvsim
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
-import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.Log
 import picocli.CommandLine
 import java.io.File

@@ -23,9 +23,11 @@
 
 package com.github.serivesmejia.eocvsim.input.source;
 
+import com.github.sarxos.webcam.Webcam;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.util.Log;
+import com.github.serivesmejia.eocvsim.util.StrUtil;
 import com.google.gson.annotations.Expose;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -35,11 +37,18 @@ import org.opencv.videoio.Videoio;
 import org.openftc.easyopencv.MatRecycler;
 
 import javax.swing.filechooser.FileFilter;
+import java.util.List;
 
 public class CameraSource extends InputSource {
 
+    // for global use, -1 means no webcam currently in use
+    public static int currentWebcamIndex = -1;
+
+    protected int webcamIndex;
+
     @Expose
-    private final int webcamIndex;
+    protected String webcamName = null;
+
     private transient VideoCapture camera = null;
 
     private transient MatRecycler.RecyclableMat lastFramePaused = null;
@@ -47,16 +56,24 @@ public class CameraSource extends InputSource {
 
     private transient boolean initialized = false;
 
+    protected boolean isLegacyByIndex = false;
+
     @Expose
-    private volatile Size size;
+    protected volatile Size size;
 
     private volatile transient MatRecycler matRecycler;
 
     private transient long capTimeNanos = 0;
 
+    public CameraSource(String webcamName, Size size) {
+        this.webcamName = webcamName;
+        this.size = size;
+    }
+
     public CameraSource(int webcamIndex, Size size) {
         this.webcamIndex = webcamIndex;
         this.size = size;
+        isLegacyByIndex = true;
     }
 
     @Override
@@ -65,8 +82,24 @@ public class CameraSource extends InputSource {
         if (initialized) return false;
         initialized = true;
 
+        if(webcamName != null) {
+            List<Webcam> webcams = Webcam.getWebcams();
+
+            for(int i = 0 ; i < webcams.size() ; i++) {
+                String name = webcams.get(i).getName();
+
+                if(name.equals(webcamName) || StrUtil.similarity(name, webcamName) > 0.6) {
+                    webcamIndex = i;
+                    break;
+                }
+            }
+        }
+
         camera = new VideoCapture();
         camera.open(webcamIndex);
+
+        camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
+        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
 
         if (!camera.isOpened()) {
             Log.error("CameraSource", "Unable to open camera " + webcamIndex);
@@ -86,6 +119,8 @@ public class CameraSource extends InputSource {
         }
 
         matRecycler.returnMat(newFrame);
+
+        currentWebcamIndex = webcamIndex;
 
         return true;
 
@@ -110,6 +145,7 @@ public class CameraSource extends InputSource {
     @Override
     public void close() {
         if (camera != null && camera.isOpened()) camera.release();
+        currentWebcamIndex = -1;
     }
 
     @Override
@@ -139,7 +175,6 @@ public class CameraSource extends InputSource {
         if (size == null) size = lastFrame.size();
 
         Imgproc.cvtColor(newFrame, lastFrame, Imgproc.COLOR_BGR2RGB);
-        Imgproc.resize(lastFrame, lastFrame, size, 0.0, 0.0, Imgproc.INTER_AREA);
 
         newFrame.release();
         newFrame.returnMat();
@@ -157,13 +192,13 @@ public class CameraSource extends InputSource {
         camera.read(lastFramePaused);
 
         Imgproc.cvtColor(lastFramePaused, lastFramePaused, Imgproc.COLOR_BGR2RGB);
-        Imgproc.resize(lastFramePaused, lastFramePaused, size, 0.0, 0.0, Imgproc.INTER_AREA);
 
         update();
 
         camera.release();
         camera = null;
 
+        currentWebcamIndex = -1;
     }
 
     @Override
@@ -174,13 +209,17 @@ public class CameraSource extends InputSource {
         camera = new VideoCapture();
         camera.open(webcamIndex);
 
-        apwdCam.destroyDialog();
+        camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
+        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
 
+        currentWebcamIndex = webcamIndex;
+
+        apwdCam.destroyDialog();
     }
 
     @Override
     protected InputSource internalCloneSource() {
-        return new CameraSource(webcamIndex, size);
+        return new CameraSource(webcamName, size);
     }
 
     @Override
