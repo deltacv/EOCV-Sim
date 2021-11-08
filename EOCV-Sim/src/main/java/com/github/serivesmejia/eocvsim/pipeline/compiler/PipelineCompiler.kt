@@ -26,8 +26,10 @@ package com.github.serivesmejia.eocvsim.pipeline.compiler
 import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.compiler.JarPacker
+import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler
 import java.io.File
 import java.io.PrintWriter
+import java.nio.charset.Charset
 import java.util.*
 import javax.tools.*
 
@@ -51,7 +53,7 @@ class PipelineCompiler(
             usable
         }
 
-        val COMPILER = ToolProvider.getSystemJavaCompiler()
+        val COMPILER = EclipseCompiler()
 
         val INDENT = "      "
         val TAG = "PipelineCompiler"
@@ -85,7 +87,7 @@ class PipelineCompiler(
     fun compile(outputJar: File): PipelineCompileResult {
         val javac = COMPILER
         
-        val fileManager = PipelineStandardFileManager(javac.getStandardFileManager(this, null, null))
+        val fileManager = PipelineStandardFileManager(javac.getStandardFileManager(this, Locale.getDefault(), Charset.defaultCharset()))
         fileManager.sourcePath = Collections.singleton(sourcesInputPath)
 
         val javaFileObjects = fileManager.getJavaFileObjects(*sourceFiles.toTypedArray())
@@ -122,16 +124,31 @@ class PipelineCompiler(
 
     override fun report(diagnostic: Diagnostic<out JavaFileObject>) {
         val locale = Locale.getDefault()
-        val relativeFile = SysUtil.getRelativePath(sourcesInputPath, File(diagnostic.source.name))
+        val source = diagnostic.source
 
-        val builder = diagnosticBuilders[relativeFile.path] ?: StringBuilder()
+        val builder = if(source != null) {
+            val relativeFile = SysUtil.getRelativePath(sourcesInputPath, File(source.name))
 
-        if(!diagnosticBuilders.containsKey(relativeFile.path)) {
-            builder.appendLine("> ${relativeFile.path}")
-            diagnosticBuilders[relativeFile.path] = builder
+            val builder = diagnosticBuilders[relativeFile.path] ?: StringBuilder()
+
+            if (!diagnosticBuilders.containsKey(relativeFile.path)) {
+                builder.appendLine("> ${relativeFile.path}")
+                diagnosticBuilders[relativeFile.path] = builder
+            }
+            builder
+        } else {
+            val builder = diagnosticBuilders["other"] ?: StringBuilder()
+
+            if (!diagnosticBuilders.containsKey("other")) {
+                builder.appendLine("> Other")
+                diagnosticBuilders["other"] = builder
+            }
+
+            builder
         }
 
         val formattedMessage = diagnostic.getMessage(locale).replace("\n", "\n$INDENT")
+        diagnostic.source
 
         builder.appendLine(String.format(locale, "$INDENT(%d:%d): %s: %s",
             diagnostic.lineNumber, diagnostic.columnNumber, diagnostic.kind, formattedMessage

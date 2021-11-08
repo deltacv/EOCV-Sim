@@ -38,6 +38,8 @@ dependencies {
 
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
+    implementation "org.eclipse.jdt:ecj:3.27.0"
+
     implementation "org.openpnp:opencv:$opencv_version"
     implementation 'com.github.sarxos:webcam-capture:0.3.12'
     implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"

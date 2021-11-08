@@ -39,6 +39,7 @@ import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
+import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
@@ -73,12 +74,14 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
             try {
                 OpenCV.loadLocally()
-                Log.info(TAG, "Successfully loaded native lib")
+                Log.info(TAG, "Successfully loaded the OpenCV native lib")
             } catch (ex: Throwable) {
-                Log.error(TAG, "Failure loading native lib", ex)
-                Log.info(TAG, "Retrying with old method...")
+                Log.error(TAG, "Failure loading the OpenCV native lib", ex)
+                Log.error(TAG, "The sim will exit now as it's impossible to continue execution without OpenCV")
 
-                if (!SysUtil.loadCvNativeLib()) exitProcess(-1)
+                CrashReport(ex).saveCrashReport()
+
+                exitProcess(-1)
             }
 
             isNativeLibLoaded = true
