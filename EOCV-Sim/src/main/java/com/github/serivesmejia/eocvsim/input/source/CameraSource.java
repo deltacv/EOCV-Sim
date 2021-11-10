@@ -83,15 +83,26 @@ public class CameraSource extends InputSource {
         initialized = true;
 
         if(webcamName != null) {
+            Webcam.resetDriver();
             List<Webcam> webcams = Webcam.getWebcams();
+
+            boolean foundWebcam = false;
 
             for(int i = 0 ; i < webcams.size() ; i++) {
                 String name = webcams.get(i).getName();
+                double similarity = StrUtil.similarity(name, webcamName);
 
-                if(name.equals(webcamName) || StrUtil.similarity(name, webcamName) > 0.6) {
+                if(name.equals(webcamName) || similarity > 0.6) {
+                    System.out.println(name + " " + webcamName + " similarity " + similarity + " " + i);
                     webcamIndex = i;
+                    foundWebcam = true;
                     break;
                 }
+            }
+
+            if(!foundWebcam) {
+                Log.error("CameraSource", "Could not find webcam " + webcamName);
+                return false;
             }
         }
 
@@ -235,7 +246,7 @@ public class CameraSource extends InputSource {
     @Override
     public String toString() {
         if (size == null) size = new Size();
-        return "CameraSource(" + webcamIndex + ", " + (size != null ? size.toString() : "null") + ")";
+        return "CameraSource(" + webcamName + ", " + (size != null ? size.toString() : "null") + ")";
     }
 
 }

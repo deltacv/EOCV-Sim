@@ -23,6 +23,9 @@
 
 package com.github.serivesmejia.eocvsim
 
+import com.github.sarxos.webcam.Webcam
+import com.github.sarxos.webcam.ds.openimaj.OpenImajDriver
+import com.github.sarxos.webcam.ds.v4l4j.V4l4jDriver
 import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
@@ -150,6 +153,16 @@ class EOCVSim(val params: Parameters = Parameters()) {
         Log.blank()
 
         classpathScan.asyncScan()
+
+        try {
+            Webcam.setDriver(OpenImajDriver())
+            Log.info(TAG, "Using the OpenIMAJ webcam driver")
+        } catch(e: Exception) {
+            Log.warn(TAG, "The OpenIMAJ webcam driver failed to load", e)
+
+            Webcam.setDriver(V4l4jDriver())
+            Log.info(TAG, "Using the V4L4j webcam driver")
+        }
 
         configManager.init() //load config
 
