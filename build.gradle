@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 buildscript {
     ext {
         kotlin_version = "1.5.10"
-        kotlinx_coroutines_version = "1.5.0-native-mt"
+        kotlinx_coroutines_version = "1.5.2-native-mt"
         opencv_version = "4.5.1-2"
         apriltag_plugin_version = "1.1.1"
 
