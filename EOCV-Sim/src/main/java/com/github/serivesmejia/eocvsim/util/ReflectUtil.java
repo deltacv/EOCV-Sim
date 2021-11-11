@@ -25,10 +25,24 @@ package com.github.serivesmejia.eocvsim.util;
 
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public class ReflectUtil {
+
+    public static Field getDeclaredFieldDeep(Class<?> clazz, String fieldName) {
+        Field field = null;
+
+        while (clazz != null && field == null) {
+            try {
+                field = clazz.getDeclaredField(fieldName);
+            } catch (Exception ignored) { }
+            clazz = clazz.getSuperclass();
+        }
+
+        return field;
+    }
 
     public static boolean hasSuperclass(Class<?> clazz, Class<?> superClass) {
         try {

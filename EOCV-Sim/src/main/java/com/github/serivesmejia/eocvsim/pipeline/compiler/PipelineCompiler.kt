@@ -24,10 +24,15 @@
 package com.github.serivesmejia.eocvsim.pipeline.compiler
 
 import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.compiler.JarPacker
+import com.github.serivesmejia.eocvsim.util.compiler.compiler
+import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler
 import java.io.File
 import java.io.PrintWriter
+import java.lang.reflect.Field
+import java.nio.charset.Charset
 import java.util.*
 import javax.tools.*
 
@@ -51,7 +56,7 @@ class PipelineCompiler(
             usable
         }
 
-        val COMPILER = ToolProvider.getSystemJavaCompiler()
+        val COMPILER = compiler
 
         val INDENT = "      "
         val TAG = "PipelineCompiler"
@@ -62,6 +67,7 @@ class PipelineCompiler(
     val latestDiagnostic: String
         get() {
             val diagnostic = StringBuilder()
+            diagnostic.appendLine("Using the ${COMPILER!!.name} compiler").appendLine()
             for((_, builder) in diagnosticBuilders) {
                 diagnostic.appendLine(builder)
                 diagnostic.appendLine("")
@@ -83,9 +89,9 @@ class PipelineCompiler(
     constructor(inputPath: File) : this(inputPath, SysUtil.filesUnder(inputPath, ".java"))
 
     fun compile(outputJar: File): PipelineCompileResult {
-        val javac = COMPILER
+        val javac = COMPILER!!.javaCompiler
         
-        val fileManager = PipelineStandardFileManager(javac.getStandardFileManager(this, null, null))
+        val fileManager = PipelineStandardFileManager(javac.getStandardFileManager(this, Locale.getDefault(), Charset.defaultCharset()))
         fileManager.sourcePath = Collections.singleton(sourcesInputPath)
 
         val javaFileObjects = fileManager.getJavaFileObjects(*sourceFiles.toTypedArray())
@@ -121,17 +127,45 @@ class PipelineCompiler(
     }
 
     override fun report(diagnostic: Diagnostic<out JavaFileObject>) {
+        // kinda stupid but eclipse compiler wraps exceptions in a "ExceptionDiagnostic" which is protected
+        // and we can't access the exception directly in any way, so we have to use reflection. ExceptionDiagnostic
+        // only returns the exception message, so we have to get the exception and rethrow it to get the full information on what went wrong
+        if(diagnostic::class.java.typeName == "org.eclipse.jdt.internal.compiler.tool.ExceptionDiagnostic") {
+            val eField = ReflectUtil.getDeclaredFieldDeep(diagnostic::class.java, "exception")!!
+            eField.isAccessible = true
+
+            val value = eField.get(diagnostic)
+
+            if(value is Exception)
+                throw value
+        }
+        
         val locale = Locale.getDefault()
-        val relativeFile = SysUtil.getRelativePath(sourcesInputPath, File(diagnostic.source.name))
+        val source = diagnostic.source
 
-        val builder = diagnosticBuilders[relativeFile.path] ?: StringBuilder()
+        val builder = if(source != null) {
+            val relativeFile = SysUtil.getRelativePath(sourcesInputPath, File(source.name))
 
-        if(!diagnosticBuilders.containsKey(relativeFile.path)) {
-            builder.appendLine("> ${relativeFile.path}")
-            diagnosticBuilders[relativeFile.path] = builder
+            val builder = diagnosticBuilders[relativeFile.path] ?: StringBuilder()
+
+            if (!diagnosticBuilders.containsKey(relativeFile.path)) {
+                builder.appendLine("> ${relativeFile.path}")
+                diagnosticBuilders[relativeFile.path] = builder
+            }
+            builder
+        } else {
+            val builder = diagnosticBuilders["other"] ?: StringBuilder()
+
+            if (!diagnosticBuilders.containsKey("other")) {
+                builder.appendLine("> Other")
+                diagnosticBuilders["other"] = builder
+            }
+
+            builder
         }
 
         val formattedMessage = diagnostic.getMessage(locale).replace("\n", "\n$INDENT")
+        diagnostic.source
 
         builder.appendLine(String.format(locale, "$INDENT(%d:%d): %s: %s",
             diagnostic.lineNumber, diagnostic.columnNumber, diagnostic.kind, formattedMessage

@@ -18,11 +18,7 @@ public class CameraSourceAdapter implements JsonSerializer<CameraSource> {
             obj.addProperty("webcamIndex", src.webcamIndex);
         }
 
-        JsonObject sizeObj = new JsonObject();
-        sizeObj.addProperty("width", src.size.width);
-        sizeObj.addProperty("height", src.size.width);
-
-        obj.add("size", sizeObj);
+        obj.add("size", context.serialize(src.size));
         obj.addProperty("createdOn", src.getCreationTime());
 
         return obj;

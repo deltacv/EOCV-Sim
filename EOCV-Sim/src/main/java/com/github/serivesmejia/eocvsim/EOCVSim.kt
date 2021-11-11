@@ -23,6 +23,9 @@
 
 package com.github.serivesmejia.eocvsim
 
+import com.github.sarxos.webcam.Webcam
+import com.github.sarxos.webcam.ds.openimaj.OpenImajDriver
+import com.github.sarxos.webcam.ds.v4l4j.V4l4jDriver
 import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
@@ -39,6 +42,7 @@ import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
+import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
@@ -73,12 +77,14 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
             try {
                 OpenCV.loadLocally()
-                Log.info(TAG, "Successfully loaded native lib")
+                Log.info(TAG, "Successfully loaded the OpenCV native lib")
             } catch (ex: Throwable) {
-                Log.error(TAG, "Failure loading native lib", ex)
-                Log.info(TAG, "Retrying with old method...")
+                Log.error(TAG, "Failure loading the OpenCV native lib", ex)
+                Log.error(TAG, "The sim will exit now as it's impossible to continue execution without OpenCV")
 
-                if (!SysUtil.loadCvNativeLib()) exitProcess(-1)
+                CrashReport(ex).saveCrashReport()
+
+                exitProcess(-1)
             }
 
             isNativeLibLoaded = true
@@ -147,6 +153,16 @@ class EOCVSim(val params: Parameters = Parameters()) {
         Log.blank()
 
         classpathScan.asyncScan()
+
+        try {
+            Webcam.setDriver(OpenImajDriver())
+            Log.info(TAG, "Using the OpenIMAJ webcam driver")
+        } catch(e: Exception) {
+            Log.warn(TAG, "The OpenIMAJ webcam driver failed to load", e)
+
+            Webcam.setDriver(V4l4jDriver())
+            Log.info(TAG, "Using the V4L4j webcam driver")
+        }
 
         configManager.init() //load config
 
