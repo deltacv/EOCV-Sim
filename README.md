@@ -20,10 +20,11 @@ transfer it onto your robot!
 
 Since OpenCV in Java uses a native library, which is platform specific, the simulator is currently limited to the following platforms:
 
-* Windows x64 (tested)
-* Windows x32 (untested)
-* MacOS x64 (tested)
-* Linux x64 (tested for Ubuntu 20.04)<br/>
+* Windows x86_64 (tested)
+* Windows x86 (untested)
+* MacOS x86_64 (tested)
+* Linux x86_64 (tested for Ubuntu 20.04)
+* Linux ARMv7 & ARMv8 (partially tested in Raspbian but not officially endorsed)<br/>
 
 ## Downloading and documentation
 
@@ -70,6 +71,13 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+### [v3.3.2 - Better compiler support](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.3.1)
+
+   - This is the 13th release for EOCV-Sim
+ 
+      - Changelog:
+        - Provides support for compiling in any Java virtual machine by using the Eclipse ecj compiler if a JDK compiler isn't found
+        
 ### [v3.3.1 - Common module hotfix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.3.0)
 
    - This is the 12th release for EOCV-Sim
