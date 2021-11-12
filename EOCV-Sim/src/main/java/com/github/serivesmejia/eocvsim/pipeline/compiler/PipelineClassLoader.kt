@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.compiler
 
+import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
@@ -40,19 +41,8 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
         private set
 
     init {
-        val pipelineClasses = mutableListOf<Class<out OpenCvPipeline>>()
-
-        for(entry in zipFile.entries()) {
-            if(!entry.name.endsWith(".class")) continue
-
-            val clazz = loadClass(entry)
-
-            if(ReflectUtil.hasSuperclass(clazz, OpenCvPipeline::class.java)) {
-                pipelineClasses.add(clazz as Class<out OpenCvPipeline>)
-            }
-        }
-
-        this.pipelineClasses = pipelineClasses.toList()
+        val scanResult = ClasspathScan().scan(pipelinesJar.absolutePath, this)
+        this.pipelineClasses = scanResult.pipelineClasses.toList()
     }
 
     private fun loadClass(entry: ZipEntry): Class<*> {
@@ -84,8 +74,6 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
     }
 
     override fun getResourceAsStream(name: String): InputStream? {
-        println("trying to load $name")
-
         val entry = zipFile.getEntry(name)
 
         if(entry != null) {

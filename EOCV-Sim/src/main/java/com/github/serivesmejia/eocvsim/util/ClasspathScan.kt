@@ -33,14 +33,19 @@ class ClasspathScan {
     private lateinit var scanResultJob: Job
 
     @Suppress("UNCHECKED_CAST")
-    fun scan() {
+    fun scan(overrideClasspath: String? = null, classLoader: ClassLoader? = null): ScanResult {
         val timer = ElapsedTime()
         val classGraph = ClassGraph()
             .enableClassInfo()
             .enableAnnotationInfo()
             .rejectPackages(*ignoredPackages)
 
-        Log.info(TAG, "Starting to scan classpath...")
+        if(overrideClasspath != null) {
+            classGraph.overrideClasspath(overrideClasspath)
+            Log.info(TAG, "Starting to scan for classes in $overrideClasspath...")
+        } else {
+            Log.info(TAG, "Starting to scan classpath...")
+        }
 
         val scanResult = classGraph.scan()
 
@@ -52,7 +57,9 @@ class ClasspathScan {
         val pipelineClasses = mutableListOf<Class<out OpenCvPipeline>>()
 
         for(pipelineClassInfo in pipelineClassesInfo) {
-            val clazz = Class.forName(pipelineClassInfo.name)
+            val clazz = if(classLoader != null) {
+                classLoader.loadClass(pipelineClassInfo.name)
+            } else Class.forName(pipelineClassInfo.name)
 
             if(ReflectUtil.hasSuperclass(clazz, OpenCvPipeline::class.java)) {
                 if(clazz.isAnnotationPresent(Disabled::class.java)) {
@@ -72,7 +79,9 @@ class ClasspathScan {
         val tunableFieldAcceptorClasses = mutableMapOf<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>()
 
         for(tunableFieldClassInfo in tunableFieldClassesInfo) {
-            val clazz = Class.forName(tunableFieldClassInfo.name)
+            val clazz = if(classLoader != null) {
+                classLoader.loadClass(tunableFieldClassInfo.name)
+            } else Class.forName(tunableFieldClassInfo.name)
 
             if(ReflectUtil.hasSuperclass(clazz, TunableField::class.java)) {
                 val tunableFieldClass = clazz as Class<out TunableField<*>>
@@ -101,6 +110,8 @@ class ClasspathScan {
             tunableFieldClasses.toTypedArray(),
             tunableFieldAcceptorClasses.toMap()
         )
+
+        return this.scanResult
     }
 
     @OptIn(DelicateCoroutinesApi::class)

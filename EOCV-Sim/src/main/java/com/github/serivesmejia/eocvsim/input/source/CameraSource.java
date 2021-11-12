@@ -93,7 +93,7 @@ public class CameraSource extends InputSource {
                 double similarity = StrUtil.similarity(name, webcamName);
 
                 if(name.equals(webcamName) || similarity > 0.6) {
-                    System.out.println(name + " " + webcamName + " similarity " + similarity + " " + i);
+                    Log.info("CameraSource", "\"" + name + "\" compared to \"" + webcamName + "\", similarity " + similarity + " (" + i + ")");
                     webcamIndex = i;
                     foundWebcam = true;
                     break;
