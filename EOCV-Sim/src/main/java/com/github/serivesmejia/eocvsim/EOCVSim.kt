@@ -157,11 +157,15 @@ class EOCVSim(val params: Parameters = Parameters()) {
         try {
             Webcam.setDriver(OpenImajDriver())
             Log.info(TAG, "Using the OpenIMAJ webcam driver")
-        } catch(e: Exception) {
+        } catch(e: Throwable) {
             Log.warn(TAG, "The OpenIMAJ webcam driver failed to load", e)
 
-            Webcam.setDriver(V4l4jDriver())
-            Log.info(TAG, "Using the V4L4j webcam driver")
+            try {
+                Webcam.setDriver(V4l4jDriver())
+                Log.info(TAG, "Using the V4L4j webcam driver")
+            } catch(e: Throwable) {
+                Log.warn(TAG, "The V4L4j webcam driver failed to load, so webcam capabilities won't be fully supported", e)
+            }
         }
 
         configManager.init() //load config

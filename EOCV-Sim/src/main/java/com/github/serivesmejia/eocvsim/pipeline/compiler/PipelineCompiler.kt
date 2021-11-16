@@ -165,7 +165,6 @@ class PipelineCompiler(
         }
 
         val formattedMessage = diagnostic.getMessage(locale).replace("\n", "\n$INDENT")
-        diagnostic.source
 
         builder.appendLine(String.format(locale, "$INDENT(%d:%d): %s: %s",
             diagnostic.lineNumber, diagnostic.columnNumber, diagnostic.kind, formattedMessage
