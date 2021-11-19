@@ -36,6 +36,7 @@ import java.util.zip.ZipFile
 class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
 
     private val zipFile = ZipFile(pipelinesJar)
+    private val loadedClasses = mutableMapOf<String, Class<*>>()
 
     var pipelineClasses: List<Class<out OpenCvPipeline>>
         private set
@@ -53,13 +54,18 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
                 SysUtil.copyStream(inStream, outStream)
                 val bytes = outStream.toByteArray()
 
-                return defineClass(name, bytes, 0, bytes.size)
+                val clazz = defineClass(name, bytes, 0, bytes.size)
+                loadedClasses[name] = clazz
+
+                return clazz
             }
         }
     }
 
+    override fun findClass(name: String) = loadedClasses[name] ?: loadClass(name, false)
+
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
-        var clazz = findLoadedClass(name)
+        var clazz = loadedClasses[name]
 
         if(clazz == null) {
             try {
@@ -70,7 +76,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
             }
         }
 
-        return clazz
+        return clazz!!
     }
 
     override fun getResourceAsStream(name: String): InputStream? {
