@@ -89,6 +89,12 @@ public class CreateCameraSource {
             usingOpenCvDiscovery = true;
         }
 
+        if(!usingOpenCvDiscovery && webcams.isEmpty()) {
+            Log.warn("CreateCameraSource", "webcam-capture returned 0 cameras, trying with OpenCV webcam discovery");
+            webcams = CameraUtil.findWebcamsOpenCv();
+            usingOpenCvDiscovery = true;
+        }
+
         createCameraSource.setModal(true);
 
         createCameraSource.setTitle("Create camera source");

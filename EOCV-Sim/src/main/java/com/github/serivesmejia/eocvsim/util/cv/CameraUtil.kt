@@ -79,11 +79,13 @@ object CameraUtil {
         }
     }
 
-   @JvmStatic fun findWebcamsOpenCv(): List<Webcam> {
-        val webcams = mutableListOf<MockIdWebcam>()
+   @JvmStatic fun findWebcamsOpenCv(emptyCamerasBeforeGivingUp: Int = 4): List<Webcam> {
+       val webcams = mutableListOf<MockIdWebcam>()
 
-        var capture: VideoCapture? = null
-        var currentIndex = 0
+       var capture: VideoCapture? = null
+       var currentIndex = 0
+
+       var emptyCameras = 0
 
         do {
             if(capture != null && capture.isOpened) {
@@ -96,10 +98,13 @@ object CameraUtil {
             if(capture.isOpened) {
                 webcams.add(MockIdWebcam(currentIndex))
                 println(webcams.last().name)
+                emptyCameras = 0
+            } else {
+                emptyCameras++
             }
 
             currentIndex++
-        } while(capture != null && capture.isOpened)
+        } while((capture != null && capture.isOpened) || emptyCameras <= emptyCamerasBeforeGivingUp)
 
         return webcams
     }
