@@ -24,8 +24,6 @@
 package com.github.serivesmejia.eocvsim
 
 import com.github.sarxos.webcam.Webcam
-import com.github.sarxos.webcam.ds.openimaj.OpenImajDriver
-import com.github.sarxos.webcam.ds.v4l4j.V4l4jDriver
 import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
