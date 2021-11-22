@@ -47,6 +47,22 @@ public class CvUtil {
         m.get(0, 0, data);
     }
 
+    private static BufferedImage convertTo3ByteBGRType(BufferedImage image) {
+        BufferedImage convertedImage = new BufferedImage(image.getWidth(), image.getHeight(),
+                BufferedImage.TYPE_3BYTE_BGR);
+        convertedImage.getGraphics().drawImage(image, 0, 0, null);
+        return convertedImage;
+    }
+
+    public static void bufferedImageToMat(BufferedImage buffImg, Mat m) {
+        buffImg = convertTo3ByteBGRType(buffImg);
+        byte[] data = ((DataBufferByte) buffImg.getRaster().getDataBuffer()).getData();
+        m.put(0, 0, data);
+        System.out.println("buff img length = " + data.length + " w = " + m.rows() + " h = " + m.cols());
+
+        buffImg.flush();
+    }
+
     public static BufferedImage matToBufferedImage(Mat m) {
         // Fastest code
         // output can be assigned either to a BufferedImage or to an Image

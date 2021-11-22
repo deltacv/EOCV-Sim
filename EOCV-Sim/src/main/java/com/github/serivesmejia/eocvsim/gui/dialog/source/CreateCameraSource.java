@@ -37,6 +37,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class CreateCameraSource {
@@ -62,7 +63,7 @@ public class CreateCameraSource {
     private java.util.List<Webcam> webcams = null;
 
     // making it static so that we don't have to re-guess the sizes every time the frame is opened
-    private static HashMap<String, Size[]> sizes = new HashMap<>();
+    private static HashMap<String, Dimension[]> sizes = new HashMap<>();
 
     private HashMap<String, Integer> indexes = new HashMap<>();
 
@@ -116,9 +117,13 @@ public class CreateCameraSource {
                     indexes.put(name, index);
 
                     if(!sizes.containsKey(name)) {
-                        Size[] resolutions = CameraUtil.getResolutionsOf(index);
+                        ArrayList<Dimension> resolutions = new ArrayList<>(Arrays.asList(webcam.getViewSizes()));
 
-                        if(resolutions.length == 0) {
+                        for(Dimension dim : webcam.getCustomViewSizes()) {
+                            if(!resolutions.contains(dim)) resolutions.add(dim);
+                        }
+
+                        if(resolutions.size() == 0) {
                             ArrayList<Webcam> newWebcams = new ArrayList<>();
 
                             for(int i = 0 ; i < webcams.size() ; i++) {
@@ -134,7 +139,7 @@ public class CreateCameraSource {
                             continue;
                         }
 
-                        sizes.put(name, resolutions);
+                        sizes.put(name, resolutions.toArray(new Dimension[0]));
                     }
                 }
 
@@ -202,7 +207,7 @@ public class CreateCameraSource {
             if(state == State.TEST_SUCCESSFUL) {
                 Webcam webcam = webcams.get(getSelectedIndex());
 
-                Size dim = sizes.get(
+                Dimension dim = sizes.get(
                         camerasComboBox.getSelectedItem()
                 )[dimensionsComboBox.getSelectedIndex()]; //oh god again...
 
@@ -246,12 +251,12 @@ public class CreateCameraSource {
             nameTextField.setText(eocvSim.inputSourceManager.tryName(webcam.getName()));
 
             dimensionsComboBox.removeAllItems();
-            Size[] webcamSizes = sizes.get(camerasComboBox.getSelectedItem());
+            Dimension[] webcamSizes = sizes.get(camerasComboBox.getSelectedItem());
 
             if(webcamSizes.length == 0) {
                 state = State.UNSUPPORTED;
             } else {
-                for(Size dim : webcamSizes) {
+                for(Dimension dim : webcamSizes) {
                     dimensionsComboBox.addItem(Math.round(dim.width) + "x" + Math.round(dim.height));
                 }
 

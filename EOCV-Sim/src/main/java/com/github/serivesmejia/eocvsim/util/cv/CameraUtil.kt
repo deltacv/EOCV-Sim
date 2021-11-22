@@ -1,5 +1,8 @@
 package com.github.serivesmejia.eocvsim.util.cv
 
+import com.github.sarxos.webcam.Webcam
+import com.github.sarxos.webcam.WebcamDriver
+import com.github.serivesmejia.eocvsim.util.Log
 import org.opencv.core.Size
 import org.opencv.videoio.VideoCapture
 import org.opencv.videoio.Videoio
@@ -16,6 +19,8 @@ object CameraUtil {
         Size(1280.0, 720.0),
         Size(1280.0, 1024.0)
     )
+
+    const val TAG = "CameraUtil"
 
     // adapted from https://www.learnpythonwithrune.org/find-all-possible-webcam-resolutions-with-opencv-in-python/
     // with a predefined list of commonResolutions because pulling from wikipedia is dumb lol
@@ -46,4 +51,34 @@ object CameraUtil {
         return resolutions.toTypedArray()
     }
 
+    fun tryLoadDrivers(vararg drivers: WebcamCaptureDriver): Boolean {
+        var wasSuccessful = false
+        for(driver in drivers) {
+            wasSuccessful = tryLoadDriver(driver)
+            if(wasSuccessful) {
+                Log.info(TAG, "Using the ${driver.name} webcam driver")
+                break
+            }
+        }
+
+        if(!wasSuccessful) {
+            Log.warn(TAG, "Failure to load all available webcam drivers, webcam functionality won't be usable")
+        }
+
+        return wasSuccessful
+    }
+
+    fun tryLoadDriver(driver: WebcamCaptureDriver): Boolean {
+        return try {
+            Webcam.setDriver(driver.driverSupplier())
+            Webcam.getWebcams() // testing if driver works
+            true
+        } catch(e: Throwable) { // didn't work :/
+            Log.error(TAG, "Error while trying to load webcam driver ${driver.name}", e)
+            false
+        }
+    }
+
 }
+
+data class WebcamCaptureDriver(val name: String, val driverSupplier: () -> WebcamDriver)

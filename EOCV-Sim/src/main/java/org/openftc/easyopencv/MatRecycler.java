@@ -22,6 +22,7 @@
 package org.openftc.easyopencv;
 
 import com.github.serivesmejia.eocvsim.util.Log;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 import java.util.concurrent.ArrayBlockingQueue;
@@ -36,14 +37,18 @@ public class MatRecycler {
     private final RecyclableMat[] mats;
     private final ArrayBlockingQueue<RecyclableMat> availableMats;
 
-    public MatRecycler(int num) {
+    public MatRecycler(int num, int rows, int cols, int type) {
         mats = new RecyclableMat[num];
         availableMats = new ArrayBlockingQueue<>(num);
 
         for (int i = 0; i < mats.length; i++) {
-            mats[i] = new RecyclableMat(i);
+            mats[i] = new RecyclableMat(i, rows, cols, type);
             availableMats.add(mats[i]);
         }
+    }
+
+    public MatRecycler(int num) {
+        this(num, 0, 0, CvType.CV_8UC3);
     }
 
     public synchronized RecyclableMat takeMat() {
@@ -60,7 +65,6 @@ public class MatRecycler {
 
         mat.checkedOut = true;
         return mat;
-
     }
 
     public synchronized void returnMat(RecyclableMat mat) {
@@ -94,6 +98,11 @@ public class MatRecycler {
         private volatile boolean checkedOut = false;
 
         private RecyclableMat(int idx) {
+            this.idx = idx;
+        }
+
+        private RecyclableMat(int idx, int rows, int cols, int type) {
+            super(rows, cols, type);
             this.idx = idx;
         }
 

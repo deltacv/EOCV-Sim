@@ -40,6 +40,8 @@ import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.cv.CameraUtil
+import com.github.serivesmejia.eocvsim.util.cv.WebcamCaptureDriver
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
@@ -67,6 +69,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
         @JvmField val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
 
         private const val TAG = "EOCVSim"
+
+        val WEBCAM_DRIVERS = arrayOf(
+            WebcamCaptureDriver("OpenIMAJ") { OpenImajDriver() },
+            WebcamCaptureDriver("V4l4j") { V4l4jDriver() },
+        )
 
         private var isNativeLibLoaded = false
 
@@ -154,19 +161,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         classpathScan.asyncScan()
 
-        try {
-            Webcam.setDriver(OpenImajDriver())
-            Log.info(TAG, "Using the OpenIMAJ webcam driver")
-        } catch(e: Throwable) {
-            Log.warn(TAG, "The OpenIMAJ webcam driver failed to load", e)
-
-            try {
-                Webcam.setDriver(V4l4jDriver())
-                Log.info(TAG, "Using the V4L4j webcam driver")
-            } catch(e: Throwable) {
-                Log.warn(TAG, "The V4L4j webcam driver failed to load, so webcam capabilities won't be fully supported", e)
-            }
-        }
+        CameraUtil.tryLoadDrivers(*WEBCAM_DRIVERS)
 
         configManager.init() //load config
 
