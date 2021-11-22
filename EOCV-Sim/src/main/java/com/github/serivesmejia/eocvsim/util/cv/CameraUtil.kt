@@ -79,6 +79,31 @@ object CameraUtil {
         }
     }
 
+   @JvmStatic fun findWebcamsOpenCv(): List<Webcam> {
+        val webcams = mutableListOf<MockIdWebcam>()
+
+        var capture: VideoCapture? = null
+        var currentIndex = 0
+
+        do {
+            if(capture != null && capture.isOpened) {
+                capture.release()
+            }
+
+            capture = VideoCapture(currentIndex)
+            capture.open(currentIndex)
+
+            if(capture.isOpened) {
+                webcams.add(MockIdWebcam(currentIndex))
+                println(webcams.last().name)
+            }
+
+            currentIndex++
+        } while(capture != null && capture.isOpened)
+
+        return webcams
+    }
+
 }
 
 data class WebcamCaptureDriver(val name: String, val driverSupplier: () -> WebcamDriver)

@@ -28,10 +28,7 @@ import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
-import com.github.serivesmejia.eocvsim.util.cv.CvUtil;
-import com.github.serivesmejia.eocvsim.util.image.BufferedImageRecycler;
 import com.google.gson.annotations.Expose;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -40,10 +37,6 @@ import org.opencv.videoio.Videoio;
 import org.openftc.easyopencv.MatRecycler;
 
 import javax.swing.filechooser.FileFilter;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.nio.ByteBuffer;
 import java.util.List;
 
 public class CameraSource extends InputSource {
@@ -57,7 +50,6 @@ public class CameraSource extends InputSource {
     protected String webcamName = null;
 
     private transient VideoCapture camera = null;
-    private transient Webcam webcam = null;
 
     private transient MatRecycler.RecyclableMat lastFramePaused = null;
     private transient MatRecycler.RecyclableMat lastFrame = null;
@@ -86,12 +78,14 @@ public class CameraSource extends InputSource {
 
     @Override
     public boolean init() {
+
         if (initialized) return false;
         initialized = true;
 
-        List<Webcam> webcams = Webcam.getWebcams();
-
         if(webcamName != null) {
+            Webcam.resetDriver();
+            List<Webcam> webcams = Webcam.getWebcams();
+
             boolean foundWebcam = false;
 
             for(int i = 0 ; i < webcams.size() ; i++) {
@@ -112,44 +106,40 @@ public class CameraSource extends InputSource {
             }
         }
 
-        try {
-            webcam = webcams.get(webcamIndex);
-            if(webcam.isOpen()) {
-                webcam.close();
-            }
-
-            webcam.setViewSize(new Dimension((int)size.width, (int)size.height));
-            webcam.open();
-        } catch(Exception e) {
-            String name;
-            if(webcam != null) name = webcam.getName();
-            else name = String.valueOf(webcamIndex);
-
-            Log.warn("CameraSource", "Unable to open camera " + name, e);
-            return false;
-        }
-
-        /*
         camera = new VideoCapture();
         camera.open(webcamIndex);
 
         camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
-        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);*/
+        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
 
-        if (!webcam.isOpen()) {
-            Log.error("CameraSource", "Unable to open camera " + webcam.getName());
+        if (!camera.isOpened()) {
+            Log.error("CameraSource", "Unable to open camera " + webcamIndex);
             return false;
         }
 
-        if(matRecycler == null) matRecycler = new MatRecycler(4, (int)size.width, (int)size.height, CvType.CV_8UC3);
+        if (matRecycler == null) matRecycler = new MatRecycler(4);
+
+        MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
+
+        camera.read(newFrame);
+
+        if (newFrame.empty()) {
+            Log.error("CameraSource", "Unable to open camera " + webcamIndex + ", returned Mat was empty.");
+            newFrame.release();
+            return false;
+        }
+
+        matRecycler.returnMat(newFrame);
 
         currentWebcamIndex = webcamIndex;
 
         return true;
+
     }
 
     @Override
     public void reset() {
+
         if (!initialized) return;
         if (camera != null && camera.isOpened()) camera.release();
 
@@ -160,16 +150,18 @@ public class CameraSource extends InputSource {
 
         camera = null;
         initialized = false;
+
     }
 
     @Override
     public void close() {
-        if (camera != null && webcam.isOpen()) webcam.close();
+        if (camera != null && camera.isOpened()) camera.release();
         currentWebcamIndex = -1;
     }
 
     @Override
     public Mat update() {
+
         if (isPaused) {
             return lastFramePaused;
         } else if (lastFramePaused != null) {
@@ -179,16 +171,15 @@ public class CameraSource extends InputSource {
         }
 
         if (lastFrame == null) lastFrame = matRecycler.takeMat();
-        if (webcam == null || !webcam.isOpen()) return lastFrame;
+        if (camera == null) return lastFrame;
 
         MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
-        readFrame(newFrame);
 
+        camera.read(newFrame);
         capTimeNanos = System.nanoTime();
 
         if (newFrame.empty()) {
             newFrame.returnMat();
-            System.out.println("empty");
             return lastFrame;
         }
 
@@ -199,41 +190,42 @@ public class CameraSource extends InputSource {
         newFrame.release();
         newFrame.returnMat();
 
-        System.out.println("frame " + lastFrame);
-
         return lastFrame;
+
     }
 
     @Override
     public void onPause() {
+
         if (lastFrame != null) lastFrame.release();
         if (lastFramePaused == null) lastFramePaused = matRecycler.takeMat();
 
-        readFrame(lastFramePaused);
+        camera.read(lastFramePaused);
+
         Imgproc.cvtColor(lastFramePaused, lastFramePaused, Imgproc.COLOR_BGR2RGB);
 
         update();
 
-        webcam.close();
+        camera.release();
+        camera = null;
 
         currentWebcamIndex = -1;
     }
 
     @Override
     public void onResume() {
+
         Visualizer.AsyncPleaseWaitDialog apwdCam = eocvSim.inputSourceManager.showApwdIfNeeded(name);
-        webcam.open();
+
+        camera = new VideoCapture();
+        camera.open(webcamIndex);
+
+        camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
+        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
 
         currentWebcamIndex = webcamIndex;
 
         apwdCam.destroyDialog();
-    }
-
-    private void readFrame(Mat frame) {
-        BufferedImage img = webcam.getImage();
-
-        CvUtil.bufferedImageToMat(img, frame);
-        img.flush();
     }
 
     @Override
@@ -254,7 +246,7 @@ public class CameraSource extends InputSource {
     @Override
     public String toString() {
         if (size == null) size = new Size();
-        return "CameraSource(" + webcamName + ", " + (size != null ? size.toString() : "null") + ")";
+        return "CameraSource(" + webcamName + ", " + webcamIndex + ", " + (size != null ? size.toString() : "null") + ")";
     }
 
 }

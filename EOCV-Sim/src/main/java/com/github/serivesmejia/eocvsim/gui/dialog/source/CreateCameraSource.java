@@ -37,7 +37,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 public class CreateCameraSource {
@@ -63,7 +62,7 @@ public class CreateCameraSource {
     private java.util.List<Webcam> webcams = null;
 
     // making it static so that we don't have to re-guess the sizes every time the frame is opened
-    private static HashMap<String, Dimension[]> sizes = new HashMap<>();
+    private static HashMap<String, Size[]> sizes = new HashMap<>();
 
     private HashMap<String, Integer> indexes = new HashMap<>();
 
@@ -78,8 +77,17 @@ public class CreateCameraSource {
         initCreateImageSource();
     }
 
+    private boolean usingOpenCvDiscovery = false;
+
     public void initCreateImageSource() {
-        webcams = Webcam.getWebcams();
+        try {
+            webcams = Webcam.getWebcams();
+        } catch(Throwable e) {
+            Log.warn("CreateCameraSource", "webcam-capture is unusable, falling basck to OpenCV webcam discovery");
+            webcams = CameraUtil.findWebcamsOpenCv();
+
+            usingOpenCvDiscovery = true;
+        }
 
         createCameraSource.setModal(true);
 
@@ -117,13 +125,9 @@ public class CreateCameraSource {
                     indexes.put(name, index);
 
                     if(!sizes.containsKey(name)) {
-                        ArrayList<Dimension> resolutions = new ArrayList<>(Arrays.asList(webcam.getViewSizes()));
+                        Size[] resolutions = CameraUtil.getResolutionsOf(index);
 
-                        for(Dimension dim : webcam.getCustomViewSizes()) {
-                            if(!resolutions.contains(dim)) resolutions.add(dim);
-                        }
-
-                        if(resolutions.size() == 0) {
+                        if(resolutions.length == 0) {
                             ArrayList<Webcam> newWebcams = new ArrayList<>();
 
                             for(int i = 0 ; i < webcams.size() ; i++) {
@@ -139,7 +143,7 @@ public class CreateCameraSource {
                             continue;
                         }
 
-                        sizes.put(name, resolutions.toArray(new Dimension[0]));
+                        sizes.put(name, resolutions);
                     }
                 }
 
@@ -207,15 +211,23 @@ public class CreateCameraSource {
             if(state == State.TEST_SUCCESSFUL) {
                 Webcam webcam = webcams.get(getSelectedIndex());
 
-                Dimension dim = sizes.get(
+                Size dim = sizes.get(
                         camerasComboBox.getSelectedItem()
                 )[dimensionsComboBox.getSelectedIndex()]; //oh god again...
 
-                createSource(
-                        nameTextField.getText(),
-                        webcam.getName(),
-                        new Size(dim.width, dim.height)
-                );
+                if(usingOpenCvDiscovery) {
+                    createSource(
+                            nameTextField.getText(),
+                            camerasComboBox.getSelectedIndex(),
+                            new Size(dim.width, dim.height)
+                    );
+                } else {
+                    createSource(
+                            nameTextField.getText(),
+                            webcam.getName(),
+                            new Size(dim.width, dim.height)
+                    );
+                }
                 close();
             } else {
                 state = State.CLICKED_TEST;
@@ -251,12 +263,12 @@ public class CreateCameraSource {
             nameTextField.setText(eocvSim.inputSourceManager.tryName(webcam.getName()));
 
             dimensionsComboBox.removeAllItems();
-            Dimension[] webcamSizes = sizes.get(camerasComboBox.getSelectedItem());
+            Size[] webcamSizes = sizes.get(camerasComboBox.getSelectedItem());
 
             if(webcamSizes.length == 0) {
                 state = State.UNSUPPORTED;
             } else {
-                for(Dimension dim : webcamSizes) {
+                for(Size dim : webcamSizes) {
                     dimensionsComboBox.addItem(Math.round(dim.width) + "x" + Math.round(dim.height));
                 }
 
@@ -378,6 +390,14 @@ public class CreateCameraSource {
         eocvSim.onMainUpdate.doOnce(() -> eocvSim.inputSourceManager.addInputSource(
                 sourceName,
                 new CameraSource(camName, size),
+                true
+        ));
+    }
+
+    public void createSource(String sourceName, int camIndex, Size size) {
+        eocvSim.onMainUpdate.doOnce(() -> eocvSim.inputSourceManager.addInputSource(
+                sourceName,
+                new CameraSource(camIndex, size),
                 true
         ));
     }
