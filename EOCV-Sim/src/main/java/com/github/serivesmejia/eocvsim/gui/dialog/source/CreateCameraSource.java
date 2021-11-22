@@ -83,7 +83,7 @@ public class CreateCameraSource {
         try {
             webcams = Webcam.getWebcams();
         } catch(Throwable e) {
-            Log.warn("CreateCameraSource", "webcam-capture is unusable, falling basck to OpenCV webcam discovery");
+            Log.warn("CreateCameraSource", "webcam-capture is unusable, falling back to OpenCV webcam discovery");
             webcams = CameraUtil.findWebcamsOpenCv();
 
             usingOpenCvDiscovery = true;

@@ -70,11 +70,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         private const val TAG = "EOCVSim"
 
-        val WEBCAM_DRIVERS = arrayOf(
-            WebcamCaptureDriver("OpenIMAJ") { OpenImajDriver() },
-            WebcamCaptureDriver("V4l4j") { V4l4jDriver() },
-        )
-
         private var isNativeLibLoaded = false
 
         fun loadOpenCvLib() {
@@ -160,8 +155,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
         Log.blank()
 
         classpathScan.asyncScan()
-
-        CameraUtil.tryLoadDrivers(*WEBCAM_DRIVERS)
 
         configManager.init() //load config
 
