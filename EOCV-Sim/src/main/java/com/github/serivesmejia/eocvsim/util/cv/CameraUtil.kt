@@ -79,7 +79,8 @@ object CameraUtil {
         }
     }
 
-   @JvmStatic fun findWebcamsOpenCv(emptyCamerasBeforeGivingUp: Int = 4): List<Webcam> {
+   @JvmStatic @JvmOverloads
+   fun findWebcamsOpenCv(emptyCamerasBeforeGivingUp: Int = 4): List<Webcam> {
        val webcams = mutableListOf<MockIdWebcam>()
 
        var capture: VideoCapture? = null
