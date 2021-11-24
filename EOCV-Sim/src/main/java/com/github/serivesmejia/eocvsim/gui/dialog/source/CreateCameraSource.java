@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.input.source.CameraSource;
 import com.github.serivesmejia.eocvsim.util.cv.CameraUtil;
 import com.github.serivesmejia.eocvsim.util.Log;
+import com.github.serivesmejia.eocvsim.input.camera.MockIdWebcam;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.videoio.VideoCapture;
@@ -222,9 +223,16 @@ public class CreateCameraSource {
                 )[dimensionsComboBox.getSelectedIndex()]; //oh god again...
 
                 if(usingOpenCvDiscovery) {
+                    int index;
+                    if(webcam instanceof MockIdWebcam) {
+                        index = ((MockIdWebcam) webcam).getId();
+                    } else {
+                        index = camerasComboBox.getSelectedIndex();
+                    }
+
                     createSource(
                             nameTextField.getText(),
-                            camerasComboBox.getSelectedIndex(),
+                            index,
                             new Size(dim.width, dim.height)
                     );
                 } else {
@@ -240,7 +248,16 @@ public class CreateCameraSource {
                 updateState();
 
                 eocvSim.onMainUpdate.doOnce(() -> {
-                    if (testCamera(getSelectedIndex())) {
+                    Webcam webcam = webcams.get(getSelectedIndex());
+
+                    int index;
+                    if(webcam instanceof MockIdWebcam) {
+                        index = ((MockIdWebcam) webcam).getId();
+                    } else {
+                        index = camerasComboBox.getSelectedIndex();
+                    }
+
+                    if (testCamera(index)) {
                         if (wasCancelled) return;
 
                         SwingUtilities.invokeLater(() -> {

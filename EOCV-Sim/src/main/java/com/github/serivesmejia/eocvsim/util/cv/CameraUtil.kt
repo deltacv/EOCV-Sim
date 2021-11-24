@@ -1,7 +1,7 @@
 package com.github.serivesmejia.eocvsim.util.cv
 
-import com.github.sarxos.webcam.Webcam
-import com.github.sarxos.webcam.WebcamDriver
+import com.github.serivesmejia.eocvsim.input.camera.OpenCvWebcam
+import com.github.serivesmejia.eocvsim.input.camera.Webcam
 import com.github.serivesmejia.eocvsim.util.Log
 import org.opencv.core.Size
 import org.opencv.videoio.VideoCapture
@@ -51,37 +51,9 @@ object CameraUtil {
         return resolutions.toTypedArray()
     }
 
-    fun tryLoadDrivers(vararg drivers: WebcamCaptureDriver): Boolean {
-        var wasSuccessful = false
-        for(driver in drivers) {
-            wasSuccessful = tryLoadDriver(driver)
-            if(wasSuccessful) {
-                Log.info(TAG, "Using the ${driver.name} webcam driver")
-                break
-            }
-        }
-
-        if(!wasSuccessful) {
-            Log.warn(TAG, "Failure to load all available webcam drivers, webcam functionality won't be usable")
-        }
-
-        return wasSuccessful
-    }
-
-    fun tryLoadDriver(driver: WebcamCaptureDriver): Boolean {
-        return try {
-            Webcam.setDriver(driver.driverSupplier())
-            Webcam.getWebcams() // testing if driver works
-            true
-        } catch(e: Throwable) { // didn't work :/
-            Log.error(TAG, "Error while trying to load webcam driver ${driver.name}", e)
-            false
-        }
-    }
-
    @JvmStatic @JvmOverloads
    fun findWebcamsOpenCv(emptyCamerasBeforeGivingUp: Int = 4): List<Webcam> {
-       val webcams = mutableListOf<MockIdWebcam>()
+       val webcams = mutableListOf<OpenCvWebcam>()
 
        var capture: VideoCapture? = null
        var currentIndex = 0
@@ -97,8 +69,7 @@ object CameraUtil {
             capture.open(currentIndex)
 
             if(capture.isOpened) {
-                webcams.add(MockIdWebcam(currentIndex))
-                println(webcams.last().name)
+                webcams.add(OpenCvWebcam(currentIndex))
                 emptyCameras = 0
             } else {
                 emptyCameras++
@@ -111,5 +82,3 @@ object CameraUtil {
     }
 
 }
-
-data class WebcamCaptureDriver(val name: String, val driverSupplier: () -> WebcamDriver)

@@ -78,7 +78,6 @@ public class CameraSource extends InputSource {
 
     @Override
     public boolean init() {
-
         if (initialized) return false;
         initialized = true;
 
@@ -118,7 +117,6 @@ public class CameraSource extends InputSource {
         }
 
         if (matRecycler == null) matRecycler = new MatRecycler(4);
-
         MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
 
         camera.read(newFrame);
@@ -134,12 +132,10 @@ public class CameraSource extends InputSource {
         currentWebcamIndex = webcamIndex;
 
         return true;
-
     }
 
     @Override
     public void reset() {
-
         if (!initialized) return;
         if (camera != null && camera.isOpened()) camera.release();
 
@@ -150,7 +146,6 @@ public class CameraSource extends InputSource {
 
         camera = null;
         initialized = false;
-
     }
 
     @Override
@@ -161,7 +156,6 @@ public class CameraSource extends InputSource {
 
     @Override
     public Mat update() {
-
         if (isPaused) {
             return lastFramePaused;
         } else if (lastFramePaused != null) {
@@ -191,17 +185,14 @@ public class CameraSource extends InputSource {
         newFrame.returnMat();
 
         return lastFrame;
-
     }
 
     @Override
     public void onPause() {
-
         if (lastFrame != null) lastFrame.release();
         if (lastFramePaused == null) lastFramePaused = matRecycler.takeMat();
 
         camera.read(lastFramePaused);
-
         Imgproc.cvtColor(lastFramePaused, lastFramePaused, Imgproc.COLOR_BGR2RGB);
 
         update();
@@ -214,7 +205,6 @@ public class CameraSource extends InputSource {
 
     @Override
     public void onResume() {
-
         Visualizer.AsyncPleaseWaitDialog apwdCam = eocvSim.inputSourceManager.showApwdIfNeeded(name);
 
         camera = new VideoCapture();
