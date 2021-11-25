@@ -23,12 +23,13 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog.source;
 
-import com.github.sarxos.webcam.Webcam;
 import com.github.serivesmejia.eocvsim.EOCVSim;
+import com.github.serivesmejia.eocvsim.input.camera.OpenCvWebcam;
+import com.github.serivesmejia.eocvsim.input.camera.OpenIMAJWebcam;
+import com.github.serivesmejia.eocvsim.input.camera.Webcam;
 import com.github.serivesmejia.eocvsim.input.source.CameraSource;
 import com.github.serivesmejia.eocvsim.util.cv.CameraUtil;
 import com.github.serivesmejia.eocvsim.util.Log;
-import com.github.serivesmejia.eocvsim.input.camera.MockIdWebcam;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.videoio.VideoCapture;
@@ -39,6 +40,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 public class CreateCameraSource {
 
@@ -82,7 +84,9 @@ public class CreateCameraSource {
 
     public void initCreateImageSource() {
         try {
-            webcams = Webcam.getWebcams();
+            webcams = OpenIMAJWebcam.getAvailableWebcams().stream().map(
+                    (device) -> new OpenIMAJWebcam(device, new Size(0, 0))
+            ).collect(Collectors.toList());
         } catch(Throwable e) {
             Log.warn("CreateCameraSource", "webcam-capture is unusable, falling back to OpenCV webcam discovery");
             webcams = CameraUtil.findWebcamsOpenCv();
@@ -224,8 +228,8 @@ public class CreateCameraSource {
 
                 if(usingOpenCvDiscovery) {
                     int index;
-                    if(webcam instanceof MockIdWebcam) {
-                        index = ((MockIdWebcam) webcam).getId();
+                    if(webcam instanceof OpenCvWebcam) {
+                        index = webcam.getIndex();
                     } else {
                         index = camerasComboBox.getSelectedIndex();
                     }
@@ -250,14 +254,13 @@ public class CreateCameraSource {
                 eocvSim.onMainUpdate.doOnce(() -> {
                     Webcam webcam = webcams.get(getSelectedIndex());
 
-                    int index;
-                    if(webcam instanceof MockIdWebcam) {
-                        index = ((MockIdWebcam) webcam).getId();
-                    } else {
-                        index = camerasComboBox.getSelectedIndex();
-                    }
+                    Size dim = sizes.get(
+                            camerasComboBox.getSelectedItem()
+                    )[dimensionsComboBox.getSelectedIndex()]; //oh god again...
 
-                    if (testCamera(index)) {
+                    webcam.setResolution(dim);
+
+                    if (testCamera(webcam)) {
                         if (wasCancelled) return;
 
                         SwingUtilities.invokeLater(() -> {
@@ -332,16 +335,15 @@ public class CreateCameraSource {
         createCameraSource.dispose();
     }
 
-    public boolean testCamera(int camIndex) {
-        VideoCapture camera = new VideoCapture();
-        camera.open(camIndex);
+    public boolean testCamera(Webcam webcam) {
+        webcam.open();
 
-        boolean wasOpened = camera.isOpened();
+        boolean wasOpened = webcam.isOpen();
 
         if(wasOpened) {
             Mat m = new Mat();
             try {
-                camera.read(m);
+                webcam.read(m);
             } catch (Exception e) {
                 Log.warn("CreateCameraSource", "Threw exception when trying to open camera", e);
                 wasOpened = false;
@@ -350,7 +352,7 @@ public class CreateCameraSource {
             m.release();
         }
 
-        camera.release();
+        webcam.close();
 
         return wasOpened;
     }

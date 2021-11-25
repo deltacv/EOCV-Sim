@@ -55,12 +55,18 @@ public class CvUtil {
     }
 
     public static void bufferedImageToMat(BufferedImage buffImg, Mat m) {
-        buffImg = convertTo3ByteBGRType(buffImg);
+        boolean flushLater = false;
+        if(buffImg.getType() != BufferedImage.TYPE_3BYTE_BGR) {
+            buffImg = convertTo3ByteBGRType(buffImg);
+            flushLater = true;
+        }
+
         byte[] data = ((DataBufferByte) buffImg.getRaster().getDataBuffer()).getData();
         m.put(0, 0, data);
-        System.out.println("buff img length = " + data.length + " w = " + m.rows() + " h = " + m.cols());
 
-        buffImg.flush();
+        if(flushLater) {
+            buffImg.flush();
+        }
     }
 
     public static BufferedImage matToBufferedImage(Mat m) {

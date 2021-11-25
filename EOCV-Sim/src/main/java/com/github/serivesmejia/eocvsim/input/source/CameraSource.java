@@ -23,9 +23,11 @@
 
 package com.github.serivesmejia.eocvsim.input.source;
 
-import com.github.sarxos.webcam.Webcam;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
+import com.github.serivesmejia.eocvsim.input.camera.OpenCvWebcam;
+import com.github.serivesmejia.eocvsim.input.camera.OpenIMAJWebcam;
+import com.github.serivesmejia.eocvsim.input.camera.Webcam;
 import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import com.google.gson.annotations.Expose;
@@ -35,6 +37,7 @@ import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 import org.opencv.videoio.Videoio;
 import org.openftc.easyopencv.MatRecycler;
+import org.openimaj.video.capture.Device;
 
 import javax.swing.filechooser.FileFilter;
 import java.util.List;
@@ -49,7 +52,7 @@ public class CameraSource extends InputSource {
     @Expose
     protected String webcamName = null;
 
-    private transient VideoCapture camera = null;
+    private transient Webcam camera = null;
 
     private transient MatRecycler.RecyclableMat lastFramePaused = null;
     private transient MatRecycler.RecyclableMat lastFrame = null;
@@ -82,18 +85,17 @@ public class CameraSource extends InputSource {
         initialized = true;
 
         if(webcamName != null) {
-            Webcam.resetDriver();
-            List<Webcam> webcams = Webcam.getWebcams();
+            List<Device> webcams = OpenIMAJWebcam.getAvailableWebcams();
 
             boolean foundWebcam = false;
 
-            for(int i = 0 ; i < webcams.size() ; i++) {
-                String name = webcams.get(i).getName();
+            for(Device device : webcams) {
+                String name = device.getNameStr();
                 double similarity = StrUtil.similarity(name, webcamName);
 
                 if(name.equals(webcamName) || similarity > 0.6) {
-                    Log.info("CameraSource", "\"" + name + "\" compared to \"" + webcamName + "\", similarity " + similarity + " (" + i + ")");
-                    webcamIndex = i;
+                    Log.info("CameraSource", "\"" + name + "\" compared to \"" + webcamName + "\", similarity " + similarity);
+                    camera = new OpenIMAJWebcam(device, size);
                     foundWebcam = true;
                     break;
                 }
@@ -103,15 +105,14 @@ public class CameraSource extends InputSource {
                 Log.error("CameraSource", "Could not find webcam " + webcamName);
                 return false;
             }
+        } else {
+            camera = new OpenCvWebcam(webcamIndex);
+            camera.setResolution(size);
         }
 
-        camera = new VideoCapture();
-        camera.open(webcamIndex);
+        camera.open();
 
-        camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
-        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
-
-        if (!camera.isOpened()) {
+        if (!camera.isOpen()) {
             Log.error("CameraSource", "Unable to open camera " + webcamIndex);
             return false;
         }
@@ -137,20 +138,19 @@ public class CameraSource extends InputSource {
     @Override
     public void reset() {
         if (!initialized) return;
-        if (camera != null && camera.isOpened()) camera.release();
+        if (camera != null && camera.isOpen()) camera.close();
 
         if(lastFrame != null && lastFrame.isCheckedOut())
             lastFrame.returnMat();
         if(lastFramePaused != null && lastFramePaused.isCheckedOut())
             lastFramePaused.returnMat();
 
-        camera = null;
         initialized = false;
     }
 
     @Override
     public void close() {
-        if (camera != null && camera.isOpened()) camera.release();
+        if (camera != null && camera.isOpen()) camera.close();
         currentWebcamIndex = -1;
     }
 
@@ -197,8 +197,7 @@ public class CameraSource extends InputSource {
 
         update();
 
-        camera.release();
-        camera = null;
+        camera.close();
 
         currentWebcamIndex = -1;
     }
@@ -206,14 +205,7 @@ public class CameraSource extends InputSource {
     @Override
     public void onResume() {
         Visualizer.AsyncPleaseWaitDialog apwdCam = eocvSim.inputSourceManager.showApwdIfNeeded(name);
-
-        camera = new VideoCapture();
-        camera.open(webcamIndex);
-
-        camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
-        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
-
-        currentWebcamIndex = webcamIndex;
+        camera.open();
 
         apwdCam.destroyDialog();
     }
