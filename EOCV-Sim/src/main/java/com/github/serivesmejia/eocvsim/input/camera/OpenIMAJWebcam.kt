@@ -23,16 +23,12 @@
 
 package com.github.serivesmejia.eocvsim.input.camera
 
-import com.github.serivesmejia.eocvsim.util.cv.CvUtil
-import org.opencv.core.*
-import org.openimaj.image.ImageUtilities
+import org.opencv.core.CvType
+import org.opencv.core.Mat
+import org.opencv.core.Size
 import org.openimaj.image.MBFImage
 import org.openimaj.video.capture.Device
 import org.openimaj.video.capture.VideoCapture
-import java.awt.image.BufferedImage
-import java.awt.image.ComponentSampleModel
-import java.awt.image.DataBufferByte
-import java.awt.image.WritableRaster
 import kotlin.system.measureTimeMillis
 
 class OpenIMAJWebcam @JvmOverloads constructor(
@@ -68,8 +64,13 @@ class OpenIMAJWebcam @JvmOverloads constructor(
 
         frameMat = Mat(resolution.height.toInt(), resolution.width.toInt(), CvType.CV_8UC3)
 
-        img?.flush()
-        img = BufferedImage(resolution.width.toInt(), resolution.height.toInt(), BufferedImage.TYPE_3BYTE_BGR)
+        val pixelsArraySize = resolution.width.toInt() * resolution.height.toInt() * 3
+        if(pixels == null || pixels!!.size != pixelsArraySize) {
+            pixels = ByteArray(pixelsArraySize)
+        }
+
+        //img?.flush()
+        //img = BufferedImage(resolution.width.toInt(), resolution.height.toInt(), BufferedImage.TYPE_3BYTE_BGR)
     }
 
     override fun internalRead(mat: Mat) {
@@ -79,34 +80,25 @@ class OpenIMAJWebcam @JvmOverloads constructor(
             frameMat!!.copyTo(mat)
         }
         println("took $milis ms to do shitty convert to mat")
-/*
-        val img = ImageUtilities.createBufferedImageForDisplay(frame, img)
-        CvUtil.bufferedImageToMat(img, frameMat!!)*/
-
-        /*
-        if(img !== this.img) {
-            img.flush()
-        }*/
-        
-        //frameMat!!.copyTo(mat)
     }
 
-    private val pixel = ByteArray(3)
-
-    private fun MBFImage.copyTo(img: Mat) {
+    private fun MBFImage.copyTo(mat: Mat) {
         val r = getBand(0).pixels
         val g = getBand(1).pixels
         val b = getBand(2).pixels
 
+        val scanlineStride = width * 3
+        val pixelStride = 3
+
         for (y in 0 until height) {
             for (x in 0 until width) {
-                pixel[2] = (r[y][x] * 255.0).toInt().toByte()
-                pixel[1] = (g[y][x] * 255.0).toInt().toByte()
-                pixel[0] = (b[y][x] * 255.0).toInt().toByte()
-
-                img.put(y, x, pixel)
+                pixels!![y * scanlineStride + x * pixelStride + 2] = (r[y][x] * 255.0).toInt().toByte()
+                pixels!![y * scanlineStride + x * pixelStride + 1] = (g[y][x] * 255.0).toInt().toByte()
+                pixels!![y * scanlineStride + x * pixelStride + 0] = (b[y][x] * 255.0).toInt().toByte()
             }
         }
+
+        mat.put(0, 0, pixels!!)
     }
 
     override fun close() {
