@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
+ * Based on work by OpenFTC (c) 2019
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -10,7 +11,6 @@
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18,28 +18,13 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- *
  */
 
 package com.github.serivesmejia.eocvsim.input.camera
 
-import org.opencv.core.Mat
-import org.opencv.core.Size
-
-interface Webcam {
-
-    val isOpen: Boolean
-
-    var resolution: Size
-    var rotation: WebcamRotation
-
-    val index: Int
-    val name: String
-
-    fun open()
-
-    fun read(mat: Mat)
-
-    fun close()
-
+enum class WebcamRotation(val displayName: String) {
+    UPRIGHT("Upright"),
+    UPSIDE_DOWN("Upside Down"),
+    SIDEWAYS_LEFT("Sideways Left"),
+    SIDEWAYS_RIGHT("Sideways Right");
 }

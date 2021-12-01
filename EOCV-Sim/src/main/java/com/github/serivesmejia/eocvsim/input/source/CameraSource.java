@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.input.camera.OpenCvWebcam;
 import com.github.serivesmejia.eocvsim.input.camera.OpenIMAJWebcam;
 import com.github.serivesmejia.eocvsim.input.camera.Webcam;
+import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation;
 import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import com.google.gson.annotations.Expose;
@@ -63,19 +64,36 @@ public class CameraSource extends InputSource {
 
     @Expose
     protected volatile Size size;
+    @Expose
+    protected volatile WebcamRotation rotation;
 
     private volatile transient MatRecycler matRecycler;
 
     private transient long capTimeNanos = 0;
 
+    public CameraSource(String webcamName, Size size, WebcamRotation rotation) {
+        this.webcamName = webcamName;
+        this.size = size;
+        this.rotation = rotation;
+    }
+
     public CameraSource(String webcamName, Size size) {
         this.webcamName = webcamName;
         this.size = size;
+        this.rotation = WebcamRotation.UPRIGHT;
+    }
+
+    public CameraSource(int webcamIndex, Size size, WebcamRotation rotation) {
+        this.webcamIndex = webcamIndex;
+        this.size = size;
+        this.rotation = rotation;
+        isLegacyByIndex = true;
     }
 
     public CameraSource(int webcamIndex, Size size) {
         this.webcamIndex = webcamIndex;
         this.size = size;
+        this.rotation = WebcamRotation.UPRIGHT;
         isLegacyByIndex = true;
     }
 
@@ -83,6 +101,8 @@ public class CameraSource extends InputSource {
     public boolean init() {
         if (initialized) return false;
         initialized = true;
+
+        if(rotation == null) rotation = WebcamRotation.UPRIGHT;
 
         if(webcamName != null) {
             List<Device> webcams = OpenIMAJWebcam.getAvailableWebcams();
@@ -95,7 +115,7 @@ public class CameraSource extends InputSource {
 
                 if(name.equals(webcamName) || similarity > 0.6) {
                     Log.info("CameraSource", "\"" + name + "\" compared to \"" + webcamName + "\", similarity " + similarity);
-                    camera = new OpenIMAJWebcam(device, size);
+                    camera = new OpenIMAJWebcam(device, size, rotation);
                     foundWebcam = true;
                     break;
                 }
@@ -106,8 +126,7 @@ public class CameraSource extends InputSource {
                 return false;
             }
         } else {
-            camera = new OpenCvWebcam(webcamIndex);
-            camera.setResolution(size);
+            camera = new OpenCvWebcam(webcamIndex, size, rotation);
         }
 
         camera.open();
