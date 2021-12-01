@@ -27,6 +27,9 @@ import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder;
 import org.opencv.core.Core;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -175,6 +178,20 @@ public class SysUtil {
 
     public static long getMemoryUsageMB() {
         return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / MB;
+    }
+
+    public static double getNonHeapMemoryUsageMB() {
+        List<MemoryPoolMXBean> memoryPools = new ArrayList<>(ManagementFactory.getMemoryPoolMXBeans());
+
+        long nonHeapMem = 0;
+
+        for(MemoryPoolMXBean pool : memoryPools) {
+            if(pool.getType() == MemoryType.NON_HEAP) {
+                nonHeapMem += pool.getUsage().getUsed();
+            }
+        }
+
+        return (double)nonHeapMem / MB;
     }
 
     public static String loadIsStr(InputStream is, Charset charset) throws UnsupportedEncodingException {
@@ -363,6 +380,10 @@ public class SysUtil {
         }
 
         return result;
+    }
+
+    public static long getJvmPid() {
+        return ProcessHandle.current().pid();
     }
 
     public enum OperatingSystem {

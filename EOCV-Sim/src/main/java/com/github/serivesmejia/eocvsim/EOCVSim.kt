@@ -33,10 +33,7 @@ import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
-import com.github.serivesmejia.eocvsim.util.ClasspathScan
-import com.github.serivesmejia.eocvsim.util.FileFilters
-import com.github.serivesmejia.eocvsim.util.Log
-import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.*
 import com.github.serivesmejia.eocvsim.util.cv.CameraUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
@@ -50,6 +47,7 @@ import nu.pattern.OpenCV
 import org.opencv.core.Size
 import java.awt.Dimension
 import java.io.File
+import java.lang.management.ManagementFactory
 import javax.swing.SwingUtilities
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
