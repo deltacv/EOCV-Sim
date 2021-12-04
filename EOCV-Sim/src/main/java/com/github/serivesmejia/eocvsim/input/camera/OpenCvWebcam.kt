@@ -71,7 +71,7 @@ class OpenCvWebcam @JvmOverloads constructor(
 
     override fun open() {
         assertNotOpen("open camera")
-        videoCapture = VideoCapture(index)      
+        videoCapture = VideoCapture()
         
         resolution = resolution // trigger setters
         fps = fps
