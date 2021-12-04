@@ -61,72 +61,6 @@ public class SysUtil {
         return OperatingSystem.UNKNOWN;
     }
 
-    public static boolean loadCvNativeLib() {
-        String os = null;
-        String fileExt = null;
-
-        switch (OS) { //getting os prefix
-            case WINDOWS:
-                os = "win";
-                fileExt = "dll";
-                break;
-            case LINUX:
-                os = "linux";
-                fileExt = "so";
-                break;
-            case MACOS:
-                os = "mac";
-                fileExt = "dylib";
-                break;
-        }
-
-        boolean is64bit = System.getProperty("sun.arch.data.model").contains("64"); //Checking if JVM is 64 bits or not
-
-        return loadLib(os, fileExt, is64bit, Core.NATIVE_LIBRARY_NAME, 0);
-    }
-
-    public static boolean loadLib(String os, String fileExt, boolean is64bit, String name, int attempts) {
-        String arch = is64bit ? "64" : "32"; //getting os arch
-
-        String libName = os + arch + "_" + name; //resultant lib name from those two
-        String libNameExt = libName + "." + fileExt; //resultant lib name from those two
-
-        File nativeLibFile = new File(getAppData() + File.separator + libNameExt);
-
-        if (!nativeLibFile.exists()) {
-            Log.info("SysUtil", "Downloading native lib from " + GH_NATIVE_LIBS_URL + libNameExt);
-            try {
-                download(GH_NATIVE_LIBS_URL + libNameExt, nativeLibFile.getAbsolutePath());
-            } catch (Throwable ex) {
-                ex.printStackTrace();
-            }
-            Log.blank();
-        }
-
-        Log.info("SysUtil", "Loading native lib \"" + libNameExt + "\"");
-
-        try {
-
-            System.load(nativeLibFile.getAbsolutePath()); //Loading OpenCV native library
-            Log.info("SysUtil", "Successfully loaded native lib \"" + libName + "\"");
-
-        } catch (UnsatisfiedLinkError ex) {
-            ex.printStackTrace();
-
-            if (attempts < 4) {
-                ex.printStackTrace();
-                Log.error("SysUtil", "Failure loading lib \"" + libName + "\", retrying with different architecture... (" + attempts + " attempts)");
-                loadLib(os, fileExt, !is64bit, Core.NATIVE_LIBRARY_NAME, attempts + 1);
-            } else {
-                ex.printStackTrace();
-                Log.error("SysUtil", "Failure loading lib \"" + libName + "\" 4 times, giving up.");
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public static void copyStream(File inFile, OutputStream out) throws IOException {
         try (InputStream in = new FileInputStream(inFile)) {
             copyStream(in, out);
@@ -178,20 +112,6 @@ public class SysUtil {
 
     public static long getMemoryUsageMB() {
         return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / MB;
-    }
-
-    public static double getNonHeapMemoryUsageMB() {
-        List<MemoryPoolMXBean> memoryPools = new ArrayList<>(ManagementFactory.getMemoryPoolMXBeans());
-
-        long nonHeapMem = 0;
-
-        for(MemoryPoolMXBean pool : memoryPools) {
-            if(pool.getType() == MemoryType.NON_HEAP) {
-                nonHeapMem += pool.getUsage().getUsed();
-            }
-        }
-
-        return (double)nonHeapMem / MB;
     }
 
     public static String loadIsStr(InputStream is, Charset charset) throws UnsupportedEncodingException {
@@ -380,10 +300,6 @@ public class SysUtil {
         }
 
         return result;
-    }
-
-    public static long getJvmPid() {
-        return ProcessHandle.current().pid();
     }
 
     public enum OperatingSystem {
