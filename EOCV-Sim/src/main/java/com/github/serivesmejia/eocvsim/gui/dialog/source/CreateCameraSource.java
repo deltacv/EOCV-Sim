@@ -39,6 +39,8 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class CreateCameraSource {
@@ -54,7 +56,7 @@ public class CreateCameraSource {
     public JButton createButton = null;
 
     public boolean wasCancelled = false;
-
+    
     private final EOCVSim eocvSim;
 
     private State state = State.INITIAL;
@@ -68,7 +70,9 @@ public class CreateCameraSource {
 
     private HashMap<String, Integer> indexes = new HashMap<>();
 
-    enum State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED, NO_WEBCAMS, UNSUPPORTED }
+    private static Executor executor = Executors.newFixedThreadPool(3);
+
+    enum State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED, NO_WEBCAMS, WAIT, UNSUPPORTED }
 
     public CreateCameraSource(JFrame parent, EOCVSim eocvSim) {
         createCameraSource = new JDialog(parent);
@@ -87,14 +91,14 @@ public class CreateCameraSource {
                     (device) -> new OpenIMAJWebcam(device, new Size(0, 0))
             ).collect(Collectors.toList());
         } catch(Throwable e) {
-            Log.warn("CreateCameraSource", "webcam-capture is unusable, falling back to OpenCV webcam discovery");
+            Log.warn("CreateCameraSource", "OpenIMAJ is unusable, falling back to OpenCV webcam discovery");
             webcams = CameraUtil.findWebcamsOpenCv();
 
             usingOpenCvDiscovery = true;
         }
 
         if(!usingOpenCvDiscovery && webcams.isEmpty()) {
-            Log.warn("CreateCameraSource", "webcam-capture returned 0 cameras, trying with OpenCV webcam discovery");
+            Log.warn("CreateCameraSource", "OpenIMAJ returned 0 cameras, trying with OpenCV webcam discovery");
             webcams = CameraUtil.findWebcamsOpenCv();
             usingOpenCvDiscovery = true;
         }
@@ -135,25 +139,29 @@ public class CreateCameraSource {
                     indexes.put(name, index);
 
                     if(!sizes.containsKey(name)) {
-                        Size[] resolutions = CameraUtil.getResolutionsOf(index);
+                        int camIndex = index;
+                        executor.execute(() -> {
+                            Size[] resolutions = CameraUtil.getResolutionsOf(camIndex);
 
-                        if(resolutions.length == 0) {
-                            ArrayList<Webcam> newWebcams = new ArrayList<>();
+                            if (resolutions.length == 0) {
+                                // remove webcam from list since it didn't return valid res
 
-                            for(int i = 0 ; i < webcams.size() ; i++) {
-                                if(i != index) {
-                                    newWebcams.add(webcams.get(i));
-                                } else {
-                                    newWebcams.add(null);
+                                ArrayList<Webcam> newWebcams = new ArrayList<>();
+
+                                for (int i = 0; i < webcams.size(); i++) {
+                                    if (i != camIndex) {
+                                        newWebcams.add(webcams.get(i));
+                                    } else {
+                                        newWebcams.add(null);
+                                    }
                                 }
+
+                                webcams = newWebcams;
+                                Log.warn("CreateCameraSource", "Webcam " + webcam.getName() + " didn't return any available resolutions, therefore it's unavailable.");
+                            } else {
+                                sizes.put(name, resolutions);
                             }
-
-                            webcams = newWebcams;
-                            Log.warn("CreateCameraSource", "Webcam " + webcam.getName() + " didn't return any available resolutions, therefore it's unavailable.");
-                            continue;
-                        }
-
-                        sizes.put(name, resolutions);
+                        });
                     }
                 }
 
@@ -288,33 +296,55 @@ public class CreateCameraSource {
             nameTextField.setText(eocvSim.inputSourceManager.tryName(webcam.getName()));
 
             dimensionsComboBox.removeAllItems();
-            Size[] webcamSizes = sizes.get(camerasComboBox.getSelectedItem());
 
-            if(webcamSizes.length == 0) {
-                state = State.UNSUPPORTED;
-            } else {
-                for(Size dim : webcamSizes) {
-                    dimensionsComboBox.addItem(Math.round(dim.width) + "x" + Math.round(dim.height));
+            Runnable runn = () -> {
+                Size[] webcamSizes = null;
+
+                // TODO: Add a timeout to this abomination
+
+                boolean firstLoop = true;
+                while (webcamSizes == null) {
+                    webcamSizes = sizes.get(camerasComboBox.getSelectedItem());
+
+                    if (webcamSizes == null) {
+                        if (firstLoop) {
+                            dimensionsComboBox.addItem("Calculating...");
+                            setInteractables(false);
+                        }
+
+                        Thread.yield();
+                    }
+
+                    firstLoop = false;
                 }
 
-                state = State.INITIAL;
-            }
+                dimensionsComboBox.removeAllItems();
 
-            updateCreateBtt();
-            updateState();
+                if (webcamSizes.length == 0) {
+                    state = State.UNSUPPORTED;
+                } else {
+                    for (Size dim : webcamSizes) {
+                        dimensionsComboBox.addItem(Math.round(dim.width) + "x" + Math.round(dim.height));
+                    }
+
+                    state = State.INITIAL;
+                }
+
+                updateCreateBtt();
+                updateState();
+            };
+
+            if(sizes.get(camerasComboBox.getSelectedItem()) == null) {
+                new Thread(runn).start();
+            } else {
+                runn.run();
+            }
         });
 
         nameTextField.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) {
-                changed();
-            }
-            public void removeUpdate(DocumentEvent e) { changed(); }
-            public void insertUpdate(DocumentEvent e) {
-                changed();
-            }
-            public void changed() {
-                updateCreateBtt();
-            }
+            public void changedUpdate(DocumentEvent e) { updateCreateBtt(); }
+            public void removeUpdate(DocumentEvent e) { updateCreateBtt(); }
+            public void insertUpdate(DocumentEvent e) { updateCreateBtt(); }
         });
 
         cancelButton.addActionListener(e -> {
@@ -349,9 +379,8 @@ public class CreateCameraSource {
             }
 
             m.release();
+            webcam.close();
         }
-
-        webcam.close();
 
         return wasOpened;
     }

@@ -52,7 +52,7 @@ object CameraUtil {
     }
 
    @JvmStatic @JvmOverloads
-   fun findWebcamsOpenCv(emptyCamerasBeforeGivingUp: Int = 4): List<Webcam> {
+   fun findWebcamsOpenCv(emptyCamerasBeforeGivingUp: Int = 1): List<Webcam> {
        val webcams = mutableListOf<OpenCvWebcam>()
 
        var capture: VideoCapture? = null
