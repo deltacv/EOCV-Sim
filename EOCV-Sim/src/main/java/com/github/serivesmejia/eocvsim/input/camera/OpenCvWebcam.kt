@@ -37,49 +37,55 @@ class OpenCvWebcam @JvmOverloads constructor(
 ) : WebcamBase(rotation) {
 
     // OpenCV's VideoCapture (not to be confused with OpenIMAJ's, called the same)
-    val videoCapture = VideoCapture(index)
-
+    var videoCapture: VideoCapture? = null
+        private set
+    
     override val isOpen: Boolean
-        get() = videoCapture.isOpened
+        get() = VideoCapture != null && videoCapture!!.isOpened
 
-    override var resolution: Size
+    override var resolution: Size = resolution
         get() {
-            val width = videoCapture.get(Videoio.CAP_PROP_FRAME_WIDTH)
-            val height = videoCapture.get(Videoio.CAP_PROP_FRAME_HEIGHT)
-            return Size(width, height)
+            return if(videoCapture != null) {
+                val width = videoCapture!!.get(Videoio.CAP_PROP_FRAME_WIDTH)
+                val height = videoCapture!!.get(Videoio.CAP_PROP_FRAME_HEIGHT)
+                
+                Size(width, height)
+            } else field
         }
         set(value) {
             assertNotOpen("change resolution")
-            videoCapture.set(Videoio.CAP_PROP_FRAME_WIDTH, value.width)
-            videoCapture.set(Videoio.CAP_PROP_FRAME_HEIGHT, value.height)
+            videoCapture?.set(Videoio.CAP_PROP_FRAME_WIDTH, value.width)
+            videoCapture?.set(Videoio.CAP_PROP_FRAME_HEIGHT, value.height)
+            field = value
         }
 
     override var fps = fps
         get() = videoCapture.get(Videoio.CAP_PROP_FPS)
         set(value) {
             assertNotOpen("change fps")
-            videoCapture.set(Videoio.CAP_PROP_FPS, value)
+            videoCapture?.set(Videoio.CAP_PROP_FPS, value)
             field = value
         }
 
     override val name = "Webcam $index"
 
-    init {
-        this.resolution = resolution
-    }
-
     override fun open() {
         assertNotOpen("open camera")
+        videoCapture = VideoCapture(index)      
+        
+        resolution = resolution // trigger setters
+        fps = fps
+        
         videoCapture.open(index)
     }
 
     override fun internalRead(mat: Mat) {
-        videoCapture.read(mat)
+        videoCapture!!.read(mat)
         Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2RGB)
     }
 
     override fun close() {
         assertOpen()
-        videoCapture.release()
+        videoCapture!!.release()
     }
 }
