@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.input.camera.openimaj
 import com.github.serivesmejia.eocvsim.input.camera.WebcamBase
 import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation
 import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import org.bridj.Pointer
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue
 import org.opencv.core.CvType
@@ -42,7 +43,8 @@ import kotlin.system.measureTimeMillis
 class OpenIMAJWebcam @JvmOverloads constructor(
     private val device: Device,
     resolution: Size = Size(320.0, 240.0),
-    rotation: WebcamRotation = WebcamRotation.UPRIGHT
+    rotation: WebcamRotation = WebcamRotation.UPRIGHT,
+    fps: Double = 30.0
 ) : WebcamBase(rotation) {
 
     companion object {
@@ -53,9 +55,6 @@ class OpenIMAJWebcam @JvmOverloads constructor(
         const val TAG = "OpenIMAJWebcam"
     }
 
-    var videoCapture: VideoCapture? = null
-        private set
-
     override val isOpen get() = videoCapture != null
     override var resolution = resolution
         set(value) {
@@ -63,8 +62,17 @@ class OpenIMAJWebcam @JvmOverloads constructor(
             field = value
         }
 
-    override val index = 0
+    override val index get() = availableWebcams.indexOf(device)
     override val name: String get() = device.nameStr
+
+    override var fps = fps
+        set(value) {
+            assertNotOpen("change fps")
+            field = value
+        }
+
+    var videoCapture: VideoCapture? = null
+        private set
 
     private var stream: WebcamStream? = null
     private var streamThread: Thread? = null
@@ -79,7 +87,7 @@ class OpenIMAJWebcam @JvmOverloads constructor(
             val width = resolution.width.toInt()
             val height = resolution.height.toInt()
 
-            videoCapture = VideoCapture(width, height, device)
+            videoCapture = VideoCapture(width, height, fps, device)
             frameMat = Mat(height, width, CvType.CV_8UC3)
 
             // creating webcam stream and starting it in another thread
@@ -122,34 +130,35 @@ class OpenIMAJWebcam @JvmOverloads constructor(
     private class WebcamStream(
         val webcam: OpenIMAJWebcam,
         val lock: Any,
-        matQueueSize: Int = 3,
+        matQueueSize: Int = 2,
     ) : Runnable {
+
+        private val grabber = ReflectOpenIMAJGrabber(webcam.videoCapture!!)
+        private val fpsLimiter = FpsLimiter(webcam.fps)
 
         private val width = webcam.resolution.width.toInt()
         private val height = webcam.resolution.height.toInt()
 
         val queue = EvictingBlockingQueue(ArrayBlockingQueue<MatRecycler.RecyclableMat>(matQueueSize))
+
         private val recycler = MatRecycler(matQueueSize + 2, height, width, CvType.CV_8UC3)
-
         private val pixels = ByteArray(width * height * 3)
-
-        private val grabber = ReflectOpenIMAJGrabber(webcam.videoCapture!!)
 
         override fun run() {
             queue.setEvictAction {
                 it.returnMat()
             }
 
-            while (!Thread.interrupted() && webcam.videoCapture!!.hasNextFrame()) {
+            while (!Thread.interrupted() && webcam.isOpen && webcam.videoCapture!!.hasNextFrame()) {
                 synchronized(lock) {
                     val err = grabber.nextFrame()
 
                     if (err == -1) {
                         Log.warn(TAG, "Timed out waiting for next frame of \"${webcam.name}\"")
                         return@synchronized
+                    } else if (err < -1) {
+                        throw RuntimeException("Error occurred getting next frame (code: $err)")
                     }
-                    if (err < -1)
-                        throw RuntimeException("Error occurred getting next frame (code: $err)");
 
                     val image = grabber.image ?: return@synchronized
                     val mat = recycler.takeMat()
@@ -161,6 +170,8 @@ class OpenIMAJWebcam @JvmOverloads constructor(
 
                     queue.offer(mat)
                 }
+
+                fpsLimiter.sync()
             }
 
             recycler.releaseAll()

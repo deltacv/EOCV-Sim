@@ -32,7 +32,8 @@ import org.opencv.videoio.Videoio
 class OpenCvWebcam @JvmOverloads constructor(
     override val index: Int,
     resolution: Size = Size(320.0, 240.0),
-    rotation: WebcamRotation = WebcamRotation.UPRIGHT
+    rotation: WebcamRotation = WebcamRotation.UPRIGHT,
+    fps: Double = 30.0
 ) : WebcamBase(rotation) {
 
     // OpenCV's VideoCapture (not to be confused with OpenIMAJ's, called the same)
@@ -51,6 +52,14 @@ class OpenCvWebcam @JvmOverloads constructor(
             assertNotOpen("change resolution")
             videoCapture.set(Videoio.CAP_PROP_FRAME_WIDTH, value.width)
             videoCapture.set(Videoio.CAP_PROP_FRAME_HEIGHT, value.height)
+        }
+
+    override var fps = fps
+        get() = videoCapture.get(Videoio.CAP_PROP_FPS)
+        set(value) {
+            assertNotOpen("change fps")
+            videoCapture.set(Videoio.CAP_PROP_FPS, value)
+            field = value
         }
 
     override val name = "Webcam $index"

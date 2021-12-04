@@ -32,6 +32,7 @@ interface Webcam {
 
     var resolution: Size
     var rotation: WebcamRotation
+    var fps: Double
 
     val index: Int
     val name: String
