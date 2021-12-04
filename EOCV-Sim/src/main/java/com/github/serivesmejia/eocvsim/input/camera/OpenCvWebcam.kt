@@ -41,7 +41,7 @@ class OpenCvWebcam @JvmOverloads constructor(
         private set
     
     override val isOpen: Boolean
-        get() = VideoCapture != null && videoCapture!!.isOpened
+        get() = videoCapture != null && videoCapture!!.isOpened
 
     override var resolution: Size = resolution
         get() {
@@ -60,7 +60,7 @@ class OpenCvWebcam @JvmOverloads constructor(
         }
 
     override var fps = fps
-        get() = videoCapture.get(Videoio.CAP_PROP_FPS)
+        get() = videoCapture?.get(Videoio.CAP_PROP_FPS) ?: field
         set(value) {
             assertNotOpen("change fps")
             videoCapture?.set(Videoio.CAP_PROP_FPS, value)
@@ -76,7 +76,7 @@ class OpenCvWebcam @JvmOverloads constructor(
         resolution = resolution // trigger setters
         fps = fps
         
-        videoCapture.open(index)
+        videoCapture!!.open(index)
     }
 
     override fun internalRead(mat: Mat) {
