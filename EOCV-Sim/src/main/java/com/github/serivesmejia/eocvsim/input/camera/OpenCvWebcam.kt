@@ -42,8 +42,8 @@ class OpenCvWebcam @JvmOverloads constructor(
 
     override var resolution: Size
         get() {
-            val width = videoCapture.get(Videoio.CAP_PROP_FRAME_WIDTH).toDouble()
-            val height = videoCapture.get(Videoio.CAP_PROP_FRAME_HEIGHT).toDouble()
+            val width = videoCapture.get(Videoio.CAP_PROP_FRAME_WIDTH)
+            val height = videoCapture.get(Videoio.CAP_PROP_FRAME_HEIGHT)
             return Size(width, height)
         }
         set(value) {
