@@ -25,14 +25,18 @@ package com.github.serivesmejia.eocvsim.input.camera.openimaj
 
 import com.github.serivesmejia.eocvsim.input.camera.WebcamBase
 import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation
+import org.bridj.Pointer
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.Size
+import org.opencv.imgproc.Imgproc
 import org.openftc.easyopencv.MatRecycler
 import org.openimaj.video.capture.Device
 import org.openimaj.video.capture.VideoCapture
 import java.util.concurrent.ArrayBlockingQueue
+import kotlin.experimental.and
+import kotlin.system.measureTimeMillis
 
 class OpenIMAJWebcam @JvmOverloads constructor(
     private val device: Device,
@@ -73,7 +77,7 @@ class OpenIMAJWebcam @JvmOverloads constructor(
 
         // creating webcam stream and starting it in another thread
         stream = WebcamStream(this)
-        streamThread = Thread(stream!!, "Thread-WebcamStream-\"$name\"")
+        streamThread = Thread(stream!!, "WebcamStream-\"$name\"-Thread")
 
         streamThread!!.start()
     }
@@ -106,9 +110,6 @@ class OpenIMAJWebcam @JvmOverloads constructor(
 
         private val pixels = ByteArray(width * height * 3)
 
-        private val scanlineStride = width * 3
-        private val pixelStride = 3
-
         private val grabber = ReflectOpenIMAJGrabber(webcam.videoCapture!!)
 
         override fun run() {
@@ -117,19 +118,21 @@ class OpenIMAJWebcam @JvmOverloads constructor(
             }
 
             while(!Thread.interrupted() && webcam.isOpen) {
-                val mat = recycler.takeMat()
-                val image = grabber.image
-                val imageBytes = image.
+                val err = grabber.nextFrame()
 
-                for (y in 0 until height) {
-                    for (x in 0 until width) {
-                        pixels[y * scanlineStride + x * pixelStride + 2] = (r[y][x] * 255.0).toInt().toByte()
-                        pixels[y * scanlineStride + x * pixelStride + 1] = (g[y][x] * 255.0).toInt().toByte()
-                        pixels[y * scanlineStride + x * pixelStride + 0] = (b[y][x] * 255.0).toInt().toByte()
-                    }
-                }
+                if (err == -1)
+                    throw RuntimeException("Timed out waiting for next frame");
+                if (err < -1)
+                    throw RuntimeException("Error occurred getting next frame");
+
+                val image = grabber.image ?: continue
+                val mat = recycler.takeMat()
+
+                val buffer = (image as Pointer<*>).getByteBuffer((width * height * 3).toLong())
+                buffer.get(pixels)
 
                 mat.put(0, 0, pixels)
+
                 queue.offer(mat)
             }
 
@@ -143,6 +146,7 @@ class OpenIMAJWebcam @JvmOverloads constructor(
 
         videoCapture!!.stopCapture()
         videoCapture = null
+
     }
 
 }

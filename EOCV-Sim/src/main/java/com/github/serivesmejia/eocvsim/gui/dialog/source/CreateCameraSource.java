@@ -25,14 +25,13 @@ package com.github.serivesmejia.eocvsim.gui.dialog.source;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.input.camera.OpenCvWebcam;
-import com.github.serivesmejia.eocvsim.input.camera.OpenIMAJWebcam;
+import com.github.serivesmejia.eocvsim.input.camera.openimaj.OpenIMAJWebcam;
 import com.github.serivesmejia.eocvsim.input.camera.Webcam;
 import com.github.serivesmejia.eocvsim.input.source.CameraSource;
 import com.github.serivesmejia.eocvsim.util.cv.CameraUtil;
 import com.github.serivesmejia.eocvsim.util.Log;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
-import org.opencv.videoio.VideoCapture;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;

@@ -32,6 +32,7 @@ import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
 import javax.swing.*;
 import java.awt.*;
@@ -106,7 +107,11 @@ public class InputSourceManager {
             currentInputSource.setPaused(isPaused);
 
             Mat m = currentInputSource.update();
-            if(m != null && !m.empty()) m.copyTo(lastMatFromSource);
+            if(m != null && !m.empty()) {
+                m.copyTo(lastMatFromSource);
+                // add an extra alpha channel because that's what eocv returns for some reason... (more realistic simulation lol)
+                Imgproc.cvtColor(lastMatFromSource, lastMatFromSource, Imgproc.COLOR_RGB2RGBA);
+            }
         } catch(Exception ex) {
             Log.error("InputSourceManager", "Error while processing current source", ex);
             Log.warn("InputSourceManager", "Changing to default source");

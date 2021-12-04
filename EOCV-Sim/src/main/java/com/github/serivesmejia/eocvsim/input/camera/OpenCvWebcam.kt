@@ -25,6 +25,7 @@ package com.github.serivesmejia.eocvsim.input.camera
 
 import org.opencv.core.Mat
 import org.opencv.core.Size
+import org.opencv.imgproc.Imgproc
 import org.opencv.videoio.VideoCapture
 import org.opencv.videoio.Videoio
 
@@ -65,6 +66,7 @@ class OpenCvWebcam @JvmOverloads constructor(
 
     override fun internalRead(mat: Mat) {
         videoCapture.read(mat)
+        Imgproc.cvtColor(mat, mat, Imgproc.COLOR_BGR2RGB)
     }
 
     override fun close() {

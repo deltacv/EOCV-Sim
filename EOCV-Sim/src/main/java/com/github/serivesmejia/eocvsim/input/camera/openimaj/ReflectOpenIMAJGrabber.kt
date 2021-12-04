@@ -13,15 +13,19 @@ class ReflectOpenIMAJGrabber(private val videoCapture: VideoCapture) {
 
     private val grabber by lazy {
         grabberField.isAccessible = true
-        val grabber = grabberField.get(videoCapture)
-        grabberField.isAccessible = false
-
-        grabber
+        grabberField.get(videoCapture)
     }
 
-    private val getImageMethod by lazy { grabberClazz.getDeclaredMethod("getImage") }
+    private val nextFrameMethod by lazy {
+        grabberClazz.getDeclaredMethod("nextFrame").apply { isAccessible = true }
+    }
+    private val getImageMethod by lazy {
+        grabberClazz.getDeclaredMethod("getImage").apply { isAccessible = true }
+    }
 
     @Suppress("UNCHECKED_CAST")
-    val image get() = getImageMethod.invoke(grabber) as Pointer<Byte>
+    val image get() = getImageMethod.invoke(grabber)
+
+    fun nextFrame() = nextFrameMethod.invoke(grabber) as Int
 
 }
