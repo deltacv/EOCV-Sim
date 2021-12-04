@@ -25,6 +25,7 @@ package com.github.serivesmejia.eocvsim.input.camera.openimaj
 
 import com.github.serivesmejia.eocvsim.input.camera.WebcamBase
 import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation
+import com.github.serivesmejia.eocvsim.util.Log
 import org.bridj.Pointer
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue
 import org.opencv.core.CvType
@@ -45,7 +46,11 @@ class OpenIMAJWebcam @JvmOverloads constructor(
 ) : WebcamBase(rotation) {
 
     companion object {
-        @JvmStatic val availableWebcams: MutableList<Device> get() = VideoCapture.getVideoDevices()
+        @JvmStatic
+        val availableWebcams: MutableList<Device>
+            get() = VideoCapture.getVideoDevices()
+
+        const val TAG = "OpenIMAJWebcam"
     }
 
     var videoCapture: VideoCapture? = null
@@ -65,27 +70,35 @@ class OpenIMAJWebcam @JvmOverloads constructor(
     private var streamThread: Thread? = null
 
     private var frameMat: Mat? = null
+    private val closeLock = Any()
 
     override fun open() {
         assertNotOpen("open camera")
 
-        val width = resolution.width.toInt()
-        val height = resolution.height.toInt()
+        try {
+            val width = resolution.width.toInt()
+            val height = resolution.height.toInt()
 
-        videoCapture = VideoCapture(width, height, device)
-        frameMat = Mat(height, width, CvType.CV_8UC3)
+            videoCapture = VideoCapture(width, height, device)
+            frameMat = Mat(height, width, CvType.CV_8UC3)
 
-        // creating webcam stream and starting it in another thread
-        stream = WebcamStream(this)
-        streamThread = Thread(stream!!, "WebcamStream-\"$name\"-Thread")
+            // creating webcam stream and starting it in another thread
+            stream = WebcamStream(this, closeLock)
+            streamThread = Thread(stream!!, "WebcamStream-\"$name\"-Thread")
 
-        streamThread!!.start()
+            streamThread!!.start()
+        } catch(e: Exception) {
+            Log.error(TAG, "Error while opening camera", e)
+
+            videoCapture = null
+            streamThread?.interrupt()
+        }
     }
 
     override fun internalRead(mat: Mat) {
         val queue = stream!!.queue
 
-        if(!queue.isEmpty()) {
+        if (!queue.isEmpty()) {
             val webcamFrameMat = queue.poll()
 
             webcamFrameMat.copyTo(frameMat)
@@ -97,8 +110,18 @@ class OpenIMAJWebcam @JvmOverloads constructor(
         }
     }
 
+    override fun close() {
+        assertOpen()
+
+        synchronized(closeLock) {
+            videoCapture!!.stopCapture()
+            videoCapture = null
+        }
+    }
+
     private class WebcamStream(
         val webcam: OpenIMAJWebcam,
+        val lock: Any,
         matQueueSize: Int = 2,
     ) : Runnable {
 
@@ -117,35 +140,31 @@ class OpenIMAJWebcam @JvmOverloads constructor(
                 it.returnMat()
             }
 
-            while(!Thread.interrupted() && webcam.isOpen) {
-                val err = grabber.nextFrame()
+            while (!Thread.interrupted() && webcam.videoCapture!!.hasNextFrame()) {
+                synchronized(lock) {
+                    val err = grabber.nextFrame()
 
-                if (err == -1)
-                    throw RuntimeException("Timed out waiting for next frame");
-                if (err < -1)
-                    throw RuntimeException("Error occurred getting next frame");
+                    if (err == -1) {
+                        Log.warn(TAG, "Timed out waiting for next frame of \"${webcam.name}\"")
+                        return@synchronized
+                    }
+                    if (err < -1)
+                        throw RuntimeException("Error occurred getting next frame (code: $err)");
 
-                val image = grabber.image ?: continue
-                val mat = recycler.takeMat()
+                    val image = grabber.image ?: return@synchronized
+                    val mat = recycler.takeMat()
 
-                val buffer = (image as Pointer<*>).getByteBuffer((width * height * 3).toLong())
-                buffer.get(pixels)
+                    val buffer = (image as Pointer<*>).getByteBuffer((width * height * 3).toLong())
+                    buffer.get(pixels)
 
-                mat.put(0, 0, pixels)
+                    mat.put(0, 0, pixels)
 
-                queue.offer(mat)
+                    queue.offer(mat)
+                }
             }
 
             recycler.releaseAll()
         }
-
-    }
-
-    override fun close() {
-        assertOpen()
-
-        videoCapture!!.stopCapture()
-        videoCapture = null
 
     }
 
