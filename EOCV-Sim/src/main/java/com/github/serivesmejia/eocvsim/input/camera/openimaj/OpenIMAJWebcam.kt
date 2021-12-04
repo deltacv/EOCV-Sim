@@ -122,7 +122,7 @@ class OpenIMAJWebcam @JvmOverloads constructor(
     private class WebcamStream(
         val webcam: OpenIMAJWebcam,
         val lock: Any,
-        matQueueSize: Int = 2,
+        matQueueSize: Int = 3,
     ) : Runnable {
 
         private val width = webcam.resolution.width.toInt()

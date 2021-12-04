@@ -198,6 +198,7 @@ public class CameraSource extends InputSource {
 
         // not needed. cameras return RGB now
         // Imgproc.cvtColor(newFrame, lastFrame, Imgproc.COLOR_BGR2RGB);
+        newFrame.copyTo(lastFrame);
 
         newFrame.release();
         newFrame.returnMat();
