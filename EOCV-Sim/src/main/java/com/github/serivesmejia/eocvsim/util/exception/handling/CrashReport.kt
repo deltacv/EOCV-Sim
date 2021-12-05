@@ -33,9 +33,9 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class CrashReport(causedByException: Throwable) {
+class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
 
-    private companion object {
+    companion object {
         val OS_ARCH = System.getProperty("os.arch")
         val OS_VERSION = System.getProperty("os.version")
         val OS_NAME = System.getProperty("os.name")
@@ -44,6 +44,12 @@ class CrashReport(causedByException: Throwable) {
         val JAVA_VENDOR = System.getProperty("java.vendor")
 
         val dtFormatter = DateTimeFormatter.ofPattern("yyyy_MM_dd-HH.mm.ss")
+
+
+        @JvmStatic val defaultFileName: String get() {
+            val dateTimeStr = dtFormatter.format(LocalDateTime.now())
+            return "crashreport-eocvsim-$dateTimeStr.log"
+        }
     }
 
     private val sb = StringBuilder()
@@ -54,7 +60,11 @@ class CrashReport(causedByException: Throwable) {
         sb.appendLine("\\--------------------------------/").appendLine()
 
         sb.appendLine(": Crash stacktrace").appendLine()
-        sb.appendLine(StrUtil.fromException(causedByException)).appendLine()
+        if(!isDummy) {
+            sb.appendLine(StrUtil.fromException(causedByException)).appendLine()
+        } else {
+            sb.appendLine(causedByException.message).appendLine()
+        }
 
         sb.appendLine("==========================================").appendLine()
 
@@ -99,9 +109,8 @@ class CrashReport(causedByException: Throwable) {
 
     fun saveCrashReport() {
         val workingDir = File(System.getProperty("user.dir"))
-        val dateTimeStr = dtFormatter.format(LocalDateTime.now())
 
-        val crashLogFile = workingDir + "/crashreport-eocvsim-$dateTimeStr.log"
+        val crashLogFile = workingDir + defaultFileName
 
         saveCrashReport(crashLogFile)
     }
