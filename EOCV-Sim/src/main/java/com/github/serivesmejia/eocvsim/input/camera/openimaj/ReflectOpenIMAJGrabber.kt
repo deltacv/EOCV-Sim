@@ -1,6 +1,7 @@
 package com.github.serivesmejia.eocvsim.input.camera.openimaj
 
 import org.bridj.Pointer
+import org.opencv.core.Size
 import org.openimaj.video.capture.VideoCapture
 
 class ReflectOpenIMAJGrabber(private val videoCapture: VideoCapture) {
@@ -23,8 +24,23 @@ class ReflectOpenIMAJGrabber(private val videoCapture: VideoCapture) {
         grabberClazz.getDeclaredMethod("getImage").apply { isAccessible = true }
     }
 
+    private val getWidthMethod by lazy {
+        grabberClazz.getDeclaredMethod("getWidth").apply { isAccessible = true }
+    }
+    private val getHeightMethod by lazy {
+        grabberClazz.getDeclaredMethod("getHeight").apply { isAccessible = true }
+    }
+
     @Suppress("UNCHECKED_CAST")
-    val image get() = getImageMethod.invoke(grabber)
+    val image: Pointer<Byte>? get() {
+        val img = getImageMethod.invoke(grabber)
+        return if(img is Pointer<*>) img as Pointer<Byte> else null
+    }
+
+    val resolution get() = Size(
+        (getWidthMethod.invoke(grabber) as Int).toDouble(),
+        (getHeightMethod.invoke(grabber) as Int).toDouble()
+    )
 
     fun nextFrame() = nextFrameMethod.invoke(grabber) as Int
 

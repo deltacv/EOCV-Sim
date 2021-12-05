@@ -23,8 +23,15 @@
 package com.github.serivesmejia.eocvsim.input.camera
 
 enum class WebcamRotation(val displayName: String) {
+    
     UPRIGHT("Upright"),
     UPSIDE_DOWN("Upside Down"),
     SIDEWAYS_LEFT("Sideways Left"),
     SIDEWAYS_RIGHT("Sideways Right");
+
+    companion object {
+        @JvmStatic fun fromDisplayName(displayName: String) = values().firstOrNull {
+            it.displayName == displayName
+        }
+    }
 }

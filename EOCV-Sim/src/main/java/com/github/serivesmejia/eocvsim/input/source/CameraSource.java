@@ -25,7 +25,7 @@ package com.github.serivesmejia.eocvsim.input.source;
 
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
-import com.github.serivesmejia.eocvsim.input.camera.OpenCvWebcam;
+import com.github.serivesmejia.eocvsim.input.camera.opencv.OpenCvWebcam;
 import com.github.serivesmejia.eocvsim.input.camera.openimaj.OpenIMAJWebcam;
 import com.github.serivesmejia.eocvsim.input.camera.Webcam;
 import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation;

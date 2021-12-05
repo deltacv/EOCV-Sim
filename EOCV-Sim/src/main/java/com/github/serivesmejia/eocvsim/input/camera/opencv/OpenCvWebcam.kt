@@ -21,8 +21,10 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.input.camera
+package com.github.serivesmejia.eocvsim.input.camera.opencv
 
+import com.github.serivesmejia.eocvsim.input.camera.WebcamBase
+import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
@@ -53,6 +55,13 @@ class OpenCvWebcam @JvmOverloads constructor(
             videoCapture.set(Videoio.CAP_PROP_FRAME_WIDTH, value.width)
             videoCapture.set(Videoio.CAP_PROP_FRAME_HEIGHT, value.height)
         }
+
+    /**
+     * WARNING: Getting the supported resolutions from opencv is an expensive
+     * operation, as it requires to test against a considerable amount of common
+     * resolutions. Expect 5-15 second hangs on the first call.
+     */
+    override val supportedResolutions by lazy { OpenCvUtil.getResolutionsOf(index) }
 
     override var fps = fps
         get() = videoCapture.get(Videoio.CAP_PROP_FPS)

@@ -1,12 +1,10 @@
-package com.github.serivesmejia.eocvsim.util.cv
+package com.github.serivesmejia.eocvsim.input.camera.opencv
 
-import com.github.serivesmejia.eocvsim.input.camera.opencv.OpenCvWebcam
-import com.github.serivesmejia.eocvsim.input.camera.Webcam
 import org.opencv.core.Size
 import org.opencv.videoio.VideoCapture
 import org.opencv.videoio.Videoio
 
-object CameraUtil {
+object OpenCvUtil {
 
     val commonResolutions = listOf(
         Size(176.0, 144.0),
@@ -19,11 +17,10 @@ object CameraUtil {
         Size(1280.0, 1024.0)
     )
 
-    const val TAG = "CameraUtil"
 
     // adapted from https://www.learnpythonwithrune.org/find-all-possible-webcam-resolutions-with-opencv-in-python/
     // with a predefined list of commonResolutions because pulling from wikipedia is dumb lol
-    @JvmStatic fun getResolutionsOf(index: Int): Array<Size> {
+    @JvmStatic fun getResolutionsOf(index: Int): List<Size> {
         val camera = VideoCapture(index)
 
         val resolutions = mutableListOf<Size>()
@@ -47,37 +44,7 @@ object CameraUtil {
         }
 
         camera.release()
-        return resolutions.toTypedArray()
-    }
-
-   @JvmStatic @JvmOverloads
-   fun findWebcamsOpenCv(emptyCamerasBeforeGivingUp: Int = 1): List<Webcam> {
-       val webcams = mutableListOf<OpenCvWebcam>()
-
-       var capture: VideoCapture? = null
-       var currentIndex = 0
-
-       var emptyCameras = 0
-
-        do {
-            if(capture != null && capture.isOpened) {
-                capture.release()
-            }
-
-            capture = VideoCapture(currentIndex)
-            capture.open(currentIndex)
-
-            if(capture.isOpened) {
-                webcams.add(OpenCvWebcam(currentIndex))
-                emptyCameras = 0
-            } else {
-                emptyCameras++
-            }
-
-            currentIndex++
-        } while((capture != null && capture.isOpened) || emptyCameras <= emptyCamerasBeforeGivingUp)
-
-        return webcams
+        return resolutions
     }
 
 }

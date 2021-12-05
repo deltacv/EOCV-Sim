@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.input.camera
 
+import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation
 import org.opencv.core.Mat
 import org.opencv.core.Size
 
@@ -31,6 +32,8 @@ interface Webcam {
     val isOpen: Boolean
 
     var resolution: Size
+    val supportedResolutions: List<Size>
+
     var rotation: WebcamRotation
     var fps: Double
 

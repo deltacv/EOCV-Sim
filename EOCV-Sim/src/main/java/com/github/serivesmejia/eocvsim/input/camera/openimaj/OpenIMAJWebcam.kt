@@ -55,12 +55,26 @@ class OpenIMAJWebcam @JvmOverloads constructor(
         const val TAG = "OpenIMAJWebcam"
     }
 
-    override val isOpen get() = videoCapture != null
+    override val isOpen get() = videoCapture != null && videoCapture!!.hasNextFrame()
+
     override var resolution = resolution
-        set(value) {
-            assertNotOpen("change resolution")
+        set(value) {assertNotOpen("change resolution")
             field = value
         }
+
+
+    // openimaj doesn't have an api to get the actual supported resolutions
+    // that sucks. however, we can return a list of common resolutions which isn't too bad
+    override val supportedResolutions = listOf(
+        Size(176.0, 144.0),
+        Size(320.0, 240.0),
+        Size(640.0, 360.0),
+        Size(640.0, 480.0),
+        Size(960.0, 540.0),
+        Size(1024.0, 768.0),
+        Size(1280.0, 720.0),
+        Size(1280.0, 1024.0)
+    )
 
     override val index get() = availableWebcams.indexOf(device)
     override val name: String get() = device.nameStr
@@ -73,6 +87,7 @@ class OpenIMAJWebcam @JvmOverloads constructor(
 
     var videoCapture: VideoCapture? = null
         private set
+    private var grabber: ReflectOpenIMAJGrabber? = null
 
     private var stream: WebcamStream? = null
     private var streamThread: Thread? = null
@@ -84,11 +99,28 @@ class OpenIMAJWebcam @JvmOverloads constructor(
         assertNotOpen("open camera")
 
         try {
-            val width = resolution.width.toInt()
-            val height = resolution.height.toInt()
 
-            videoCapture = VideoCapture(width, height, fps, device)
-            frameMat = Mat(height, width, CvType.CV_8UC3)
+            val capture = VideoCapture(
+                resolution.width.toInt(),
+                resolution.height.toInt(),
+                fps, device
+            )
+            grabber = ReflectOpenIMAJGrabber(capture)
+
+            // set the actual resolution to the size of the
+            // native videoData to avoid jvm crash due to
+            // requesting more bytes than we have
+            resolution = grabber!!.resolution
+
+            // avoid triggering exception in the resolution setter
+            // by defining videocapture after setting actual resolution
+            videoCapture = capture
+
+            frameMat = Mat(
+                resolution.height.toInt(),
+                resolution.width.toInt(),
+                CvType.CV_8UC3
+            )
 
             // creating webcam stream and starting it in another thread
             stream = WebcamStream(this, closeLock)
@@ -104,6 +136,12 @@ class OpenIMAJWebcam @JvmOverloads constructor(
     }
 
     override fun internalRead(mat: Mat) {
+        if(!streamThread!!.isAlive) {
+            Log.warn(TAG, "The WebcamStream thread mysteriously disappeared, probably due to an exception. Closing webcam \"$name\".")
+            close()
+            return
+        }
+
         val queue = stream!!.queue
 
         if (!queue.isEmpty()) {
@@ -133,7 +171,7 @@ class OpenIMAJWebcam @JvmOverloads constructor(
         matQueueSize: Int = 2,
     ) : Runnable {
 
-        private val grabber = ReflectOpenIMAJGrabber(webcam.videoCapture!!)
+        private val grabber = webcam.grabber!!
         private val fpsLimiter = FpsLimiter(webcam.fps)
 
         private val width = webcam.resolution.width.toInt()
@@ -163,7 +201,7 @@ class OpenIMAJWebcam @JvmOverloads constructor(
                     val image = grabber.image ?: return@synchronized
                     val mat = recycler.takeMat()
 
-                    val buffer = (image as Pointer<*>).getByteBuffer((width * height * 3).toLong())
+                    val buffer = image.getByteBuffer((width * height * 3).toLong())
                     buffer.get(pixels)
 
                     mat.put(0, 0, pixels)
