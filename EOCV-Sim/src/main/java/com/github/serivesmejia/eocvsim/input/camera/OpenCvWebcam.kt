@@ -37,7 +37,7 @@ class OpenCvWebcam @JvmOverloads constructor(
 ) : WebcamBase(rotation) {
 
     // OpenCV's VideoCapture (not to be confused with OpenIMAJ's, called the same)
-    val videoCapture = VideoCapture(index)
+    val videoCapture = VideoCapture()
 
     override val isOpen: Boolean
         get() = videoCapture.isOpened
