@@ -235,9 +235,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
                 break //bye bye
             }
 
-            //updating displayed telemetry
-            visualizer.telemetryPanel.updateTelemetry(pipelineManager.currentTelemetry)
-
             //limit FPG
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
             fpsLimiter.sync()

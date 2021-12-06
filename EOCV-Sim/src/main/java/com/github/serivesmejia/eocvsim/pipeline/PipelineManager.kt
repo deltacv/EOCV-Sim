@@ -36,6 +36,7 @@ import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.TimestampedPipelineHandler
@@ -147,18 +148,28 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
 
         pipelineExceptionTracker.onNewPipelineException {
+            val telemetry = currentTelemetry
+
             if(openedPipelineOutputCount <= 3) {
                 DialogFactory.createPipelineOutput(eocvSim)
                 openedPipelineOutputCount++
             }
 
-            currentTelemetry?.errItem?.caption = "[/!\\]"
-            currentTelemetry?.errItem?.setValue("Uncaught exception thrown in\n pipeline, check Workspace -> Output.")
+            if(telemetry is TelemetryImpl) {
+                telemetry.errItem.caption = "[/!\\]"
+                telemetry.errItem.setValue("Uncaught exception thrown in\n pipeline, check Workspace -> Output.")
+                telemetry.forceTelemetryTransmission()
+            }
         }
 
         pipelineExceptionTracker.onPipelineExceptionClear {
-            currentTelemetry?.errItem?.caption = ""
-            currentTelemetry?.errItem?.setValue("")
+            val telemetry = currentTelemetry
+
+            if(telemetry is TelemetryImpl) {
+                telemetry.errItem.caption = ""
+                telemetry.errItem.setValue("")
+                telemetry.forceTelemetryTransmission()
+            }
         }
 
         onPipelineChange {
@@ -183,19 +194,31 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
     }
 
+    private var wasBuildRunning = false
+
     fun update(inputMat: Mat?) {
+        val telemetry = currentTelemetry
         onUpdate.run()
 
         if(activePipelineContexts.size > MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS) {
             throw MaxActiveContextsException("Current amount of active pipeline coroutine contexts (${activePipelineContexts.size}) is more than the maximum allowed. This generally means that there are multiple pipelines stuck in processFrame() running in the background, check for any lengthy operations in your pipelines.")
         }
 
-        if(compiledPipelineManager.isBuildRunning) {
-            currentTelemetry?.infoItem?.caption = "[>]"
-            currentTelemetry?.infoItem?.setValue("Building java files in workspace...")
-        } else {
-            currentTelemetry?.infoItem?.caption = ""
-            currentTelemetry?.infoItem?.setValue("")
+        if(telemetry is TelemetryImpl) {
+            if (compiledPipelineManager.isBuildRunning) {
+                telemetry.infoItem.caption = "[>]"
+                telemetry.infoItem.setValue("Building java files in workspace...")
+                telemetry.forceTelemetryTransmission()
+            } else {
+                telemetry.infoItem.caption = ""
+                telemetry.infoItem.setValue("")
+            }
+
+            if(wasBuildRunning != compiledPipelineManager.isBuildRunning) {
+                telemetry.forceTelemetryTransmission()
+            }
+
+            wasBuildRunning = compiledPipelineManager.isBuildRunning
         }
 
         if(paused || currentPipeline == null) {
@@ -448,7 +471,10 @@ class PipelineManager(var eocvSim: EOCVSim) {
         var constructor: Constructor<*>
 
         try {
-            nextTelemetry = Telemetry()
+            nextTelemetry = TelemetryImpl().apply {
+                // send telemetry updates to the ui
+                addTransmissionReceiver(eocvSim.visualizer.telemetryPanel)
+            }
 
             try { //instantiate pipeline if it has a constructor of a telemetry parameter
                 constructor = pipelineClass.getConstructor(Telemetry::class.java)
