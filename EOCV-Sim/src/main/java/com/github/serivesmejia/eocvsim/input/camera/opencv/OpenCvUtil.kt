@@ -17,7 +17,6 @@ object OpenCvUtil {
         Size(1280.0, 1024.0)
     )
 
-
     // adapted from https://www.learnpythonwithrune.org/find-all-possible-webcam-resolutions-with-opencv-in-python/
     // with a predefined list of commonResolutions because pulling from wikipedia is dumb lol
     @JvmStatic fun getResolutionsOf(index: Int): List<Size> {

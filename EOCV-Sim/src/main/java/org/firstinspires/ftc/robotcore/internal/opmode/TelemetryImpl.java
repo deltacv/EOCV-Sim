@@ -271,6 +271,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         String  caption  = null;
         Value   value    = null;
         Boolean retained = null;
+        boolean showIfEmpty = true;
 
         //------------------------------------------------------------------------------------------
         // Construction
@@ -292,7 +293,13 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         {
             synchronized (theLock)
             {
-                return String.format("%s%s%s", this.caption, getCaptionValueSeparator(), this.value.getComposed(recompose));
+                String composed = this.value.getComposed(recompose);
+
+                if(!showIfEmpty && this.caption.trim().equals("") && composed.trim().equals("")) {
+                    return "";
+                }
+
+                return String.format("%s%s%s", this.caption, getCaptionValueSeparator(), composed);
             }
         }
 
@@ -412,14 +419,14 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         // Operations
         //------------------------------------------------------------------------------------------
 
-        @Override public String getComposed(boolean recompose)
+        public String getComposed(boolean recompose, boolean appendSeparator)
         {
             StringBuilder result = new StringBuilder();
             result.append(this.lineCaption);
             boolean firstTime = true;
             for (Lineable lineable : lineables)
             {
-                if (!firstTime)
+                if (!firstTime && appendSeparator)
                 {
                     result.append(getItemSeparator());
                 }
@@ -427,6 +434,11 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
                 firstTime = false;
             }
             return result.toString();
+        }
+
+        @Override
+        public String getComposed(boolean recompose) {
+            return getComposed(recompose, true);
         }
 
         @Override public Item addData(String caption, String format, Object... args)
@@ -447,6 +459,10 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         @Override public <T> Item addData(String caption, String format, Func<T> valueProducer)
         {
             return lineables.addItemAfter(null, caption, new Value<T>(format, valueProducer));
+        }
+
+        public boolean isEmpty() {
+            return getComposed(false, false).trim().equals("");
         }
     }
 
@@ -638,7 +654,10 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         this.transmissionReceivers = new ArrayList<>();
 
         errItem = addData("", "").setRetained(true);
+        ((ItemImpl)errItem).showIfEmpty = false;
+
         infoItem = addData("", "").setRetained(true);
+        ((ItemImpl)infoItem).showIfEmpty = false;
     }
 
     //----------------------------------------------------------------------------------------------
@@ -786,7 +805,6 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
     public void addTransmissionReceiver(TelemetryTransmissionReceiver transmissionReceiver) {
         transmissionReceivers.add(transmissionReceiver);
     }
-
 
     public boolean removeTransmissionReceiver(TelemetryTransmissionReceiver transmissionReceiver) {
         return transmissionReceivers.remove(transmissionReceiver);
