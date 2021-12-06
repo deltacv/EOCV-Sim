@@ -799,7 +799,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
     }
 
     public void forceTelemetryTransmission() {
-        saveToTransmitter(false);
+        saveToTransmitter(true);
     }
 
     public void addTransmissionReceiver(TelemetryTransmissionReceiver transmissionReceiver) {
