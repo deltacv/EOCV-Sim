@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.config;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanelConfig;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
+import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineFps;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager;
@@ -45,6 +46,8 @@ public class Config {
 
     public volatile Size videoRecordingSize = new Size(640, 480);
     public volatile PipelineFps videoRecordingFps = PipelineFps.MEDIUM;
+
+    public volatile WebcamDriver preferredWebcamDriver = WebcamDriver.OpenIMAJ;
 
     public volatile String workspacePath  = CompiledPipelineManager.Companion.getDEF_WORKSPACE_FOLDER().getAbsolutePath();
 

@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox
+import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver
 import com.github.serivesmejia.eocvsim.input.SourceType
 import java.awt.FlowLayout
 import java.awt.GridLayout
@@ -38,6 +39,12 @@ class CreateSourcePanel(eocvSim: EOCVSim) : JPanel(GridLayout(2, 1)) {
     private val sourceSelectComboBox = EnumComboBox(
         "", SourceType::class.java, SourceType.values(),
         { it.coolName }, { SourceType.fromCoolName(it) }
+    )
+
+    private val cameraDriverComboBox = EnumComboBox(
+        "Camera driver: ", WebcamDriver::class.java, WebcamDriver.values(),
+        { it.name.replace("_", " ") }, { WebcamDriver.valueOf(it.replace(" ", "_")) }
+
     )
 
     private val sourceSelectPanel    = JPanel(FlowLayout(FlowLayout.CENTER))

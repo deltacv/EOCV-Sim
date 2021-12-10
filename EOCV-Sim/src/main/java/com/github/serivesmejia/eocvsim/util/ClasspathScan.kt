@@ -50,6 +50,9 @@ class ClasspathScan {
         val scanResult = classGraph.scan()
 
         Log.info(TAG, "ClassGraph finished scanning (took ${timer.seconds()}s)")
+        for(clazz in scanResult.allClasses) {
+            println(clazz.name)
+        }
         
         val tunableFieldClassesInfo = scanResult.getClassesWithAnnotation(RegisterTunableField::class.java.name)
         val pipelineClassesInfo = scanResult.getSubclasses(OpenCvPipeline::class.java.name)

@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.config.Config;
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox;
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
+import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineFps;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout;
 
@@ -37,7 +38,7 @@ import java.awt.*;
 public class Configuration {
 
     private final EOCVSim eocvSim;
-    public JPanel contents = new JPanel(new GridLayout(7, 1, 1, 8));
+    public JPanel contents = new JPanel(new GridLayout(8, 1, 1, 8));
     public JComboBox<String> themeComboBox = new JComboBox<>();
 
     public JButton acceptButton = new JButton("Accept");
@@ -46,6 +47,8 @@ public class Configuration {
 
     public EnumComboBox<PipelineTimeout> pipelineTimeoutComboBox = null;
     public EnumComboBox<PipelineFps> pipelineFpsComboBox = null;
+
+    public EnumComboBox<WebcamDriver> preferredWebcamDriver = null;
 
     public SizeFields videoRecordingSize = null;
     public EnumComboBox<PipelineFps> videoRecordingFpsComboBox = null;
@@ -66,7 +69,7 @@ public class Configuration {
         Config config = this.eocvSim.configManager.getConfig();
         configuration.setModal(true);
         configuration.setTitle("Settings");
-        configuration.setSize(350, 320);
+        configuration.setSize(365, 340);
 
         JPanel themePanel = new JPanel(new FlowLayout());
         JLabel themeLabel = new JLabel("Theme: ");
@@ -91,6 +94,13 @@ public class Configuration {
         pauseOnImagePanel.add(pauseOnImageLabel);
 
         contents.add(pauseOnImagePanel);
+
+        preferredWebcamDriver = new EnumComboBox<>(
+                "Preferred Webcam Driver: ", WebcamDriver.class,
+                WebcamDriver.values()
+        );
+        preferredWebcamDriver.setSelectedEnum(config.preferredWebcamDriver);
+        contents.add(preferredWebcamDriver);
 
         pipelineTimeoutComboBox = new EnumComboBox<>(
                 "Pipeline Process Timeout: ", PipelineTimeout.class,
@@ -150,6 +160,7 @@ public class Configuration {
         //save user modifications to config
         config.simTheme = userSelectedTheme;
         config.pauseOnImages = pauseOnImageCheckBox.isSelected();
+        config.preferredWebcamDriver = preferredWebcamDriver.getSelectedEnum();
         config.pipelineTimeout = pipelineTimeoutComboBox.getSelectedEnum();
         config.pipelineMaxFps = pipelineFpsComboBox.getSelectedEnum();
         config.videoRecordingSize = videoRecordingSize.getCurrentSize();

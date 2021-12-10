@@ -37,11 +37,11 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline) {
 
     val holdingPipelineName = holdingPipeline::class.simpleName
 
-    val pipelineFieldValues: Map<Field, Any>
+    val pipelineFieldValues: Map<Field, Any?>
     val pipelineClass = holdingPipeline::class.java
 
     init {
-        val fieldValues = mutableMapOf<Field, Any>()
+        val fieldValues = mutableMapOf<Field, Any?>()
 
         for(field in pipelineClass.declaredFields) {
             if(Modifier.isFinal(field.modifiers) || !Modifier.isPublic(field.modifiers))
@@ -98,7 +98,7 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline) {
         }
     }
 
-    fun getField(name: String): Pair<Field, Any>? {
+    fun getField(name: String): Pair<Field, Any?>? {
         for((field, value) in pipelineFieldValues) {
             if(field.name == name) {
                 return Pair(field, value)

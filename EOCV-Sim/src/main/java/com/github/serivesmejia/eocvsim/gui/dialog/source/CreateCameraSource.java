@@ -25,6 +25,7 @@ package com.github.serivesmejia.eocvsim.gui.dialog.source;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox;
+import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation;
 import com.github.serivesmejia.eocvsim.input.camera.opencv.OpenCvWebcam;
 import com.github.serivesmejia.eocvsim.input.camera.openimaj.OpenIMAJWebcam;
@@ -73,7 +74,7 @@ public class CreateCameraSource {
 
     private HashMap<String, Integer> indexes = new HashMap<>();
 
-    private static Executor executor = Executors.newFixedThreadPool(3);
+    private static final Executor executor = Executors.newFixedThreadPool(3);
 
     enum State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED, NO_WEBCAMS, UNSUPPORTED }
 
@@ -89,19 +90,26 @@ public class CreateCameraSource {
     private boolean usingOpenCvDiscovery = false;
 
     public void initCreateImageSource() {
-        try {
-            webcams = OpenIMAJWebcam.getAvailableWebcams().stream().map(
-                    (device) -> new OpenIMAJWebcam(device, new Size(0, 0))
-            ).collect(Collectors.toList());
-        } catch(Throwable e) {
-            Log.warn("CreateCameraSource", "OpenIMAJ is unusable, falling back to OpenCV webcam discovery");
-            webcams = CameraUtil.findWebcamsOpenCv();
+        WebcamDriver preferredDriver = eocvSim.getConfig().preferredWebcamDriver;
 
-            usingOpenCvDiscovery = true;
-        }
+        if(preferredDriver == WebcamDriver.OpenIMAJ) {
+            try {
+                webcams = OpenIMAJWebcam.getAvailableWebcams().stream().map(
+                        (device) -> new OpenIMAJWebcam(device, new Size(0, 0))
+                ).collect(Collectors.toList());
+            } catch (Throwable e) {
+                Log.warn("CreateCameraSource", "OpenIMAJ is unusable, falling back to OpenCV webcam discovery");
+                webcams = CameraUtil.findWebcamsOpenCv();
 
-        if(!usingOpenCvDiscovery && webcams.isEmpty()) {
-            Log.warn("CreateCameraSource", "OpenIMAJ returned 0 cameras, trying with OpenCV webcam discovery");
+                usingOpenCvDiscovery = true;
+            }
+
+            if (!usingOpenCvDiscovery && webcams.isEmpty()) {
+                Log.warn("CreateCameraSource", "OpenIMAJ returned 0 cameras, trying with OpenCV webcam discovery");
+                webcams = CameraUtil.findWebcamsOpenCv();
+                usingOpenCvDiscovery = true;
+            }
+        } else {
             webcams = CameraUtil.findWebcamsOpenCv();
             usingOpenCvDiscovery = true;
         }

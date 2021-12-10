@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'kotlin'
     id 'maven-publish'
 }
 
@@ -21,4 +22,5 @@ publishing {
 
 dependencies {
     implementation "org.openpnp:opencv:$opencv_version"
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 }
