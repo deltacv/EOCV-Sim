@@ -33,16 +33,17 @@ class ClasspathScan {
     private lateinit var scanResultJob: Job
 
     @Suppress("UNCHECKED_CAST")
-    fun scan(overrideClasspath: String? = null, classLoader: ClassLoader? = null): ScanResult {
+    fun scan(jarFile: String? = null, classLoader: ClassLoader? = null): ScanResult {
         val timer = ElapsedTime()
         val classGraph = ClassGraph()
             .enableClassInfo()
+            //.verbose()
             .enableAnnotationInfo()
             .rejectPackages(*ignoredPackages)
 
-        if(overrideClasspath != null) {
-            classGraph.overrideClasspath(overrideClasspath)
-            Log.info(TAG, "Starting to scan for classes in $overrideClasspath...")
+        if(jarFile != null) {
+            classGraph.overrideClasspath("$jarFile!/")
+            Log.info(TAG, "Starting to scan for classes in $jarFile...")
         } else {
             Log.info(TAG, "Starting to scan classpath...")
         }
@@ -50,9 +51,6 @@ class ClasspathScan {
         val scanResult = classGraph.scan()
 
         Log.info(TAG, "ClassGraph finished scanning (took ${timer.seconds()}s)")
-        for(clazz in scanResult.allClasses) {
-            println(clazz.name)
-        }
         
         val tunableFieldClassesInfo = scanResult.getClassesWithAnnotation(RegisterTunableField::class.java.name)
         val pipelineClassesInfo = scanResult.getSubclasses(OpenCvPipeline::class.java.name)

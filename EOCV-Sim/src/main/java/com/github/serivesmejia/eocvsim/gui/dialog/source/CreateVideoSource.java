@@ -156,10 +156,10 @@ public class CreateVideoSource {
         // Status label part
         cancelButton.addActionListener(e -> close());
 
-        createVideoSource.setResizable(false);
+        createVideoSource.pack();
         createVideoSource.setLocationRelativeTo(null);
+        createVideoSource.setResizable(false);
         createVideoSource.setVisible(true);
-
     }
 
     public void videoFileSelected(File f) {

@@ -97,10 +97,10 @@ public class CreateSource {
             DialogFactory.createSourceDialog(eocvSim, sourceType);
         });
 
-        chooseSource.setResizable(false);
+        chooseSource.pack();
         chooseSource.setLocationRelativeTo(null);
+        chooseSource.setResizable(false);
         chooseSource.setVisible(true);
-
     }
 
     public void close() {

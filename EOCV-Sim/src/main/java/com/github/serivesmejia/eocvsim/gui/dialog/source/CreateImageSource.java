@@ -156,8 +156,9 @@ public class CreateImageSource {
 
         cancelButton.addActionListener(e -> close());
 
-        createImageSource.setResizable(false);
+        createImageSource.pack();
         createImageSource.setLocationRelativeTo(null);
+        createImageSource.setResizable(false);
         createImageSource.setVisible(true);
 
     }

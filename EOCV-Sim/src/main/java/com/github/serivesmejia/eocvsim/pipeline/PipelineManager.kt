@@ -41,6 +41,7 @@ import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.lang.reflect.Constructor
+import java.lang.reflect.Field
 import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong
@@ -107,6 +108,14 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     var lastInitialSnapshot: PipelineSnapshot? = null
         private set
+
+    val snapshotFieldFilter: (Field) -> Boolean = {
+        // only snapshot fields managed by the variable tuner
+        // when getTunableFieldOf returns null, it means that
+        // it wasn't able to find a suitable TunableField for
+        // the passed Field type.
+        eocvSim.tunerManager.getTunableFieldOf(it) != null
+    }
 
     //manages and builds pipelines in runtime
     @JvmField val compiledPipelineManager = CompiledPipelineManager(this)
@@ -514,7 +523,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         currentPipelineIndex = index
         currentPipelineName  = currentPipeline!!.javaClass.simpleName
 
-        val snap = PipelineSnapshot(currentPipeline!!)
+        val snap = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
 
         lastInitialSnapshot = if(applyLatestSnapshot) {
             applyLatestSnapshot()
@@ -568,13 +577,13 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     fun captureSnapshot() {
         if(currentPipeline != null) {
-            latestSnapshot = PipelineSnapshot(currentPipeline!!)
+            latestSnapshot = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
         }
     }
 
     fun captureStaticSnapshot() {
         if(currentPipeline != null) {
-            staticSnapshot = PipelineSnapshot(currentPipeline!!)
+            staticSnapshot = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
         }
     }
 

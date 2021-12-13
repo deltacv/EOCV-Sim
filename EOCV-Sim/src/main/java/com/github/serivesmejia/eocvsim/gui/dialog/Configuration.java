@@ -38,7 +38,7 @@ import java.awt.*;
 public class Configuration {
 
     private final EOCVSim eocvSim;
-    public JPanel contents = new JPanel(new GridLayout(8, 1, 1, 8));
+    public JPanel contents = new JPanel(new GridBagLayout());
     public JComboBox<String> themeComboBox = new JComboBox<>();
 
     public JButton acceptButton = new JButton("Accept");
@@ -69,8 +69,17 @@ public class Configuration {
         Config config = this.eocvSim.configManager.getConfig();
         configuration.setModal(true);
         configuration.setTitle("Settings");
-        configuration.setSize(365, 340);
+        //configuration.setSize(380, 300);
 
+        JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.LEFT);
+
+        /*
+        UI TAB
+         */
+
+        JPanel uiPanel = new JPanel(new GridLayout(1, 1, 1, 8));
+
+        /* THEME SETTING */
         JPanel themePanel = new JPanel(new FlowLayout());
         JLabel themeLabel = new JLabel("Theme: ");
 
@@ -83,8 +92,16 @@ public class Configuration {
         themeComboBox.setSelectedIndex(eocvSim.getConfig().simTheme.ordinal());
         themePanel.add(themeLabel);
         themePanel.add(this.themeComboBox);
-        contents.add(themePanel);
+        uiPanel.add(themePanel);
 
+        tabbedPane.addTab("Inteface", uiPanel);
+
+        /*
+        INPUT SOURCES TAB
+         */
+        JPanel inputSourcesPanel = new JPanel(new GridLayout(2, 1, 1, 8));
+
+        /* PAUSE WITH IMAGE SOURCES OPTION */
         JPanel pauseOnImagePanel = new JPanel(new FlowLayout());
         JLabel pauseOnImageLabel = new JLabel("Pause with Image Sources");
 
@@ -93,29 +110,40 @@ public class Configuration {
         pauseOnImagePanel.add(pauseOnImageCheckBox);
         pauseOnImagePanel.add(pauseOnImageLabel);
 
-        contents.add(pauseOnImagePanel);
+        inputSourcesPanel.add(pauseOnImagePanel);
 
+        /* PREFERRED WEBCAM DRIVER OPTION */
         preferredWebcamDriver = new EnumComboBox<>(
                 "Preferred Webcam Driver: ", WebcamDriver.class,
                 WebcamDriver.values()
         );
         preferredWebcamDriver.setSelectedEnum(config.preferredWebcamDriver);
-        contents.add(preferredWebcamDriver);
+        inputSourcesPanel.add(preferredWebcamDriver);
 
+        tabbedPane.addTab("Input Sources", inputSourcesPanel);
+
+        /*
+        PROCESSING TAB
+         */
+        JPanel processingPanel = new JPanel(new GridLayout(4, 1, 1, 8));
+
+        /* PIPELINE TIMEOUT IN processFrame AND init*/
         pipelineTimeoutComboBox = new EnumComboBox<>(
                 "Pipeline Process Timeout: ", PipelineTimeout.class,
                 PipelineTimeout.values(), PipelineTimeout::getCoolName, PipelineTimeout::fromCoolName
         );
         pipelineTimeoutComboBox.setSelectedEnum(config.pipelineTimeout);
-        contents.add(pipelineTimeoutComboBox);
+        processingPanel.add(pipelineTimeoutComboBox);
 
+        /* PIPELINE FPS*/
         pipelineFpsComboBox = new EnumComboBox<>(
                 "Pipeline Max FPS: ", PipelineFps.class,
                 PipelineFps.values(), PipelineFps::getCoolName, PipelineFps::fromCoolName
         );
         pipelineFpsComboBox.setSelectedEnum(config.pipelineMaxFps);
-        contents.add(this.pipelineFpsComboBox);
+        processingPanel.add(this.pipelineFpsComboBox);
 
+        /* VIDEO REC SIZE */
         videoRecordingSize = new SizeFields(
                 config.videoRecordingSize, false,
                 "Video Recording Size: "
@@ -123,17 +151,28 @@ public class Configuration {
         videoRecordingSize.onChange.doPersistent(() ->
                 acceptButton.setEnabled(this.videoRecordingSize.getValid())
         );
-        contents.add(this.videoRecordingSize);
+        processingPanel.add(this.videoRecordingSize);
 
-        // video fps
-
+        /* VIDEO REC FPS */
         videoRecordingFpsComboBox = new EnumComboBox<>(
                 "Video Recording FPS: ", PipelineFps.class,
                 PipelineFps.values(), PipelineFps::getCoolName, PipelineFps::fromCoolName
         );
         videoRecordingFpsComboBox.setSelectedEnum(config.videoRecordingFps);
-        contents.add(videoRecordingFpsComboBox);
+        processingPanel.add(videoRecordingFpsComboBox);
 
+        tabbedPane.addTab("Processing", processingPanel);
+
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        /* ADD TABBED PANE TO DIALOG */
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        contents.add(tabbedPane, gbc);
+
+        /*
+        ACCEPT BUTTON AND FINISH SETTING UP DIALOG
+         */
         JPanel acceptPanel = new JPanel(new FlowLayout());
         acceptPanel.add(acceptButton);
 
@@ -142,10 +181,13 @@ public class Configuration {
             close();
         });
 
-        contents.add(acceptPanel);
+        gbc.gridy = 2;
+        contents.add(acceptPanel, gbc);
         contents.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
 
         configuration.add(this.contents);
+        configuration.pack();
+
         configuration.setResizable(false);
         configuration.setLocationRelativeTo(null);
         configuration.setVisible(true);

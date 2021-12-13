@@ -29,7 +29,7 @@ import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.*
 
-class PipelineSnapshot(holdingPipeline: OpenCvPipeline) {
+class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> Boolean)? = null) {
 
     companion object {
         private val TAG = "PipelineSnapshot"
@@ -46,6 +46,8 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline) {
         for(field in pipelineClass.declaredFields) {
             if(Modifier.isFinal(field.modifiers) || !Modifier.isPublic(field.modifiers))
                 continue
+
+            if(filter?.invoke(field) == false) continue
 
             fieldValues[field] = field.get(holdingPipeline)
         }

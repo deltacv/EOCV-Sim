@@ -95,9 +95,14 @@ class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
         revalAndRepaint()
     }
 
+    private var lastTelemetry = "";
+
     override fun onTelemetryTransmission(text: String, srcTelemetry: Telemetry) {
         SwingUtilities.invokeLater {
-            updateTelemetry(text, srcTelemetry.captionValueSeparator, srcTelemetry.itemSeparator)
+            if(lastTelemetry != text) {
+                updateTelemetry(text, srcTelemetry.captionValueSeparator, srcTelemetry.itemSeparator)
+            }
+            lastTelemetry = text
         }
     }
 

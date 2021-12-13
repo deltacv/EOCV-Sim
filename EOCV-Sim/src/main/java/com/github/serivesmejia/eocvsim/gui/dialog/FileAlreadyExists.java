@@ -47,11 +47,9 @@ public class FileAlreadyExists {
     }
 
     public UserChoice run() {
-
         fileAlreadyExists.setModal(true);
 
         fileAlreadyExists.setTitle("Warning");
-        fileAlreadyExists.setSize(300, 120);
 
         JPanel alreadyExistsPanel = new JPanel(new FlowLayout());
 
@@ -86,10 +84,9 @@ public class FileAlreadyExists {
         fileAlreadyExists.setLocationRelativeTo(null);
         fileAlreadyExists.setVisible(true);
 
-        while (userChoice == UserChoice.NA) ;
+        while (userChoice == UserChoice.NA);
 
         return userChoice;
-
     }
 
     public enum UserChoice {NA, REPLACE, CANCEL}

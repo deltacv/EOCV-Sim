@@ -39,7 +39,9 @@ class RectField(instance: OpenCvPipeline, reflectionField: Field, eocvSim: EOCVS
 
     @Volatile private var hasChanged = false
 
-    private var initialRect = initialFieldValue as Rect
+    private var initialRect = if(initialFieldValue != null)
+        initialFieldValue as Rect
+    else Rect(0, 0, 0, 0)
 
     init {
         rect[0] = initialRect.x.toDouble()
