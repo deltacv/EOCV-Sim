@@ -122,8 +122,7 @@ public class CreateCameraSource {
         JPanel contentsPanel = new JPanel(new GridBagLayout());
 
         // Camera id part
-        JLabel idLabel = new JLabel("Camera: ");
-        idLabel.setHorizontalAlignment(JLabel.LEFT);
+        JLabel idLabel = new JLabel("Camera: ", JLabel.RIGHT);
 
         camerasComboBox = new JComboBox<>();
         if(webcams.isEmpty()) {
@@ -180,52 +179,43 @@ public class CreateCameraSource {
             SwingUtilities.invokeLater(() -> camerasComboBox.setSelectedIndex(0));
         }
 
+        JPanel fieldsPanel = new JPanel(new GridBagLayout());
+
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.weighty = 1.5;
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-
-        contentsPanel.add(idLabel, gbc);
+        fieldsPanel.add(idLabel, gbc);
 
         gbc.gridx = 1;
-        contentsPanel.add(camerasComboBox, gbc);
+        fieldsPanel.add(camerasComboBox, gbc);
 
         //Name part
-        JLabel nameLabel = new JLabel("Source Name: ");
+        JLabel nameLabel = new JLabel("Source Name: ", JLabel.RIGHT);
 
         nameTextField = new JTextField("CameraSource-" + (eocvSim.inputSourceManager.sources.size() + 1), 15);
 
         gbc.gridx = 0;
         gbc.gridy = 1;
 
-        contentsPanel.add(nameLabel, gbc);
+        fieldsPanel.add(nameLabel, gbc);
 
         gbc.gridx = 1;
-        contentsPanel.add(nameTextField, gbc);
+        fieldsPanel.add(nameTextField, gbc);
 
         // Size part
-        JLabel sizeLabel = new JLabel("Suggested Resolutions: ");
+        JLabel sizeLabel = new JLabel("Suggested Resolutions: ", JLabel.RIGHT);
+        dimensionsComboBox = new JComboBox<>();
 
         gbc.gridx = 0;
         gbc.gridy = 2;
 
-        contentsPanel.add(sizeLabel, gbc);
-
-        dimensionsComboBox = new JComboBox<>();
+        fieldsPanel.add(sizeLabel, gbc);
 
         gbc.gridx = 1;
-        contentsPanel.add(dimensionsComboBox, gbc);
+        fieldsPanel.add(dimensionsComboBox, gbc);
 
         // Webcam rotation combo box
 
-        JLabel rotationLabel = new JLabel("Webcam Rotation: ");
-
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-
-        contentsPanel.add(rotationLabel, gbc);
-
+        JLabel rotationLabel = new JLabel("Webcam Rotation: ", JLabel.RIGHT);
         rotationComboBox = new EnumComboBox<WebcamRotation>(
                 "",
                 WebcamRotation.class,
@@ -234,31 +224,37 @@ public class CreateCameraSource {
                 WebcamRotation::fromDisplayName
         );
 
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+
+        fieldsPanel.add(rotationLabel, gbc);
         gbc.gridx = 1;
-        contentsPanel.add(rotationComboBox, gbc);
+        fieldsPanel.add(rotationComboBox.getComboBox(), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+
+        contentsPanel.add(fieldsPanel, gbc);
 
         contentsPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
 
         // Status label part
         statusLabel.setHorizontalAlignment(JLabel.CENTER);
 
-        gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 1;
         contentsPanel.add(statusLabel, gbc);
 
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+
         // Bottom buttons
-        JPanel buttonsPanel = new JPanel(new FlowLayout());
         createButton = new JButton();
 
-        buttonsPanel.add(createButton);
-
-        JButton cancelButton = new JButton("Cancel");
-        buttonsPanel.add(cancelButton);
+        contentsPanel.add(createButton, gbc);
 
         gbc.gridx = 1;
-        gbc.gridy = 5;
-
-        contentsPanel.add(buttonsPanel, gbc);
+        JButton cancelButton = new JButton("Cancel");
+        contentsPanel.add(cancelButton, gbc);
 
         //Add contents
         contentsPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));

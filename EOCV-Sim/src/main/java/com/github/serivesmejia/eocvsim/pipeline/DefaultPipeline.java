@@ -64,7 +64,6 @@ public class DefaultPipeline extends OpenCvPipeline {
                 (int) Math.round(5 * aspectRatioPercentage)
         );
 
-
         //Text
         Imgproc.putText(
                 input,

@@ -59,11 +59,11 @@ public class MatRecycler {
         RecyclableMat mat = null;
         try {
             mat = availableMats.take();
+            mat.checkedOut = true;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
-        mat.checkedOut = true;
         return mat;
     }
 
