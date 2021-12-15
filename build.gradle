@@ -19,11 +19,12 @@ buildscript {
 
     repositories {
         mavenCentral()
-        maven { url "https://plugins.gradle.org/m2/" }
+        gradlePluginPortal()
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'gradle.plugin.com.github.johnrengelman:shadow:7.1.1'
     }
 }
 
