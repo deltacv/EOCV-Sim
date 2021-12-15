@@ -79,8 +79,6 @@ class Output @JvmOverloads constructor(
 
         output.contentPane.add(tabbedPane)
 
-        output.setLocationRelativeTo(null)
-
         updatePipelineOutput()
 
         if(eocvSim.pipelineManager.paused) {
@@ -97,6 +95,9 @@ class Output @JvmOverloads constructor(
         registerListeners()
 
         output.pack()
+        output.setSize(500, 350)
+
+        output.setLocationRelativeTo(null)
         output.isVisible = true
     }
 

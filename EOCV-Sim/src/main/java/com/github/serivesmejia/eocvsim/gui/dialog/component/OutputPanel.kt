@@ -43,9 +43,10 @@ class OutputPanel(
             bottomButtonsPanel.outputTextSupplier = { outputArea.text }
         }
 
-        outputArea.isEditable  = false
-        outputArea.highlighter = null
-        outputArea.lineWrap    = true
+        outputArea.isEditable    = false
+        outputArea.highlighter   = null
+        outputArea.lineWrap      = true
+        outputArea.wrapStyleWord = true
 
         val outputScroll = JScrollPane(outputArea)
         outputScroll.verticalScrollBarPolicy   = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
