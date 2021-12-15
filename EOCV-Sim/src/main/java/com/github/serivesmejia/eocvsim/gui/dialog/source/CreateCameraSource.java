@@ -117,12 +117,11 @@ public class CreateCameraSource {
         createCameraSource.setModal(true);
 
         createCameraSource.setTitle("Create camera source");
-        createCameraSource.setSize(350, 280);
 
         JPanel contentsPanel = new JPanel(new GridBagLayout());
 
         // Camera id part
-        JLabel idLabel = new JLabel("Camera: ", JLabel.RIGHT);
+        JLabel idLabel = new JLabel("Available cameras: ", JLabel.RIGHT);
 
         camerasComboBox = new JComboBox<>();
         if(webcams.isEmpty()) {
@@ -182,6 +181,8 @@ public class CreateCameraSource {
         JPanel fieldsPanel = new JPanel(new GridBagLayout());
 
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(7, 0, 0, 7);
 
         fieldsPanel.add(idLabel, gbc);
 
@@ -189,7 +190,7 @@ public class CreateCameraSource {
         fieldsPanel.add(camerasComboBox, gbc);
 
         //Name part
-        JLabel nameLabel = new JLabel("Source Name: ", JLabel.RIGHT);
+        JLabel nameLabel = new JLabel("Source name: ", JLabel.RIGHT);
 
         nameTextField = new JTextField("CameraSource-" + (eocvSim.inputSourceManager.sources.size() + 1), 15);
 
@@ -202,7 +203,7 @@ public class CreateCameraSource {
         fieldsPanel.add(nameTextField, gbc);
 
         // Size part
-        JLabel sizeLabel = new JLabel("Suggested Resolutions: ", JLabel.RIGHT);
+        JLabel sizeLabel = new JLabel("Suggested resolutions: ", JLabel.RIGHT);
         dimensionsComboBox = new JComboBox<>();
 
         gbc.gridx = 0;
@@ -215,7 +216,7 @@ public class CreateCameraSource {
 
         // Webcam rotation combo box
 
-        JLabel rotationLabel = new JLabel("Webcam Rotation: ", JLabel.RIGHT);
+        JLabel rotationLabel = new JLabel("Camera rotation: ", JLabel.RIGHT);
         rotationComboBox = new EnumComboBox<WebcamRotation>(
                 "",
                 WebcamRotation.class,
@@ -236,7 +237,7 @@ public class CreateCameraSource {
 
         contentsPanel.add(fieldsPanel, gbc);
 
-        contentsPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
+        contentsPanel.setBorder(BorderFactory.createEmptyBorder(5, 0, 0, 0));
 
         // Status label part
         statusLabel.setHorizontalAlignment(JLabel.CENTER);
@@ -244,20 +245,29 @@ public class CreateCameraSource {
         gbc.gridy = 1;
         contentsPanel.add(statusLabel, gbc);
 
+        // Bottom buttons
+
+        JPanel bottomButtonsPanel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints gbcBtts = new GridBagConstraints();
+        gbcBtts.insets = new Insets(0, 0, 0, 10);
+
+        createButton = new JButton();
+        JButton cancelButton = new JButton("Cancel");
+
+        bottomButtonsPanel.add(createButton, gbcBtts);
+
+        gbcBtts.gridx = 1;
+        gbcBtts.insets = new Insets(0, 0, 0, 0);
+        bottomButtonsPanel.add(cancelButton, gbcBtts);
+
+        gbc.insets = new Insets(10, 0, 0, 0);
         gbc.gridx = 0;
         gbc.gridy = 2;
-
-        // Bottom buttons
-        createButton = new JButton();
-
-        contentsPanel.add(createButton, gbc);
-
-        gbc.gridx = 1;
-        JButton cancelButton = new JButton("Cancel");
-        contentsPanel.add(cancelButton, gbc);
+        contentsPanel.add(bottomButtonsPanel, gbc);
 
         //Add contents
-        contentsPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
+        contentsPanel.setBorder(BorderFactory.createEmptyBorder(8, 15, 15, 0));
 
         createCameraSource.getContentPane().add(contentsPanel, BorderLayout.CENTER);
 
@@ -266,8 +276,7 @@ public class CreateCameraSource {
             if(state == State.TEST_SUCCESSFUL) {
                 Webcam webcam = webcams.get(getSelectedIndex());
 
-                Size dim = sizes.get(
-                        camerasComboBox.getSelectedItem()
+                Size dim = sizes.get(camerasComboBox.getSelectedItem()
                 ).get(dimensionsComboBox.getSelectedIndex()); //oh god again...
 
                 if(usingOpenCvDiscovery) {
