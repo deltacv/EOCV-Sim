@@ -2,7 +2,7 @@ pluginManagement {
     repositories {
         maven { url 'https://dl.bintray.com/kotlin/kotlin-eap' }
         mavenCentral()
-        maven { url 'https://plugins.gradle.org/m2/' }
+        gradlePluginPortal()
     }
 }
 
@@ -11,4 +11,3 @@ rootProject.name = 'EOCV-Sim'
 include 'TeamCode'
 include 'EOCV-Sim'
 include 'Common'
-

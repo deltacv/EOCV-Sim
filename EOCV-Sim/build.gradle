@@ -64,6 +64,8 @@ dependencies {
         exclude group: 'com.caffeineowl', module: 'bezier-utils'
     }
 
+    implementation 'io.javalin:javalin:4.1.1'
+
     implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"
 
     implementation 'info.picocli:picocli:4.6.1'
