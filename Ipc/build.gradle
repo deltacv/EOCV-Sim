@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+    id 'kotlin'
+    id 'maven-publish'
+}
+
+apply from: '../build.common.gradle'
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+}
+
+dependencies {
+    'org.java-websocket:Java-WebSocket:1.5.2'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+}

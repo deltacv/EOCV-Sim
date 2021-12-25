@@ -29,6 +29,7 @@ import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
+import com.github.serivesmejia.eocvsim.ipc.IpcServer
 import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
@@ -87,22 +88,17 @@ class EOCVSim(val params: Parameters = Parameters()) {
         }
     }
 
-    @JvmField
-    val onMainUpdate = EventHandler("OnMainUpdate")
+    @JvmField val onMainUpdate = EventHandler("OnMainUpdate")
 
-    @JvmField
-    val visualizer = Visualizer(this)
+    @JvmField val visualizer = Visualizer(this)
 
-    @JvmField
-    val configManager = ConfigManager()
-    @JvmField
-    val inputSourceManager = InputSourceManager(this)
-    @JvmField
-    val pipelineManager = PipelineManager(this)
-    @JvmField
-    val tunerManager = TunerManager(this)
-    @JvmField
-    val workspaceManager = WorkspaceManager(this)
+    @JvmField val configManager = ConfigManager()
+    @JvmField val inputSourceManager = InputSourceManager(this)
+    @JvmField val pipelineManager = PipelineManager(this)
+    @JvmField val tunerManager = TunerManager(this)
+    @JvmField val workspaceManager = WorkspaceManager(this)
+
+    @JvmField val ipcServer = IpcServer(this)
 
     val classpathScan = ClasspathScan()
 
@@ -151,8 +147,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
         classpathScan.asyncScan()
 
         configManager.init() //load config
-
         workspaceManager.init()
+
+        ipcServer.start()
 
         visualizer.initAsync(configManager.config.simTheme) //create gui in the EDT
 

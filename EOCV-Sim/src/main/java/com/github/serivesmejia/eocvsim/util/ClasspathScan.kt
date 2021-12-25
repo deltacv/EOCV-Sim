@@ -23,6 +23,8 @@
 
 package com.github.serivesmejia.eocvsim.util
 
+import com.github.serivesmejia.eocvsim.ipc.message.handler.IpcMessageHandler
+import com.github.serivesmejia.eocvsim.ipc.message.IpcMessage
 import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
@@ -53,8 +55,15 @@ class ClasspathScan {
         )
     }
 
-    lateinit var scanResult: ScanResult
-        private set
+    private lateinit var _scanResult: ScanResult
+
+    val scanResult: ScanResult get() {
+        if(::scanResultJob.isInitialized && !::_scanResult.isInitialized) {
+            join()
+        }
+
+        return _scanResult
+    }
 
     private lateinit var scanResultJob: Job
 
@@ -78,7 +87,6 @@ class ClasspathScan {
 
         Log.info(TAG, "ClassGraph finished scanning (took ${timer.seconds()}s)")
         
-        val tunableFieldClassesInfo = scanResult.getClassesWithAnnotation(RegisterTunableField::class.java.name)
         val pipelineClassesInfo = scanResult.getSubclasses(OpenCvPipeline::class.java.name)
 
         val pipelineClasses = mutableListOf<Class<out OpenCvPipeline>>()
@@ -101,6 +109,8 @@ class ClasspathScan {
         Log.blank()
         Log.info(TAG, "Found ${pipelineClasses.size} pipelines")
         Log.blank()
+
+        val tunableFieldClassesInfo = scanResult.getClassesWithAnnotation(RegisterTunableField::class.java.name)
 
         val tunableFieldClasses = mutableListOf<Class<out TunableField<*>>>()
         val tunableFieldAcceptorClasses = mutableMapOf<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>()
@@ -130,12 +140,33 @@ class ClasspathScan {
         Log.info(TAG, "Found ${tunableFieldClasses.size} tunable fields and ${tunableFieldAcceptorClasses.size} acceptors")
         Log.blank()
 
+        val ipcMessageHandlerClassesInfo = scanResult.getClassesWithAnnotation(IpcMessageHandler.Register::class.java.name)
+        val ipcMessageHandlerClasses = mutableMapOf<Class<out IpcMessage>, Class<out IpcMessageHandler<*>>>()
+
+        for(ipcMessageHandlerClassInfo in ipcMessageHandlerClassesInfo) {
+            val clazz = if(classLoader != null) {
+                classLoader.loadClass(ipcMessageHandlerClassInfo.name)
+            } else Class.forName(ipcMessageHandlerClassInfo.name)
+
+            if(ReflectUtil.hasSuperclass(clazz, IpcMessageHandler::class.java)) {
+                val handledMessage = clazz.getAnnotation(IpcMessageHandler.Register::class.java).handledMessage.java
+
+                ipcMessageHandlerClasses[handledMessage] = clazz as Class<out IpcMessageHandler<*>>
+                Log.info(TAG, "Found IPC message handler ${clazz.typeName}")
+            }
+        }
+
+        Log.blank()
+        Log.info(TAG, "Found ${ipcMessageHandlerClasses.size} IPC message handlers")
+        Log.blank()
+
         Log.info(TAG, "Finished scanning (took ${timer.seconds()}s)")
 
-        this.scanResult = ScanResult(
+        this._scanResult = ScanResult(
             pipelineClasses.toTypedArray(),
             tunableFieldClasses.toTypedArray(),
-            tunableFieldAcceptorClasses.toMap()
+            tunableFieldAcceptorClasses.toMap(),
+            ipcMessageHandlerClasses.toMap()
         )
 
         return this.scanResult
@@ -157,5 +188,6 @@ class ClasspathScan {
 data class ScanResult(
     val pipelineClasses: Array<Class<out OpenCvPipeline>>,
     val tunableFieldClasses: Array<Class<out TunableField<*>>>,
-    val tunableFieldAcceptorClasses: Map<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>
+    val tunableFieldAcceptorClasses: Map<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>,
+    val ipcMessageHandlerClasses: Map<Class<out IpcMessage>, Class<out IpcMessageHandler<*>>>
 )
