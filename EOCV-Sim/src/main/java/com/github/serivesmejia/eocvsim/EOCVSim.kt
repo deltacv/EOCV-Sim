@@ -29,13 +29,12 @@ import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
-import com.github.serivesmejia.eocvsim.ipc.IpcServer
+import io.github.deltacv.eocvsim.ipc.IpcServer
 import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.*
-import com.github.serivesmejia.eocvsim.util.cv.CameraUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
@@ -48,11 +47,9 @@ import nu.pattern.OpenCV
 import org.opencv.core.Size
 import java.awt.Dimension
 import java.io.File
-import java.lang.management.ManagementFactory
 import javax.swing.SwingUtilities
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
-import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 class EOCVSim(val params: Parameters = Parameters()) {

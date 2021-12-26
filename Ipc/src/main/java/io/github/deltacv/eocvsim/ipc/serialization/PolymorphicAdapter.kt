@@ -1,6 +1,5 @@
-package com.github.serivesmejia.eocvsim.ipc.serialization
+package io.github.deltacv.eocvsim.ipc.serialization
 
-import com.github.serivesmejia.eocvsim.ipc.message.IpcMessage
 import com.google.gson.*
 import java.lang.reflect.Type
 
@@ -19,10 +18,10 @@ open class PolymorphicAdapter<T>(val name: String) : JsonSerializer<T>, JsonDese
 
     @Suppress("UNCHECKED_CAST")
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): T {
-        val className = json.asJsonObject.get("messageClass").asString
+        val className = json.asJsonObject.get("${name}Class").asString
         val clazz = Class.forName(className)
 
-        return gson.fromJson(json, clazz) as T
+        return gson.fromJson(json.asJsonObject.get("$name"), clazz) as T
     }
 
 }
