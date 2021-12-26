@@ -40,7 +40,6 @@ abstract class IpcMessageBase : IpcMessage {
         return this
     }
 
-
     override fun toString() = "IpcMessageBase(type=\"${this::class.java.typeName}\", id=$id)"
 
 }
