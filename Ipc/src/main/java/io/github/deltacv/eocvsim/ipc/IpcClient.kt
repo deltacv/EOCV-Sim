@@ -1,15 +1,22 @@
 package io.github.deltacv.eocvsim.ipc
 
 import com.github.serivesmejia.eocvsim.util.Log
+import io.github.deltacv.eocvsim.ipc.message.AuthMessage
 import io.github.deltacv.eocvsim.ipc.message.IpcMessage
+import io.github.deltacv.eocvsim.ipc.message.response.IpcErrorResponse
 import io.github.deltacv.eocvsim.ipc.message.response.IpcMessageResponse
+import io.github.deltacv.eocvsim.ipc.message.response.IpcOkResponse
+import io.github.deltacv.eocvsim.ipc.security.PassToken
 import io.github.deltacv.eocvsim.ipc.serialization.ipcGson
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.lang.Exception
 import java.net.URI
 
-class IpcClient(val port: Int = 11026) : WebSocketClient(URI("ws://localhost:$port")) {
+class IpcClient(
+    val port: Int = 11026,
+    val passToken: PassToken? = null
+) : WebSocketClient(URI("ws://localhost:$port")) {
 
     companion object {
         const val TAG = "IpcClient"
@@ -20,14 +27,26 @@ class IpcClient(val port: Int = 11026) : WebSocketClient(URI("ws://localhost:$po
     private val awaitingResponseMessages = mutableMapOf<Int, IpcMessage>()
 
     fun broadcast(message: IpcMessage) {
-        Log.trace(TAG, "Sent $message to server at port $port")
         send(gson.toJson(message))
+        Log.trace(TAG, "Sent $message to server at port $port and id ${message.id}")
 
         awaitingResponseMessages[message.id] = message
     }
 
     override fun onOpen(handshakedata: ServerHandshake) {
         Log.info(TAG, "Connected to server at port $port with ${handshakedata.httpStatusMessage}")
+
+        if(passToken != null) {
+            Log.info(TAG, "Authenticating to port $port...")
+
+            broadcast(AuthMessage(passToken).onResponse {
+                if(it is IpcOkResponse) {
+                    Log.info(TAG, "Authentication to port $port successful")
+                } else if(it is IpcErrorResponse) {
+                    Log.info(TAG, "Authentication to port $port failed: ${it.reason}")
+                }
+            })
+        }
     }
 
     override fun onMessage(message: String) {
@@ -35,6 +54,7 @@ class IpcClient(val port: Int = 11026) : WebSocketClient(URI("ws://localhost:$po
 
         for((id, message) in awaitingResponseMessages) {
             if(id == response.id) {
+                Log.trace(TAG, "Server at port $port responded to id $id with $response")
                 message.receiveResponse(response)
                 break
             }

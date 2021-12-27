@@ -1,3 +1,5 @@
 package io.github.deltacv.eocvsim.ipc.message
 
-class AuthMessage(var passToken: String) : IpcMessageBase()
+import io.github.deltacv.eocvsim.ipc.security.PassToken
+
+class AuthMessage(var passToken: PassToken) : IpcMessageBase()

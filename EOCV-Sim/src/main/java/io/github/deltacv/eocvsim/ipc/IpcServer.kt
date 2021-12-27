@@ -7,12 +7,14 @@ import io.github.deltacv.eocvsim.ipc.message.AuthMessage
 import io.github.deltacv.eocvsim.ipc.message.IpcMessage
 import io.github.deltacv.eocvsim.ipc.message.handler.IpcMessageHandler
 import io.github.deltacv.eocvsim.ipc.message.response.IpcMessageResponse
-import io.github.deltacv.eocvsim.ipc.security.DestroyableString
 import io.github.deltacv.eocvsim.ipc.security.PassToken
+import io.github.deltacv.eocvsim.ipc.security.secureRandomString
 import io.github.deltacv.eocvsim.ipc.serialization.ipcGson
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import java.net.InetSocketAddress
 
 class IpcServer(
@@ -36,12 +38,6 @@ class IpcServer(
 
     private val authorisedConnections = mutableListOf<WebSocket>()
 
-    init {
-        if(usePassToken) {
-            passToken = PassToken(DestroyableString.random())
-        }
-    }
-
     override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
         val hostString = conn.localSocketAddress.hostString
 
@@ -61,22 +57,20 @@ class IpcServer(
         val messageObject = gson.fromJson(message, IpcMessage::class.java)
 
         if(usePassToken && !authorisedConnections.contains(conn)) {
-            if(messageObject is AuthMessage) {
-                if(passToken.matches(messageObject.passToken)) {
-                    authorisedConnections.add(conn)
-                } else {
-                    conn.close(1013, "Passtoken is incorrect")
-                    return
-                }
-            } else {
+            if(messageObject !is AuthMessage) {
                 conn.close(1013, "Didn't authenticate with an AuthMessage before messaging started")
                 return
             }
         }
 
-        val handler = handlerFor(messageObject::class.java)
+        Log.trace(TAG, "Received message ${messageObject} with id ${messageObject.id} from ${conn.localSocketAddress.hostString}")
 
-        handler?.internalHandle(IpcTransactionContext(messageObject, conn, this, gson))
+        val handler = handlerFor(messageObject::class.java)
+        handler?.let {
+            it.internalHandle(IpcTransactionContext(messageObject, conn, this, gson))
+
+            Log.trace(TAG, "Handler ${handler::class.java.typeName} executed for message with id ${messageObject.id} from ${conn.localSocketAddress.hostString}")
+        }
     }
 
     override fun onError(conn: WebSocket, ex: Exception) {
@@ -85,7 +79,23 @@ class IpcServer(
     }
 
     override fun onStart() {
+        if(usePassToken) {
+            val str = secureRandomString()
+            passToken = PassToken(str)
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(StringSelection(str.toString()), null)
+        }
+
         Log.info(TAG, "Opened IPC websocket at ${this.address.hostString ?: "localhost"} port ${this.address.port}")
+    }
+
+    fun auth(ctx: IpcTransactionContext<AuthMessage>) {
+        if(passToken == ctx.message.passToken) {
+            authorisedConnections.add(ctx.wsCtx)
+            Log.info(TAG, "Client ${ctx.wsCtx.localSocketAddress.hostString} successfully authenticated")
+        } else {
+            ctx.wsCtx.close(1013, "Passtoken is incorrect")
+            return
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -100,7 +110,7 @@ class IpcServer(
                     handlers[messageClass] = handlerClass.getConstructor().newInstance() as IpcMessageHandler<M>
                     handlers[messageClass]!! as IpcMessageHandler<M>
                 } catch(ignored: NoSuchMethodException) {
-                    Log.warn(TAG,"Handler class ${handlerClass.typeName} doesn't implement a constructor with no parameters, it cannot be instantiated")
+                    Log.trace(TAG,"Handler class ${handlerClass.typeName} doesn't implement a constructor with no parameters, it cannot be instantiated")
                     null
                 }
             } else null
@@ -113,6 +123,8 @@ class IpcServer(
         val server: IpcServer,
         private val gson: Gson
     ) {
+
+        val eocvSim get() = server.eocvSim
 
         fun respond(response: IpcMessageResponse) {
             response.id = message.id

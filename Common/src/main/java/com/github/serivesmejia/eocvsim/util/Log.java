@@ -120,88 +120,88 @@ public class Log {
     }
 
     static public void error(String message, Throwable ex) {
-        if (ERROR) logger.log(LEVEL_ERROR, null, message, ex);
+        logger.log(LEVEL_ERROR, null, message, ex, ERROR);
     }
 
     static public void error(String category, String message, Throwable ex) {
-        if (ERROR) logger.log(LEVEL_ERROR, category, message, ex);
+        logger.log(LEVEL_ERROR, category, message, ex, ERROR);
     }
 
     static public void error(String message) {
-        if (ERROR) logger.log(LEVEL_ERROR, null, message, null);
+        logger.log(LEVEL_ERROR, null, message, null, ERROR);
     }
 
     static public void error(String category, String message) {
-        if (ERROR) logger.log(LEVEL_ERROR, category, message, null);
+        logger.log(LEVEL_ERROR, category, message, null, ERROR);
     }
 
     static public void warn(String message, Throwable ex) {
-        if (WARN) logger.log(LEVEL_WARN, null, message, ex);
+        logger.log(LEVEL_WARN, null, message, ex, WARN);
     }
 
     static public void warn(String category, String message, Throwable ex) {
-        if (WARN) logger.log(LEVEL_WARN, category, message, ex);
+        logger.log(LEVEL_WARN, category, message, ex, WARN);
     }
 
     static public void warn(String message) {
-        if (WARN) logger.log(LEVEL_WARN, null, message, null);
+        logger.log(LEVEL_WARN, null, message, null, WARN);
     }
 
     static public void warn(String category, String message) {
-        if (WARN) logger.log(LEVEL_WARN, category, message, null);
+        logger.log(LEVEL_WARN, category, message, null, WARN);
     }
 
     static public void info(String message, Throwable ex) {
-        if (INFO) logger.log(LEVEL_INFO, null, message, ex);
+        logger.log(LEVEL_INFO, null, message, ex, INFO);
     }
 
     static public void info(String category, String message, Throwable ex) {
-        if (INFO) logger.log(LEVEL_INFO, category, message, ex);
+        logger.log(LEVEL_INFO, category, message, ex, INFO);
     }
 
     static public void info(String message) {
-        if (INFO) logger.log(LEVEL_INFO, null, message, null);
+        logger.log(LEVEL_INFO, null, message, null, INFO);
     }
 
     static public void info(String category, String message) {
-        if (INFO) logger.log(LEVEL_INFO, category, message, null);
+        logger.log(LEVEL_INFO, category, message, null, INFO);
     }
 
     static public void debug(String message, Throwable ex) {
-        if (DEBUG) logger.log(LEVEL_DEBUG, null, message, ex);
+        logger.log(LEVEL_DEBUG, null, message, ex, DEBUG);
     }
 
     static public void debug(String category, String message, Throwable ex) {
-        if (DEBUG) logger.log(LEVEL_DEBUG, category, message, ex);
+        logger.log(LEVEL_DEBUG, category, message, ex, DEBUG);
     }
 
     static public void debug(String message) {
-        if (DEBUG) logger.log(LEVEL_DEBUG, null, message, null);
+        logger.log(LEVEL_DEBUG, null, message, null, DEBUG);
     }
 
     static public void debug(String category, String message) {
-        if (DEBUG) logger.log(LEVEL_DEBUG, category, message, null);
+        logger.log(LEVEL_DEBUG, category, message, null, DEBUG);
     }
 
     static public void trace(String message, Throwable ex) {
-        if (TRACE) logger.log(LEVEL_TRACE, null, message, ex);
+        logger.log(LEVEL_TRACE, null, message, ex, TRACE);
     }
 
     static public void trace(String category, String message, Throwable ex) {
-        if (TRACE) logger.log(LEVEL_TRACE, category, message, ex);
+        logger.log(LEVEL_TRACE, category, message, ex, TRACE);
     }
 
     static public void trace(String message) {
-        if (TRACE) logger.log(LEVEL_TRACE, null, message, null);
+        logger.log(LEVEL_TRACE, null, message, null, TRACE);
     }
 
     static public void trace(String category, String message) {
-        if (TRACE) logger.log(LEVEL_TRACE, category, message, null);
+        logger.log(LEVEL_TRACE, category, message, null, TRACE);
     }
 
     static public void blank(int lines) {
         for (int i = 0; i < lines; i++) {
-            logger.log(LEVEL_BLANK, null, "", null);
+            logger.log(LEVEL_BLANK, null, "", null, true);
         }
     }
 
@@ -216,7 +216,7 @@ public class Log {
     static public class Logger {
         private final long firstLogTime = System.currentTimeMillis();
 
-        public void log(int level, String category, String message, Throwable ex) {
+        public void log(int level, String category, String message, Throwable ex, boolean print) {
             StringBuilder builder = new StringBuilder(256);
 
             if (level != LEVEL_BLANK) {
@@ -263,11 +263,13 @@ public class Log {
                 builder.append(writer.toString().trim());
             }
 
-            print(builder.toString(), level);
+            if(print) {
+                print(builder.toString(), level);
+            }
         }
 
         /**
-         * Prints the message to System.out. Called by the default implementation of {@link #log(int, String, String, Throwable)}.
+         * Prints the message to System.out. Called by the default implementation of {@link #log(int, String, String, Throwable, boolean)}.
          */
         protected void print(String message, int level) {
             fullLogs.append(message).append("\n");

@@ -5,9 +5,9 @@ import java.security.MessageDigest
 
 private val md = MessageDigest.getInstance("SHA-512");
 
-fun DestroyableString.sha512() = chars.sha512()
-
-fun String.sha512() = encodeToByteArray().sha512()
+fun String.sha512(): String {
+    return encodeToByteArray().sha512()
+}
 
 fun ByteArray.sha512(): String {
     val messageDigest = md.digest(this)

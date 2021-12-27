@@ -1,16 +1,10 @@
 package io.github.deltacv.eocvsim.ipc
 
 import io.github.deltacv.eocvsim.ipc.message.sim.PrintMessage
-import io.github.deltacv.eocvsim.ipc.security.DestroyableString
 import io.github.deltacv.eocvsim.ipc.security.PassToken
-import kotlin.system.measureTimeMillis
 
 fun main() {
-    println(measureTimeMillis {
-        println(PassToken(DestroyableString.random()).hash)
-    })
-
-    val client = IpcClient()
+    val client = IpcClient(passToken = PassToken("eL31fCp8AHci%ZzWDtex8P2CzhpB5MGj5U&5uj#Obgnibm!r#rwq&#tWL&%lpWDJdKOJLh\$dH-#=GrQJyWkCB#sOaEnI6z#E@at\$LDtw#%g7P"))
     client.connectBlocking()
 
     client.broadcast(
