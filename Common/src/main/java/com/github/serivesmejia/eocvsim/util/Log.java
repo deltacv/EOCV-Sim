@@ -263,8 +263,11 @@ public class Log {
                 builder.append(writer.toString().trim());
             }
 
+            String str = builder.toString();
+            fullLogs.append(str).append("\n");
+
             if(print) {
-                print(builder.toString(), level);
+                print(str, level);
             }
         }
 
@@ -272,8 +275,6 @@ public class Log {
          * Prints the message to System.out. Called by the default implementation of {@link #log(int, String, String, Throwable, boolean)}.
          */
         protected void print(String message, int level) {
-            fullLogs.append(message).append("\n");
-
             if(level == LEVEL_ERROR) {
                 System.err.println(message);
             } else {
