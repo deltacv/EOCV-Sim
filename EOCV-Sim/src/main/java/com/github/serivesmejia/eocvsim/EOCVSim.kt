@@ -43,6 +43,8 @@ import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
+import io.github.deltacv.eocvsim.pipeline.JavascriptPipeline
+import io.github.deltacv.eocvsim.pipeline.JavascriptPipelineInstantiator
 import nu.pattern.OpenCV
 import org.opencv.core.Size
 import java.awt.Dimension
@@ -181,6 +183,28 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     private fun start() {
+        val jsPipelineInstantiator = JavascriptPipelineInstantiator("js pipeline test", """
+            importClass(org.opencv.imgproc.Imgproc)
+            importClass(org.opencv.core.Size)
+            importClass(java.lang.System)
+            cd
+            function processFrame(input) {
+                Imgproc.GaussianBlur(input, input, new Size(7, 7), 0)
+                telemetry.addData("[>]", "telemetry from js!")
+                telemetry.update()
+                
+                return input
+            }
+            
+            function onViewportTapped() {
+                System.out.println("eeeeeeee hello from js pipeline")
+            }
+        """.trimIndent())
+
+        pipelineManager.addPipelineClass(
+            JavascriptPipeline::class.java, instantiator = jsPipelineInstantiator
+        )
+
         Log.info(TAG, "Begin EOCVSim loop")
         Log.blank()
 

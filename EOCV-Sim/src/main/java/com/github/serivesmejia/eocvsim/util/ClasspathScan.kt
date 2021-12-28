@@ -46,6 +46,7 @@ class ClasspathScan {
             "imgui",
             "io.github.classgraph",
             "com.github.serivesmejia.eocvsim.pipeline",
+            "io.github.deltacv.eocvsim.pipeline",
             "org.openftc",
             "org.lwjgl",
             "org.apache",

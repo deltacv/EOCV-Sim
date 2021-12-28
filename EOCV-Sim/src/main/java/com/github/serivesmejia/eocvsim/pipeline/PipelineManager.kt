@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.pipeline.PipelineInstantiator
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.util.MatPoster
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
@@ -361,7 +362,11 @@ class PipelineManager(var eocvSim: EOCVSim) {
         //similar to pipeline processFrame, call the user function in the background
         //and wait for some X timeout for the user to finisih doing what it has to do.
         val viewportTappedJob = GlobalScope.launch(currentPipelineContext ?: EmptyCoroutineContext) {
-            pipeline.onViewportTapped()
+            try {
+                pipeline.onViewportTapped()
+            } catch(e: Exception) {
+                updateExceptionTracker(e)
+            }
         }
 
         val configTimeoutMs = eocvSim.config.pipelineTimeout.ms
@@ -400,9 +405,13 @@ class PipelineManager(var eocvSim: EOCVSim) {
     }
 
     @Suppress("UNCHECKED_CAST")
-    @JvmOverloads fun addPipelineClass(C: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH) {
+    @JvmOverloads fun addPipelineClass(
+        C: Class<*>,
+        source: PipelineSource = PipelineSource.CLASSPATH,
+        instantiator: PipelineInstantiator = DefaultPipelineInstantiator,
+    ) {
         try {
-            pipelines.add(PipelineData(source, C as Class<out OpenCvPipeline>))
+            pipelines.add(PipelineData(source, C as Class<out OpenCvPipeline>, instantiator))
         } catch (ex: Exception) {
             Log.warn(TAG, "Error while adding pipeline class", ex)
             Log.warn(TAG, "Unable to cast " + C.name + " to OpenCvPipeline class.")
@@ -471,13 +480,12 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
         captureSnapshot()
 
-        var nextPipeline: OpenCvPipeline?
-        var nextTelemetry: Telemetry?
+        val nextPipeline: OpenCvPipeline?
+        val nextTelemetry: Telemetry?
+        val pipelineData = pipelines[index]
         val pipelineClass = pipelines[index].clazz
 
         Log.info(TAG, "Changing to pipeline " + pipelineClass.name)
-
-        var constructor: Constructor<*>
 
         try {
             nextTelemetry = TelemetryImpl().apply {
@@ -485,13 +493,9 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 addTransmissionReceiver(eocvSim.visualizer.telemetryPanel)
             }
 
-            try { //instantiate pipeline if it has a constructor of a telemetry parameter
-                constructor = pipelineClass.getConstructor(Telemetry::class.java)
-                nextPipeline = constructor.newInstance(nextTelemetry) as OpenCvPipeline
-            } catch (ex: NoSuchMethodException) { //instantiating with a constructor of no params
-                constructor = pipelineClass.getConstructor()
-                nextPipeline = constructor.newInstance() as OpenCvPipeline
-            }
+            nextPipeline = pipelineData.instantiator.instantiate(
+                pipelineClass, nextTelemetry
+            )
 
             Log.info(TAG, "Instantiated pipeline class " + pipelineClass.name)
         } catch (ex: NoSuchMethodException) {
@@ -694,6 +698,10 @@ enum class PipelineFps(val fps: Int, val coolName: String) {
     }
 }
 
-data class PipelineData(val source: PipelineSource, val clazz: Class<out OpenCvPipeline>)
+data class PipelineData(
+    val source: PipelineSource,
+    val clazz: Class<out OpenCvPipeline>,
+    val instantiator: PipelineInstantiator
+)
 
 enum class PipelineSource { CLASSPATH, COMPILED_ON_RUNTIME }
