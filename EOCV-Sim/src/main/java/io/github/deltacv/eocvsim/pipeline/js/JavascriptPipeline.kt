@@ -1,4 +1,4 @@
-package io.github.deltacv.eocvsim.pipeline
+package io.github.deltacv.eocvsim.pipeline.js
 
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.mozilla.javascript.Context

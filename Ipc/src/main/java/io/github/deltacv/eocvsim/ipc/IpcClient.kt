@@ -52,10 +52,10 @@ class IpcClient(
     override fun onMessage(message: String) {
         val response = gson.fromJson(message, IpcMessageResponse::class.java) ?: return
 
-        for((id, message) in awaitingResponseMessages) {
+        for((id, messageObj) in awaitingResponseMessages) {
             if(id == response.id) {
                 Log.trace(TAG, "Server at port $port responded to id $id with $response")
-                message.receiveResponse(response)
+                messageObj.receiveResponse(response)
                 break
             }
         }

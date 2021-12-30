@@ -39,8 +39,9 @@ dependencies {
 
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
-    implementation 'org.mozilla:rhino:1.7.13'
     implementation "org.eclipse.jdt:ecj:3.21.0"
+    implementation 'org.mozilla:rhino:1.7.13'
+    implementation 'org.python:jython-standalone:2.7.2'
 
     implementation "org.openpnp:opencv:$opencv_version"
 
