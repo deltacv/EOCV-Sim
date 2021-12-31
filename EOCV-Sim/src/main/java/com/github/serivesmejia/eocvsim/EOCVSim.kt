@@ -409,10 +409,10 @@ def processFrame(input):
 
         val msg = isRecording + pipelineFpsMsg + posterFpsMsg + isPaused
 
-        if (pipelineManager.currentPipeline == null) {
+        if (pipelineManager.currentPipelineData == null) {
             visualizer.setTitleMessage("No pipeline$msg${workspaceMsg}")
         } else {
-            visualizer.setTitleMessage("${pipelineManager.currentPipelineName}$msg${workspaceMsg}")
+            visualizer.setTitleMessage("${pipelineManager.currentPipelineData!!.displayName}$msg${workspaceMsg}")
         }
     }
 

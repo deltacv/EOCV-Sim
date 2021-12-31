@@ -5,20 +5,7 @@ plugins {
 }
 
 apply from: '../build.common.gradle'
-
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
-    archiveClassifier = "sources"
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-        }
-    }
-}
+apply from: '../publish.gradle'
 
 dependencies {
     implementation project(":Common")

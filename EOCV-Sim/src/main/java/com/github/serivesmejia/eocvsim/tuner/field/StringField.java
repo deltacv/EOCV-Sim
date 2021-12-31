@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
@@ -40,7 +41,7 @@ public class StringField extends TunableField<String> {
 
     volatile boolean hasChanged = false;
 
-    public StringField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public StringField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.TEXT);
 
         if(initialFieldValue != null) {

@@ -28,13 +28,15 @@ import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.tuner.exception.CancelTunableFieldAddingException;
 import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.ReflectUtil;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection;
+import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @SuppressWarnings("rawtypes")
 public class TunerManager {
@@ -47,6 +49,8 @@ public class TunerManager {
 
     private static HashMap<Type, Class<? extends TunableField<?>>> tunableFieldsTypes = null;
     private static HashMap<Class<? extends TunableField<?>>, Class<? extends TunableFieldAcceptor>> tunableFieldAcceptors = null;
+
+    private VirtualReflection reflect = JvmVirtualReflection.INSTANCE;
 
     private boolean firstInit = true;
 
@@ -119,9 +123,9 @@ public class TunerManager {
         init();
     }
 
-    public Class<? extends TunableField> getTunableFieldOf(Field field) {
+    public Class<? extends TunableField> getTunableFieldOf(VirtualField field) {
         //we only accept non-final fields
-        if (Modifier.isFinal(field.getModifiers())) return null;
+        if (field.isFinal()) return null;
 
         Class<?> type = field.getType();
         if (field.getType().isPrimitive()) { //wrap to java object equivalent if field type is primitive
@@ -146,9 +150,9 @@ public class TunerManager {
 
         if (pipeline == null) return;
 
-        Field[] fields = pipeline.getClass().getFields();
+        VirtualField[] fields = reflect.contextOf(pipeline).getFields();
 
-        for (Field field : fields) {
+        for (VirtualField field : fields) {
             Class<? extends TunableField> tunableFieldClass = getTunableFieldOf(field);
 
             // we can't handle this type
@@ -158,12 +162,14 @@ public class TunerManager {
             //now, lets do some more reflection to instantiate this TunableField
             //and add it to the list...
             try {
-                Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(OpenCvPipeline.class, Field.class, EOCVSim.class);
+                Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(OpenCvPipeline.class, VirtualField.class, EOCVSim.class);
                 this.fields.add(constructor.newInstance(pipeline, field, eocvSim));
             } catch(InvocationTargetException e) {
                 if(e.getCause() instanceof CancelTunableFieldAddingException) {
                     String message = e.getCause().getMessage();
                     Log.info("TunerManager", "Field " + field.getName() + " wasn't added due to \"" + message + "\"");
+                } else {
+                    Log.error("TunerManager", "Reflection error while processing field: " + field.getName(), e.getCause());
                 }
             } catch (Exception ex) {
                 //oops rip
@@ -171,6 +177,10 @@ public class TunerManager {
             }
 
         }
+    }
+
+    public void setVirtualReflection(VirtualReflection reflect) {
+        this.reflect = reflect;
     }
 
     public void reevaluateConfigs() {

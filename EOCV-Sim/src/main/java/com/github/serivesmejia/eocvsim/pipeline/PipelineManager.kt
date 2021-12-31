@@ -35,6 +35,9 @@ import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
+import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
@@ -104,13 +107,18 @@ class PipelineManager(var eocvSim: EOCVSim) {
             return field
         }
 
+    var virtualReflect: VirtualReflection = JvmVirtualReflection
+        set(value) {
+            eocvSim.tunerManager.setVirtualReflection(value)
+            field = value
+        }
+
     var latestSnapshot: PipelineSnapshot? = null
         private set
-
     var lastInitialSnapshot: PipelineSnapshot? = null
         private set
 
-    val snapshotFieldFilter: (Field) -> Boolean = {
+    val snapshotFieldFilter: (VirtualField) -> Boolean = {
         // only snapshot fields managed by the variable tuner
         // when getTunableFieldOf returns null, it means that
         // it wasn't able to find a suitable TunableField for
@@ -408,10 +416,16 @@ class PipelineManager(var eocvSim: EOCVSim) {
     @JvmOverloads fun addPipelineClass(
         C: Class<*>,
         source: PipelineSource = PipelineSource.CLASSPATH,
-        instantiator: PipelineInstantiator = DefaultPipelineInstantiator,
+        customDisplayName: String? = null, // will only be used if the instantiator doesn't provide a name
+        instantiator: PipelineInstantiator = DefaultPipelineInstantiator
     ) {
         try {
-            pipelines.add(PipelineData(source, C as Class<out OpenCvPipeline>, instantiator))
+            val pipelineC = C as Class<out OpenCvPipeline>
+            val displayName = customDisplayName ?: instantiator.nameOf(pipelineC) ?: C.simpleName
+
+            pipelines.add(PipelineData(
+                source, pipelineC, displayName, instantiator
+            ))
         } catch (ex: Exception) {
             Log.warn(TAG, "Error while adding pipeline class", ex)
             Log.warn(TAG, "Unable to cast " + C.name + " to OpenCvPipeline class.")
@@ -525,9 +539,11 @@ class PipelineManager(var eocvSim: EOCVSim) {
         currentPipelineData  = pipelines[index]
         currentTelemetry     = nextTelemetry
         currentPipelineIndex = index
-        currentPipelineName  = currentPipeline!!.javaClass.simpleName
+        currentPipelineName  = "${currentPipelineData!!.displayName} (class ${currentPipeline!!::class.java.typeName})"
 
-        val snap = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
+        virtualReflect = pipelineData.instantiator.virtualReflectOf(pipelineClass)
+
+        val snap = PipelineSnapshot(currentPipeline!!, virtualReflect, snapshotFieldFilter)
 
         lastInitialSnapshot = if(applyLatestSnapshot) {
             applyLatestSnapshot()
@@ -581,13 +597,13 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     fun captureSnapshot() {
         if(currentPipeline != null) {
-            latestSnapshot = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
+            latestSnapshot = PipelineSnapshot(currentPipeline!!, virtualReflect, snapshotFieldFilter)
         }
     }
 
     fun captureStaticSnapshot() {
         if(currentPipeline != null) {
-            staticSnapshot = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
+            staticSnapshot = PipelineSnapshot(currentPipeline!!, virtualReflect, snapshotFieldFilter)
         }
     }
 
@@ -701,7 +717,8 @@ enum class PipelineFps(val fps: Int, val coolName: String) {
 data class PipelineData(
     val source: PipelineSource,
     val clazz: Class<out OpenCvPipeline>,
+    val displayName: String,
     val instantiator: PipelineInstantiator
 )
 
-enum class PipelineSource { CLASSPATH, COMPILED_ON_RUNTIME }
+enum class PipelineSource { CLASSPATH, COMPILED_ON_RUNTIME, PYTHON_RUNTIME }

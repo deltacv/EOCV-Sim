@@ -5,12 +5,13 @@ import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableFieldAcceptor
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import org.openftc.easyopencv.OpenCvPipeline
 import java.lang.reflect.Field
 
 @RegisterTunableField
 class EnumField(private val instance: OpenCvPipeline,
-                reflectionField: Field,
+                reflectionField: VirtualField,
                 eocvSim: EOCVSim) : TunableField<Enum<*>>(instance, reflectionField, eocvSim, AllowMode.TEXT) {
 
     val values = reflectionField.type.enumConstants
@@ -45,7 +46,7 @@ class EnumField(private val instance: OpenCvPipeline,
 
     override fun setGuiFieldValue(index: Int, newValue: String) {
         currentValue = java.lang.Enum.valueOf(initialValue::class.java, newValue)
-        reflectionField.set(instance, currentValue)
+        reflectionField.set(currentValue)
     }
 
     override fun getValue() = currentValue
@@ -56,7 +57,7 @@ class EnumField(private val instance: OpenCvPipeline,
         return values
     }
 
-    override fun hasChanged() = reflectionField.get(instance) != beforeValue
+    override fun hasChanged() = reflectionField.get() != beforeValue
 
     class EnumFieldAcceptor : TunableFieldAcceptor {
         override fun accept(clazz: Class<*>) = clazz.isEnum

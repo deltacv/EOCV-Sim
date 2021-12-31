@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.tuner.field.numeric;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.tuner.field.NumericField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
@@ -35,7 +36,7 @@ public class LongField extends NumericField<Long> {
 
     private long beforeValue;
 
-    public LongField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public LongField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS);
         value = (long) initialFieldValue;
     }

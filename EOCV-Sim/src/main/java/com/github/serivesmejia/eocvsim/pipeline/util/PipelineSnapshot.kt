@@ -24,32 +24,38 @@
 package com.github.serivesmejia.eocvsim.pipeline.util
 
 import com.github.serivesmejia.eocvsim.util.Log
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
 import org.openftc.easyopencv.OpenCvPipeline
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 import java.util.*
 
-class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> Boolean)? = null) {
+class PipelineSnapshot(
+    holdingPipeline: OpenCvPipeline,
+    val virtualReflect: VirtualReflection,
+    val filter: ((VirtualField) -> Boolean)? = null
+) {
 
     companion object {
-        private val TAG = "PipelineSnapshot"
+        const val TAG = "PipelineSnapshot"
     }
 
     val holdingPipelineName = holdingPipeline::class.simpleName
 
-    val pipelineFieldValues: Map<Field, Any?>
+    val pipelineFieldValues: Map<VirtualField, Any?>
     val pipelineClass = holdingPipeline::class.java
 
     init {
-        val fieldValues = mutableMapOf<Field, Any?>()
+        val fieldValues = mutableMapOf<VirtualField, Any?>()
 
-        for(field in pipelineClass.declaredFields) {
-            if(Modifier.isFinal(field.modifiers) || !Modifier.isPublic(field.modifiers))
-                continue
+        val fields = virtualReflect.contextOf(holdingPipeline)?.getFields() ?: arrayOf<VirtualField>()
 
+        for(field in fields) {
+            if(field.isFinal) continue
             if(filter?.invoke(field) == false) continue
 
-            fieldValues[field] = field.get(holdingPipeline)
+            fieldValues[field] = field.get()
         }
 
         pipelineFieldValues = fieldValues.toMap()
@@ -62,7 +68,7 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> 
         if(pipelineClass.name != otherPipeline::class.java.name) return
 
         val changedList = if(lastInitialPipelineSnapshot != null)
-            getChangedFieldsComparedTo(PipelineSnapshot(otherPipeline), lastInitialPipelineSnapshot)
+            getChangedFieldsComparedTo(lastInitialPipelineSnapshot, PipelineSnapshot(otherPipeline, virtualReflect))
         else Collections.emptyList()
 
         fieldValuesLoop@
@@ -79,28 +85,18 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> 
             }
 
             try {
-                field.set(otherPipeline, value)
+                val byNameField = virtualReflect.contextOf(otherPipeline)!!.getField(field.name)
+                byNameField!!.set(value)
             } catch(e: Exception) {
                 Log.warn(
                     TAG,
-                    "Failed to set field ${field.name} from snapshot of ${pipelineClass.name}. " +
-                    "Retrying with by name lookup logic..."
+                    "Definitely failed to set field ${field.name} from snapshot of ${pipelineClass.name}. Did the source code change?", e
                 )
-
-                try {
-                    val byNameField = otherPipeline::class.java.getDeclaredField(field.name)
-                    byNameField.set(otherPipeline, value)
-                } catch(e: Exception) {
-                    Log.warn(
-                        TAG, "Definitely failed to set field ${field.name} from snapshot of ${pipelineClass.name}. " +
-                        "Did the source code change?", e
-                    )
-                }
             }
         }
     }
 
-    fun getField(name: String): Pair<Field, Any?>? {
+    fun getField(name: String): Pair<VirtualField, Any?>? {
         for((field, value) in pipelineFieldValues) {
             if(field.name == name) {
                 return Pair(field, value)
@@ -113,11 +109,11 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> 
     private fun getChangedFieldsComparedTo(
         pipelineSnapshotA: PipelineSnapshot,
         pipelineSnapshotB: PipelineSnapshot
-    ): List<Field> = pipelineSnapshotA.run {
+    ): List<VirtualField> = pipelineSnapshotA.run {
         if(holdingPipelineName != pipelineSnapshotB.holdingPipelineName && pipelineClass != pipelineSnapshotB.pipelineClass)
             return Collections.emptyList()
 
-        val changedList = mutableListOf<Field>()
+        val changedList = mutableListOf<VirtualField>()
 
         for((field, value) in pipelineFieldValues) {
             val (otherField, otherValue) = pipelineSnapshotB.getField(field.name) ?: continue

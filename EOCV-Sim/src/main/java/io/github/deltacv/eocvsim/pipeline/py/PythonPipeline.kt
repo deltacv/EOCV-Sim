@@ -1,5 +1,6 @@
 package io.github.deltacv.eocvsim.pipeline.py
 
+import io.github.deltacv.eocvsim.virtualreflect.py.PyWrapper
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
@@ -9,26 +10,26 @@ import org.python.core.PyObject
 import org.python.util.PythonInterpreter
 
 class PythonPipeline(
-    val name: String,
+    override val name: String,
     val source: String,
     val telemetry: Telemetry
-) : OpenCvPipeline() {
+) : PyWrapper, OpenCvPipeline() {
 
     var initFunction: PyFunction? = null
         private set
-    lateinit var processFrameFunction: PyFunction
+    var processFrameFunction: PyFunction
         private set
     var onViewportTappedFunction: PyFunction? = null
         private set
 
     private lateinit var matPyObject: PyObject
 
-    private val interpreter = PythonInterpreter()
+    override val interpreter = PythonInterpreter().apply {
+        set("telemetry", Py.java2py(telemetry))
+        exec(source)
+    }
 
-    override fun init(mat: Mat) {
-        interpreter.set("telemetry", Py.java2py(telemetry))
-        interpreter.exec(source)
-
+    init {
         val initFunc = interpreter.get("init")
         if(initFunc is PyFunction) {
             initFunction = initFunc
@@ -43,9 +44,10 @@ class PythonPipeline(
         if(onViewportTappedFunc is PyFunction) {
             onViewportTappedFunction = onViewportTappedFunc
         }
+    }
 
+    override fun init(mat: Mat) {
         matPyObject = Py.java2py(mat)
-
         initFunction?.__call__(matPyObject)
     }
 

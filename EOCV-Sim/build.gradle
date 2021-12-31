@@ -10,20 +10,7 @@ plugins {
 }
 
 apply from: '../build.common.gradle'
-
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
-    archiveClassifier = "sources"
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-        }
-    }
-}
+apply from: '../publish.gradle'
 
 ext.kotest_version = '4.4.3'
 
@@ -40,7 +27,6 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
 
     implementation "org.eclipse.jdt:ecj:3.21.0"
-    implementation 'org.mozilla:rhino:1.7.13'
     implementation 'org.python:jython-standalone:2.7.2'
 
     implementation "org.openpnp:opencv:$opencv_version"

@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanelConfig;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
@@ -35,7 +36,7 @@ import java.lang.reflect.Type;
 
 public abstract class TunableField<T> {
 
-    protected Field reflectionField;
+    protected VirtualField reflectionField;
     protected TunableFieldPanel fieldPanel;
 
     protected OpenCvPipeline pipeline;
@@ -51,16 +52,16 @@ public abstract class TunableField<T> {
 
     private TunableFieldPanel.Mode recommendedMode = null;
 
-    public TunableField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
+    public TunableField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
         this.reflectionField = reflectionField;
         this.pipeline = instance;
         this.allowMode = allowMode;
         this.eocvSim = eocvSim;
 
-        initialFieldValue = reflectionField.get(instance);
+        initialFieldValue = reflectionField.get();
     }
 
-    public TunableField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public TunableField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         this(instance, reflectionField, eocvSim, AllowMode.TEXT);
     }
 
@@ -72,7 +73,7 @@ public abstract class TunableField<T> {
 
     public void setPipelineFieldValue(T newValue) throws IllegalAccessException {
         if (hasChanged()) { //execute if value is not the same to save resources
-            reflectionField.set(pipeline, newValue);
+            reflectionField.set(newValue);
             onValueChange.run();
         }
     }

@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.tuner.field.numeric;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.tuner.field.NumericField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
@@ -35,14 +36,13 @@ public class DoubleField extends NumericField<Double> {
 
     private double beforeValue;
 
-    public DoubleField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public DoubleField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
         value = (double) initialFieldValue;
     }
 
     @Override
     public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
-
         try {
             value = Double.valueOf(newValue);
         } catch (NumberFormatException ex) {
@@ -52,7 +52,6 @@ public class DoubleField extends NumericField<Double> {
         setPipelineFieldValue(value);
 
         beforeValue = value;
-
     }
 
     @Override

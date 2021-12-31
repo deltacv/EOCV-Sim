@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.tuner.field;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
@@ -38,15 +39,13 @@ public class BooleanField extends TunableField<Boolean> {
     boolean lastVal;
     volatile boolean hasChanged = false;
 
-    public BooleanField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-
+    public BooleanField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.TEXT);
 
         setGuiFieldAmount(0);
         setGuiComboBoxAmount(1);
 
         value = (boolean) initialFieldValue;
-
     }
 
     @Override
@@ -54,7 +53,6 @@ public class BooleanField extends TunableField<Boolean> {
 
     @Override
     public void update() {
-
         hasChanged = value != lastVal;
 
         if (hasChanged) { //update values in GUI if they changed since last check
@@ -62,7 +60,6 @@ public class BooleanField extends TunableField<Boolean> {
         }
 
         lastVal = value;
-
     }
 
     @Override

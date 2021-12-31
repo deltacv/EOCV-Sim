@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.tuner.field.cv;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.opencv.core.Point;
 import org.openftc.easyopencv.OpenCvPipeline;
 
@@ -36,12 +37,12 @@ public class PointField extends TunableField<Point> {
 
     Point point;
 
-    double[] lastXY = {0, 0};
+    double lastX = 0;
+    double lastY = 0;
 
     volatile boolean hasChanged = false;
 
-    public PointField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-
+    public PointField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
 
         if(initialFieldValue != null) {
@@ -52,23 +53,23 @@ public class PointField extends TunableField<Point> {
         }
 
         setGuiFieldAmount(2);
-
     }
 
     @Override
-    public void init() { }
+    public void init() {
+        reflectionField.set(point);
+    }
 
     @Override
     public void update() {
-
-        hasChanged = point.x != lastXY[0] || point.y != lastXY[1];
+        hasChanged = point.x != lastX || point.y != lastY;
 
         if (hasChanged) { //update values in GUI if they changed since last check
             updateGuiFieldValues();
         }
 
-        lastXY = new double[]{point.x, point.y};
-
+        lastX = point.x;
+        lastY = point.y;
     }
 
     @Override
@@ -79,7 +80,6 @@ public class PointField extends TunableField<Point> {
 
     @Override
     public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
-
         try {
             double value = Double.parseDouble(newValue);
             if (index == 0) {
@@ -93,8 +93,8 @@ public class PointField extends TunableField<Point> {
 
         setPipelineFieldValue(point);
 
-        lastXY = new double[]{point.x, point.y};
-
+        lastX = point.x;
+        lastY = point.y;
     }
 
     @Override
@@ -109,7 +109,7 @@ public class PointField extends TunableField<Point> {
 
     @Override
     public boolean hasChanged() {
-        hasChanged = point.x != lastXY[0] || point.y != lastXY[1];
+        hasChanged = point.x != lastX || point.y != lastY;
         return hasChanged;
     }
 

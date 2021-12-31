@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.tuner.field;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
@@ -36,7 +37,7 @@ public class NumericField<T extends Number> extends TunableField<T> {
 
     protected volatile boolean hasChanged = false;
 
-    public NumericField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
+    public NumericField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, allowMode);
     }
 
@@ -46,14 +47,10 @@ public class NumericField<T extends Number> extends TunableField<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void update() {
         if (value == null) return;
-
-        try {
-            value = (T) reflectionField.get(pipeline);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        value = (T) reflectionField.get();
 
         hasChanged = hasChanged();
 

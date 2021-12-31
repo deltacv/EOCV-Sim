@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.opencv.core.Scalar;
 import org.openftc.easyopencv.OpenCvPipeline;
 
@@ -43,30 +44,29 @@ public class ScalarField extends TunableField<Scalar> {
 
     volatile boolean hasChanged = false;
 
-    public ScalarField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public ScalarField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
 
         if(initialFieldValue == null) {
             scalar = new Scalar(0, 0, 0);
         } else {
-            scalar = (Scalar) initialFieldValue;
+            scalar = ((Scalar) initialFieldValue).clone();
         }
+
         scalarSize = scalar.val.length;
 
-        setGuiFieldAmount(scalarSize);
+        setGuiFieldAmount(4);
         setRecommendedPanelMode(TunableFieldPanel.Mode.SLIDERS);
     }
 
     @Override
-    public void init() { }
+    public void init() {
+        reflectionField.set(scalar);
+    }
 
     @Override
     public void update() {
-        try {
-            scalar = (Scalar) reflectionField.get(pipeline);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        scalar = (Scalar) reflectionField.get();
 
         hasChanged = !Arrays.equals(scalar.val, lastVal);
 

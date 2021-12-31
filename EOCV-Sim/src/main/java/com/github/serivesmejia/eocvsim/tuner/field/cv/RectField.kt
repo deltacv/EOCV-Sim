@@ -26,12 +26,13 @@ package com.github.serivesmejia.eocvsim.tuner.field.cv
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import org.opencv.core.Rect
 import org.openftc.easyopencv.OpenCvPipeline
 import java.lang.reflect.Field
 
 @RegisterTunableField
-class RectField(instance: OpenCvPipeline, reflectionField: Field, eocvSim: EOCVSim) : 
+class RectField(instance: OpenCvPipeline, reflectionField: VirtualField, eocvSim: EOCVSim) :
                 TunableField<Rect>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
 
     private var rect = arrayOf(0.0, 0.0, 0.0, 0.0)
@@ -40,7 +41,7 @@ class RectField(instance: OpenCvPipeline, reflectionField: Field, eocvSim: EOCVS
     @Volatile private var hasChanged = false
 
     private var initialRect = if(initialFieldValue != null)
-        initialFieldValue as Rect
+        (initialFieldValue as Rect).clone()
     else Rect(0, 0, 0, 0)
 
     init {
@@ -52,11 +53,13 @@ class RectField(instance: OpenCvPipeline, reflectionField: Field, eocvSim: EOCVS
         guiFieldAmount = 4
     }
 
-    override fun init() {}
+    override fun init() {
+        reflectionField.set(initialRect)
+    }
 
     override fun update() {
         if(hasChanged()){
-            initialRect = reflectionField.get(pipeline) as Rect
+            initialRect = reflectionField.get() as Rect
 
             rect[0] = initialRect.x.toDouble()
             rect[1] = initialRect.y.toDouble()
