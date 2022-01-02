@@ -3,4 +3,4 @@ jdk:
 before_install:
  - chmod +x gradlew
 install:
- - ./gradlew :EOCV-Sim:clean :EOCV-Sim:build :EOCV-Sim:publishToMavenLocal :Common:publishToMavenLocal -x :EOCV-Sim:test
+ - ./gradlew clean build :EOCV-Sim:publishToMavenLocal :Common:publishToMavenLocal :Ipc:publishToMavenLocal -x :EOCV-Sim:test
