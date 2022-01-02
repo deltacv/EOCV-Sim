@@ -7,14 +7,9 @@ object PyVirtualReflection : VirtualReflection {
 
     override fun contextOf(c: Class<*>) = null
 
-    override fun contextOf(value: Any) = when(value) {
-        value is PythonInterpreter -> {
-            PyVirtualReflectContext(null, value as PythonInterpreter)
-        }
-        value is PyWrapper -> {
-            PyVirtualReflectContext((value as PyWrapper).name, value.interpreter)
-        }
-        else -> null
-    }
-
+    override fun contextOf(value: Any) = if(value is PyWrapper) {
+        PyVirtualReflectContext(value.name, value.interpreter)
+    } else if(value is PythonInterpreter) {
+        PyVirtualReflectContext(null, value)
+    } else null
 }

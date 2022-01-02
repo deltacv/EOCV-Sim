@@ -29,6 +29,7 @@ import com.github.serivesmejia.eocvsim.tuner.exception.CancelTunableFieldAddingE
 import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.ReflectUtil;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection;
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection;
 import org.openftc.easyopencv.OpenCvPipeline;
@@ -147,8 +148,10 @@ public class TunerManager {
     }
 
     public void addFieldsFrom(OpenCvPipeline pipeline) {
-
         if (pipeline == null) return;
+
+        VirtualReflectContext reflectContext = reflect.contextOf(pipeline);
+        if(reflectContext == null) return;
 
         VirtualField[] fields = reflect.contextOf(pipeline).getFields();
 

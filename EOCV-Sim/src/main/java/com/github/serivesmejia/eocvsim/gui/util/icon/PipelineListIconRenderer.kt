@@ -34,8 +34,8 @@ class PipelineListIconRenderer(
             val source = pipelineManager.pipelines[index].source
 
             label.icon = when(source) {
-                PipelineSource.COMPILED_ON_RUNTIME -> gearsIcon
-                else -> hammerIcon
+                PipelineSource.CLASSPATH -> hammerIcon
+                else -> gearsIcon
             }
         }
 

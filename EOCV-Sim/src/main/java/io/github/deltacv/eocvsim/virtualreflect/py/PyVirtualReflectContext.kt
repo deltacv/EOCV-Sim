@@ -13,6 +13,7 @@ class PyVirtualReflectContext(
 
     override val name: String
         get() = ctxName ?: "PythonInterpreter"
+
     override val simpleName get() = name
 
     private val fieldCache = mutableMapOf<String, PyVirtualField>()
@@ -23,7 +24,17 @@ class PyVirtualReflectContext(
         val fields = mutableListOf<PyVirtualField>()
 
         for(item in locals) {
-            fields.add(fieldFor((item as PyTuple)[0] as String))
+            val name = (item as PyTuple)[0] as String
+
+            // ignore "protected" members as defined by
+            // python naming conventions (variables prefixed
+            // with an underscore are considered private and
+            // shouldn't be exposed). also filters out python
+            // special names such as "__main__" (they are
+            // still accessible with getField(name) though)
+            if(name.startsWith("_")) continue
+
+            fields.add(fieldFor(name))
         }
 
         return fields.toTypedArray()

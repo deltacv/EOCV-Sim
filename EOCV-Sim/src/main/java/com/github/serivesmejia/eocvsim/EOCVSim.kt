@@ -44,7 +44,7 @@ import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import io.github.deltacv.eocvsim.pipeline.py.PythonPipeline
-import io.github.deltacv.eocvsim.pipeline.py.PythonPipelineInstantiator
+import io.github.deltacv.eocvsim.pipeline.py.PythonPipelineHandler
 import nu.pattern.OpenCV
 import org.opencv.core.Size
 import java.awt.Dimension
@@ -97,7 +97,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     @JvmField val tunerManager = TunerManager(this)
     @JvmField val workspaceManager = WorkspaceManager(this)
 
-    @JvmField val ipcServer = IpcServer(this)
+    @JvmField val ipcServer = IpcServer(this, usePassToken = false)
 
     val classpathScan = ClasspathScan()
 
@@ -183,51 +183,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     private fun start() {
-        val pyPipelineInstantiator = PythonPipelineInstantiator("py pipeline test", """
-from org.opencv.core import (Scalar, Mat, Core, MatOfPoint, Rect)
-from java.util import ArrayList
-from org.opencv.imgproc import Imgproc
-
-lowerRGBA = Scalar(0.0, 0.0, 0.0, 0.0)
-upperRGBA = Scalar(255.0, 255.0, 255.0, 255.0)
-rgbaBinaryMat = Mat()
-
-contours = ArrayList()
-hierarchy = Mat()
-
-contoursColor = Scalar(0.0, 0.0, 0.0, 0.0)
-inputContours = Mat()
-
-contoursRects = ArrayList()
-
-rectsColor = Scalar(0.0, 0.0, 0.0, 0.0)
-inputContoursRects = Mat()
-
-def processFrame(input):
-	Core.inRange(input, lowerRGBA, upperRGBA, rgbaBinaryMat)
-
-	contours.clear()
-	hierarchy.release()
-	Imgproc.findContours(rgbaBinaryMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE)
-
-	input.copyTo(inputContours)
-	Imgproc.drawContours(inputContours, contours, -1, contoursColor, 4)
-
-	contoursRects.clear()
-	for points in contours:
-		contoursRects.add(Imgproc.boundingRect(points))
-
-	inputContours.copyTo(inputContoursRects)
-	for rect in contoursRects:
-		Imgproc.rectangle(inputContoursRects, rect, rectsColor, 1)
-
-	return inputContoursRects
-""")
-
-        pipelineManager.addPipelineClass(
-            PythonPipeline::class.java, instantiator = pyPipelineInstantiator
-        )
-
         Log.info(TAG, "Begin EOCVSim loop")
         Log.blank()
 

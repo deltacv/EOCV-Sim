@@ -6,6 +6,7 @@ import com.google.gson.Gson
 import io.github.deltacv.eocvsim.ipc.message.AuthMessage
 import io.github.deltacv.eocvsim.ipc.message.IpcMessage
 import io.github.deltacv.eocvsim.ipc.message.handler.IpcMessageHandler
+import io.github.deltacv.eocvsim.ipc.message.response.IpcErrorResponse
 import io.github.deltacv.eocvsim.ipc.message.response.IpcMessageResponse
 import io.github.deltacv.eocvsim.ipc.security.PassToken
 import io.github.deltacv.eocvsim.ipc.security.secureRandomString
@@ -63,13 +64,19 @@ class IpcServer(
             }
         }
 
-        Log.trace(TAG, "Received message ${messageObject} with id ${messageObject.id} from ${conn.localSocketAddress.hostString}")
+        Log.trace(TAG, "Received message $messageObject with id $messageObject.id from ${conn.localSocketAddress.hostString}")
 
         val handler = handlerFor(messageObject::class.java)
         handler?.let {
-            it.internalHandle(IpcTransactionContext(messageObject, conn, this, gson))
+            val ctx = IpcTransactionContext(messageObject, conn, this, gson)
 
-            Log.trace(TAG, "Handler ${handler::class.java.typeName} executed for message with id ${messageObject.id} from ${conn.localSocketAddress.hostString}")
+            try {
+                it.internalHandle(ctx)
+                Log.trace(TAG, "Handler ${handler::class.java.typeName} executed for message with id ${messageObject.id} from ${conn.localSocketAddress.hostString}")
+            } catch(e: Exception) {
+                ctx.respond(IpcErrorResponse("Exception thrown while processing message", e))
+                Log.error(TAG, "Handler ${handler::class.java.typeName} throwed an exception while processing message with id ${messageObject.id} from ${conn.localSocketAddress.hostString}", e)
+            }
         }
     }
 

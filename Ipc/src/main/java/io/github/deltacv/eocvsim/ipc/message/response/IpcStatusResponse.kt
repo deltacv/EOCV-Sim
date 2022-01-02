@@ -8,10 +8,13 @@ open class IpcOkResponse(var info: String = "")  : IpcMessageResponse() {
     }
 }
 
-open class IpcErrorResponse(var reason: String = "") : IpcMessageResponse() {
+open class IpcErrorResponse(
+    var reason: String = "",
+    var exception: Exception? = null
+) : IpcMessageResponse() {
     override val status = false
 
     override fun toString(): String {
-        return "IpcErrorResponse(reason=\"$reason\")"
+        return "IpcErrorResponse(reason=\"$reason\", exception=\"$exception\")"
     }
 }

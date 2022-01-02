@@ -93,5 +93,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
 
 }
 
-val OpenCvPipeline.isFromRuntimeCompilation
+val Class<out OpenCvPipeline>.isFromRuntimeBuild
    get() = this::class.java.classLoader is PipelineClassLoader
+
+val OpenCvPipeline.isFromRuntimeBuild get() = this::class.java.isFromRuntimeBuild

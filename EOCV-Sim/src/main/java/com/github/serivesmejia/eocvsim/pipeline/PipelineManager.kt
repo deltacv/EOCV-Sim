@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Sebastian Erives
+ * Copyright (c) 2021, 2022 Sebastian Erives
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,6 @@
 package com.github.serivesmejia.eocvsim.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.pipeline.PipelineInstantiator
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.util.MatPoster
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
@@ -44,8 +43,6 @@ import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.TimestampedPipelineHandler
-import java.lang.reflect.Constructor
-import java.lang.reflect.Field
 import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong
@@ -397,35 +394,50 @@ class PipelineManager(var eocvSim: EOCVSim) {
     }
 
     @JvmOverloads
-    fun requestAddPipelineClass(C: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH) {
-        onUpdate.doOnce { addPipelineClass(C, source) }
+    fun requestAddPipelineClass(
+        C: Class<*>,
+        handler: PipelineHandler = DefaultPipelineHandler,
+        source: PipelineSource? = null,
+        customDisplayName: String? = null,
+        refreshGuiPipelineList: Boolean = true
+    ) {
+        onUpdate.doOnce {
+            addPipelineClass(C, handler, source, customDisplayName, refreshGuiPipelineList)
+        }
     }
 
-    fun requestAddPipelineClasses(classes: List<Class<*>>,
-                                  source: PipelineSource = PipelineSource.CLASSPATH,
-                                  refreshGui: Boolean = false) {
+    fun requestAddPipelineClasses(
+        classes: List<Class<*>>,
+        handler: PipelineHandler = DefaultPipelineHandler,
+        source: PipelineSource? = null,
+        customDisplayName: String? = null,
+        refreshGuiPipelineList: Boolean = false
+    ) {
         onUpdate.doOnce {
             for(clazz in classes) {
-                addPipelineClass(clazz, source)
+                addPipelineClass(clazz, handler, source, customDisplayName, refreshGuiPipelineList = false)
             }
-            if(refreshGui) refreshGuiPipelineList()
+            if(refreshGuiPipelineList) refreshGuiPipelineList()
         }
     }
 
     @Suppress("UNCHECKED_CAST")
     @JvmOverloads fun addPipelineClass(
         C: Class<*>,
-        source: PipelineSource = PipelineSource.CLASSPATH,
-        customDisplayName: String? = null, // will only be used if the instantiator doesn't provide a name
-        instantiator: PipelineInstantiator = DefaultPipelineInstantiator
+        handler: PipelineHandler = DefaultPipelineHandler,
+        source: PipelineSource? = null,
+        customDisplayName: String? = null,
+        refreshGuiPipelineList: Boolean = true
     ) {
         try {
-            val pipelineC = C as Class<out OpenCvPipeline>
-            val displayName = customDisplayName ?: instantiator.nameOf(pipelineC) ?: C.simpleName
+            val pipelineClass = C as Class<out OpenCvPipeline>
+            val displayName = customDisplayName ?: handler.nameOf(pipelineClass) ?: C.simpleName
 
             pipelines.add(PipelineData(
-                source, pipelineC, displayName, instantiator
+                source ?: handler.sourceOf(pipelineClass), pipelineClass, displayName, handler
             ))
+
+            if(refreshGuiPipelineList) refreshGuiPipelineList()
         } catch (ex: Exception) {
             Log.warn(TAG, "Error while adding pipeline class", ex)
             Log.warn(TAG, "Unable to cast " + C.name + " to OpenCvPipeline class.")
@@ -434,21 +446,53 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
     }
 
+    fun removePipeline(
+        pipelineData: PipelineData,
+        refreshGuiPipelineList: Boolean = true,
+        changeToDefaultIfRemoved: Boolean = true
+    ) {
+        pipelines.remove(pipelineData)
+
+        if(currentPipeline != null && pipelineData == currentPipelineData) {
+            if(changeToDefaultIfRemoved)
+                requestChangePipeline(0) //change to default pipeline if the current pipeline was deleted
+        }
+
+        if(refreshGuiPipelineList) refreshGuiPipelineList()
+    }
+
+    fun removePipeline(
+        displayName: String,
+        source: PipelineSource,
+        refreshGuiPipelineList: Boolean = true,
+        changeToDefaultIfRemoved: Boolean = true
+    ) {
+        for(pipeline in pipelines.toTypedArray()) {
+            if(pipeline.source == source && pipeline.displayName == displayName) {
+                removePipeline(pipeline, refreshGuiPipelineList, changeToDefaultIfRemoved)
+            }
+        }
+    }
+
+    fun requestRemovePipeline(
+        displayName: String,
+        source: PipelineSource,
+        refreshGuiPipelineList: Boolean = true,
+        changeToDefaultIfRemoved: Boolean = true
+    ) {
+        onUpdate.doOnce {
+            removePipeline(displayName, source, refreshGuiPipelineList, changeToDefaultIfRemoved)
+        }
+    }
+
     @JvmOverloads fun removeAllPipelinesFrom(source: PipelineSource,
                                              refreshGuiPipelineList: Boolean = true,
                                              changeToDefaultIfRemoved: Boolean = true) {
         for(pipeline in pipelines.toTypedArray()) {
             if(pipeline.source == source) {
-                pipelines.remove(pipeline)
-
-                if(currentPipeline != null && currentPipeline!!::class.java == pipeline.clazz) {
-                    if(changeToDefaultIfRemoved)
-                        requestChangePipeline(0) //change to default pipeline if the current pipeline was deleted
-                }
+                removePipeline(pipeline, refreshGuiPipelineList, changeToDefaultIfRemoved)
             }
         }
-
-        if(refreshGuiPipelineList) refreshGuiPipelineList()
     }
 
     @JvmOverloads
@@ -462,12 +506,17 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     fun changePipeline(name: String, source: PipelineSource) {
         for((i, data) in pipelines.withIndex()) {
-            if(data.clazz.simpleName.equals(name, true) && data.source == source) {
+            if(data.clazz.simpleName == name && data.source == source) {
                 changePipeline(i)
                 return
             }
 
-            if(data.clazz.name.equals(name, true) && data.source == source) {
+            if(data.clazz.name == name && data.source == source) {
+                changePipeline(i)
+                return
+            }
+
+            if(data.displayName == name && data.source == source) {
                 changePipeline(i)
                 return
             }
@@ -507,7 +556,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 addTransmissionReceiver(eocvSim.visualizer.telemetryPanel)
             }
 
-            nextPipeline = pipelineData.instantiator.instantiate(
+            nextPipeline = pipelineData.handler.instantiate(
                 pipelineClass, nextTelemetry
             )
 
@@ -541,7 +590,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         currentPipelineIndex = index
         currentPipelineName  = "${currentPipelineData!!.displayName} (class ${currentPipeline!!::class.java.typeName})"
 
-        virtualReflect = pipelineData.instantiator.virtualReflectOf(pipelineClass)
+        virtualReflect = pipelineData.handler.virtualReflectOf(pipelineClass)
 
         val snap = PipelineSnapshot(currentPipeline!!, virtualReflect, snapshotFieldFilter)
 
@@ -674,7 +723,11 @@ class PipelineManager(var eocvSim: EOCVSim) {
         eocvSim.onMainUpdate.doOnce { setPaused(paused, pauseReason) }
     }
 
-    fun refreshGuiPipelineList() = eocvSim.visualizer.pipelineSelectorPanel.updatePipelinesList()
+    fun refreshGuiPipelineList() {
+        if(eocvSim.visualizer.hasFinishedInit()) {
+            eocvSim.visualizer.pipelineSelectorPanel.updatePipelinesList()
+        }
+    }
 
 }
 
@@ -718,7 +771,7 @@ data class PipelineData(
     val source: PipelineSource,
     val clazz: Class<out OpenCvPipeline>,
     val displayName: String,
-    val instantiator: PipelineInstantiator
+    val handler: PipelineHandler
 )
 
 enum class PipelineSource { CLASSPATH, COMPILED_ON_RUNTIME, PYTHON_RUNTIME }

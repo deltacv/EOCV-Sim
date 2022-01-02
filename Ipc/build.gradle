@@ -10,7 +10,7 @@ apply from: '../publish.gradle'
 dependencies {
     implementation project(":Common")
 
-    implementation "org.java-websocket:Java-WebSocket:$javawebsocket_version"
+    api "org.java-websocket:Java-WebSocket:$javawebsocket_version"
     implementation "com.google.code.gson:gson:$gson_version"
 
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
