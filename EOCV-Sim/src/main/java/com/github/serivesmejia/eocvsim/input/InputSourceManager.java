@@ -28,11 +28,12 @@ import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.SourceSelectorPanel;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager;
-import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -55,14 +56,15 @@ public class InputSourceManager {
 
     private String defaultSource = "";
 
+    Logger logger = LoggerFactory.getLogger(getClass());
+
     public InputSourceManager(EOCVSim eocvSim) {
         this.eocvSim = eocvSim;
         selectorPanel = eocvSim.visualizer.sourceSelectorPanel;
     }
 
     public void init() {
-
-        Log.info("InputSourceManager", "Initializing...");
+        logger.info("Initializing...");
 
         if(lastMatFromSource == null)
             lastMatFromSource = new Mat();
@@ -79,8 +81,6 @@ public class InputSourceManager {
         for (Map.Entry<String, InputSource> entry : inputSourceLoader.loadedInputSources.entrySet()) {
             addInputSource(entry.getKey(), entry.getValue());
         }
-
-        Log.blank();
     }
 
     private void createDefaultImgInputSource(String resourcePath, String fileName, String sourceName, Size imgSize) {
@@ -113,8 +113,8 @@ public class InputSourceManager {
                 Imgproc.cvtColor(lastMatFromSource, lastMatFromSource, Imgproc.COLOR_RGB2RGBA);
             }
         } catch(Exception ex) {
-            Log.error("InputSourceManager", "Error while processing current source", ex);
-            Log.warn("InputSourceManager", "Changing to default source");
+            logger.error("Error while processing current source", ex);
+            logger.warn("Changing to default source");
 
             setInputSource(defaultSource);
         }
@@ -176,7 +176,7 @@ public class InputSourceManager {
             });
         }
 
-        Log.info("InputSourceManager", "Adding InputSource " + inputSource + " (" + inputSource.getClass().getSimpleName() + ")");
+        logger.info("Adding InputSource " + inputSource + " (" + inputSource.getClass().getSimpleName() + ")");
     }
 
     public void deleteInputSource(String sourceName) {
@@ -221,7 +221,7 @@ public class InputSourceManager {
                 eocvSim.visualizer.asyncPleaseWaitDialog("Error while loading requested source", "Falling back to previous source",
                         "Close", new Dimension(300, 150), true, true);
 
-                Log.error("InputSourceManager", "Error while loading requested source (" + sourceName + ") reported by itself (init method returned false)");
+                logger.error("Error while loading requested source (" + sourceName + ") reported by itself (init method returned false)");
 
                 return false;
             }
@@ -242,7 +242,7 @@ public class InputSourceManager {
         if (eocvSim.configManager.getConfig().pauseOnImages)
             pauseIfImage();
 
-        Log.info("InputSourceManager", "Set InputSource to " + currentInputSource.toString() + " (" + src.getClass().getSimpleName() + ")");
+        logger.info("Set InputSource to " + currentInputSource.toString() + " (" + src.getClass().getSimpleName() + ")");
 
         return true;
 

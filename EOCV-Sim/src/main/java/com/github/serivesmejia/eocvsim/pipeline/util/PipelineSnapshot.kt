@@ -23,7 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.util
 
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import org.openftc.easyopencv.OpenCvPipeline
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
@@ -31,9 +31,7 @@ import java.util.*
 
 class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> Boolean)? = null) {
 
-    companion object {
-        private val TAG = "PipelineSnapshot"
-    }
+    val logger by loggerForThis()
 
     val holdingPipelineName = holdingPipeline::class.simpleName
 
@@ -54,7 +52,7 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> 
 
         pipelineFieldValues = fieldValues.toMap()
 
-        Log.info(TAG, "Taken snapshot of pipeline ${pipelineClass.name}")
+        logger.info("Taken snapshot of pipeline ${pipelineClass.name}")
     }
 
     fun transferTo(otherPipeline: OpenCvPipeline,
@@ -69,8 +67,7 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> 
         for((field, value) in pipelineFieldValues) {
             for(changedField in changedList) {
                 if(changedField.name == field.name && changedField.type == field.type) {
-                    Log.info(
-                        TAG,
+                    logger.trace(
                         "Skipping field ${field.name} since its value was changed in code, compared to the initial state of the pipeline"
                     )
 
@@ -81,8 +78,7 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> 
             try {
                 field.set(otherPipeline, value)
             } catch(e: Exception) {
-                Log.warn(
-                    TAG,
+                logger.trace(
                     "Failed to set field ${field.name} from snapshot of ${pipelineClass.name}. " +
                     "Retrying with by name lookup logic..."
                 )
@@ -91,9 +87,9 @@ class PipelineSnapshot(holdingPipeline: OpenCvPipeline, val filter: ((Field) -> 
                     val byNameField = otherPipeline::class.java.getDeclaredField(field.name)
                     byNameField.set(otherPipeline, value)
                 } catch(e: Exception) {
-                    Log.warn(
-                        TAG, "Definitely failed to set field ${field.name} from snapshot of ${pipelineClass.name}. " +
-                        "Did the source code change?", e
+                    logger.warn(
+                        "Definitely failed to set field ${field.name} from snapshot of ${pipelineClass.name}. Did the source code change?",
+                        e
                     )
                 }
             }

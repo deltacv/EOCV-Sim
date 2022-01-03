@@ -34,7 +34,6 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.*
-import com.github.serivesmejia.eocvsim.util.cv.CameraUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
@@ -45,6 +44,7 @@ import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import nu.pattern.OpenCV
 import org.opencv.core.Size
+import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.io.File
 import java.lang.management.ManagementFactory
@@ -62,21 +62,21 @@ class EOCVSim(val params: Parameters = Parameters()) {
         const val DEFAULT_EOCV_HEIGHT = 240
         @JvmField val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
 
-        private const val TAG = "EOCVSim"
+        val logger by loggerFor(EOCVSim::class)
 
         private var isNativeLibLoaded = false
 
         fun loadOpenCvLib() {
             if (isNativeLibLoaded) return
 
-            Log.info(TAG, "Loading native lib...")
+            logger.info("Loading native lib...")
 
             try {
                 OpenCV.loadLocally()
-                Log.info(TAG, "Successfully loaded the OpenCV native lib")
+                logger.info("Successfully loaded the OpenCV native lib")
             } catch (ex: Throwable) {
-                Log.error(TAG, "Failure loading the OpenCV native lib", ex)
-                Log.error(TAG, "The sim will exit now as it's impossible to continue execution without OpenCV")
+                logger.error("Failure loading the OpenCV native lib", ex)
+                logger.error("The sim will exit now as it's impossible to continue execution without OpenCV")
 
                 CrashReport(ex).saveCrashReport()
 
@@ -125,28 +125,25 @@ class EOCVSim(val params: Parameters = Parameters()) {
         eocvSimThread = Thread.currentThread()
 
         if(!EOCVSimFolder.couldLock) {
-            Log.error(TAG,
+            logger.error(
                 "Couldn't finally claim lock file in \"${EOCVSimFolder.absolutePath}\"! " +
                         "Is the folder opened by another EOCV-Sim instance?"
             )
 
-            Log.error(TAG, "Unable to continue with the execution, the sim will exit now.")
+            logger.error("Unable to continue with the execution, the sim will exit now.")
             exitProcess(-1)
         } else {
-            Log.info(TAG, "Confirmed claiming of the lock file in ${EOCVSimFolder.absolutePath}")
-            Log.blank()
+            logger.info("Confirmed claiming of the lock file in ${EOCVSimFolder.absolutePath}")
         }
 
         DialogFactory.createSplashScreen(visualizer.onInitFinished)
 
-        Log.info(TAG, "Initializing EasyOpenCV Simulator v$VERSION ($hexCode)")
-        Log.blank()
+        logger.info("-- Initializing EasyOpenCV Simulator v$VERSION ($hexCode) --")
 
         EOCVSimUncaughtExceptionHandler.register()
 
         //loading native lib only once in the app runtime
         loadOpenCvLib()
-        Log.blank()
 
         classpathScan.asyncScan()
 
@@ -187,8 +184,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     private fun start() {
-        Log.info(TAG, "Begin EOCVSim loop")
-        Log.blank()
+        logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
         while (!eocvSimThread.isInterrupted) {
             //run all pending requested runnables
@@ -217,8 +213,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
                 }
 
                 //print exception
-                Log.error(
-                    TAG,
+                logger.error(
                     "Please note that the following exception is likely to be caused by one or more of the user pipelines",
                     ex
                 )
@@ -240,17 +235,17 @@ class EOCVSim(val params: Parameters = Parameters()) {
             fpsLimiter.sync()
         }
 
-        Log.warn(TAG, "Main thread interrupted (" + Integer.toHexString(hashCode()) + ")")
+        logger.warn("Main thread interrupted ($hexCode)")
     }
 
     fun destroy(reason: DestroyReason) {
-        Log.warn(TAG, "Destroying current EOCVSim ($hexCode) due to $reason, it is normal to see InterruptedExceptions and other kinds of stack traces below")
+        logger.warn("-- Destroying current EOCVSim ($hexCode) due to $reason, it is normal to see InterruptedExceptions and other kinds of stack traces below --")
 
         //stop recording session if there's currently an ongoing one
         currentRecordingSession?.stopRecordingSession()
         currentRecordingSession?.discardVideo()
 
-        Log.info(TAG, "Trying to save config file...")
+        logger.info("Trying to save config file...")
 
         inputSourceManager.currentInputSource?.close()
         workspaceManager.stopFileWatcher()
@@ -268,13 +263,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     fun restart() {
-        Log.info(TAG, "Restarting...")
+        logger.info("Restarting...")
 
         pipelineManager.captureStaticSnapshot()
 
-        Log.blank()
         destroy(DestroyReason.RESTART)
-        Log.blank()
 
         currentMainThread = Thread(
             { EOCVSim(params).init() },
@@ -296,7 +289,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
             currentRecordingSession!!.startRecordingSession()
 
-            Log.info(TAG, "Recording session started")
+            logger.info("Recording session started")
 
             pipelineManager.pipelineOutputPosters.add(currentRecordingSession!!.matPoster)
         }
@@ -311,7 +304,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             itVideo.stopRecordingSession()
             pipelineManager.pipelineOutputPosters.remove(itVideo.matPoster)
 
-            Log.info(TAG, "Recording session stopped")
+            logger.info("Recording session stopped")
 
             DialogFactory.createFileChooser(
                 visualizer.frame,

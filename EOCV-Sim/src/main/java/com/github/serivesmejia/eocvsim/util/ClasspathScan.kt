@@ -53,6 +53,8 @@ class ClasspathScan {
         )
     }
 
+    val logger by loggerForThis()
+
     lateinit var scanResult: ScanResult
         private set
 
@@ -69,14 +71,14 @@ class ClasspathScan {
 
         if(jarFile != null) {
             classGraph.overrideClasspath("$jarFile!/")
-            Log.info(TAG, "Starting to scan for classes in $jarFile...")
+            logger.info("Starting to scan for classes in $jarFile...")
         } else {
-            Log.info(TAG, "Starting to scan classpath...")
+            logger.info("Starting to scan classpath...")
         }
 
         val scanResult = classGraph.scan()
 
-        Log.info(TAG, "ClassGraph finished scanning (took ${timer.seconds()}s)")
+        logger.info("ClassGraph finished scanning (took ${timer.seconds()}s)")
         
         val tunableFieldClassesInfo = scanResult.getClassesWithAnnotation(RegisterTunableField::class.java.name)
         val pipelineClassesInfo = scanResult.getSubclasses(OpenCvPipeline::class.java.name)
@@ -90,17 +92,15 @@ class ClasspathScan {
 
             if(ReflectUtil.hasSuperclass(clazz, OpenCvPipeline::class.java)) {
                 if(clazz.isAnnotationPresent(Disabled::class.java)) {
-                    Log.info(TAG, "Found @Disabled pipeline ${clazz.typeName}")
+                    logger.info("Found @Disabled pipeline ${clazz.typeName}")
                 } else {
-                    Log.info(TAG, "Found pipeline ${clazz.typeName}")
+                    logger.info("Found pipeline ${clazz.typeName}")
                     pipelineClasses.add(clazz as Class<out OpenCvPipeline>)
                 }
             }
         }
 
-        Log.blank()
-        Log.info(TAG, "Found ${pipelineClasses.size} pipelines")
-        Log.blank()
+        logger.info("Found ${pipelineClasses.size} pipelines")
 
         val tunableFieldClasses = mutableListOf<Class<out TunableField<*>>>()
         val tunableFieldAcceptorClasses = mutableMapOf<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>()
@@ -114,23 +114,21 @@ class ClasspathScan {
                 val tunableFieldClass = clazz as Class<out TunableField<*>>
 
                 tunableFieldClasses.add(tunableFieldClass)
-                Log.info(TAG, "Found tunable field ${clazz.typeName}")
+                logger.info("Found tunable field ${clazz.typeName}")
 
                 for(subclass in clazz.declaredClasses) {
                     if(ReflectUtil.hasSuperclass(subclass, TunableFieldAcceptor::class.java)) {
                         tunableFieldAcceptorClasses[tunableFieldClass] = subclass as Class<out TunableFieldAcceptor>
-                        Log.info(TAG, "Found acceptor for this tunable field, ${clazz.typeName}")
+                        logger.info("Found acceptor for this tunable field, ${clazz.typeName}")
                         break
                     }
                 }
             }
         }
 
-        Log.blank()
-        Log.info(TAG, "Found ${tunableFieldClasses.size} tunable fields and ${tunableFieldAcceptorClasses.size} acceptors")
-        Log.blank()
+        logger.info("Found ${tunableFieldClasses.size} tunable fields and ${tunableFieldAcceptorClasses.size} acceptors")
 
-        Log.info(TAG, "Finished scanning (took ${timer.seconds()}s)")
+        logger.info("Finished scanning (took ${timer.seconds()}s)")
 
         this.scanResult = ScanResult(
             pipelineClasses.toTypedArray(),

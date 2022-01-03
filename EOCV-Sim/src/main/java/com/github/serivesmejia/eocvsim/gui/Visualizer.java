@@ -37,11 +37,12 @@ import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.Pipelin
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
 import com.github.serivesmejia.eocvsim.gui.util.ReflectTaskbar;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompiler;
-import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher;
 import com.github.serivesmejia.eocvsim.workspace.util.template.GradleWorkspaceTemplate;
 import kotlin.Unit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -89,6 +90,8 @@ public class Visualizer {
 
     private volatile boolean hasFinishedInitializing = false;
 
+    Logger logger = LoggerFactory.getLogger(getClass());
+
     public Visualizer(EOCVSim eocvSim) {
         this.eocvSim = eocvSim;
     }
@@ -99,16 +102,16 @@ public class Visualizer {
                 //set icon for mac os (and other systems which do support this method)
                 ReflectTaskbar.INSTANCE.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
             } catch (final UnsupportedOperationException e) {
-                Log.warn("Visualizer", "Setting the Taskbar icon image is not supported on this platform");
+                logger.warn("Setting the Taskbar icon image is not supported on this platform");
             } catch (final SecurityException e) {
-                Log.error("Visualizer", "Security exception while setting TaskBar icon", e);
+                logger.error("Security exception while setting TaskBar icon", e);
             }
         }
 
         try {
             theme.install();
         } catch (Exception e) {
-            Log.error("Visualizer", "Failed to install theme " + theme.name(), e);
+            logger.error("Failed to install theme " + theme.name(), e);
         }
 
         Icons.INSTANCE.setDark(FlatLaf.isLafDark());

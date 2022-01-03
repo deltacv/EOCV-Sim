@@ -28,7 +28,6 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package org.firstinspires.ftc.robotcore.internal.opmode;
 
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel;
-import com.github.serivesmejia.eocvsim.util.Log;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Func;

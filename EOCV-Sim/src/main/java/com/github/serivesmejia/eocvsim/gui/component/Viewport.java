@@ -26,12 +26,13 @@ package com.github.serivesmejia.eocvsim.gui.component;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.util.MatPoster;
 import com.github.serivesmejia.eocvsim.util.image.DynamicBufferedImageRecycler;
-import com.github.serivesmejia.eocvsim.util.cv.CvUtil;
-import com.github.serivesmejia.eocvsim.util.Log;
+import com.github.serivesmejia.eocvsim.util.CvUtil;
 import com.qualcomm.robotcore.util.Range;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -53,6 +54,8 @@ public class Viewport extends JPanel {
     private double scale;
 
     private final EOCVSim eocvSim;
+
+    Logger logger = LoggerFactory.getLogger(getClass());
 
     public Viewport(EOCVSim eocvSim, int maxQueueItems) {
         super(new GridBagLayout());
@@ -107,7 +110,7 @@ public class Viewport extends JPanel {
                 Imgproc.cvtColor(m, m, Imgproc.COLOR_RGB2BGR);
                 postMat(m);
             } catch(Exception ex) {
-                Log.error("Viewport-Postable", "Couldn't visualize last mat", ex);
+                logger.error("Couldn't visualize last mat", ex);
             }
         });
     }

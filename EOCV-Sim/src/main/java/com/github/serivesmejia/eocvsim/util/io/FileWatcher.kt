@@ -25,7 +25,8 @@ package com.github.serivesmejia.eocvsim.util.io
 
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerOf
+import org.slf4j.Logger
 import java.io.File
 import java.util.*
 
@@ -34,11 +35,12 @@ class FileWatcher(private val watchingDirectories: List<File>,
                   name: String) {
 
     private val TAG = "FileWatcher-$name"
-
     val onChange = EventHandler("OnChange-$TAG")
 
+    val logger by loggerOf(TAG)
+
     private val watcherThread = Thread(
-        Runner(watchingDirectories, watchingFileExtensions, onChange),
+        Runner(watchingDirectories, watchingFileExtensions, onChange, logger),
         TAG
     )
 
@@ -50,21 +52,22 @@ class FileWatcher(private val watchingDirectories: List<File>,
         watcherThread.interrupt()
     }
 
-    private class Runner(val watchingDirectories: List<File>,
-                         val fileExts: List<String>?,
-                         val onChange: EventHandler) : Runnable {
+    private class Runner(
+        val watchingDirectories: List<File>,
+        val fileExts: List<String>?,
+        val onChange: EventHandler,
+        val logger: Logger
+    ) : Runnable {
 
         private val lastModifyDates = mutableMapOf<String, Long>()
 
         override fun run() {
-            val TAG = Thread.currentThread().name!!
-
             val directoriesList = StringBuilder()
             for(directory in watchingDirectories) {
                 directoriesList.appendLine(directory.absolutePath)
             }
 
-            Log.info(TAG, "Starting to watch directories in:\n$directoriesList")
+            logger.info("Starting to watch directories in:\n$directoriesList")
 
             while(!Thread.currentThread().isInterrupted) {
                 var changeDetected = false
@@ -78,7 +81,7 @@ class FileWatcher(private val watchingDirectories: List<File>,
                         val lastModified = file.lastModified()
 
                         if(lastModifyDates.containsKey(path) && lastModified > lastModifyDates[path]!! && !changeDetected) {
-                            Log.info(TAG, "Change detected on ${directory.absolutePath}")
+                            logger.info("Change detected on ${directory.absolutePath}")
 
                             onChange.run()
                             changeDetected = true
@@ -91,7 +94,7 @@ class FileWatcher(private val watchingDirectories: List<File>,
                 Thread.sleep(1200) //check every 800 ms
             }
 
-            Log.info(TAG, "Stopping watching directories:\n$directoriesList")
+            logger.info("Stopping watching directories:\n$directoriesList")
         }
 
     }

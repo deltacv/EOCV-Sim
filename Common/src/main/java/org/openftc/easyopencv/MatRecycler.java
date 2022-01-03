@@ -21,9 +21,10 @@
 
 package org.openftc.easyopencv;
 
-import com.github.serivesmejia.eocvsim.util.Log;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -36,6 +37,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class MatRecycler {
     private final RecyclableMat[] mats;
     private final ArrayBlockingQueue<RecyclableMat> availableMats;
+
+    static Logger logger = LoggerFactory.getLogger(MatRecycler.class);
 
     public MatRecycler(int num, int rows, int cols, int type) {
         mats = new RecyclableMat[num];
@@ -111,7 +114,7 @@ public class MatRecycler {
                 try {
                     MatRecycler.this.returnMat(this);
                 } catch (IllegalArgumentException ex) {
-                    Log.warn("RecyclableMat", "Tried to return a Mat which was already returned", ex);
+                    logger.warn("Tried to return a Mat which was already returned", ex);
                 }
             }
         }

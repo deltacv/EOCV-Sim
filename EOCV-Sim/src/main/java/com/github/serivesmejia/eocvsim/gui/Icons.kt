@@ -24,7 +24,7 @@
 package com.github.serivesmejia.eocvsim.gui
 
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import java.awt.image.BufferedImage
 import java.util.NoSuchElementException
 import javax.swing.ImageIcon
@@ -40,7 +40,7 @@ object Icons {
 
     private var colorsInverted = false
 
-    private const val TAG = "Icons"
+    val logger by loggerForThis()
 
     init {
         addFutureImage("ico_eocvsim", "/images/icon/ico_eocvsim.png", false)
@@ -63,7 +63,7 @@ object Icons {
     fun getImage(name: String): ImageIcon {
         for(futureIcon in futureIcons.toTypedArray()) {
             if(futureIcon.name == name) {
-                Log.info(TAG, "Loading future icon $name")
+                logger.trace("Loading future icon $name")
                 addImage(futureIcon.name, futureIcon.resourcePath, futureIcon.allowInvert)
 
                 futureIcons.remove(futureIcon)

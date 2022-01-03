@@ -25,6 +25,8 @@ package com.github.serivesmejia.eocvsim.util;
 
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder;
 import org.opencv.core.Core;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
@@ -42,6 +44,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class SysUtil {
+
+    static Logger logger = LoggerFactory.getLogger(SysUtil.class);
 
     public static OperatingSystem OS = SysUtil.getOS();
     public static int MB = 1024 * 1024;
@@ -143,7 +147,7 @@ public class SysUtil {
             fw.close();
             return true;
         } catch (IOException e) {
-            Log.error("Exception while trying to save file " + f.getAbsolutePath(), e);
+            logger.error("Exception while trying to save file " + f.getAbsolutePath(), e);
             return false;
         }
     }
@@ -232,12 +236,12 @@ public class SysUtil {
     public static boolean migrateFile(File oldFile, File newFile) {
         if(newFile.exists() || !oldFile.exists()) return false;
 
-        Log.info("SysUtil", "Migrating old file " + oldFile.getAbsolutePath() + "  to " + newFile.getAbsolutePath());
+        logger.info("Migrating old file " + oldFile.getAbsolutePath() + "  to " + newFile.getAbsolutePath());
 
         try {
             Files.move(oldFile.toPath(), newFile.toPath());
         } catch (IOException e) {
-            Log.warn("SysUtil", "Failed to migrate old file " + oldFile.getAbsolutePath());
+            logger.warn("Failed to migrate old file " + oldFile.getAbsolutePath());
             return false;
         }
 

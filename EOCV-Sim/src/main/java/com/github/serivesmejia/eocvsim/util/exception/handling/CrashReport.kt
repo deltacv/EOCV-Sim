@@ -25,10 +25,10 @@ package com.github.serivesmejia.eocvsim.util.exception.handling
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.Build
-import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.plus
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -45,12 +45,14 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
 
         val dtFormatter = DateTimeFormatter.ofPattern("yyyy_MM_dd-HH.mm.ss")
 
-
         @JvmStatic val defaultFileName: String get() {
             val dateTimeStr = dtFormatter.format(LocalDateTime.now())
             return "crashreport-eocvsim-$dateTimeStr.log"
         }
     }
+
+
+    val logger by loggerForThis()
 
     private val sb = StringBuilder()
 
@@ -97,14 +99,14 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
         sb.appendLine("==================================").appendLine()
 
         sb.appendLine(": Full logs").appendLine()
-        sb.appendLine(Log.fullLogs.toString()).appendLine()
+        // sb.appendLine(Log.fullLogs.toString()).appendLine()
 
         sb.appendLine(";")
     }
 
     fun saveCrashReport(f: File) {
         SysUtil.saveFileStr(f, toString())
-        Log.info("CrashReport", "Saved crash report to ${f.absolutePath}")
+        logger.info("Saved crash report to ${f.absolutePath}")
     }
 
     fun saveCrashReport() {

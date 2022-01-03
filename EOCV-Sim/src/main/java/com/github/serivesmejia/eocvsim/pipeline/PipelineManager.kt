@@ -29,11 +29,11 @@ import com.github.serivesmejia.eocvsim.gui.util.MatPoster
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
-import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
@@ -54,8 +54,6 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
         var staticSnapshot: PipelineSnapshot? = null
             private set
-
-        private const val TAG = "PipelineManager"
     }
 
     @JvmField val onUpdate          = EventHandler("OnPipelineUpdate")
@@ -63,6 +61,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
     @JvmField val onPipelineTimeout = EventHandler("OnPipelineTimeout")
     @JvmField val onPause           = EventHandler("OnPipelinePause")
     @JvmField val onResume          = EventHandler("OnPipelineResume")
+
+    val logger by loggerForThis()
 
     val pipelineOutputPosters = ArrayList<MatPoster>()
     val pipelineFpsCounter = FpsCounter()
@@ -131,7 +131,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
     }
 
     fun init() {
-        Log.info(TAG, "Initializing...")
+        logger.info("Initializing...")
 
         //add default pipeline
         addPipelineClass(DefaultPipeline::class.java)
@@ -145,8 +145,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
             addPipelineClass(pipelineClass)
         }
 
-        Log.info(TAG, "Found " + pipelines.size + " pipeline(s)")
-        Log.blank()
+        logger.info("Found " + pipelines.size + " pipeline(s)")
 
         // changing to initial pipeline
         onUpdate.doOnce {
@@ -258,8 +257,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 if(!hasInitCurrentPipeline && inputMat != null) {
                     currentPipeline?.init(inputMat)
 
-                    Log.info("PipelineManager", "Initialized pipeline $currentPipelineName")
-                    Log.blank()
+                    logger.info("Initialized pipeline $currentPipelineName")
 
                     hasInitCurrentPipeline = true
                 }
@@ -275,8 +273,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
                                 try {
                                     poster.post(outputMat)
                                 } catch (ex: Exception) {
-                                    Log.error(
-                                        TAG,
+                                    logger.error(
                                         "Uncaught exception thrown while posting pipeline output Mat to ${poster.name} poster",
                                         ex
                                     )
@@ -303,8 +300,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
                     eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = previousPipelineIndex
                     changePipeline(currentPipelineIndex)
 
-                    Log.error(TAG, "Error while initializing requested pipeline, $currentPipelineName", ex)
-                    Log.blank()
+                    logger.error("Error while initializing requested pipeline, $currentPipelineName", ex)
                 } else {
                     updateExceptionTracker(ex)
                 }
@@ -336,8 +332,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 //someone wants to do something here
                 onPipelineTimeout.run()
 
-                Log.warn(TAG , "User pipeline $currentPipelineName took too long to $lastPipelineAction (more than $timeout ms), falling back to DefaultPipeline.")
-                Log.blank()
+                logger.warn( "User pipeline $currentPipelineName took too long to $lastPipelineAction (more than $timeout ms), falling back to DefaultPipeline.")
             } finally {
                 //we cancel our pipeline job so that it
                 //doesn't post the output mat from the
@@ -376,7 +371,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
             }
         } catch(ex: TimeoutCancellationException) {
             //send a warning to the user
-            Log.warn(TAG , "User pipeline $currentPipelineName took too long to handle onViewportTapped (more than $configTimeoutMs ms).")
+            logger.warn("User pipeline $currentPipelineName took too long to handle onViewportTapped (more than $configTimeoutMs ms).")
         } finally {
             //cancel the job
             viewportTappedJob.cancel()
@@ -404,9 +399,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         try {
             pipelines.add(PipelineData(source, C as Class<out OpenCvPipeline>))
         } catch (ex: Exception) {
-            Log.warn(TAG, "Error while adding pipeline class", ex)
-            Log.warn(TAG, "Unable to cast " + C.name + " to OpenCvPipeline class.")
-            Log.warn(TAG, "Remember that the pipeline class should extend OpenCvPipeline")
+            logger.warn("Error while adding pipeline class", ex)
             updateExceptionTracker(ex)
         }
     }
@@ -450,7 +443,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
             }
         }
 
-        Log.warn(TAG, "Pipeline class with name $name and source $source couldn't be found")
+        logger.warn("Pipeline class with name $name and source $source couldn't be found")
     }
 
     fun requestChangePipeline(name: String, source: PipelineSource) {
@@ -475,7 +468,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         var nextTelemetry: Telemetry?
         val pipelineClass = pipelines[index].clazz
 
-        Log.info(TAG, "Changing to pipeline " + pipelineClass.name)
+        logger.info("Changing to pipeline ${pipelineClass.name}")
 
         var constructor: Constructor<*>
 
@@ -493,22 +486,20 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 nextPipeline = constructor.newInstance() as OpenCvPipeline
             }
 
-            Log.info(TAG, "Instantiated pipeline class " + pipelineClass.name)
+            logger.info("Instantiated pipeline class ${pipelineClass.name}")
         } catch (ex: NoSuchMethodException) {
             pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline, \"${pipelineClass.simpleName}\". Falling back to previous one.")
             pipelineExceptionTracker.addMessage("Make sure your pipeline implements a public constructor with no parameters or a Telemetry parameter.")
 
             eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = currentPipelineIndex
 
-            Log.error(TAG, "Error while instantiating requested pipeline, ${pipelineClass.simpleName} (usable constructor missing)", ex)
-            Log.blank()
+            logger.error("Error while instantiating requested pipeline, ${pipelineClass.simpleName} (usable constructor missing)", ex)
             return
         } catch (ex: Exception) {
             pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline, \"${pipelineClass.simpleName}\". Falling back to previous one.")
             updateExceptionTracker(ex)
 
-            Log.error(TAG, "Error while instantiating requested pipeline, ${pipelineClass.simpleName} (unknown issue)", ex)
-            Log.blank()
+            logger.error("Error while instantiating requested pipeline, ${pipelineClass.simpleName} (unknown issue)", ex)
 
             eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = currentPipelineIndex
 

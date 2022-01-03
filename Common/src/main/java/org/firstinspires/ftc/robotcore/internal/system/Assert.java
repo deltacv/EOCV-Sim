@@ -26,7 +26,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.robotcore.internal.system;
 
-import com.github.serivesmejia.eocvsim.util.Log;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link Assert} is a utility class for assertions that generates an exception which
@@ -36,7 +38,8 @@ import com.github.serivesmejia.eocvsim.util.Log;
  * in the middle, depending on the nature of the failure.
  */
 public class Assert {
-    public static final String TAG = "Assert";
+
+    static Logger logger = LoggerFactory.getLogger(ElapsedTime.class);
 
     public static void assertTrue(boolean value) {
         if (!value) {
@@ -100,7 +103,7 @@ public class Assert {
         try {
             throw new RuntimeException("assertion failed");
         } catch (Exception e) {
-            Log.error(TAG, "assertion failed", e);
+            logger.error("assertion failed", e);
         }
     }
 
@@ -110,7 +113,7 @@ public class Assert {
         try {
             throw new RuntimeException(banner);
         } catch (Exception e) {
-            Log.error(TAG, banner, e);
+            logger.error(banner, e);
         }
     }
 }

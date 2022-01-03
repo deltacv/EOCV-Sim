@@ -1,7 +1,7 @@
 package com.github.serivesmejia.eocvsim.util.io
 
-import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.channels.FileLock
@@ -13,16 +13,14 @@ class LockFile(pathname: String) : File(pathname) {
     var lock: FileLock? = null
         private set
 
+    val logger by loggerForThis()
+
     val isLocked get() = try {
         raf
         if(lock != null) !tryLock(false) else false
     } catch(ex: Exception) {
-        Log.warn(TAG, "Can't open lock file $absolutePath")
+        logger.warn("Can't open lock file $absolutePath")
         true
-    }
-
-    companion object {
-        const val TAG = "LockFile"
     }
 
     init {
@@ -36,10 +34,10 @@ class LockFile(pathname: String) : File(pathname) {
     fun tryLock(log: Boolean = true): Boolean {
         return try {
             lock = raf.channel.tryLock()
-            if(log) Log.info(TAG, "Probably locked file $absolutePath")
+            if(log) logger.trace("Probably locked file $absolutePath")
             true
         } catch(ex: Exception) {
-            if(log) Log.warn(TAG, "Couldn't lock file $absolutePath", ex);
+            if(log) logger.warn("Couldn't lock file $absolutePath", ex);
             false
         }
     }
