@@ -62,6 +62,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
         const val DEFAULT_EOCV_HEIGHT = 240
         @JvmField val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
 
+        private var hasScanned = false
+        private val classpathScan = ClasspathScan()
+
         val logger by loggerFor(EOCVSim::class)
 
         private var isNativeLibLoaded = false
@@ -104,10 +107,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
     @JvmField
     val workspaceManager = WorkspaceManager(this)
 
-    val classpathScan = ClasspathScan()
+    val config: Config get() = configManager.config
 
-    val config: Config
-        get() = configManager.config
+    val classpathScan get() = Companion.classpathScan
 
     var currentRecordingSession: VideoRecordingSession? = null
     val fpsLimiter = FpsLimiter(30.0)
@@ -116,6 +118,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         private set
 
     private val hexCode = Integer.toHexString(hashCode())
+
+    private var isRestarting = false
 
     enum class DestroyReason {
         USER_REQUESTED, RESTART, CRASH
@@ -145,7 +149,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
         //loading native lib only once in the app runtime
         loadOpenCvLib()
 
-        classpathScan.asyncScan()
+        if(!hasScanned) {
+            classpathScan.asyncScan()
+            hasScanned = true
+        }
 
         configManager.init() //load config
 
@@ -232,10 +239,19 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
             //limit FPG
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
-            fpsLimiter.sync()
+            try {
+                fpsLimiter.sync()
+            } catch(e: InterruptedException) {
+                break
+            }
         }
 
         logger.warn("Main thread interrupted ($hexCode)")
+
+        if(isRestarting) {
+            isRestarting = false
+            EOCVSim(params).init()
+        }
     }
 
     fun destroy(reason: DestroyReason) {
@@ -267,18 +283,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         pipelineManager.captureStaticSnapshot()
 
+        isRestarting = true
         destroy(DestroyReason.RESTART)
-
-        currentMainThread = Thread(
-            { EOCVSim(params).init() },
-            "new-main"
-        )
-        currentMainThread.start() //run next instance on a new main thread for the old one to get interrupted and ended
-
-        if(Thread.currentThread() == jvmMainThread) {
-            Thread.interrupted() // clear interrupt state
-            Thread.sleep(Long.MAX_VALUE) // hang forever the jvm main thread so that the app doesnt die idk
-        }
     }
 
     fun startRecordingSession() {
