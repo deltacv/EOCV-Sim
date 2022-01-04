@@ -35,8 +35,6 @@ import org.openftc.easyopencv.OpenCvPipeline
 class ClasspathScan {
 
     companion object {
-        const val TAG = "ClasspathScan"
-
         val ignoredPackages = arrayOf(
             "java",
             "kotlin",
@@ -114,19 +112,19 @@ class ClasspathScan {
                 val tunableFieldClass = clazz as Class<out TunableField<*>>
 
                 tunableFieldClasses.add(tunableFieldClass)
-                logger.info("Found tunable field ${clazz.typeName}")
+                logger.trace("Found tunable field ${clazz.typeName}")
 
                 for(subclass in clazz.declaredClasses) {
                     if(ReflectUtil.hasSuperclass(subclass, TunableFieldAcceptor::class.java)) {
                         tunableFieldAcceptorClasses[tunableFieldClass] = subclass as Class<out TunableFieldAcceptor>
-                        logger.info("Found acceptor for this tunable field, ${clazz.typeName}")
+                        logger.trace("Found acceptor for this tunable field, ${clazz.typeName}")
                         break
                     }
                 }
             }
         }
 
-        logger.info("Found ${tunableFieldClasses.size} tunable fields and ${tunableFieldAcceptorClasses.size} acceptors")
+        logger.trace("Found ${tunableFieldClasses.size} tunable fields and ${tunableFieldAcceptorClasses.size} acceptors")
 
         logger.info("Finished scanning (took ${timer.seconds()}s)")
 

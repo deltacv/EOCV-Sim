@@ -41,7 +41,7 @@ class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExc
 
             exitProcess(1)
         } else {
-            CrashReport(e).saveCrashReport("lasterror-eocvsim")
+            CrashReport(e).saveCrashReport("lasterror-")
 
             //if not, eocv sim might still be working (i.e a crash from a MatPoster thread)
             //so we might not need to exit in this point, but we'll need to send a warning

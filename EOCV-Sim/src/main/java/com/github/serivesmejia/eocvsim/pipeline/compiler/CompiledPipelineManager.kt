@@ -238,7 +238,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     fun loadFromPipelinesJar() {
         if(!PIPELINES_OUTPUT_JAR.exists()) return
 
-        logger.info("Looking for pipelines in jar file $PIPELINES_OUTPUT_JAR")
+        logger.trace("Looking for pipelines in jar file $PIPELINES_OUTPUT_JAR")
 
         try {
             currentPipelineClassLoader = PipelineClassLoader(PIPELINES_OUTPUT_JAR)
@@ -247,7 +247,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
             for(pipelineClass in currentPipelineClassLoader!!.pipelineClasses) {
                 pipelines.add(pipelineClass)
-                logger.info("Added ${pipelineClass.simpleName} from jar")
+                logger.trace("Added ${pipelineClass.simpleName} from jar")
             }
 
             pipelineManager.requestAddPipelineClasses(pipelines, PipelineSource.COMPILED_ON_RUNTIME, false)

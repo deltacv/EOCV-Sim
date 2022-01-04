@@ -30,8 +30,6 @@ class EOCVSimCommandInterface : Runnable {
     @CommandLine.Option(names = ["-s", "--source"], description = ["Specifies the source of the pipeline that will be selected when the simulator starts, from the --pipeline argument. Defaults to CLASSPATH. Possible values: \${COMPLETION-CANDIDATES}"])
     @JvmField var initialPipelineSource = PipelineSource.CLASSPATH
 
-    val logger by loggerForThis()
-
     override fun run() {
         val parameters = EOCVSim.Parameters()
 
@@ -42,17 +40,15 @@ class EOCVSimCommandInterface : Runnable {
                 file = Paths.get(System.getProperty("user.dir"), workspacePath).toFile()
 
                 if(!file.exists()) {
-                    logger.error("Workspace path is not valid, folder doesn't exist (tried in \"$workspacePath\" and \"${file.absolutePath})\"")
+                    System.err.println("Workspace path is not valid, folder doesn't exist (tried in \"$workspacePath\" and \"${file.absolutePath})\"")
                     exitProcess(1)
                 }
             }
 
             if(!file.isDirectory) {
-                logger.error("Workspace path is not valid, the specified path is not a folder")
+                System.err.println("Workspace path is not valid, the specified path is not a folder")
                 exitProcess(1)
             }
-
-            logger.info("Workspace from command line: ${file.absolutePath}")
 
             parameters.initialWorkspace = file
         }
@@ -60,8 +56,6 @@ class EOCVSimCommandInterface : Runnable {
         if(initialPipeline.trim() != "") {
             parameters.initialPipelineName = initialPipeline
             parameters.initialPipelineSource = initialPipelineSource
-
-            logger.info("Initial pipeline from command line: $initialPipeline coming from $initialPipelineSource")
         }
 
         EOCVSim(parameters).init()

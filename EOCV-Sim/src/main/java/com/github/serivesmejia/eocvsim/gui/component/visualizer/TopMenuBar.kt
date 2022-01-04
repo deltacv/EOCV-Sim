@@ -168,7 +168,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
             DialogFactory.createFileChooser(visualizer.frame,
                 DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT,
-                CrashReport.defaultFileName, FileFilters.logFileFilter
+                CrashReport.defaultCrashFileName, FileFilters.logFileFilter
             ).addCloseListener { OPTION, selectedFile, _ ->
                     if(OPTION == JFileChooser.APPROVE_OPTION) {
                         var path = selectedFile.absolutePath

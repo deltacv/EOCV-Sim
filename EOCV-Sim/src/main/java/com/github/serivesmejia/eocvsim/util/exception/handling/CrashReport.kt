@@ -28,8 +28,12 @@ import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.plus
+import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import java.io.BufferedWriter
 import java.io.File
+import java.io.FileWriter
+import java.nio.CharBuffer
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -47,8 +51,10 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
 
         @JvmStatic val defaultFileName: String get() {
             val dateTimeStr = dtFormatter.format(LocalDateTime.now())
-            return "crashreport-eocvsim-$dateTimeStr.log"
+            return "eocvsim-$dateTimeStr.log"
         }
+
+        @JvmStatic val defaultCrashFileName get() = "crashreport-$defaultFileName"
     }
 
 
@@ -98,8 +104,15 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
 
         sb.appendLine("==================================").appendLine()
 
+
         sb.appendLine(": Full logs").appendLine()
-        // sb.appendLine(Log.fullLogs.toString()).appendLine()
+
+        val lastLogFile = EOCVSimFolder.lastLogFile
+        if(lastLogFile != null) {
+            sb.appendLine(SysUtil.loadFileStr(lastLogFile)).appendLine()
+        } else {
+            sb.appendLine("No logs").appendLine()
+        }
 
         sb.appendLine(";")
     }
@@ -112,7 +125,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
     fun saveCrashReport() {
         val workingDir = File(System.getProperty("user.dir"))
 
-        val crashLogFile = workingDir + defaultFileName
+        val crashLogFile = workingDir + defaultCrashFileName
 
         saveCrashReport(crashLogFile)
     }

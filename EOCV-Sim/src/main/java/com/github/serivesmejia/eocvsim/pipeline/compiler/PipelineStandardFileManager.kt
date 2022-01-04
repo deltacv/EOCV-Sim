@@ -47,10 +47,8 @@ class PipelineStandardFileManager(delegate: StandardJavaFileManager) : Delegatin
             
             for(file in SysUtil.getClasspathFiles()) {
                 val files = SysUtil.filesUnder(file, ".jar")
-                if(logger.isTraceEnabled) {
-                    files.forEach {
-                        logger.trace("Found classpath file ${it.absolutePath}")
-                    }
+                files.forEach {
+                    logger.trace("Found classpath file ${it.absolutePath}")
                 }
 
                 classpathList.addAll(files)

@@ -33,7 +33,9 @@ import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
-import com.github.serivesmejia.eocvsim.util.*
+import com.github.serivesmejia.eocvsim.util.ClasspathScan
+import com.github.serivesmejia.eocvsim.util.FileFilters
+import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
@@ -41,17 +43,15 @@ import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtEx
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
+import com.github.serivesmejia.eocvsim.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import nu.pattern.OpenCV
 import org.opencv.core.Size
-import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.io.File
-import java.lang.management.ManagementFactory
 import javax.swing.SwingUtilities
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
-import kotlin.concurrent.thread
 import kotlin.system.exitProcess
 
 class EOCVSim(val params: Parameters = Parameters()) {
@@ -66,6 +66,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
         private val classpathScan = ClasspathScan()
 
         val logger by loggerFor(EOCVSim::class)
+
+        init {
+            EOCVSimFolder // mkdir needed folders
+        }
 
         private var isNativeLibLoaded = false
 
@@ -375,9 +379,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     class Parameters {
-        var scanForPipelinesIn = "org.firstinspires"
-        var scanForTunableFieldsIn = "com.github.serivesmejia"
-
         var initialWorkspace: File? = null
 
         var initialPipelineName: String? = null
