@@ -29,32 +29,16 @@ dependencies {
     implementation "org.eclipse.jdt:ecj:3.21.0"
     implementation 'org.python:jython-standalone:2.7.2'
 
-    implementation "org.openpnp:opencv:$opencv_version"
+    api "org.openpnp:opencv:$opencv_version"
 
-    implementation 'org.slf4j:slf4j-api:1.7.32'
-    implementation 'org.slf4j:slf4j-log4j12:1.7.32'
-    implementation('org.openimaj:core-video-capture:1.3.10') {
-        //exclude group: 'org.openimaj', module: 'core'
-        exclude group: 'org.openimaj', module: 'core-audio'
-        exclude group: 'org.openimaj', module: 'core-math'
-        exclude group: 'org.openimaj.content', module: 'animation'
-        exclude group: 'com.twelvemonkeys.common', module: 'common-lang'
-        exclude group: 'com.twelvemonkeys.imageio', module: 'imageio-core'
-        exclude group: 'com.twelvemonkeys.imageio', module: 'imageio-jpeg'
-        exclude group: 'com.sun.media', module: 'jai-codec'
-        exclude group: 'javax.media', module: 'jai-codec'
-        exclude group: 'net.sourceforge.jeuclid', module: 'jeuclid'
-        exclude group: 'net.sourceforge.jeuclid', module: 'jeuclid-core'
-        exclude group: 'uk.ac.ed.ph.snuggletex', module: 'snuggletex-core'
-        exclude group: 'com.googlecode.json-simple', module: 'json-simple'
-        exclude group: 'com.flickr4java', module: 'flickr4java'
-        exclude group: 'uk.ac.ed.ph.snuggletex', module: 'snuggletex-upconversion'
-        // exclude group: 'org.apache.sanselan', module: 'sanselan'
-        exclude group: 'com.caffeineowl', module: 'bezier-utils'
-    }
+    implementation "org.slf4j:slf4j-api:$slf4j_version"
+    implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
+    implementation "org.apache.logging.log4j:log4j-core:$log4j_version"
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version"
 
     implementation "org.java-websocket:Java-WebSocket:$javawebsocket_version"
 
+    implementation "com.github.deltacv:steve:1.0.0"
     implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"
 
     implementation 'info.picocli:picocli:4.6.1'

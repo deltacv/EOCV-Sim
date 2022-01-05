@@ -24,8 +24,8 @@
 package com.github.serivesmejia.eocvsim.workspace.util.template
 
 import com.github.serivesmejia.eocvsim.Build
-import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.github.serivesmejia.eocvsim.workspace.util.WorkspaceTemplate
 import net.lingala.zip4j.ZipFile
 import java.io.File
@@ -34,6 +34,8 @@ import java.io.IOException
 object GradleWorkspaceTemplate : WorkspaceTemplate() {
 
     private val TAG = "GradleWorkspaceTemplate"
+
+    val logger by loggerForThis()
 
     val templateZipResource = javaClass.getResourceAsStream("/templates/gradle_workspace.zip")
 
@@ -45,15 +47,15 @@ object GradleWorkspaceTemplate : WorkspaceTemplate() {
         ).file
 
         return try {
-            Log.info(TAG, "Extracting template to ${folder.absolutePath}")
+            logger.info("Extracting template to ${folder.absolutePath}")
 
             ZipFile(templateZipFile).extractAll(folder.absolutePath)
 
-            Log.info(TAG, "Successfully extracted template")
+            logger.info("Successfully extracted template")
             reformatTemplate(folder) //format necessary template files in the folder
             true
         } catch(ex: IOException) {
-            Log.warn(TAG, "Failed to extract workspace template to ${folder.absolutePath}", ex)
+            logger.warn("Failed to extract workspace template to ${folder.absolutePath}", ex)
             false
         }
     }

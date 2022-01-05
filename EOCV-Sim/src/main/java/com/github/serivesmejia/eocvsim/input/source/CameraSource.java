@@ -25,18 +25,19 @@ package com.github.serivesmejia.eocvsim.input.source;
 
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
-import com.github.serivesmejia.eocvsim.input.camera.opencv.OpenCvWebcam;
-import com.github.serivesmejia.eocvsim.input.camera.openimaj.OpenIMAJWebcam;
-import com.github.serivesmejia.eocvsim.input.camera.Webcam;
-import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation;
-import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import com.google.gson.annotations.Expose;
+import io.github.deltacv.steve.Webcam;
+import io.github.deltacv.steve.WebcamRotation;
+import io.github.deltacv.steve.opencv.OpenCvWebcam;
+import io.github.deltacv.steve.opencv.OpenCvWebcamBackend;
+import io.github.deltacv.steve.openimaj.OpenIMAJWebcamBackend;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.MatRecycler;
-import org.openimaj.video.capture.Device;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.filechooser.FileFilter;
 import java.util.List;
@@ -68,6 +69,10 @@ public class CameraSource extends InputSource {
     private volatile transient MatRecycler matRecycler;
 
     private transient long capTimeNanos = 0;
+
+    Logger logger = LoggerFactory.getLogger(getClass());
+
+    public CameraSource() {}
 
     public CameraSource(String webcamName, Size size, WebcamRotation rotation) {
         this.webcamName = webcamName;
@@ -103,34 +108,38 @@ public class CameraSource extends InputSource {
         if(rotation == null) rotation = WebcamRotation.UPRIGHT;
 
         if(webcamName != null) {
-            List<Device> webcams = OpenIMAJWebcam.getAvailableWebcams();
+            Webcam.Companion.setBackend(OpenIMAJWebcamBackend.INSTANCE);
+
+            List<Webcam> webcams = Webcam.Companion.getAvailableWebcams();
 
             boolean foundWebcam = false;
 
-            for(Device device : webcams) {
-                String name = device.getNameStr();
+            for(Webcam device : webcams) {
+                String name = device.getName();
                 double similarity = StrUtil.similarity(name, webcamName);
 
                 if(name.equals(webcamName) || similarity > 0.6) {
-                    Log.info("CameraSource", "\"" + name + "\" compared to \"" + webcamName + "\", similarity " + similarity);
-                    camera = new OpenIMAJWebcam(device, size, rotation);
+                    logger.info("\"" + name + "\" compared to \"" + webcamName + "\", similarity " + similarity);
+
+                    camera = device;
                     foundWebcam = true;
                     break;
                 }
             }
 
             if(!foundWebcam) {
-                Log.error("CameraSource", "Could not find webcam " + webcamName);
+                logger.error("Could not find webcam " + webcamName);
                 return false;
             }
         } else {
+            Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);
             camera = new OpenCvWebcam(webcamIndex, size, rotation);
         }
 
         camera.open();
 
         if (!camera.isOpen()) {
-            Log.error("CameraSource", "Unable to open camera " + webcamIndex);
+            logger.error("Unable to open camera " + webcamIndex);
             return false;
         }
 
@@ -140,7 +149,7 @@ public class CameraSource extends InputSource {
         camera.read(newFrame);
 
         if (newFrame.empty()) {
-            Log.error("CameraSource", "Unable to open camera " + webcamIndex + ", returned Mat was empty.");
+            logger.error("Unable to open camera " + webcamIndex + ", returned Mat was empty.");
             newFrame.release();
             return false;
         }
@@ -249,5 +258,4 @@ public class CameraSource extends InputSource {
         if (size == null) size = new Size();
         return "CameraSource(" + webcamName + ", " + webcamIndex + ", " + (size != null ? size.toString() : "null") + ")";
     }
-
 }

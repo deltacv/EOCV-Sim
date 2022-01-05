@@ -23,12 +23,10 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.util
 
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
 import org.openftc.easyopencv.OpenCvPipeline
-import java.lang.reflect.Field
-import java.lang.reflect.Modifier
 import java.util.*
 
 class PipelineSnapshot(
@@ -37,9 +35,7 @@ class PipelineSnapshot(
     val filter: ((VirtualField) -> Boolean)? = null
 ) {
 
-    companion object {
-        const val TAG = "PipelineSnapshot"
-    }
+    val logger by loggerForThis()
 
     val holdingPipelineName = holdingPipeline::class.simpleName
 
@@ -60,7 +56,7 @@ class PipelineSnapshot(
 
         pipelineFieldValues = fieldValues.toMap()
 
-        Log.info(TAG, "Taken snapshot of pipeline ${pipelineClass.name}")
+        logger.info("Taken snapshot of pipeline ${pipelineClass.name}")
     }
 
     fun transferTo(otherPipeline: OpenCvPipeline,
@@ -75,8 +71,7 @@ class PipelineSnapshot(
         for((field, value) in pipelineFieldValues) {
             for(changedField in changedList) {
                 if(changedField.name == field.name && changedField.type == field.type) {
-                    Log.info(
-                        TAG,
+                    logger.info(
                         "Skipping field ${field.name} since its value was changed in code, compared to the initial state of the pipeline"
                     )
 
@@ -88,8 +83,7 @@ class PipelineSnapshot(
                 val byNameField = virtualReflect.contextOf(otherPipeline)!!.getField(field.name)
                 byNameField!!.set(value)
             } catch(e: Exception) {
-                Log.warn(
-                    TAG,
+                logger.warn(
                     "Definitely failed to set field ${field.name} from snapshot of ${pipelineClass.name}. Did the source code change?", e
                 )
             }

@@ -1,7 +1,30 @@
+/*
+ * Copyright (c) 2022 Sebastian Erives
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+
 package io.github.deltacv.eocvsim.ipc
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.google.gson.Gson
 import io.github.deltacv.eocvsim.ipc.message.AuthMessage
 import io.github.deltacv.eocvsim.ipc.message.IpcMessage
@@ -25,9 +48,7 @@ class IpcServer(
     val usePassToken: Boolean = true
 ) : WebSocketServer(InetSocketAddress(port)) {
 
-    companion object {
-        const val TAG = "IpcServer"
-    }
+    val logger by loggerForThis()
 
     lateinit var passToken: PassToken
         private set
@@ -46,11 +67,11 @@ class IpcServer(
             conn.close(1013, "Ipc does not allow connections incoming from non-localhost addresses")
         }
 
-        Log.info(TAG, "Client $hostString connected to IPC server")
+        logger.info("Client $hostString connected to IPC server")
     }
 
     override fun onClose(conn: WebSocket, code: Int, reason: String, remote: Boolean) {
-        Log.info(TAG, "Client ${conn.localSocketAddress.hostString} disconnected from IPC server with code $code: $reason")
+        logger.info("Client ${conn.localSocketAddress.hostString} disconnected from IPC server with code $code: $reason")
         authorisedConnections.remove(conn)
     }
 
@@ -64,7 +85,7 @@ class IpcServer(
             }
         }
 
-        Log.trace(TAG, "Received message $messageObject with id $messageObject.id from ${conn.localSocketAddress.hostString}")
+        logger.trace("Received message $messageObject with id $messageObject.id from ${conn.localSocketAddress.hostString}")
 
         val handler = handlerFor(messageObject::class.java)
         handler?.let {
@@ -72,16 +93,16 @@ class IpcServer(
 
             try {
                 it.internalHandle(ctx)
-                Log.trace(TAG, "Handler ${handler::class.java.typeName} executed for message with id ${messageObject.id} from ${conn.localSocketAddress.hostString}")
+                logger.trace("Handler ${handler::class.java.typeName} executed for message with id ${messageObject.id} from ${conn.localSocketAddress.hostString}")
             } catch(e: Exception) {
                 ctx.respond(IpcErrorResponse("Exception thrown while processing message", e))
-                Log.error(TAG, "Handler ${handler::class.java.typeName} throwed an exception while processing message with id ${messageObject.id} from ${conn.localSocketAddress.hostString}", e)
+                logger.error("Handler ${handler::class.java.typeName} throwed an exception while processing message with id ${messageObject.id} from ${conn.localSocketAddress.hostString}", e)
             }
         }
     }
 
     override fun onError(conn: WebSocket, ex: Exception) {
-        Log.info(TAG, "Exception with client ${conn.localSocketAddress.hostString}", ex)
+        logger.error("Exception with client ${conn.localSocketAddress.hostString}", ex)
         authorisedConnections.remove(conn)
     }
 
@@ -89,16 +110,15 @@ class IpcServer(
         if(usePassToken) {
             val str = secureRandomString()
             passToken = PassToken(str)
-            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(StringSelection(str.toString()), null)
         }
 
-        Log.info(TAG, "Opened IPC websocket at ${this.address.hostString ?: "localhost"} port ${this.address.port}")
+        logger.info("Opened IPC websocket at ${this.address.hostString ?: "localhost"} port ${this.address.port}")
     }
 
     fun auth(ctx: IpcTransactionContext<AuthMessage>) {
         if(passToken == ctx.message.passToken) {
             authorisedConnections.add(ctx.wsCtx)
-            Log.info(TAG, "Client ${ctx.wsCtx.localSocketAddress.hostString} successfully authenticated")
+            logger.info("Client ${ctx.wsCtx.localSocketAddress.hostString} successfully authenticated")
         } else {
             ctx.wsCtx.close(1013, "Passtoken is incorrect")
             return
@@ -117,7 +137,7 @@ class IpcServer(
                     handlers[messageClass] = handlerClass.getConstructor().newInstance() as IpcMessageHandler<M>
                     handlers[messageClass]!! as IpcMessageHandler<M>
                 } catch(ignored: NoSuchMethodException) {
-                    Log.trace(TAG,"Handler class ${handlerClass.typeName} doesn't implement a constructor with no parameters, it cannot be instantiated")
+                    logger.trace("Handler class ${handlerClass.typeName} doesn't implement a constructor with no parameters, it cannot be instantiated")
                     null
                 }
             } else null

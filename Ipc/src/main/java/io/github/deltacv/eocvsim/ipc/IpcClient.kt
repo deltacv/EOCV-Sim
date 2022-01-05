@@ -1,6 +1,5 @@
 package io.github.deltacv.eocvsim.ipc
 
-import com.github.serivesmejia.eocvsim.util.Log
 import io.github.deltacv.eocvsim.ipc.message.AuthMessage
 import io.github.deltacv.eocvsim.ipc.message.IpcMessage
 import io.github.deltacv.eocvsim.ipc.message.response.IpcErrorResponse
@@ -8,6 +7,7 @@ import io.github.deltacv.eocvsim.ipc.message.response.IpcMessageResponse
 import io.github.deltacv.eocvsim.ipc.message.response.IpcOkResponse
 import io.github.deltacv.eocvsim.ipc.security.PassToken
 import io.github.deltacv.eocvsim.ipc.serialization.ipcGson
+import io.github.deltacv.eocvsim.util.loggerForThis
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.lang.Exception
@@ -18,9 +18,7 @@ class IpcClient(
     val passToken: PassToken? = null
 ) : WebSocketClient(URI("ws://localhost:$port")) {
 
-    companion object {
-        const val TAG = "IpcClient"
-    }
+    val logger by loggerForThis()
 
     private val gson = ipcGson
 
@@ -28,22 +26,22 @@ class IpcClient(
 
     fun broadcast(message: IpcMessage) {
         send(gson.toJson(message))
-        Log.trace(TAG, "Sent $message to server at port $port and id ${message.id}")
+        logger.trace("Sent $message to server at port $port and id ${message.id}")
 
         awaitingResponseMessages[message.id] = message
     }
 
     override fun onOpen(handshakedata: ServerHandshake) {
-        Log.info(TAG, "Connected to server at port $port with ${handshakedata.httpStatusMessage}")
+        logger.info("Connected to server at port $port with ${handshakedata.httpStatusMessage}")
 
         if(passToken != null) {
-            Log.info(TAG, "Authenticating to port $port...")
+            logger.info("Authenticating to port $port...")
 
             broadcast(AuthMessage(passToken).onResponse {
                 if(it is IpcOkResponse) {
-                    Log.info(TAG, "Authentication to port $port successful")
+                    logger.info("Authentication to port $port successful")
                 } else if(it is IpcErrorResponse) {
-                    Log.info(TAG, "Authentication to port $port failed: ${it.reason}")
+                    logger.info("Authentication to port $port failed: ${it.reason}")
                 }
             })
         }
@@ -54,7 +52,7 @@ class IpcClient(
 
         for((id, messageObj) in awaitingResponseMessages) {
             if(id == response.id) {
-                Log.trace(TAG, "Server at port $port responded to id $id with $response")
+                logger.trace("Server at port $port responded to id $id with $response")
                 messageObj.receiveResponse(response)
                 break
             }
@@ -64,11 +62,11 @@ class IpcClient(
     }
 
     override fun onClose(code: Int, reason: String, remote: Boolean) {
-        Log.info(TAG, "Disconnected from server at port $port with code $code: $reason")
+        logger.info("Disconnected from server at port $port with code $code: $reason")
     }
 
     override fun onError(ex: Exception) {
-        Log.error(TAG, "Exception threw in client connected to port $port", ex)
+        logger.error("Exception threw in client connected to port $port", ex)
     }
 
 }

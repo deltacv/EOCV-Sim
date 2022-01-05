@@ -1,9 +1,11 @@
 package com.github.serivesmejia.eocvsim.tuner
 
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import java.util.HashMap
 
 class TunableFieldAcceptorManager(private val acceptors: HashMap<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>) {
+
+    val logger by loggerForThis()
 
     fun accept(clazz: Class<*>): Class<out TunableField<*>>? {
         for((fieldClass, acceptorClass) in acceptors) {
@@ -11,7 +13,7 @@ class TunableFieldAcceptorManager(private val acceptors: HashMap<Class<out Tunab
             val acceptorConstructor = try {
                 acceptorClass.getConstructor() //get constructor with no params
             } catch(ex: NoSuchMethodException) {
-                Log.warn("TunableFieldAcceptorManager", "TunableFieldAcceptor ${acceptorClass.typeName} doesn't implement a constructor with zero parameters", ex)
+                logger.error("TunableFieldAcceptor ${acceptorClass.typeName} doesn't implement a constructor with zero parameters", ex)
                 continue
             }
 
@@ -24,5 +26,4 @@ class TunableFieldAcceptorManager(private val acceptors: HashMap<Class<out Tunab
 
         return null //no one accepted our type... poor clazz :(
     }
-
 }

@@ -23,11 +23,12 @@
 
 package com.github.serivesmejia.eocvsim.gui.util;
 
-import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter;
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue;
 import org.opencv.core.Mat;
 import org.openftc.easyopencv.MatRecycler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -51,6 +52,8 @@ public class MatPoster {
 
     private volatile boolean hasPosterThreadStarted = false;
 
+    Logger logger;
+
     public static MatPoster createWithoutRecycler(String name, int maxQueueItems) {
         return new MatPoster(name, maxQueueItems, null);
     }
@@ -70,12 +73,14 @@ public class MatPoster {
 
         this.name = name;
 
+        logger = LoggerFactory.getLogger("MatPoster-" + name);
+
         postQueue.setEvictAction(this::evict); //release mat and return it to recycler if it's dropped by the EvictingBlockingQueue
     }
 
     public void post(Mat m) {
         if (m == null || m.empty()) {
-            Log.warn("MatPoster-" + name, "Tried to post empty or null mat, skipped this frame.");
+            logger.warn("Tried to post empty or null mat, skipped this frame.");
             return;
         }
 
@@ -128,7 +133,7 @@ public class MatPoster {
     }
 
     public void stop() {
-        Log.info("MatPoster-" + name, "Destroying...");
+        logger.info("Destroying...");
 
         posterThread.interrupt();
 
@@ -208,8 +213,7 @@ public class MatPoster {
 
             }
 
-            Log.warn("MatPoster-" + name +"-Thread", "Thread interrupted (" + Integer.toHexString(hashCode()) + ")");
-
+            logger.warn("Thread interrupted (" + Integer.toHexString(hashCode()) + ")");
         }
     }
 

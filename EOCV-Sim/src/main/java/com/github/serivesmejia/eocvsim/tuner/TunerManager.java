@@ -26,13 +26,14 @@ package com.github.serivesmejia.eocvsim.tuner;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.tuner.exception.CancelTunableFieldAddingException;
-import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.ReflectUtil;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection;
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection;
 import org.openftc.easyopencv.OpenCvPipeline;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;
@@ -41,6 +42,8 @@ import java.util.List;
 
 @SuppressWarnings("rawtypes")
 public class TunerManager {
+
+    Logger logger = LoggerFactory.getLogger(getClass());
 
     private final EOCVSim eocvSim;
 
@@ -93,7 +96,7 @@ public class TunerManager {
                 try {
                     field.init();
                 } catch(CancelTunableFieldAddingException e) {
-                    Log.info("TunerManager", "Field " + field.getFieldName() + " was removed due to \"" + e.getMessage() + "\"");
+                    logger.info("Field " + field.getFieldName() + " was removed due to \"" + e.getMessage() + "\"");
                     fields.remove(field);
                 }
             }
@@ -106,7 +109,7 @@ public class TunerManager {
             try {
                 field.update();
             } catch(Exception ex) {
-                Log.error("Error while updating field " + field.getFieldName(), ex);
+                logger.error("Error while updating field " + field.getFieldName(), ex);
             }
 
             //check if this field has requested to reevaluate config for all panels
@@ -170,13 +173,13 @@ public class TunerManager {
             } catch(InvocationTargetException e) {
                 if(e.getCause() instanceof CancelTunableFieldAddingException) {
                     String message = e.getCause().getMessage();
-                    Log.info("TunerManager", "Field " + field.getName() + " wasn't added due to \"" + message + "\"");
+                    logger.info("Field " + field.getName() + " wasn't added due to \"" + message + "\"");
                 } else {
-                    Log.error("TunerManager", "Reflection error while processing field: " + field.getName(), e.getCause());
+                    logger.error("Reflection error while processing field: " + field.getName(), e.getCause());
                 }
             } catch (Exception ex) {
                 //oops rip
-                Log.error("TunerManager", "Reflection error while processing field: " + field.getName(), ex);
+                logger.error("Reflection error while processing field: " + field.getName(), ex);
             }
 
         }

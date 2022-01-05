@@ -27,17 +27,20 @@ import com.github.serivesmejia.eocvsim.input.source.CameraSource;
 import com.github.serivesmejia.eocvsim.input.source.CameraSourceAdapter;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
 import com.github.serivesmejia.eocvsim.input.source.VideoSource;
-import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.Expose;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
 public class InputSourceLoader {
+
+    Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(CameraSource.class, new CameraSourceAdapter())
@@ -113,8 +116,7 @@ public class InputSourceLoader {
         try {
             sources = gson.fromJson(jsonSources, InputSourcesContainer.class);
         } catch (Exception ex) {
-            Log.error("InputSourceLoader", "Error while parsing sources file, it will be replaced and fixed later on, but the user created sources will be deleted.", ex);
-            Log.blank();
+            logger.error("Error while parsing sources file, it will be replaced and fixed later on, but the user created sources will be deleted.", ex);
             return;
         }
 
@@ -123,7 +125,7 @@ public class InputSourceLoader {
 
         saveInputSourcesToFile(sources); //to make sure version gets declared in case it was an older file
 
-        Log.info("InputSourceLoader", "InputSources file version is " + sources.sourcesFileVersion);
+        logger.info("InputSources file version is " + sources.sourcesFileVersion);
 
         loadedInputSources = sources.allSources;
 

@@ -26,15 +26,16 @@ package com.github.serivesmejia.eocvsim.gui.dialog.source;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox;
 import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
-import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation;
-import com.github.serivesmejia.eocvsim.input.camera.opencv.OpenCvWebcam;
-import com.github.serivesmejia.eocvsim.input.camera.openimaj.OpenIMAJWebcam;
-import com.github.serivesmejia.eocvsim.input.camera.Webcam;
 import com.github.serivesmejia.eocvsim.input.source.CameraSource;
-import com.github.serivesmejia.eocvsim.util.cv.CameraUtil;
-import com.github.serivesmejia.eocvsim.util.Log;
+import io.github.deltacv.steve.Webcam;
+import io.github.deltacv.steve.WebcamRotation;
+import io.github.deltacv.steve.opencv.OpenCvWebcam;
+import io.github.deltacv.steve.opencv.OpenCvWebcamBackend;
+import io.github.deltacv.steve.openimaj.OpenIMAJWebcamBackend;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -76,6 +77,8 @@ public class CreateCameraSource {
 
     private static final Executor executor = Executors.newFixedThreadPool(3);
 
+    Logger logger = LoggerFactory.getLogger(getClass());
+
     enum State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED, NO_WEBCAMS, UNSUPPORTED }
 
     public CreateCameraSource(JFrame parent, EOCVSim eocvSim) {
@@ -94,23 +97,29 @@ public class CreateCameraSource {
 
         if(preferredDriver == WebcamDriver.OpenIMAJ) {
             try {
-                webcams = OpenIMAJWebcam.getAvailableWebcams().stream().map(
-                        (device) -> new OpenIMAJWebcam(device, new Size(0, 0))
-                ).collect(Collectors.toList());
+                Webcam.Companion.setBackend(OpenIMAJWebcamBackend.INSTANCE);
+                webcams = Webcam.Companion.getAvailableWebcams();
             } catch (Throwable e) {
-                Log.warn("CreateCameraSource", "OpenIMAJ is unusable, falling back to OpenCV webcam discovery");
-                webcams = CameraUtil.findWebcamsOpenCv();
+                logger.error("OpenIMAJ failed to discover cameras with error", e);
+                logger.warn("OpenIMAJ is unusable, falling back to OpenCV webcam discovery");
+
+                Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);
+                webcams = Webcam.Companion.getAvailableWebcams();
 
                 usingOpenCvDiscovery = true;
             }
 
             if (!usingOpenCvDiscovery && webcams.isEmpty()) {
-                Log.warn("CreateCameraSource", "OpenIMAJ returned 0 cameras, trying with OpenCV webcam discovery");
-                webcams = CameraUtil.findWebcamsOpenCv();
+                logger.warn("OpenIMAJ returned 0 cameras, trying with OpenCV webcam discovery");
+
+                Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);
+                webcams = Webcam.Companion.getAvailableWebcams();
+
                 usingOpenCvDiscovery = true;
             }
         } else {
-            webcams = CameraUtil.findWebcamsOpenCv();
+            Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);
+            webcams = Webcam.Companion.getAvailableWebcams();
             usingOpenCvDiscovery = true;
         }
 
@@ -164,7 +173,7 @@ public class CreateCameraSource {
                                 }
 
                                 webcams = newWebcams;
-                                Log.warn("CreateCameraSource", "Webcam " + webcam.getName() + " didn't return any available resolutions, therefore it's unavailable.");
+                                logger.warn("Webcam " + webcam.getName() + " didn't return any available resolutions, therefore it's unavailable.");
                             } else {
                                 sizes.put(name, resolutions);
                             }
@@ -423,7 +432,7 @@ public class CreateCameraSource {
             try {
                 webcam.read(m);
             } catch (Exception e) {
-                Log.warn("CreateCameraSource", "Threw exception when trying to open camera", e);
+                logger.warn("Threw exception when trying to open camera", e);
                 wasOpened = false;
             }
 
@@ -512,5 +521,4 @@ public class CreateCameraSource {
     public int getSelectedIndex() {
         return indexes.get(camerasComboBox.getSelectedItem());
     }
-
 }

@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2021 Sebastian Erives
- * Based on work by OpenFTC (c) 2019
+ * Copyright (c) 2022 Sebastian Erives
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -11,6 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -18,20 +18,15 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
  */
 
-package com.github.serivesmejia.eocvsim.input.camera
+package io.github.deltacv.eocvsim.util
 
-enum class WebcamRotation(val displayName: String) {
-    
-    UPRIGHT("Upright"),
-    UPSIDE_DOWN("Upside Down"),
-    SIDEWAYS_LEFT("Sideways Left"),
-    SIDEWAYS_RIGHT("Sideways Right");
+import org.slf4j.LoggerFactory
+import kotlin.reflect.KClass
 
-    companion object {
-        @JvmStatic fun fromDisplayName(displayName: String) = values().firstOrNull {
-            it.displayName == displayName
-        }
-    }
-}
+internal fun Any.loggerFor(clazz: KClass<*>) = lazy { LoggerFactory.getLogger(clazz.java) }
+internal fun Any.loggerForThis() = lazy { LoggerFactory.getLogger(this::class.java) }
+
+internal fun Any.loggerOf(name: String) = lazy { LoggerFactory.getLogger(name) }

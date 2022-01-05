@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Sebastian Erives
+ * Copyright (c) 2022 Sebastian Erives
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,29 +21,12 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.input.camera
+package com.github.serivesmejia.eocvsim.util
 
-import com.github.serivesmejia.eocvsim.input.camera.WebcamRotation
-import org.opencv.core.Mat
-import org.opencv.core.Size
+import org.slf4j.LoggerFactory
+import kotlin.reflect.KClass
 
-interface Webcam {
+internal fun Any.loggerFor(clazz: KClass<*>) = lazy { LoggerFactory.getLogger(clazz.java) }
+internal fun Any.loggerForThis() = lazy { LoggerFactory.getLogger(this::class.java) }
 
-    val isOpen: Boolean
-
-    var resolution: Size
-    val supportedResolutions: List<Size>
-
-    var rotation: WebcamRotation
-    var fps: Double
-
-    val index: Int
-    val name: String
-
-    fun open()
-
-    fun read(mat: Mat)
-
-    fun close()
-
-}
+internal fun Any.loggerOf(name: String) = lazy { LoggerFactory.getLogger(name) }
