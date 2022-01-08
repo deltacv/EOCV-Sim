@@ -68,5 +68,8 @@ fun PipelineManager.addPythonPipeline(
 
 fun PipelineManager.removePythonPipeline(
     name: String,
-    updateGui: Boolean = true
-) = removePipeline(name, PipelineSource.PYTHON_RUNTIME, refreshGuiPipelineList = updateGui)
+    updateGui: Boolean = true,
+    changeToDefaultIfRemoved: Boolean = true
+) = removePipeline(
+    name, PipelineSource.PYTHON_RUNTIME, updateGui, changeToDefaultIfRemoved
+)

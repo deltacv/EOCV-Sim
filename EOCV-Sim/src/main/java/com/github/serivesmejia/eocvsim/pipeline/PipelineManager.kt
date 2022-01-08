@@ -80,8 +80,15 @@ class PipelineManager(var eocvSim: EOCVSim) {
         private set
     @Volatile var currentPipelineData: PipelineData? = null
         private set
-    var currentPipelineName = ""
-        private set
+
+    val currentPipelineName
+        get() = currentPipelineData?.clazz?.typeName ?: ""
+    val currentPipelineShortName
+        get() = currentPipelineData?.clazz?.simpleName ?: ""
+    val currentPipelineDisplayName
+        get() = currentPipelineData?.displayName ?: ""
+    val currentPipelineDisplayClassName
+        get() = "$currentPipelineDisplayName (class $currentPipelineName)"
     var currentPipelineIndex = -1
         private set
     var previousPipelineIndex = 0
@@ -157,7 +164,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
         // changing to initial pipeline
         onUpdate.doOnce {
-            if(compiledPipelineManager.isBuildRunning)
+            if(compiledPipelineManager.isBuildRunning && staticSnapshot != null)
                 compiledPipelineManager.onBuildEnd.doOnce(::applyStaticSnapOrDef)
             else
                 applyStaticSnapOrDef()
@@ -298,17 +305,13 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 updateExceptionTracker()
             } catch (ex: Exception) { //handling exceptions from pipelines
                 if(!hasInitCurrentPipeline) {
-                    pipelineExceptionTracker.addMessage("Error while initializing requested pipeline, \"$currentPipelineName\". Falling back to previous one.")
-                    pipelineExceptionTracker.addMessage(
-                        StrUtil.cutStringBy(
-                            StrUtil.fromException(ex), "\n", 9
-                        ).trim()
-                    )
+                    pipelineExceptionTracker.addMessage("Error while initializing requested pipeline, \"$currentPipelineDisplayName\". Falling back to previous one.")
+                    pipelineExceptionTracker.addMessage(StrUtil.fromException(ex))
 
                     eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = previousPipelineIndex
                     changePipeline(currentPipelineIndex)
 
-                    logger.error("Error while initializing requested pipeline, $currentPipelineName", ex)
+                    logger.error("Error while initializing requested pipeline, $currentPipelineDisplayName", ex)
                 } else {
                     updateExceptionTracker(ex)
                 }
@@ -335,12 +338,12 @@ class PipelineManager(var eocvSim: EOCVSim) {
             } catch (ex: TimeoutCancellationException) {
                 //oops, pipeline ran out of time! we'll fall back
                 //to default pipeline to avoid further issues.
-                requestForceChangePipeline(0)
+                requestChangePipeline(0, force = true)
                 //also call the event listeners in case
                 //someone wants to do something here
                 onPipelineTimeout.run()
 
-                logger.warn("User pipeline $currentPipelineName took too long to $lastPipelineAction (more than $timeout ms), falling back to DefaultPipeline.")
+                logger.warn("User pipeline $currentPipelineDisplayName took too long to $lastPipelineAction (more than $timeout ms), falling back to DefaultPipeline.")
             } finally {
                 //we cancel our pipeline job so that it
                 //doesn't post the output mat from the
@@ -383,7 +386,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
             }
         } catch(ex: TimeoutCancellationException) {
             //send a warning to the user
-            logger.warn("User pipeline $currentPipelineName took too long to handle onViewportTapped (more than $configTimeoutMs ms).")
+            logger.warn("User pipeline $currentPipelineDisplayName took too long to handle onViewportTapped (more than $configTimeoutMs ms).")
         } finally {
             //cancel the job
             viewportTappedJob.cancel()
@@ -434,7 +437,15 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 source ?: handler.sourceOf(pipelineClass), pipelineClass, displayName, handler
             ))
 
-            if(refreshGuiPipelineList) refreshGuiPipelineList()
+            if(refreshGuiPipelineList) {
+                val allowSwitching = eocvSim.visualizer.pipelineSelectorPanel?.allowPipelineSwitching ?: true
+
+                eocvSim.visualizer.pipelineSelectorPanel?.allowPipelineSwitching = false
+                refreshGuiPipelineList()
+
+                eocvSim.visualizer.pipelineSelectorPanel?.selectedIndex = currentPipelineIndex
+                eocvSim.visualizer.pipelineSelectorPanel?.allowPipelineSwitching = allowSwitching
+            }
         } catch (ex: Exception) {
             logger.warn(TAG, "Error while adding pipeline class", ex)
             updateExceptionTracker(ex)
@@ -499,30 +510,31 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
     }
 
-    fun changePipeline(name: String, source: PipelineSource) {
+    fun changePipeline(name: String, source: PipelineSource, force: Boolean = false): Boolean {
         for((i, data) in pipelines.withIndex()) {
             if(data.clazz.simpleName == name && data.source == source) {
-                changePipeline(i)
-                return
+                changePipeline(i, force)
+                return true
             }
 
             if(data.clazz.name == name && data.source == source) {
-                changePipeline(i)
-                return
+                changePipeline(i, force)
+                return true
             }
 
             if(data.displayName == name && data.source == source) {
-                changePipeline(i)
-                return
+                changePipeline(i, force)
+                return true
             }
         }
 
         logger.warn("Pipeline class with name $name and source $source couldn't be found")
+        return false
     }
 
-    fun requestChangePipeline(name: String, source: PipelineSource) {
+    fun requestChangePipeline(name: String, source: PipelineSource, force: Boolean = false) {
         eocvSim.onMainUpdate.doOnce {
-            changePipeline(name, source)
+            changePipeline(name, source, force)
         }
     }
 
@@ -543,7 +555,9 @@ class PipelineManager(var eocvSim: EOCVSim) {
         val pipelineData = pipelines[index]
         val pipelineClass = pipelines[index].clazz
 
-        logger.info("Changing to pipeline " + pipelineClass.name)
+        val name = "${pipelineData.displayName} (class ${pipelineClass.typeName})"
+
+        logger.info("Changing to pipeline $name")
 
         try {
             nextTelemetry = TelemetryImpl().apply {
@@ -557,18 +571,18 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
             logger.info("Instantiated pipeline class " + pipelineClass.name)
         } catch (ex: NoSuchMethodException) {
-            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline, \"${pipelineClass.simpleName}\". Falling back to previous one.")
+            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline, \"${pipelineData.displayName}\". Falling back to previous one.")
             pipelineExceptionTracker.addMessage("Make sure your pipeline implements a public constructor with no parameters or a Telemetry parameter.")
 
             eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = currentPipelineIndex
 
-            logger.error("Error while instantiating requested pipeline, ${pipelineClass.simpleName} (usable constructor missing)", ex)
+            logger.error("Error while instantiating requested pipeline, $name : usable constructor missing", ex)
             return
         } catch (ex: Exception) {
-            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline, \"${pipelineClass.simpleName}\". Falling back to previous one.")
+            pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline, \"${pipelineData.displayName}\". Falling back to previous one.")
             updateExceptionTracker(ex)
 
-            logger.error("Error while instantiating requested pipeline, ${pipelineClass.simpleName} (unknown issue)", ex)
+            logger.error("Error while instantiating requested pipeline, $name (unknown issue)", ex)
 
             eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = currentPipelineIndex
 
@@ -577,11 +591,10 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
         previousPipelineIndex = currentPipelineIndex
 
-        currentPipeline      = nextPipeline
-        currentPipelineData  = pipelines[index]
-        currentTelemetry     = nextTelemetry
-        currentPipelineIndex = index
-        currentPipelineName  = "${currentPipelineData!!.displayName} (class ${currentPipeline!!::class.java.typeName})"
+        currentPipeline            = nextPipeline
+        currentPipelineData        = pipelines[index]
+        currentTelemetry           = nextTelemetry
+        currentPipelineIndex       = index
 
         virtualReflect = pipelineData.handler.virtualReflectOf(pipelineClass)
 
@@ -597,7 +610,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         hasInitCurrentPipeline = false
 
         currentPipelineContext?.close()
-        currentPipelineContext = newSingleThreadContext("Pipeline-$currentPipelineName")
+        currentPipelineContext = newSingleThreadContext("Pipeline-$currentPipelineShortName")
 
         activePipelineContexts.add(currentPipelineContext!!)
 
@@ -618,18 +631,16 @@ class PipelineManager(var eocvSim: EOCVSim) {
      * Change to the requested pipeline only if we're
      * not in the requested pipeline right now.
      */
-    fun changePipeline(index: Int?) {
-        if (index == currentPipelineIndex) return
+    fun changePipeline(index: Int?, force: Boolean = false) {
+        if (index == currentPipelineIndex && !force) return
         forceChangePipeline(index)
     }
 
-    fun requestChangePipeline(index: Int?) {
+    fun requestChangePipeline(index: Int?, force: Boolean = false) {
         onUpdate.doOnce {
-            changePipeline(index)
+            changePipeline(index, force)
         }
     }
-
-    fun requestForceChangePipeline(index: Int) = onUpdate.doOnce { forceChangePipeline(index) }
 
     fun applyLatestSnapshot() {
         if(currentPipeline != null && latestSnapshot != null) {

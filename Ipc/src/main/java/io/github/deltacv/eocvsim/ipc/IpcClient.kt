@@ -41,7 +41,7 @@ class IpcClient(
                 if(it is IpcOkResponse) {
                     logger.info("Authentication to port $port successful")
                 } else if(it is IpcErrorResponse) {
-                    logger.info("Authentication to port $port failed: ${it.reason}")
+                    logger.warn("Authentication to port $port failed: ${it.reason}")
                 }
             })
         }
@@ -62,7 +62,7 @@ class IpcClient(
     }
 
     override fun onClose(code: Int, reason: String, remote: Boolean) {
-        logger.info("Disconnected from server at port $port with code $code: $reason")
+        logger.warn("Disconnected from server at port $port with code $code: $reason")
     }
 
     override fun onError(ex: Exception) {

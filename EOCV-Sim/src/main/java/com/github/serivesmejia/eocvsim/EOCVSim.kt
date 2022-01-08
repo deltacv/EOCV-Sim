@@ -244,6 +244,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         logger.info("Trying to save config file...")
 
         inputSourceManager.currentInputSource?.close()
+        ipcServer.stop()
         workspaceManager.stopFileWatcher()
         configManager.saveToFile()
         visualizer.close()
@@ -350,7 +351,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         if (pipelineManager.currentPipeline == null) {
             visualizer.setTitleMessage("No pipeline$msg${workspaceMsg}")
         } else {
-            visualizer.setTitleMessage("${pipelineManager.currentPipelineName}$msg${workspaceMsg}")
+            visualizer.setTitleMessage("${pipelineManager.currentPipelineDisplayName}$msg${workspaceMsg}")
         }
     }
 
