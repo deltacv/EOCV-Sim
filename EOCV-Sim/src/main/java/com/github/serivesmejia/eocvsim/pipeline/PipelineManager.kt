@@ -164,7 +164,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
         // changing to initial pipeline
         onUpdate.doOnce {
-            if(compiledPipelineManager.isBuildRunning && staticSnapshot != null)
+            if(compiledPipelineManager.isBuildRunning)
                 compiledPipelineManager.onBuildEnd.doOnce(::applyStaticSnapOrDef)
             else
                 applyStaticSnapOrDef()
