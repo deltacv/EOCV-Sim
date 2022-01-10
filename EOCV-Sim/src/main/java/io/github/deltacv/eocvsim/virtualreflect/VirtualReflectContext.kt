@@ -28,8 +28,10 @@ interface VirtualReflectContext {
     val name: String
     val simpleName: String
 
-    fun getFields(): Array<VirtualField>
+    val fields: Array<VirtualField>
 
     fun getField(name: String): VirtualField?
+
+    fun getLabeledField(label: String): VirtualField?
 
 }

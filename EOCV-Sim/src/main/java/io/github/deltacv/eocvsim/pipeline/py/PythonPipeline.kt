@@ -24,6 +24,7 @@
 package io.github.deltacv.eocvsim.pipeline.py
 
 import io.github.deltacv.eocvsim.virtualreflect.py.PyWrapper
+import io.github.deltacv.eocvsim.virtualreflect.py.enableLabeling
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
@@ -48,6 +49,7 @@ class PythonPipeline(
     private lateinit var matPyObject: PyObject
 
     override val interpreter = PythonInterpreter().apply {
+        enableLabeling()
         set("telemetry", Py.java2py(telemetry))
         exec(source)
     }

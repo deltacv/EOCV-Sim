@@ -30,6 +30,8 @@ interface VirtualField {
 
     val isFinal: Boolean
 
+    val label: String?
+
     fun get(): Any?
     fun set(value: Any?)
     

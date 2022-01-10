@@ -23,12 +23,25 @@
 
 package io.github.deltacv.eocvsim.virtualreflect.jvm
 
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
+import java.lang.ref.WeakReference
+import java.util.*
 
 object JvmVirtualReflection : VirtualReflection {
 
-    override fun contextOf(c: Class<*>) = JvmVirtualReflectContext(null, c)
+    private val cache = WeakHashMap<Any, WeakReference<JvmVirtualReflectContext>>()
 
-    override fun contextOf(value: Any) = JvmVirtualReflectContext(value, value::class.java)
+    override fun contextOf(c: Class<*>) = cacheContextOf(null, c)
+
+    override fun contextOf(value: Any) = cacheContextOf(value, value::class.java)
+
+    private fun cacheContextOf(value: Any?, clazz: Class<*>): VirtualReflectContext {
+        if(!cache.containsKey(value) || cache[value]?.get() == null) {
+            cache[value] = WeakReference(JvmVirtualReflectContext(value, clazz))
+        }
+
+        return cache[value]!!.get()!!
+    }
 
 }

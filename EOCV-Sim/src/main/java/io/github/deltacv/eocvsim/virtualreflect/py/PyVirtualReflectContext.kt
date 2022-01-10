@@ -41,7 +41,9 @@ class PyVirtualReflectContext(
 
     private val fieldCache = mutableMapOf<String, PyVirtualField>()
 
-    override fun getFields(): Array<VirtualField> {
+    private val labeledFieldCache = mutableMapOf<String, PyVirtualField>()
+
+    override val fields: Array<VirtualField> get() {
         val locals = (interpreter.locals as PyStringMap).items()
 
         val fields = mutableListOf<PyVirtualField>()
@@ -67,6 +69,19 @@ class PyVirtualReflectContext(
         if(interpreter[name] == null) return null
 
         return fieldFor(name)
+    }
+
+    override fun getLabeledField(label: String): VirtualField? {
+        if(!labeledFieldCache.containsKey(label)) {
+            for(field in fields) {
+                if(field.label == label) {
+                    labeledFieldCache[label] = field as PyVirtualField
+                    break
+                }
+            }
+        }
+
+        return labeledFieldCache[label]
     }
 
     private fun fieldFor(name: String): PyVirtualField {

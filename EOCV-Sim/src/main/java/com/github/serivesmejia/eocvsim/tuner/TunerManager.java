@@ -164,6 +164,8 @@ public class TunerManager {
             // we can't handle this type
             if(tunableFieldClass == null) continue;
 
+            logger.info(field.getName() + " label " + field.getLabel());
+
             //yay we have a registered TunableField which handles this
             //now, lets do some more reflection to instantiate this TunableField
             //and add it to the list...

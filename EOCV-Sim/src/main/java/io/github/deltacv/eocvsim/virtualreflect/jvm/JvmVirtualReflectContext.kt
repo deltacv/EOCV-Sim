@@ -32,16 +32,29 @@ class JvmVirtualReflectContext(
     val clazz: Class<*>
 ) : VirtualReflectContext {
 
-    override val name = clazz.name
-    override val simpleName = clazz.simpleName
+    override val name: String = clazz.name
+    override val simpleName: String = clazz.simpleName
 
     private val cachedVirtualFields = mutableMapOf<Field, JvmVirtualField>()
 
-    override fun getFields(): Array<VirtualField> = clazz.fields.map { virtualFieldFor(it) }.toTypedArray()
+    override val fields: Array<VirtualField> = clazz.fields.map { virtualFieldFor(it) }.toTypedArray()
 
     override fun getField(name: String): VirtualField? {
         val field = clazz.getField(name) ?: return null
         return virtualFieldFor(field)
+    }
+
+    override fun getLabeledField(label: String): VirtualField? {
+        var labeledField: VirtualField? = null
+
+        for(field in fields) {
+            if(field.label == label) {
+                labeledField = field
+                break
+            }
+        }
+
+        return labeledField
     }
 
     private fun virtualFieldFor(field: Field): JvmVirtualField {

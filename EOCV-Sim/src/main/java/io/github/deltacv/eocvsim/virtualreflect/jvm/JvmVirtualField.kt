@@ -37,6 +37,25 @@ class JvmVirtualField(
 
     override val isFinal get() = Modifier.isFinal(field.modifiers)
 
+    private var hasLabel: Boolean? = null
+    private var cachedLabel: String? = null
+
+    override val label: String?
+        get() = if(hasLabel == null) {
+            val labelAnnotations = this.field.getDeclaredAnnotationsByType(Label::class.java)
+            if(labelAnnotations.isEmpty()) {
+                hasLabel = false
+                null
+            } else {
+                hasLabel = true
+                cachedLabel = labelAnnotations[0].name
+
+                cachedLabel
+            }
+        } else if(hasLabel == true) {
+            cachedLabel
+        } else null
+
     override fun get(): Any? = field.get(instance)
 
     override fun set(value: Any?) {

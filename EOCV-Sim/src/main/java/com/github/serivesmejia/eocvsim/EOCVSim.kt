@@ -23,6 +23,7 @@ import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import io.github.deltacv.eocvsim.ipc.IpcServer
+import io.github.deltacv.eocvsim.pipeline.py.addPythonPipeline
 import nu.pattern.OpenCV
 import org.opencv.core.Size
 import java.awt.Dimension
@@ -171,6 +172,47 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     private fun start() {
+        pipelineManager.addPythonPipeline("py test", """
+from org.opencv.core import (Scalar, Mat, Core, MatOfPoint, Rect)
+from java.util import ArrayList
+from org.opencv.imgproc import Imgproc
+
+lowerRGBA = label("aaaaa", Scalar(0.0, 0.0, 0.0, 0.0))
+upperRGBA = label("bbbbb", Scalar(255.0, 255.0, 255.0, 255.0))
+rgbaBinaryMat = Mat()
+
+contours = ArrayList()
+hierarchy = Mat()
+
+contoursColor = Scalar(0.0, 0.0, 0.0, 0.0)
+inputContours = Mat()
+
+contoursRects = ArrayList()
+
+rectsColor = Scalar(0.0, 0.0, 0.0, 0.0)
+inputContoursRects = Mat()
+
+def processFrame(input):
+	Core.inRange(input, lowerRGBA, upperRGBA, rgbaBinaryMat)
+
+	contours.clear()
+	hierarchy.release()
+	Imgproc.findContours(rgbaBinaryMat, contours, hierarchy, Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE)
+
+	input.copyTo(inputContours)
+	Imgproc.drawContours(inputContours, contours, -1, contoursColor, 4)
+
+	contoursRects.clear()
+	for points in contours:
+		contoursRects.add(Imgproc.boundingRect(points))
+
+	inputContours.copyTo(inputContoursRects)
+	for rect in contoursRects:
+		Imgproc.rectangle(inputContoursRects, rect, rectsColor, 1)
+
+	return inputContoursRects
+        """)
+
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
         while (!eocvSimThread.isInterrupted) {

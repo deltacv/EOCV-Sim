@@ -45,7 +45,7 @@ class PipelineSnapshot(
     init {
         val fieldValues = mutableMapOf<VirtualField, Any?>()
 
-        val fields = virtualReflect.contextOf(holdingPipeline)?.getFields() ?: arrayOf<VirtualField>()
+        val fields = virtualReflect.contextOf(holdingPipeline)?.fields ?: arrayOf<VirtualField>()
 
         for(field in fields) {
             if(field.isFinal) continue
