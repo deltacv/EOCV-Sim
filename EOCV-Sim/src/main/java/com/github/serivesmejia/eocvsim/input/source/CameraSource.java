@@ -136,6 +136,8 @@ public class CameraSource extends InputSource {
             camera = new OpenCvWebcam(webcamIndex, size, rotation);
         }
 
+        camera.setResolution(size);
+        camera.setRotation(rotation);
         camera.open();
 
         if (!camera.isOpen()) {
