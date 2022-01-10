@@ -25,6 +25,8 @@ package io.github.deltacv.eocvsim.virtualreflect.py
 
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext
+import org.python.core.Py
+import org.python.core.PyDictionary
 import org.python.core.PyStringMap
 import org.python.core.PyTuple
 import org.python.util.PythonInterpreter
@@ -86,10 +88,18 @@ class PyVirtualReflectContext(
 
     private fun fieldFor(name: String): PyVirtualField {
         if(!fieldCache.containsKey(name)) {
-            fieldCache[name] = PyVirtualField(name, interpreter)
+            fieldCache[name] = PyVirtualField(name, interpreter, labelOf(name))
         }
 
         return fieldCache[name]!!
+    }
+
+    fun labelOf(name: String): String? {
+        val labels = interpreter["__labels__"]
+
+        return if(labels != null) {
+            (labels as PyDictionary)[Py.newString(name)].asStringOrNull()
+        } else null
     }
 
 }

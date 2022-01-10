@@ -5,29 +5,17 @@ import org.python.util.PythonInterpreter
 
 fun PythonInterpreter.enableLabeling() {
     try {
-        if (this["LabeledAttribute"] != null) return
+        if (this["__labels__"] != null) return // skip if this was already called before
     } catch(ignored: Exception) {  }
 
     exec("""
-        class LabeledAttribute():
-            def __init__(self, label, obj):
-                self.label = label
-                self.obj = obj
+        __labels__ = {}
                 
-            def __get__(self, obj, owner):
-                return self.obj
+        def label(label, variable_name, value):
+            __labels__[variable_name] = label
+            return value
             
-            def __set__(self, obj, value):
-                self.obj = value
-                
-        def label(label, value):
-            return LabeledAttribute(label, value)
+        def label(label, variable_name):
+            __labels__[variable_name] = label
     """.trimIndent())
 }
-
-fun PythonInterpreter.getLabelOf(attribute: PyObject) =
-    if(attribute.type.name == "LabeledAttribute") {
-        try {
-            attribute.__findattr__("label")?.asStringOrNull()
-        } catch(ignored: Exception) { null }
-    } else null

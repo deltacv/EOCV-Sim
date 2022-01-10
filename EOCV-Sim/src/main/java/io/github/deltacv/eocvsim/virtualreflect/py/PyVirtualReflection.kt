@@ -23,17 +23,28 @@
 
 package io.github.deltacv.eocvsim.virtualreflect.py
 
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
 import org.python.util.PythonInterpreter
+import java.lang.ref.WeakReference
+import java.util.*
 
 object PyVirtualReflection : VirtualReflection {
 
+    private val cache = WeakHashMap<Any, WeakReference<PyVirtualReflectContext>>()
+
     override fun contextOf(c: Class<*>) = null
 
-    override fun contextOf(value: Any) = if(value is PyWrapper) {
-        PyVirtualReflectContext(value.name, value.interpreter)
-    } else if(value is PythonInterpreter) {
-        PyVirtualReflectContext(null, value)
-    } else null
+    override fun contextOf(value: Any): VirtualReflectContext? {
+        if(!cache.contains(value) || cache[value]?.get() == null) {
+            cache[value] = WeakReference(if(value is PyWrapper) {
+                PyVirtualReflectContext(value.name, value.interpreter)
+            } else if (value is PythonInterpreter) {
+                PyVirtualReflectContext(null, value)
+            } else null)
+        }
+
+        return cache[value]!!.get()
+    }
 
 }

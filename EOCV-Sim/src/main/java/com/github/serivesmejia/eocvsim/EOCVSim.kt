@@ -177,8 +177,10 @@ from org.opencv.core import (Scalar, Mat, Core, MatOfPoint, Rect)
 from java.util import ArrayList
 from org.opencv.imgproc import Imgproc
 
-lowerRGBA = label("aaaaa", Scalar(0.0, 0.0, 0.0, 0.0))
-upperRGBA = label("bbbbb", Scalar(255.0, 255.0, 255.0, 255.0))
+label("aaaaa", "lowerRGBA")
+lowerRGBA = Scalar(0.0, 0.0, 0.0, 0.0)
+label("bbbbb", "upperRGBA")
+upperRGBA = Scalar(255.0, 255.0, 255.0, 255.0)
 rgbaBinaryMat = Mat()
 
 contours = ArrayList()
