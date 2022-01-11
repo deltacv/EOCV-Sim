@@ -73,14 +73,16 @@ public class StringField extends TunableField<String> {
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
+    public void setFieldValue(int index, Object newValue) throws IllegalAccessException {
+        setPipelineFieldValue((String)newValue);
+    }
 
+    @Override
+    public void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException {
         value = newValue;
-
-        setPipelineFieldValue(value);
+        setFieldValue(index, value);
 
         lastVal = value;
-
     }
 
     @Override

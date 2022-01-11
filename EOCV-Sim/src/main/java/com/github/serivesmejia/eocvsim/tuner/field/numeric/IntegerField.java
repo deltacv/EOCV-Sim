@@ -34,31 +34,21 @@ import java.lang.reflect.Field;
 @RegisterTunableField
 public class IntegerField extends NumericField<Integer> {
 
-    protected int beforeValue;
-
     public IntegerField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS);
         value = (int) initialFieldValue;
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
+    public void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException {
         try {
             value = (int) Math.round(Double.parseDouble(newValue));
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException("Parameter should be a valid numeric String");
         }
 
-        setPipelineFieldValue(value);
-
+        setFieldValue(index, value);
         beforeValue = value;
-    }
-
-    @Override
-    public boolean hasChanged() {
-        boolean hasChanged = value != beforeValue;
-        beforeValue = value;
-        return hasChanged;
     }
 
 }

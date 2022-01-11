@@ -8,8 +8,6 @@ apply from: '../build.common.gradle'
 apply from: '../publish.gradle'
 
 dependencies {
-    implementation project(":Common")
-
     implementation "org.slf4j:slf4j-api:$slf4j_version"
 
     api "org.java-websocket:Java-WebSocket:$javawebsocket_version"

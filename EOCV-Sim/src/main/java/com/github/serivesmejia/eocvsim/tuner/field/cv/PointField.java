@@ -79,22 +79,33 @@ public class PointField extends TunableField<Point> {
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
+    public void setFieldValue(int index, Object newValue) throws IllegalAccessException {
         try {
-            double value = Double.parseDouble(newValue);
+            double value = 0;
+            if(newValue instanceof String) {
+                value = Double.parseDouble((String)newValue);
+            } else {
+                value = (double)newValue;
+            }
+
             if (index == 0) {
                 point.x = value;
             } else {
                 point.y = value;
             }
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Parameter should be a valid numeric String");
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Parameter should be a valid number", ex);
         }
 
         setPipelineFieldValue(point);
 
         lastX = point.x;
         lastY = point.y;
+    }
+
+    @Override
+    public void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException {
+        setFieldValue(index, point);
     }
 
     @Override

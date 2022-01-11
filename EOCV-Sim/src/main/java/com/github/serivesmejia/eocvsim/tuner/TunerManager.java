@@ -31,6 +31,7 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection;
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection;
+import org.jetbrains.annotations.Nullable;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -164,8 +165,6 @@ public class TunerManager {
             // we can't handle this type
             if(tunableFieldClass == null) continue;
 
-            logger.info(field.getName() + " label " + field.getLabel());
-
             //yay we have a registered TunableField which handles this
             //now, lets do some more reflection to instantiate this TunableField
             //and add it to the list...
@@ -185,6 +184,21 @@ public class TunerManager {
             }
 
         }
+    }
+
+    @Nullable public TunableField getTunableFieldWithLabel(String label) {
+        TunableField labeledField = null;
+
+        for(TunableField field : fields) {
+            String fieldLabel = field.reflectionField.getLabel();
+
+            if(fieldLabel != null && fieldLabel.equals(label)) {
+                labeledField = field;
+                break;
+            }
+        }
+
+        return labeledField;
     }
 
     public void setVirtualReflection(VirtualReflection reflect) {

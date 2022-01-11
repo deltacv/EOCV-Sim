@@ -70,27 +70,32 @@ class RectField(instance: OpenCvPipeline, reflectionField: VirtualField, eocvSim
         }
     }
 
-    override fun updateGuiFieldValues() {
-        for((i, value) in rect.withIndex()) {
-            fieldPanel.setFieldValue(i, value)
-        }
-    }
-
-    override fun setGuiFieldValue(index: Int, newValue: String) {
+    override fun setFieldValue(index: Int, newValue: Any) {
         try {
-            val value = newValue.toDouble()
-            rect[index] = value
-        } catch (ex: NumberFormatException) {
-            throw IllegalArgumentException("Parameter should be a valid numeric String")
+            rect[index] = if(newValue is String)
+                newValue.toDouble()
+            else (newValue as Number).toDouble()
+        } catch (e: Exception) {
+            throw IllegalArgumentException("Parameter should be a valid numeric value", e)
         }
 
-        initialRect.set(rect.toDoubleArray());
+        initialRect.set(rect.toDoubleArray())
         setPipelineFieldValue(initialRect)
 
         lastRect[0] = initialRect.x.toDouble()
         lastRect[1] = initialRect.y.toDouble()
         lastRect[2] = initialRect.width.toDouble()
         lastRect[3] = initialRect.height.toDouble()
+    }
+
+    override fun updateGuiFieldValues() {
+        for((i, value) in rect.withIndex()) {
+            fieldPanel.setFieldValue(i, value)
+        }
+    }
+
+    override fun setFieldValueFromGui(index: Int, newValue: String) {
+        setFieldValue(index, newValue)
     }
 
     override fun getValue(): Rect = Rect(rect.toDoubleArray())

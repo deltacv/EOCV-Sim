@@ -78,9 +78,11 @@ public abstract class TunableField<T> {
         }
     }
 
-    public abstract void setGuiFieldValue(int index, String newValue) throws IllegalAccessException;
+    public abstract void setFieldValue(int index, Object newValue) throws IllegalAccessException;
 
-    public void setGuiComboBoxValue(int index, String newValue) throws IllegalAccessException { }
+    public abstract void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException;
+
+    public void setComboBoxValueFromGui(int index, String newValue) throws IllegalAccessException { }
 
     public final void setTunableFieldPanel(TunableFieldPanel fieldPanel) {
         this.fieldPanel = fieldPanel;

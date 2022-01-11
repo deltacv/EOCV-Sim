@@ -29,8 +29,6 @@ import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-import java.lang.reflect.Field;
-
 @RegisterTunableField
 public class BooleanField extends TunableField<Boolean> {
 
@@ -68,14 +66,19 @@ public class BooleanField extends TunableField<Boolean> {
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
-        setGuiComboBoxValue(index, newValue);
+    public void setFieldValue(int index, Object newValue) throws IllegalAccessException {
+        setPipelineFieldValue((boolean)newValue);
     }
 
     @Override
-    public void setGuiComboBoxValue(int index, String newValue) throws IllegalAccessException {
+    public void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException {
+        setComboBoxValueFromGui(index, newValue);
+    }
+
+    @Override
+    public void setComboBoxValueFromGui(int index, String newValue) throws IllegalAccessException {
         value = Boolean.parseBoolean(newValue);
-        setPipelineFieldValue(value);
+        setFieldValue(index, value);
         lastVal = value;
     }
 

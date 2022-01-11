@@ -31,9 +31,10 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
 
-public class NumericField<T extends Number> extends TunableField<T> {
+abstract public class NumericField<T extends Number> extends TunableField<T> {
 
     protected T value;
+    protected T beforeValue;
 
     protected volatile boolean hasChanged = false;
 
@@ -60,12 +61,14 @@ public class NumericField<T extends Number> extends TunableField<T> {
     }
 
     @Override
-    public void updateGuiFieldValues() {
-        fieldPanel.setFieldValue(0, value);
+    @SuppressWarnings("unchecked")
+    public void setFieldValue(int index, Object value) throws IllegalAccessException {
+        setPipelineFieldValue((T) value);
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
+    public void updateGuiFieldValues() {
+        fieldPanel.setFieldValue(0, value);
     }
 
     @Override
@@ -80,7 +83,10 @@ public class NumericField<T extends Number> extends TunableField<T> {
 
     @Override
     public boolean hasChanged() {
-        return false;
+        boolean hasChanged = value != beforeValue;
+        beforeValue = value;
+        return hasChanged;
     }
+
 
 }

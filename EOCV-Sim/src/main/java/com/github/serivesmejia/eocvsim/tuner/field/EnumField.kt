@@ -4,10 +4,8 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
-import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableFieldAcceptor
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import org.openftc.easyopencv.OpenCvPipeline
-import java.lang.reflect.Field
 
 @RegisterTunableField
 class EnumField(private val instance: OpenCvPipeline,
@@ -42,11 +40,15 @@ class EnumField(private val instance: OpenCvPipeline,
         fieldPanel.setComboBoxSelection(0, currentValue)
     }
 
-    override fun setGuiComboBoxValue(index: Int, newValue: String) = setGuiFieldValue(index, newValue)
+    override fun setFieldValue(index: Int, newValue: Any) {
+        reflectionField.set(newValue)
+    }
 
-    override fun setGuiFieldValue(index: Int, newValue: String) {
+    override fun setComboBoxValueFromGui(index: Int, newValue: String) = setFieldValueFromGui(index, newValue)
+
+    override fun setFieldValueFromGui(index: Int, newValue: String) {
         currentValue = java.lang.Enum.valueOf(initialValue::class.java, newValue)
-        reflectionField.set(currentValue)
+        setFieldValue(index, currentValue)
     }
 
     override fun getValue() = currentValue
