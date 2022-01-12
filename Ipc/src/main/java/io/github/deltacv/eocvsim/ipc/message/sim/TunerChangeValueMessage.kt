@@ -7,3 +7,8 @@ class TunerChangeValueMessage(
     var index: Int,
     var value: Any
 ) : IpcMessageBase()
+
+class TunerChangeValuesMessage(
+    var label: String,
+    var values: Array<Any>
+) : IpcMessageBase()
