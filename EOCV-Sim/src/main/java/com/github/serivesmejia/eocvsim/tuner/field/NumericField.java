@@ -61,12 +61,6 @@ abstract public class NumericField<T extends Number> extends TunableField<T> {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public void setFieldValue(int index, Object value) throws IllegalAccessException {
-        setPipelineFieldValue((T) value);
-    }
-
-    @Override
     public void updateGuiFieldValues() {
         fieldPanel.setFieldValue(0, value);
     }

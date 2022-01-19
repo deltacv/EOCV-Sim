@@ -51,4 +51,14 @@ public class FloatField extends NumericField<Float> {
         beforeValue = value;
     }
 
+    @Override
+    public void setFieldValue(int index, Object value) throws IllegalAccessException {
+        if(value instanceof Number) {
+            this.value = ((Number) value).floatValue();
+        } else {
+            this.value = (float)value;
+        }
+        setPipelineFieldValue(this.value);
+    }
+
 }

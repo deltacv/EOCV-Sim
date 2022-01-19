@@ -51,4 +51,14 @@ public class IntegerField extends NumericField<Integer> {
         beforeValue = value;
     }
 
+    @Override
+    public void setFieldValue(int index, Object value) throws IllegalAccessException {
+        if(value instanceof Number) {
+            this.value = ((Number) value).intValue();
+        } else {
+            this.value = (int)value;
+        }
+        setPipelineFieldValue(this.value);
+    }
+
 }

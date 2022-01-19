@@ -10,5 +10,5 @@ class TunerChangeValueMessage(
 
 class TunerChangeValuesMessage(
     var label: String,
-    var values: Array<Any>
+    var values: Array<*>
 ) : IpcMessageBase()

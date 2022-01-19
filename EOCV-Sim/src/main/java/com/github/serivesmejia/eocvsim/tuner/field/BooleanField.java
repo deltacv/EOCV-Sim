@@ -67,6 +67,7 @@ public class BooleanField extends TunableField<Boolean> {
 
     @Override
     public void setFieldValue(int index, Object newValue) throws IllegalAccessException {
+        value = (boolean) newValue;
         setPipelineFieldValue((boolean)newValue);
     }
 

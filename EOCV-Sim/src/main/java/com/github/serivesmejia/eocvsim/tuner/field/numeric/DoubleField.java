@@ -51,4 +51,14 @@ public class DoubleField extends NumericField<Double> {
         beforeValue = value;
     }
 
+    @Override
+    public void setFieldValue(int index, Object value) throws IllegalAccessException {
+        if(value instanceof Number) {
+            this.value = ((Number) value).doubleValue();
+        } else {
+            this.value = (double)value;
+        }
+        setPipelineFieldValue(this.value);
+    }
+
 }
