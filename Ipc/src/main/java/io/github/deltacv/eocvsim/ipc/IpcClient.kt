@@ -9,9 +9,11 @@ import io.github.deltacv.eocvsim.ipc.security.PassToken
 import io.github.deltacv.eocvsim.ipc.serialization.ipcGson
 import io.github.deltacv.eocvsim.util.loggerForThis
 import org.java_websocket.client.WebSocketClient
+import org.java_websocket.drafts.Draft
 import org.java_websocket.handshake.ServerHandshake
 import java.lang.Exception
 import java.net.URI
+import java.nio.ByteBuffer
 
 class IpcClient(
     val port: Int = 11026,
@@ -22,6 +24,7 @@ class IpcClient(
 
     private val gson = ipcGson
 
+    private val binaryHandlers = mutableMapOf<Byte, MutableList<(Short, ByteBuffer) -> Unit>>()
     private val awaitingResponseMessages = mutableMapOf<Int, IpcMessage>()
 
     fun broadcast(message: IpcMessage) {
@@ -29,6 +32,13 @@ class IpcClient(
         logger.trace("Sent $message to server at port $port and id ${message.id}")
 
         awaitingResponseMessages[message.id] = message
+    }
+
+    fun binaryHandler(opcode: Byte, callback: (Short, ByteBuffer) -> Unit) {
+        val list = binaryHandlers[opcode] ?: mutableListOf()
+        list.add(callback)
+
+        binaryHandlers[opcode] = list
     }
 
     override fun onOpen(handshakedata: ServerHandshake) {
@@ -59,6 +69,28 @@ class IpcClient(
         }
 
         awaitingResponseMessages.remove(response.id)
+    }
+
+    override fun onMessage(bytes: ByteBuffer) {
+        // following small spec
+        val opcode = bytes.get() // first byte indicates the opcode (determines who will take this data)
+
+        val id = bytes.short // third and fourth bytes correspond to a signed java short
+                             // optionally contains an id (can be left to 0 if not needed)
+
+        val callbacks = binaryHandlers[opcode]
+        if(callbacks == null) {
+            bytes.clear()
+            return
+        }
+
+        for(callback in callbacks) {
+            callback(id,
+                bytes // remaining bytes are just user data,
+                      // so we just pass the bytebuffer which currently
+                      // is at the position where the data starts
+            )
+        }
     }
 
     override fun onClose(code: Int, reason: String, remote: Boolean) {

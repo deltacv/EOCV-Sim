@@ -22,6 +22,7 @@ import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
+import io.github.deltacv.eocvsim.ipc.IpcImageStreamer
 import io.github.deltacv.eocvsim.ipc.IpcServer
 import io.github.deltacv.eocvsim.pipeline.py.addPythonPipeline
 import nu.pattern.OpenCV
@@ -217,6 +218,8 @@ def processFrame(input):
 
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
+        val stream = IpcImageStreamer(Size(320.0, 240.0), ipcServer)
+
         while (!eocvSimThread.isInterrupted) {
             //run all pending requested runnables
             onMainUpdate.run()
@@ -229,6 +232,7 @@ def processFrame(input):
             try {
                 pipelineManager.update(
                     if(inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
+                        stream.sendFrame(1, inputSourceManager.lastMatFromSource)
                         inputSourceManager.lastMatFromSource
                     } else null
                 )

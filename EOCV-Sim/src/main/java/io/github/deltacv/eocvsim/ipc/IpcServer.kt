@@ -39,7 +39,9 @@ import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.lang.ref.WeakReference
 import java.net.InetSocketAddress
+import java.nio.ByteBuffer
 
 class IpcServer(
     val eocvSim: EOCVSim,
@@ -59,6 +61,35 @@ class IpcServer(
     private val gson = ipcGson
 
     private val authorisedConnections = mutableListOf<WebSocket>()
+
+    private val daemonBuffers = mutableMapOf<Int, WeakReference<ByteBuffer>>()
+
+    fun broadcastBinary(opcode: Byte, id: Short, data: ByteArray) {
+        // 1 byte for opcode + 2 bytes for short id + n bytes for data
+        val requiredSize = 1 + 2 + data.size
+
+        val buffer: ByteBuffer
+
+        synchronized(daemonBuffers) {
+            buffer = daemonBuffers[requiredSize]?.get()
+                ?: ByteBuffer.allocate(requiredSize)
+
+            daemonBuffers.remove(requiredSize)
+        }
+
+        buffer.clear()
+
+        buffer.put(opcode)
+        buffer.putShort(id)
+        buffer.put(data)
+
+        buffer.clear()
+        broadcast(buffer)
+
+        synchronized(daemonBuffers) {
+            daemonBuffers[requiredSize] = WeakReference(buffer)
+        }
+    }
 
     override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
         val hostString = conn.localSocketAddress.hostString
