@@ -41,6 +41,7 @@ import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
 import org.opencv.core.Mat
+import org.opencv.imgproc.Imgproc
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.util.*
@@ -283,6 +284,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
                     currentPipeline?.processFrame(inputMat)?.let { outputMat ->
                         if (isActive) {
                             pipelineFpsCounter.update()
+
+                            eocvSim.stream.sendFrame(1, outputMat, Imgproc.COLOR_RGBA2RGB)
 
                             for (poster in pipelineOutputPosters.toTypedArray()) {
                                 try {

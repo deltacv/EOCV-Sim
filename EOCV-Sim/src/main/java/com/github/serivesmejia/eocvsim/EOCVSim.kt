@@ -27,6 +27,7 @@ import io.github.deltacv.eocvsim.ipc.IpcServer
 import io.github.deltacv.eocvsim.pipeline.py.addPythonPipeline
 import nu.pattern.OpenCV
 import org.opencv.core.Size
+import org.opencv.imgproc.Imgproc
 import java.awt.Dimension
 import java.io.File
 import javax.swing.SwingUtilities
@@ -87,6 +88,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     @JvmField val workspaceManager = WorkspaceManager(this)
 
     @JvmField val ipcServer = IpcServer(this, usePassToken = false)
+    val stream by lazy { IpcImageStreamer(Size(320.0, 240.0), ipcServer) }
 
     val config: Config get() = configManager.config
 
@@ -218,8 +220,6 @@ def processFrame(input):
 
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
-        val stream = IpcImageStreamer(Size(320.0, 240.0), ipcServer)
-
         while (!eocvSimThread.isInterrupted) {
             //run all pending requested runnables
             onMainUpdate.run()
@@ -232,7 +232,6 @@ def processFrame(input):
             try {
                 pipelineManager.update(
                     if(inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
-                        stream.sendFrame(1, inputSourceManager.lastMatFromSource)
                         inputSourceManager.lastMatFromSource
                     } else null
                 )
