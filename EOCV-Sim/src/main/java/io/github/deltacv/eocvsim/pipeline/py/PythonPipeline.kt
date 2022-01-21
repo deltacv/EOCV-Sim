@@ -23,6 +23,7 @@
 
 package io.github.deltacv.eocvsim.pipeline.py
 
+import io.github.deltacv.eocvsim.pipeline.StreamableOpenCvPipeline
 import io.github.deltacv.eocvsim.virtualreflect.py.PyWrapper
 import io.github.deltacv.eocvsim.virtualreflect.py.enableLabeling
 import org.firstinspires.ftc.robotcore.external.Telemetry
@@ -37,7 +38,7 @@ class PythonPipeline(
     override val name: String,
     val source: String,
     val telemetry: Telemetry
-) : PyWrapper, OpenCvPipeline() {
+) : PyWrapper, StreamableOpenCvPipeline() {
 
     var initFunction: PyFunction? = null
         private set
@@ -51,6 +52,8 @@ class PythonPipeline(
     override val interpreter = PythonInterpreter().apply {
         enableLabeling()
         set("telemetry", Py.java2py(telemetry))
+        set("stream", Streamer(this@PythonPipeline))
+
         exec(source)
     }
 
@@ -82,6 +85,37 @@ class PythonPipeline(
 
     override fun onViewportTapped() {
         onViewportTappedFunction?.__call__()
+    }
+
+    // class for exposing the streamFrame function to python
+    // in the shape of "stream(Int, Mat, Int)"
+    // or "stream(Int, Mat)"
+    class Streamer(private val pipeline: PythonPipeline) : PyObject() {
+        override fun __call__(id: PyObject, image: PyObject): PyObject {
+            pipeline.streamFrame(id.asInt().toShort(), Py.tojava(image, Mat::class.java))
+            return Py.None
+        }
+
+        override fun __call__(id: PyObject, image: PyObject, cvtColor: PyObject): PyObject {
+            pipeline.streamFrame(id.asInt().toShort(), Py.tojava(image, Mat::class.java), cvtColor.asInt())
+            return Py.None
+        }
+
+        override fun __call__(args: Array<out PyObject>): PyObject {
+            if(args.size < 2) {
+                throw Py.TypeError("stream() missing ${2 - args.size} required positional argument(s)")
+            } else if(args.size > 3) {
+                throw Py.TypeError("stream() takes 2 or 3 positional arguments but ${args.size} were given")
+            }
+
+            val id = args[0]
+            val image = args[1]
+            val cvtColor = if(args.size == 3) args[2] else null
+
+            pipeline.streamFrame(id.asInt().toShort(), Py.tojava(image, Mat::class.java), cvtColor?.asInt())
+
+            return Py.None
+        }
     }
 
 }

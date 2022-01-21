@@ -88,7 +88,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
     @JvmField val workspaceManager = WorkspaceManager(this)
 
     @JvmField val ipcServer = IpcServer(this, usePassToken = false)
-    val stream by lazy { IpcImageStreamer(Size(320.0, 240.0), ipcServer) }
 
     val config: Config get() = configManager.config
 

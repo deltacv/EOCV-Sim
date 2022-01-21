@@ -34,6 +34,8 @@ import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.eocvsim.ipc.IpcImageStreamer
+import io.github.deltacv.eocvsim.pipeline.StreamableOpenCvPipeline
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
@@ -41,6 +43,7 @@ import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
 import org.opencv.core.Mat
+import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.TimestampedPipelineHandler
@@ -119,6 +122,9 @@ class PipelineManager(var eocvSim: EOCVSim) {
             eocvSim.tunerManager.setVirtualReflection(value)
             field = value
         }
+
+    var streamData: PipelineStream? = null
+        private set
 
     var latestSnapshot: PipelineSnapshot? = null
         private set
@@ -285,8 +291,6 @@ class PipelineManager(var eocvSim: EOCVSim) {
                         if (isActive) {
                             pipelineFpsCounter.update()
 
-                            eocvSim.stream.sendFrame(1, outputMat, Imgproc.COLOR_RGBA2RGB)
-
                             for (poster in pipelineOutputPosters.toTypedArray()) {
                                 try {
                                     poster.post(outputMat)
@@ -393,6 +397,36 @@ class PipelineManager(var eocvSim: EOCVSim) {
         } finally {
             //cancel the job
             viewportTappedJob.cancel()
+        }
+    }
+
+    fun startPipelineStream(
+        opcode: Byte = 0xE,
+        width: Int, height: Int
+    ) {
+        if(streamData != null)
+            throw IllegalStateException("Cannot start another IPC pipeline stream while another is already running. Call stopPipelineStream()")
+
+        streamData = PipelineStream(opcode, Size(width.toDouble(), height.toDouble()))
+        applyStream()
+    }
+
+    fun stopPipelineStream() {
+        streamData = null
+        applyStream()
+    }
+
+    private fun applyStream() {
+        val currentPipeline = currentPipeline
+
+        if(currentPipeline is StreamableOpenCvPipeline) {
+            val stream = streamData
+
+            if(stream != null) {
+                currentPipeline.streamer = IpcImageStreamer(
+                    stream.size, stream.opcode, eocvSim.ipcServer
+                )
+            } else currentPipeline.streamer = null
         }
     }
 
@@ -601,6 +635,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
         virtualReflect = pipelineData.handler.virtualReflectOf(pipelineClass)
 
+        applyStream()
+
         val snap = PipelineSnapshot(currentPipeline!!, virtualReflect, snapshotFieldFilter)
 
         lastInitialSnapshot = if(applyLatestSnapshot) {
@@ -735,6 +771,10 @@ class PipelineManager(var eocvSim: EOCVSim) {
             eocvSim.visualizer.pipelineSelectorPanel.updatePipelinesList()
         }
     }
+
+    data class PipelineStream(
+        val opcode: Byte, val size: Size
+    )
 
 }
 

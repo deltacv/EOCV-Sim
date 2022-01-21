@@ -16,12 +16,9 @@ import java.awt.image.DataBufferByte
 
 class IpcImageStreamer(
     val resolution: Size,
+    val opcode: Byte,
     val server: IpcServer
 ) {
-
-    companion object {
-        const val opcode: Byte = 0xE
-    }
 
     private val matRecycler = MatRecycler(2)
 
