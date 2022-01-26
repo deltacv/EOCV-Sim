@@ -1,6 +1,7 @@
 package io.github.deltacv.eocvsim.ipc.message.sim
 
 import io.github.deltacv.eocvsim.ipc.message.IpcMessageBase
+import io.github.deltacv.eocvsim.pipeline.PipelineSource
 
 class PythonPipelineSourceMessage(
     var pipelineName: String,
@@ -12,5 +13,3 @@ class ChangePipelineMessage(
     var pipelineSource: PipelineSource,
     var force: Boolean = false
 ) : IpcMessageBase()
-
-enum class PipelineSource { CLASSPATH, COMPILED_ON_RUNTIME, PYTHON_RUNTIME }

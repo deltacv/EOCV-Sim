@@ -35,6 +35,7 @@ import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.eocvsim.ipc.IpcImageStreamer
+import io.github.deltacv.eocvsim.pipeline.PipelineSource
 import io.github.deltacv.eocvsim.pipeline.StreamableOpenCvPipeline
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
@@ -820,5 +821,3 @@ data class PipelineData(
     val displayName: String,
     val handler: PipelineHandler
 )
-
-enum class PipelineSource { CLASSPATH, COMPILED_ON_RUNTIME, PYTHON_RUNTIME }

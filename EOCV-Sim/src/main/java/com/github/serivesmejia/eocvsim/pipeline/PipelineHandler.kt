@@ -1,6 +1,7 @@
 package com.github.serivesmejia.eocvsim.pipeline
 
 import com.github.serivesmejia.eocvsim.pipeline.compiler.isFromRuntimeBuild
+import io.github.deltacv.eocvsim.pipeline.PipelineSource
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
 import org.firstinspires.ftc.robotcore.external.Telemetry

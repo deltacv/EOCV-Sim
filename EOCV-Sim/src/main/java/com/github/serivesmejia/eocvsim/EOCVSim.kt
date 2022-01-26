@@ -8,7 +8,6 @@ import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
-import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
@@ -24,6 +23,7 @@ import com.github.serivesmejia.eocvsim.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import io.github.deltacv.eocvsim.ipc.IpcImageStreamer
 import io.github.deltacv.eocvsim.ipc.IpcServer
+import io.github.deltacv.eocvsim.pipeline.PipelineSource
 import io.github.deltacv.eocvsim.pipeline.py.addPythonPipeline
 import nu.pattern.OpenCV
 import org.opencv.core.Size

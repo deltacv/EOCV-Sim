@@ -3,7 +3,7 @@ package com.github.serivesmejia.eocvsim.gui.util.icon
 import com.github.serivesmejia.eocvsim.gui.Icons
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
-import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
+import io.github.deltacv.eocvsim.pipeline.PipelineSource
 
 import javax.swing.*
 import java.awt.*

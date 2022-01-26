@@ -19,4 +19,5 @@ dependencies {
 task(runSim, dependsOn: 'classes', type: JavaExec) {
     main = 'com.github.serivesmejia.eocvsim.Main'
     classpath = sourceSets.main.runtimeClasspath
+    environment("Dsun.java2d.d3d", false)
 }

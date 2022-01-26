@@ -23,11 +23,12 @@
 
 package io.github.deltacv.eocvsim.ipc.message.handler.sim
 
-import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import io.github.deltacv.eocvsim.ipc.IpcServer
 import io.github.deltacv.eocvsim.ipc.message.handler.IpcMessageHandler
+import io.github.deltacv.eocvsim.ipc.message.response.IpcBooleanResponse
 import io.github.deltacv.eocvsim.ipc.message.response.IpcOkResponse
 import io.github.deltacv.eocvsim.ipc.message.sim.PythonPipelineSourceMessage
+import io.github.deltacv.eocvsim.pipeline.py.PythonPipeline
 import io.github.deltacv.eocvsim.pipeline.py.addPythonPipeline
 import io.github.deltacv.eocvsim.pipeline.py.removePythonPipeline
 
@@ -40,13 +41,23 @@ class PythonPipelineSourceMessageHandler : IpcMessageHandler<PythonPipelineSourc
         val pipelineManager = ctx.eocvSim.pipelineManager
 
         pipelineManager.onUpdate.doOnce {
+            val currentPipeline = pipelineManager.currentPipeline
+            val isCurrentlyRunning = currentPipeline is PythonPipeline && currentPipeline.name == ctx.message.pipelineName
+
+            if(isCurrentlyRunning) {
+                (currentPipeline as PythonPipeline).source = ctx.message.pythonSource
+                ctx.eocvSim.tunerManager.reset()
+            }
+
             pipelineManager.removePythonPipeline(ctx.message.pipelineName,
                 updateGui = false,
                 changeToDefaultIfRemoved = false
             )
-            pipelineManager.addPythonPipeline(ctx.message.pipelineName, ctx.message.pythonSource, true)
+            pipelineManager.addPythonPipeline(ctx.message.pipelineName, ctx.message.pythonSource,
+                updateGui = !isCurrentlyRunning
+            )
 
-            ctx.respond(IpcOkResponse())
+            ctx.respond(IpcBooleanResponse(isCurrentlyRunning))
         }
     }
 

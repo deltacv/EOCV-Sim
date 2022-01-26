@@ -71,8 +71,13 @@ class IpcServer(
         val buffer: ByteBuffer
 
         synchronized(daemonBuffers) {
-            buffer = daemonBuffers[requiredSize]?.get()
-                ?: ByteBuffer.allocate(requiredSize)
+            var buff = daemonBuffers[requiredSize]?.get()
+            if(buff == null) {
+                println("created new bufffff")
+                buff = ByteBuffer.allocate(requiredSize)
+            }
+
+            buffer = buff!!
 
             daemonBuffers.remove(requiredSize)
         }

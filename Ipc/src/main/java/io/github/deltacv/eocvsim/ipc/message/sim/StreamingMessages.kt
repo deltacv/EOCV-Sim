@@ -2,6 +2,8 @@ package io.github.deltacv.eocvsim.ipc.message.sim
 
 import io.github.deltacv.eocvsim.ipc.message.IpcMessageBase
 
+class IsStreamingMessage : IpcMessageBase()
+
 class StartStreamingMessage(
     var width: Int,
     var height: Int,

@@ -36,28 +36,44 @@ import org.python.util.PythonInterpreter
 
 class PythonPipeline(
     override val name: String,
-    val source: String,
+    source: String,
     val telemetry: Telemetry
-) : PyWrapper, StreamableOpenCvPipeline() {
+) : StreamableOpenCvPipeline(), PyWrapper {
 
     var initFunction: PyFunction? = null
         private set
-    var processFrameFunction: PyFunction
+    lateinit var processFrameFunction: PyFunction
         private set
     var onViewportTappedFunction: PyFunction? = null
         private set
 
     private lateinit var matPyObject: PyObject
 
-    override val interpreter = PythonInterpreter().apply {
-        enableLabeling()
-        set("telemetry", Py.java2py(telemetry))
-        set("stream", Streamer(this@PythonPipeline))
+    private var nextProcessDoInit = false
 
-        exec(source)
-    }
+    var source = source
+        set(value) {
+            field = value
+            initInterpreter()
+            nextProcessDoInit = true
+        }
+
+    private var internalInterpreter: PythonInterpreter? = null
+    override val interpreter get() = internalInterpreter!!
 
     init {
+        initInterpreter()
+    }
+
+    private fun initInterpreter() {
+        internalInterpreter = PythonInterpreter().apply {
+            enableLabeling()
+            set("telemetry", Py.java2py(telemetry))
+            set("stream", Streamer(this@PythonPipeline))
+
+            exec(source)
+        }
+
         val initFunc = interpreter.get("init")
         if(initFunc is PyFunction) {
             initFunction = initFunc
@@ -80,6 +96,10 @@ class PythonPipeline(
     }
 
     override fun processFrame(input: Mat): Mat {
+        if(nextProcessDoInit) {
+            init(input)
+            nextProcessDoInit = false
+        }
         return processFrameFunction.__call__(matPyObject).__tojava__(Mat::class.java) as Mat
     }
 
@@ -90,7 +110,7 @@ class PythonPipeline(
     // class for exposing the streamFrame function to python
     // in the shape of "stream(Int, Mat, Int)"
     // or "stream(Int, Mat)"
-    class Streamer(private val pipeline: PythonPipeline) : PyObject() {
+    private class Streamer(private val pipeline: PythonPipeline) : PyObject() {
         override fun __call__(id: PyObject, image: PyObject): PyObject {
             pipeline.streamFrame(id.asInt().toShort(), Py.tojava(image, Mat::class.java))
             return Py.None
