@@ -71,7 +71,23 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
-### [v3.3.2 - Better compiler support](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.3.1)
+### [v3.4.0 - Webcam stability improvements](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.4.0)
+
+   - This is the 14th release for EOCV-Sim
+ 
+      - Changelog:      
+        - Adds option for selecting between OpenCV and OpenIMAJ webcam drivers, with a fallback to OpenCV in case OpenIMAJ fails to load
+        - Support for webcam rotation to adjust depending on the direction on which the webcam could be mounted
+        - Migrated logging to slf4j with log4j backend (non log4shell version)
+        - Improved various dialog windows across the sim to be a little more visually pleasing
+        - Full telemetry implementation rewrite by using the FTC SDK interface and implementation (with minor modifications)
+        - Scrapped webcam-capture
+      - Bug fixes: 
+        - Fixes crashes related to camera sources and OpenIMAJ loading
+        - Fixes prolonged lags when opening the camera source creation dialog
+        - Fixes classloader and jar packaged to use correct zip file separators (/ instead of File.separator)
+
+### [v3.3.2 - Better compiler support](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.3.2)
 
    - This is the 13th release for EOCV-Sim
  
@@ -81,7 +97,7 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
       - Bug fixes:
         - Fixes camera source sizes serialization where the height was replaced by the width
         
-### [v3.3.1 - Common module hotfix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.3.0)
+### [v3.3.1 - Common module hotfix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.3.1)
 
    - This is the 12th release for EOCV-Sim
  
