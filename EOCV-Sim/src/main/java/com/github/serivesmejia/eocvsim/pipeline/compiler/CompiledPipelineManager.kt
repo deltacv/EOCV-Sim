@@ -27,10 +27,10 @@ import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
-import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.github.serivesmejia.eocvsim.workspace.util.template.DefaultWorkspaceTemplate
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.*
@@ -54,9 +54,9 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         val JARS_OUTPUT_FOLDER    = File(COMPILER_FOLDER, File.separator + "out_jars").mkdirLazy()
 
         val PIPELINES_OUTPUT_JAR  = File(JARS_OUTPUT_FOLDER, File.separator + "pipelines.jar")
-
-        const val TAG = "CompiledPipelineManager"
     }
+
+    val logger by loggerForThis()
 
     var currentPipelineClassLoader: PipelineClassLoader? = null
         private set
@@ -75,7 +75,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     val workspaceManager get() = pipelineManager.eocvSim.workspaceManager
 
     fun init() {
-        Log.info(TAG, "Initializing...")
+        logger.info("Initializing...")
         asyncCompile(false)
 
         workspaceManager.onWorkspaceChange {
@@ -108,7 +108,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         workspaceManager.reloadConfig()
 
         val absoluteSourcesPath = workspaceManager.sourcesAbsolutePath.toFile()
-        Log.info(TAG, "Building java files in workspace, at ${absoluteSourcesPath.absolutePath}")
+        logger.info("Building java files in workspace, at ${absoluteSourcesPath.absolutePath}")
 
         val runtime = ElapsedTime()
 
@@ -175,9 +175,9 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         }
 
         if(result.status == PipelineCompileStatus.SUCCESS) {
-            Log.info(TAG, "$lastBuildOutputMessage\n")
+            logger.info("$lastBuildOutputMessage\n")
         } else {
-            Log.warn(TAG, "$lastBuildOutputMessage\n")
+            logger.warn("$lastBuildOutputMessage\n")
 
             if(result.status == PipelineCompileStatus.FAILED && !Output.isAlreadyOpened)
                 DialogFactory.createBuildOutput(pipelineManager.eocvSim)
@@ -211,7 +211,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             |If this seems like a bug, please open an issue in the EOCV-Sim github repo
         """.trimMargin()
 
-        Log.error(TAG, lastBuildOutputMessage)
+        logger.error(lastBuildOutputMessage)
 
         lastBuildResult = PipelineCompileResult(PipelineCompileStatus.FAILED, lastBuildOutputMessage!!)
 
@@ -238,7 +238,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     fun loadFromPipelinesJar() {
         if(!PIPELINES_OUTPUT_JAR.exists()) return
 
-        Log.info(TAG, "Looking for pipelines in jar file $PIPELINES_OUTPUT_JAR")
+        logger.trace("Looking for pipelines in jar file $PIPELINES_OUTPUT_JAR")
 
         try {
             currentPipelineClassLoader = PipelineClassLoader(PIPELINES_OUTPUT_JAR)
@@ -247,12 +247,12 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
             for(pipelineClass in currentPipelineClassLoader!!.pipelineClasses) {
                 pipelines.add(pipelineClass)
-                Log.info(TAG, "Added ${pipelineClass.simpleName} from jar")
+                logger.trace("Added ${pipelineClass.simpleName} from jar")
             }
 
             pipelineManager.requestAddPipelineClasses(pipelines, PipelineSource.COMPILED_ON_RUNTIME, false)
         } catch(e: Exception) {
-            Log.error(TAG, "Uncaught exception thrown while loading jar $PIPELINES_OUTPUT_JAR", e)
+            logger.error("Uncaught exception thrown while loading jar $PIPELINES_OUTPUT_JAR", e)
         }
     }
 

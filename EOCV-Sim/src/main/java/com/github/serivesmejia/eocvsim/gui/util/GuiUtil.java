@@ -26,10 +26,11 @@ package com.github.serivesmejia.eocvsim.gui.util;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.DialogFactory;
 import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists;
-import com.github.serivesmejia.eocvsim.util.cv.CvUtil;
-import com.github.serivesmejia.eocvsim.util.Log;
+import com.github.serivesmejia.eocvsim.util.CvUtil;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Mat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -51,6 +52,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class GuiUtil {
+
+    static Logger logger = LoggerFactory.getLogger(GuiUtil.class);
 
     public static void jTextFieldOnlyNumbers(JTextField field, int minNumber, int onMinNumberChangeTo) {
 
@@ -119,7 +122,7 @@ public final class GuiUtil {
         try {
             saveBufferedImage(file, bufferedImage, format);
         } catch (IOException e) {
-            Log.error("GuiUtil", "Failed to save buffered image", e);
+            logger.error("Failed to save buffered image", e);
         }
     }
 

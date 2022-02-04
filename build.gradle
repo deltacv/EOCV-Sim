@@ -4,8 +4,10 @@ import java.time.format.DateTimeFormatter
 
 buildscript {
     ext {
-        kotlin_version = "1.5.10"
+        kotlin_version = "1.5.31"
         kotlinx_coroutines_version = "1.5.0-native-mt"
+        slf4j_version = "1.7.32"
+        log4j_version = "2.17.1"
         opencv_version = "4.5.1-2"
         apriltag_plugin_version = "1.1.1"
 
@@ -19,16 +21,18 @@ buildscript {
 
     repositories {
         mavenCentral()
+        gradlePluginPortal()
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'gradle.plugin.com.github.johnrengelman:shadow:7.1.1'
     }
 }
 
 allprojects {
     group 'com.github.deltacv'
-    version '3.3.2'
+    version '3.4.0'
 
     ext {
         standardVersion = version
@@ -37,7 +41,10 @@ allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
+
         maven { url "https://jitpack.io" }
+        maven { url 'https://maven.openimaj.org/' }
+        maven { url 'https://maven.ecs.soton.ac.uk/content/repositories/thirdparty/' }
     }
 
     tasks.withType(Jar) {

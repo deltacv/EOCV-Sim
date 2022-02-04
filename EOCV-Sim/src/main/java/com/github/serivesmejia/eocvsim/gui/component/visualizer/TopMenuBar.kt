@@ -30,9 +30,13 @@ import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.input.SourceType
+import com.github.serivesmejia.eocvsim.util.FileFilters
+import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
 import java.awt.Desktop
+import java.io.File
 import java.net.URI
+import javax.swing.JFileChooser
 import javax.swing.JMenu
 import javax.swing.JMenuBar
 import javax.swing.JMenuItem
@@ -152,10 +156,41 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         mHelpMenu.addSeparator()
 
+        val helpExportLogs = JMenuItem("Export logs")
+        helpExportLogs.addActionListener {
+            var crashReport: CrashReport
+
+            try {
+                throw Exception("Dummy exception, log exported from GUI")
+            } catch (e: Exception) {
+                crashReport = CrashReport(e, isDummy = true)
+            }
+
+            DialogFactory.createFileChooser(visualizer.frame,
+                DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT,
+                CrashReport.defaultCrashFileName, FileFilters.logFileFilter
+            ).addCloseListener { OPTION, selectedFile, _ ->
+                    if(OPTION == JFileChooser.APPROVE_OPTION) {
+                        var path = selectedFile.absolutePath
+                        if (path.endsWith(File.separator))
+                            path = path.removeSuffix(File.separator)
+
+                        crashReport.saveCrashReport(File(
+                            if(!path.endsWith(".log")) {
+                                "$path.log"
+                            } else path
+                        ))
+                    }
+                }
+        }
+
+        mHelpMenu.add(helpExportLogs)
+
         val helpAbout = JMenuItem("About")
         helpAbout.addActionListener { DialogFactory.createAboutDialog(eocvSim) }
 
         mHelpMenu.add(helpAbout)
+
         add(mHelpMenu)
     }
 

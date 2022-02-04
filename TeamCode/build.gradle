@@ -8,8 +8,6 @@ plugins {
 apply from: '../build.common.gradle'
 
 dependencies {
-    implementation "org.openpnp:opencv:$opencv_version"
-    
     implementation project(':EOCV-Sim')
     implementation project(':Common')
 

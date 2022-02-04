@@ -24,7 +24,7 @@
 package com.github.serivesmejia.eocvsim.gui.component;
 
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil;
-import com.github.serivesmejia.eocvsim.util.cv.CvUtil;
+import com.github.serivesmejia.eocvsim.util.CvUtil;
 import org.opencv.core.Mat;
 
 import javax.swing.*;

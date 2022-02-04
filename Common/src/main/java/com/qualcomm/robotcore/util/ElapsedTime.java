@@ -25,7 +25,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.robotcore.util;
 
-import com.github.serivesmejia.eocvsim.util.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +43,8 @@ import java.util.concurrent.TimeUnit;
  */
 @SuppressWarnings("WeakerAccess")
 public class ElapsedTime {
+
+    static Logger logger = LoggerFactory.getLogger(ElapsedTime.class);
 
     //------------------------------------------------------------------------------------------------
     // Types and constants
@@ -243,7 +246,7 @@ public class ElapsedTime {
      * Log a message stating how long the timer has been running
      */
     public void log(String label) {
-        Log.info("ElapsedTime", String.format("TIMER: %20s - %1.3f %s", label, time(), resolutionStr()));
+        logger.info(String.format("TIMER: %20s - %1.3f %s", label, time(), resolutionStr()));
     }
 
     /**

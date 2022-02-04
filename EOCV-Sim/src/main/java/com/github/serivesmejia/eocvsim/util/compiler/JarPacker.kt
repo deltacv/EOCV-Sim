@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.util.compiler
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import java.io.File
 import java.io.FileOutputStream
+import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
 import java.util.zip.ZipEntry
@@ -67,7 +68,7 @@ object JarPacker {
     private fun putFileInJar(jar: JarOutputStream, rootFile: File, file: File) {
         if(!file.exists()) return
 
-        val ze = ZipEntry(SysUtil.getRelativePath(rootFile, file).path)
+        val ze = JarEntry(SysUtil.getRelativePath(rootFile, file).path.replace(File.separator, "/"))
         ze.time = file.lastModified()
 
         jar.putNextEntry(ze)

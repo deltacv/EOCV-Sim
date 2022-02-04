@@ -5,7 +5,7 @@ import java.time.format.DateTimeFormatter
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'com.github.johnrengelman.shadow'
     id 'maven-publish'
 }
 
@@ -40,12 +40,14 @@ dependencies {
 
     implementation "org.eclipse.jdt:ecj:3.21.0"
 
-    implementation "org.openpnp:opencv:$opencv_version"
+    api "org.openpnp:opencv:$opencv_version"
 
-    implementation 'com.github.sarxos:webcam-capture:0.3.12'
-    implementation 'com.github.sarxos:webcam-capture-driver-openimaj:0.3.12'
-    implementation 'com.github.sarxos:webcam-capture-driver-v4l4j:0.3.12'
+    implementation "org.slf4j:slf4j-api:$slf4j_version"
+    implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
+    implementation "org.apache.logging.log4j:log4j-core:$log4j_version"
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version"
 
+    implementation "com.github.deltacv:steve:1.0.0"
     implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"
 
     implementation 'info.picocli:picocli:4.6.1'

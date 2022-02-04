@@ -25,8 +25,13 @@ package com.github.serivesmejia.eocvsim.util;
 
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder;
 import org.opencv.core.Core;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -39,6 +44,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class SysUtil {
+
+    static Logger logger = LoggerFactory.getLogger(SysUtil.class);
 
     public static OperatingSystem OS = SysUtil.getOS();
     public static int MB = 1024 * 1024;
@@ -56,72 +63,6 @@ public class SysUtil {
         }
 
         return OperatingSystem.UNKNOWN;
-    }
-
-    public static boolean loadCvNativeLib() {
-        String os = null;
-        String fileExt = null;
-
-        switch (OS) { //getting os prefix
-            case WINDOWS:
-                os = "win";
-                fileExt = "dll";
-                break;
-            case LINUX:
-                os = "linux";
-                fileExt = "so";
-                break;
-            case MACOS:
-                os = "mac";
-                fileExt = "dylib";
-                break;
-        }
-
-        boolean is64bit = System.getProperty("sun.arch.data.model").contains("64"); //Checking if JVM is 64 bits or not
-
-        return loadLib(os, fileExt, is64bit, Core.NATIVE_LIBRARY_NAME, 0);
-    }
-
-    public static boolean loadLib(String os, String fileExt, boolean is64bit, String name, int attempts) {
-        String arch = is64bit ? "64" : "32"; //getting os arch
-
-        String libName = os + arch + "_" + name; //resultant lib name from those two
-        String libNameExt = libName + "." + fileExt; //resultant lib name from those two
-
-        File nativeLibFile = new File(getAppData() + File.separator + libNameExt);
-
-        if (!nativeLibFile.exists()) {
-            Log.info("SysUtil", "Downloading native lib from " + GH_NATIVE_LIBS_URL + libNameExt);
-            try {
-                download(GH_NATIVE_LIBS_URL + libNameExt, nativeLibFile.getAbsolutePath());
-            } catch (Throwable ex) {
-                ex.printStackTrace();
-            }
-            Log.blank();
-        }
-
-        Log.info("SysUtil", "Loading native lib \"" + libNameExt + "\"");
-
-        try {
-
-            System.load(nativeLibFile.getAbsolutePath()); //Loading OpenCV native library
-            Log.info("SysUtil", "Successfully loaded native lib \"" + libName + "\"");
-
-        } catch (UnsatisfiedLinkError ex) {
-            ex.printStackTrace();
-
-            if (attempts < 4) {
-                ex.printStackTrace();
-                Log.error("SysUtil", "Failure loading lib \"" + libName + "\", retrying with different architecture... (" + attempts + " attempts)");
-                loadLib(os, fileExt, !is64bit, Core.NATIVE_LIBRARY_NAME, attempts + 1);
-            } else {
-                ex.printStackTrace();
-                Log.error("SysUtil", "Failure loading lib \"" + libName + "\" 4 times, giving up.");
-                return false;
-            }
-        }
-
-        return true;
     }
 
     public static void copyStream(File inFile, OutputStream out) throws IOException {
@@ -206,7 +147,7 @@ public class SysUtil {
             fw.close();
             return true;
         } catch (IOException e) {
-            Log.error("Exception while trying to save file " + f.getAbsolutePath(), e);
+            logger.error("Exception while trying to save file " + f.getAbsolutePath(), e);
             return false;
         }
     }
@@ -295,12 +236,12 @@ public class SysUtil {
     public static boolean migrateFile(File oldFile, File newFile) {
         if(newFile.exists() || !oldFile.exists()) return false;
 
-        Log.info("SysUtil", "Migrating old file " + oldFile.getAbsolutePath() + "  to " + newFile.getAbsolutePath());
+        logger.info("Migrating old file " + oldFile.getAbsolutePath() + "  to " + newFile.getAbsolutePath());
 
         try {
             Files.move(oldFile.toPath(), newFile.toPath());
         } catch (IOException e) {
-            Log.warn("SysUtil", "Failed to migrate old file " + oldFile.getAbsolutePath());
+            logger.warn("Failed to migrate old file " + oldFile.getAbsolutePath());
             return false;
         }
 

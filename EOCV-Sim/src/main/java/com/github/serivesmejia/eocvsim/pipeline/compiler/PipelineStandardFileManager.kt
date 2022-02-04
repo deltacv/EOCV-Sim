@@ -23,9 +23,9 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.compiler
 
-import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.compiler.DelegatingStandardFileManager
+import com.github.serivesmejia.eocvsim.util.loggerFor
 import java.io.File
 import java.util.*
 import javax.tools.StandardJavaFileManager
@@ -38,24 +38,24 @@ class PipelineStandardFileManager(delegate: StandardJavaFileManager) : Delegatin
         get() = delegate.getLocation(StandardLocation.SOURCE_PATH)
 
     companion object {
+        val logger by loggerFor(PipelineStandardFileManager::class)
+
         val classpath by lazy {
             val classpathList = arrayListOf<File>()
 
-            Log.info(TAG, "Scanning classpath files...")
+            logger.trace("Scanning classpath files...")
             
             for(file in SysUtil.getClasspathFiles()) {
                 val files = SysUtil.filesUnder(file, ".jar")
-                files.forEach { Log.info(TAG, "Found classpath file ${it.absolutePath} in classpath") }
-                
+                files.forEach {
+                    logger.trace("Found classpath file ${it.absolutePath}")
+                }
+
                 classpathList.addAll(files)
             }
-            
-            Log.blank()
 
             classpathList.toList()
         }
-        
-        private const val TAG = "PipelineStandardFileManager"
     }
 
     init {

@@ -23,18 +23,21 @@
 
 package com.github.serivesmejia.eocvsim.input.source;
 
-import com.github.sarxos.webcam.Webcam;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
-import com.github.serivesmejia.eocvsim.util.Log;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import com.google.gson.annotations.Expose;
+import io.github.deltacv.steve.Webcam;
+import io.github.deltacv.steve.WebcamRotation;
+import io.github.deltacv.steve.opencv.OpenCvWebcam;
+import io.github.deltacv.steve.opencv.OpenCvWebcamBackend;
+import io.github.deltacv.steve.openimaj.OpenIMAJWebcamBackend;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.videoio.VideoCapture;
-import org.opencv.videoio.Videoio;
 import org.openftc.easyopencv.MatRecycler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.filechooser.FileFilter;
 import java.util.List;
@@ -49,7 +52,7 @@ public class CameraSource extends InputSource {
     @Expose
     protected String webcamName = null;
 
-    private transient VideoCapture camera = null;
+    private transient Webcam camera = null;
 
     private transient MatRecycler.RecyclableMat lastFramePaused = null;
     private transient MatRecycler.RecyclableMat lastFrame = null;
@@ -60,71 +63,95 @@ public class CameraSource extends InputSource {
 
     @Expose
     protected volatile Size size;
+    @Expose
+    protected volatile WebcamRotation rotation;
 
     private volatile transient MatRecycler matRecycler;
 
     private transient long capTimeNanos = 0;
 
+    Logger logger = LoggerFactory.getLogger(getClass());
+
+    public CameraSource() {}
+
+    public CameraSource(String webcamName, Size size, WebcamRotation rotation) {
+        this.webcamName = webcamName;
+        this.size = size;
+        this.rotation = rotation;
+    }
+
     public CameraSource(String webcamName, Size size) {
         this.webcamName = webcamName;
         this.size = size;
+        this.rotation = WebcamRotation.UPRIGHT;
+    }
+
+    public CameraSource(int webcamIndex, Size size, WebcamRotation rotation) {
+        this.webcamIndex = webcamIndex;
+        this.size = size;
+        this.rotation = rotation;
+        isLegacyByIndex = true;
     }
 
     public CameraSource(int webcamIndex, Size size) {
         this.webcamIndex = webcamIndex;
         this.size = size;
+        this.rotation = WebcamRotation.UPRIGHT;
         isLegacyByIndex = true;
     }
 
     @Override
     public boolean init() {
-
         if (initialized) return false;
         initialized = true;
 
+        if(rotation == null) rotation = WebcamRotation.UPRIGHT;
+
         if(webcamName != null) {
-            Webcam.resetDriver();
-            List<Webcam> webcams = Webcam.getWebcams();
+            Webcam.Companion.setBackend(OpenIMAJWebcamBackend.INSTANCE);
+
+            List<Webcam> webcams = Webcam.Companion.getAvailableWebcams();
 
             boolean foundWebcam = false;
 
-            for(int i = 0 ; i < webcams.size() ; i++) {
-                String name = webcams.get(i).getName();
+            for(Webcam device : webcams) {
+                String name = device.getName();
                 double similarity = StrUtil.similarity(name, webcamName);
 
                 if(name.equals(webcamName) || similarity > 0.6) {
-                    System.out.println(name + " " + webcamName + " similarity " + similarity + " " + i);
-                    webcamIndex = i;
+                    logger.info("\"" + name + "\" compared to \"" + webcamName + "\", similarity " + similarity);
+
+                    camera = device;
                     foundWebcam = true;
                     break;
                 }
             }
 
             if(!foundWebcam) {
-                Log.error("CameraSource", "Could not find webcam " + webcamName);
+                logger.error("Could not find webcam " + webcamName);
                 return false;
             }
+        } else {
+            Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);
+            camera = new OpenCvWebcam(webcamIndex, size, rotation);
         }
 
-        camera = new VideoCapture();
-        camera.open(webcamIndex);
+        camera.setResolution(size);
+        camera.setRotation(rotation);
+        camera.open();
 
-        camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
-        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
-
-        if (!camera.isOpened()) {
-            Log.error("CameraSource", "Unable to open camera " + webcamIndex);
+        if (!camera.isOpen()) {
+            logger.error("Unable to open camera " + webcamIndex);
             return false;
         }
 
         if (matRecycler == null) matRecycler = new MatRecycler(4);
-
         MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
 
         camera.read(newFrame);
 
         if (newFrame.empty()) {
-            Log.error("CameraSource", "Unable to open camera " + webcamIndex + ", returned Mat was empty.");
+            logger.error("Unable to open camera " + webcamIndex + ", returned Mat was empty.");
             newFrame.release();
             return false;
         }
@@ -134,34 +161,29 @@ public class CameraSource extends InputSource {
         currentWebcamIndex = webcamIndex;
 
         return true;
-
     }
 
     @Override
     public void reset() {
-
         if (!initialized) return;
-        if (camera != null && camera.isOpened()) camera.release();
+        if (camera != null && camera.isOpen()) camera.close();
 
         if(lastFrame != null && lastFrame.isCheckedOut())
             lastFrame.returnMat();
         if(lastFramePaused != null && lastFramePaused.isCheckedOut())
             lastFramePaused.returnMat();
 
-        camera = null;
         initialized = false;
-
     }
 
     @Override
     public void close() {
-        if (camera != null && camera.isOpened()) camera.release();
+        if (camera != null && camera.isOpen()) camera.close();
         currentWebcamIndex = -1;
     }
 
     @Override
     public Mat update() {
-
         if (isPaused) {
             return lastFramePaused;
         } else if (lastFramePaused != null) {
@@ -185,45 +207,35 @@ public class CameraSource extends InputSource {
 
         if (size == null) size = lastFrame.size();
 
-        Imgproc.cvtColor(newFrame, lastFrame, Imgproc.COLOR_BGR2RGB);
+        // not needed. cameras return RGB now
+        // Imgproc.cvtColor(newFrame, lastFrame, Imgproc.COLOR_BGR2RGB);
+        newFrame.copyTo(lastFrame);
 
         newFrame.release();
         newFrame.returnMat();
 
         return lastFrame;
-
     }
 
     @Override
     public void onPause() {
-
         if (lastFrame != null) lastFrame.release();
         if (lastFramePaused == null) lastFramePaused = matRecycler.takeMat();
 
         camera.read(lastFramePaused);
-
         Imgproc.cvtColor(lastFramePaused, lastFramePaused, Imgproc.COLOR_BGR2RGB);
 
         update();
 
-        camera.release();
-        camera = null;
+        camera.close();
 
         currentWebcamIndex = -1;
     }
 
     @Override
     public void onResume() {
-
         Visualizer.AsyncPleaseWaitDialog apwdCam = eocvSim.inputSourceManager.showApwdIfNeeded(name);
-
-        camera = new VideoCapture();
-        camera.open(webcamIndex);
-
-        camera.set(Videoio.CAP_PROP_FRAME_WIDTH, size.width);
-        camera.set(Videoio.CAP_PROP_FRAME_HEIGHT, size.height);
-
-        currentWebcamIndex = webcamIndex;
+        camera.open();
 
         apwdCam.destroyDialog();
     }
@@ -246,7 +258,7 @@ public class CameraSource extends InputSource {
     @Override
     public String toString() {
         if (size == null) size = new Size();
-        return "CameraSource(" + webcamName + ", " + (size != null ? size.toString() : "null") + ")";
+        return "CameraSource(" + webcamName + ", " + webcamIndex + ", " + (size != null ? size.toString() : "null") + ")";
     }
 
 }

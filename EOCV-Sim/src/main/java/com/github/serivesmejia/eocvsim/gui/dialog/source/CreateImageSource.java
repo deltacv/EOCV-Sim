@@ -27,7 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.input.FileSelector;
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
-import com.github.serivesmejia.eocvsim.util.cv.CvUtil;
+import com.github.serivesmejia.eocvsim.util.CvUtil;
 import com.github.serivesmejia.eocvsim.util.FileFilters;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import org.opencv.core.Size;
@@ -156,8 +156,9 @@ public class CreateImageSource {
 
         cancelButton.addActionListener(e -> close());
 
-        createImageSource.setResizable(false);
+        createImageSource.pack();
         createImageSource.setLocationRelativeTo(null);
+        createImageSource.setResizable(false);
         createImageSource.setVisible(true);
 
     }

@@ -66,13 +66,19 @@ public class DialogFactory {
     }
 
     public static FileChooser createFileChooser(Component parent, FileChooser.Mode mode, FileFilter... filters) {
-        FileChooser fileChooser = new FileChooser(parent, mode, filters);
+        FileChooser fileChooser = new FileChooser(parent, mode, "", filters);
+        invokeLater(fileChooser::init);
+        return fileChooser;
+    }
+
+    public static FileChooser createFileChooser(Component parent, FileChooser.Mode mode, String initialFileName, FileFilter... filters) {
+        FileChooser fileChooser = new FileChooser(parent, mode, initialFileName, filters);
         invokeLater(fileChooser::init);
         return fileChooser;
     }
 
     public static FileChooser createFileChooser(Component parent, FileFilter... filters) {
-        return createFileChooser(parent, null, filters);
+        return createFileChooser(parent, null, "", filters);
     }
 
     public static FileChooser createFileChooser(Component parent, FileChooser.Mode mode) {
@@ -162,7 +168,7 @@ public class DialogFactory {
 
         private final ArrayList<FileChooserCloseListener> closeListeners = new ArrayList<>();
 
-        public FileChooser(Component parent, Mode mode, FileFilter... filters) {
+        public FileChooser(Component parent, Mode mode, String initialFileName, FileFilter... filters) {
 
             if (mode == null) mode = Mode.FILE_SELECT;
 
@@ -177,6 +183,7 @@ public class DialogFactory {
                 chooser.setAcceptAllFileFilterUsed(false);
             }
 
+            chooser.setSelectedFile(new File(chooser.getSelectedFile(), initialFileName));
 
             if (filters != null) {
                 for (FileFilter filter : filters) {

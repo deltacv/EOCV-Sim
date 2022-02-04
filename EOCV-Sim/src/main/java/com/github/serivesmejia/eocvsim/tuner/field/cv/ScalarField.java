@@ -46,7 +46,11 @@ public class ScalarField extends TunableField<Scalar> {
     public ScalarField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
 
-        scalar = (Scalar) initialFieldValue;
+        if(initialFieldValue == null) {
+            scalar = new Scalar(0, 0, 0);
+        } else {
+            scalar = (Scalar) initialFieldValue;
+        }
         scalarSize = scalar.val.length;
 
         setGuiFieldAmount(scalarSize);

@@ -27,8 +27,8 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.io.FileWatcher
-import com.github.serivesmejia.eocvsim.util.Log
 import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfig
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfigLoader
 import com.github.serivesmejia.eocvsim.workspace.util.WorkspaceTemplate
@@ -42,9 +42,7 @@ import java.nio.file.Paths
 @OptIn(DelicateCoroutinesApi::class)
 class WorkspaceManager(val eocvSim: EOCVSim) {
 
-    companion object {
-        private const val TAG = "WorkspaceManager"
-    }
+    val logger by loggerForThis()
 
     val workspaceConfigLoader by lazy { WorkspaceConfigLoader(workspaceFile) }
 
@@ -58,7 +56,7 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
 
                 field = value
 
-                Log.info(TAG, "Set current workspace to ${value.absolutePath}")
+                logger.info("Set current workspace to ${value.absolutePath}")
 
                 if(::fileWatcher.isInitialized)
                     fileWatcher.stop()
@@ -80,13 +78,13 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
                 cachedWorkspConfig = WorkspaceConfig()
 
                 if(workspaceConfigLoader.workspaceConfigFile.exists())
-                    Log.warn(TAG, "Recreating workspace config file, old one failed to parse")
+                    logger.warn("Recreating workspace config file, old one failed to parse")
                 else
-                    Log.info(TAG, "Creating workspace config file...")
+                    logger.info("Creating workspace config file...")
 
                 workspaceConfigLoader.saveWorkspaceConfig(workspaceConfig)
             } else {
-                Log.info(TAG, "Loaded workspace config successfully")
+                logger.info("Loaded workspace config successfully")
             }
         }
 
@@ -94,7 +92,7 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
 
     var workspaceConfig: WorkspaceConfig
         set(value) {
-            Log.info(TAG, "Saving workspace config file of ${workspaceFile.absolutePath}")
+            logger.info("Saving workspace config file of ${workspaceFile.absolutePath}")
             workspaceConfigLoader.saveWorkspaceConfig(value)
             cachedWorkspConfig = value
         }
@@ -183,8 +181,6 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
             file
         else
             CompiledPipelineManager.DEF_WORKSPACE_FOLDER
-
-        Log.blank()
     }
 
     fun saveCurrentConfig() {

@@ -26,16 +26,16 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.StrUtil
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 
 class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
 
     companion object {
-        private const val TAG = "PipelineExceptionTracker"
-
         const val millisExceptionExpire = 25000L
         const val cutStacktraceLines = 9
     }
+
+    val logger by loggerForThis()
 
     var currentPipeline: PipelineData? = null
         private set
@@ -65,15 +65,13 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
             }.findFirst()
 
             if(!exception.isPresent) {
-                Log.blank()
-                Log.warn(
-                    TAG, "Uncaught exception thrown while processing pipeline ${data.clazz.simpleName}",
+                logger.error(
+                    "Uncaught exception thrown while processing pipeline ${data.clazz.simpleName}",
                     ex
                 )
 
-                Log.warn(TAG, "Note that to avoid spam, continuously equal thrown exceptions are only logged once.")
-                Log.warn(TAG, "It will be reported once the pipeline stops throwing the exception after $millisExceptionExpire ms")
-                Log.blank()
+                logger.warn("Note that to avoid spam, continuously equal thrown exceptions are only logged once.")
+                logger.warn("It will be reported once the pipeline stops throwing the exception after $millisExceptionExpire ms")
 
                 exceptionsThrown[ex] = PipelineException(
                     0, exStr, System.currentTimeMillis()
@@ -92,8 +90,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
             val timeElapsed = System.currentTimeMillis() - d.millisThrown
             if(timeElapsed >= millisExceptionExpire) {
                 exceptionsThrown.remove(e)
-                Log.info(
-                    TAG,
+                logger.info(
                     "Pipeline ${currentPipeline!!.clazz.simpleName} stopped throwing $e"
                 )
 

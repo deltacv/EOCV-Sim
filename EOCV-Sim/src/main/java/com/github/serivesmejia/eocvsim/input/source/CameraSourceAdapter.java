@@ -7,7 +7,6 @@ import java.lang.reflect.Type;
 
 public class CameraSourceAdapter implements JsonSerializer<CameraSource> {
 
-
     @Override
     public JsonElement serialize(CameraSource src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject obj = new JsonObject();

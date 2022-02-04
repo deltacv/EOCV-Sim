@@ -44,9 +44,12 @@ public class PointField extends TunableField<Point> {
 
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
 
-        Point p = (Point) initialFieldValue;
-
-        point = new Point(p.x, p.y);
+        if(initialFieldValue != null) {
+            Point p = (Point) initialFieldValue;
+            point = new Point(p.x, p.y);
+        } else {
+            point = new Point(0, 0);
+        }
 
         setGuiFieldAmount(2);
 

@@ -27,7 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.input.FileSelector;
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields;
 import com.github.serivesmejia.eocvsim.input.source.VideoSource;
-import com.github.serivesmejia.eocvsim.util.cv.CvUtil;
+import com.github.serivesmejia.eocvsim.util.CvUtil;
 import com.github.serivesmejia.eocvsim.util.FileFilters;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import org.opencv.core.Mat;
@@ -156,10 +156,10 @@ public class CreateVideoSource {
         // Status label part
         cancelButton.addActionListener(e -> close());
 
-        createVideoSource.setResizable(false);
+        createVideoSource.pack();
         createVideoSource.setLocationRelativeTo(null);
+        createVideoSource.setResizable(false);
         createVideoSource.setVisible(true);
-
     }
 
     public void videoFileSelected(File f) {

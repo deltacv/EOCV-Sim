@@ -23,30 +23,30 @@
 
 package com.github.serivesmejia.eocvsim.workspace.util
 
-import com.github.serivesmejia.eocvsim.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import kotlinx.coroutines.DelicateCoroutinesApi
 import java.io.File
 
 object VSCodeLauncher {
 
-    private val TAG = "VSCodeLauncher"
+    val logger by loggerForThis()
 
     fun launch(workspace: File) {
-        Log.info(TAG, "Opening VS Code...")
+        logger.info("Opening VS Code...")
 
         val result = SysUtil.runShellCommand("code \"${workspace.absolutePath}\"")
 
-        if(result.output.isNotEmpty()) Log.info(TAG, result.output)
+        if(result.output.isNotEmpty()) logger.info(result.output)
 
         if(result.exitCode == 0)
-            Log.info(TAG, "VS Code opened")
+            logger.info("VS Code opened")
         else
-            Log.info(TAG, "VS Code failed to open")
+            logger.info("VS Code failed to open")
     }
 
     @OptIn(DelicateCoroutinesApi::class)

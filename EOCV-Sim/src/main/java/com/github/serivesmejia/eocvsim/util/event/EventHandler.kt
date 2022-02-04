@@ -23,9 +23,11 @@
 
 package com.github.serivesmejia.eocvsim.util.event
 
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerOf
 
 class EventHandler(val name: String) : Runnable {
+
+    val logger by loggerOf("${name}-EventHandler")
 
     private val lock = Any()
     private val onceLock = Any()
@@ -55,10 +57,10 @@ class EventHandler(val name: String) : Runnable {
                 runListener(listener, false)
             } catch (ex: Exception) {
                 if(ex is InterruptedException) {
-                    Log.warn("${name}-EventHandler", "Rethrowing InterruptedException...")
+                    logger.warn("Rethrowing InterruptedException...")
                     throw ex
                 } else {
-                    Log.warn("${name}-EventHandler", "Error while running listener ${listener.javaClass.name}", ex)
+                    logger.error("Error while running listener ${listener.javaClass.name}", ex)
                 }
             }
         }
@@ -71,10 +73,10 @@ class EventHandler(val name: String) : Runnable {
                 runListener(listener, true)
             } catch (ex: Exception) {
                 if(ex is InterruptedException) {
-                    Log.warn("${name}-EventHandler", "Rethrowing InterruptedException...")
+                    logger.warn("Rethrowing InterruptedException...")
                     throw ex
                 } else {
-                    Log.warn("${name}-EventHandler", "Error while running \"once\" ${listener.javaClass.name}", ex)
+                    logger.error("Error while running \"once\" ${listener.javaClass.name}", ex)
                 }
             }
 

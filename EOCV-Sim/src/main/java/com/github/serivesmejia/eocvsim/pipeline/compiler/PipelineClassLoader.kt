@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.compiler
 
+import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
@@ -35,57 +36,50 @@ import java.util.zip.ZipFile
 class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
 
     private val zipFile = ZipFile(pipelinesJar)
+    private val loadedClasses = mutableMapOf<String, Class<*>>()
 
     var pipelineClasses: List<Class<out OpenCvPipeline>>
         private set
 
     init {
-        val pipelineClasses = mutableListOf<Class<out OpenCvPipeline>>()
-
-        for(entry in zipFile.entries()) {
-            if(!entry.name.endsWith(".class")) continue
-
-            val clazz = loadClass(entry)
-
-            if(ReflectUtil.hasSuperclass(clazz, OpenCvPipeline::class.java)) {
-                pipelineClasses.add(clazz as Class<out OpenCvPipeline>)
-            }
-        }
-
-        this.pipelineClasses = pipelineClasses.toList()
+        val scanResult = ClasspathScan().scan(pipelinesJar.absolutePath, this)
+        this.pipelineClasses = scanResult.pipelineClasses.toList()
     }
 
     private fun loadClass(entry: ZipEntry): Class<*> {
-        val name = entry.name.removeFromEnd(".class").replace(File.separatorChar, '.')
+        val name = entry.name.removeFromEnd(".class").replace('/', '.')
 
         zipFile.getInputStream(entry).use { inStream ->
             ByteArrayOutputStream().use { outStream ->
                 SysUtil.copyStream(inStream, outStream)
                 val bytes = outStream.toByteArray()
 
-                return defineClass(name, bytes, 0, bytes.size)
+                val clazz = defineClass(name, bytes, 0, bytes.size)
+                loadedClasses[name] = clazz
+
+                return clazz
             }
         }
     }
 
+    override fun findClass(name: String) = loadedClasses[name] ?: loadClass(name, false)
+
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
-        var clazz = findLoadedClass(name)
+        var clazz = loadedClasses[name]
 
         if(clazz == null) {
             try {
-                clazz = loadClass(zipFile.getEntry(name.replace('.', File.separatorChar) + ".class"))
+                clazz = loadClass(zipFile.getEntry(name.replace('.', '/') + ".class"))
                 if(resolve) resolveClass(clazz)
             } catch(e: Exception) {
-                clazz = super.loadClass(name, resolve)
+                clazz = Class.forName(name) // fallback to the system classloader
             }
         }
 
-        return clazz
+        return clazz!!
     }
 
     override fun getResourceAsStream(name: String): InputStream? {
-        println("trying to load $name")
-
         val entry = zipFile.getEntry(name)
 
         if(entry != null) {

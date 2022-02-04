@@ -71,7 +71,6 @@ class Output @JvmOverloads constructor(
 
         output.isModal = true
         output.title = "Output"
-        output.setSize(500, 350)
 
         tabbedPane.add("Pipeline Output", pipelineOutputPanel)
         tabbedPane.add("Build Output", buildOutputPanel)
@@ -79,8 +78,6 @@ class Output @JvmOverloads constructor(
         tabbedPane.selectedIndex = tabbedPaneIndex
 
         output.contentPane.add(tabbedPane)
-
-        output.setLocationRelativeTo(null)
 
         updatePipelineOutput()
 
@@ -97,6 +94,10 @@ class Output @JvmOverloads constructor(
 
         registerListeners()
 
+        output.pack()
+        output.setSize(500, 350)
+
+        output.setLocationRelativeTo(null)
         output.isVisible = true
     }
 

@@ -23,9 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.compiler
 
-import com.github.serivesmejia.eocvsim.util.Log
-import com.github.serivesmejia.eocvsim.util.ReflectUtil
-import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.*
 import com.github.serivesmejia.eocvsim.util.compiler.JarPacker
 import com.github.serivesmejia.eocvsim.util.compiler.compiler
 import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler
@@ -42,15 +40,17 @@ class PipelineCompiler(
 ): DiagnosticListener<JavaFileObject> {
 
     companion object {
+        val logger by loggerFor(PipelineCompiler::class)
+
         val IS_USABLE by lazy {
             val usable = COMPILER != null
 
             // Send a warning message to console
             // will only be sent once (that's why it's done here)
             if(!usable) {
-                Log.warn(TAG, "Unable to compile Java source code in this JVM (the ToolProvider wasn't able to provide a compiler)")
-                Log.warn(TAG, "For the user, this probably means that the sim is running in a JRE which doesn't include the javac compiler executable")
-                Log.warn(TAG, "To be able to compile pipelines on runtime, make sure the sim is running on a JDK that includes the javac executable (any JDK probably does)")
+                logger.warn("Unable to compile Java source code in this JVM (the ToolProvider wasn't able to provide a compiler)")
+                logger.warn("For the user, this probably means that the sim is running in a JRE which doesn't include the javac compiler executable")
+                logger.warn("To be able to compile pipelines on runtime, make sure the sim is running on a JDK that includes the javac executable (any JDK probably does)")
             }
 
             usable
@@ -59,7 +59,6 @@ class PipelineCompiler(
         val COMPILER = compiler
 
         val INDENT = "      "
-        val TAG = "PipelineCompiler"
     }
 
     private var diagnosticBuilders = mutableMapOf<String, StringBuilder>()
@@ -165,7 +164,6 @@ class PipelineCompiler(
         }
 
         val formattedMessage = diagnostic.getMessage(locale).replace("\n", "\n$INDENT")
-        diagnostic.source
 
         builder.appendLine(String.format(locale, "$INDENT(%d:%d): %s: %s",
             diagnostic.lineNumber, diagnostic.columnNumber, diagnostic.kind, formattedMessage

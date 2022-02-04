@@ -2,7 +2,7 @@
 package com.github.serivesmejia.eocvsim
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import picocli.CommandLine
 import java.io.File
 import java.nio.file.Paths
@@ -40,17 +40,15 @@ class EOCVSimCommandInterface : Runnable {
                 file = Paths.get(System.getProperty("user.dir"), workspacePath).toFile()
 
                 if(!file.exists()) {
-                    Log.error("Workspace path is not valid, folder doesn't exist (tried in \"$workspacePath\" and \"${file.absolutePath})\"")
+                    System.err.println("Workspace path is not valid, folder doesn't exist (tried in \"$workspacePath\" and \"${file.absolutePath})\"")
                     exitProcess(1)
                 }
             }
 
             if(!file.isDirectory) {
-                Log.error("Workspace path is not valid, the specified path is not a folder")
+                System.err.println("Workspace path is not valid, the specified path is not a folder")
                 exitProcess(1)
             }
-
-            Log.info("Workspace from command line: ${file.absolutePath}")
 
             parameters.initialWorkspace = file
         }
@@ -58,8 +56,6 @@ class EOCVSimCommandInterface : Runnable {
         if(initialPipeline.trim() != "") {
             parameters.initialPipelineName = initialPipeline
             parameters.initialPipelineSource = initialPipelineSource
-
-            Log.info("Initial pipeline from command line: $initialPipeline coming from $initialPipelineSource")
         }
 
         EOCVSim(parameters).init()

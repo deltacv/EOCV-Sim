@@ -25,15 +25,13 @@ package com.github.serivesmejia.eocvsim.tuner;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
-import com.github.serivesmejia.eocvsim.tuner.scanner.AnnotatedTunableFieldScanner;
-import com.github.serivesmejia.eocvsim.util.Log;
+import com.github.serivesmejia.eocvsim.tuner.exception.CancelTunableFieldAddingException;
 import com.github.serivesmejia.eocvsim.util.ReflectUtil;
 import org.openftc.easyopencv.OpenCvPipeline;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,6 +50,8 @@ public class TunerManager {
     private static HashMap<Class<? extends TunableField<?>>, Class<? extends TunableFieldAcceptor>> tunableFieldAcceptors = null;
 
     private boolean firstInit = true;
+
+    Logger logger = LoggerFactory.getLogger(getClass());
 
     public TunerManager(EOCVSim eocvSim) {
         this.eocvSim = eocvSim;
@@ -87,8 +87,13 @@ public class TunerManager {
             addFieldsFrom(eocvSim.pipelineManager.getCurrentPipeline());
             eocvSim.visualizer.updateTunerFields(createTunableFieldPanels());
 
-            for(TunableField field : fields) {
-                field.init();
+            for(TunableField field : fields.toArray(new TunableField[0])) {
+                try {
+                    field.init();
+                } catch(CancelTunableFieldAddingException e) {
+                    logger.trace("Field " + field.getFieldName() + " was removed due to \"" + e.getMessage() + "\"");
+                    fields.remove(field);
+                }
             }
         }
     }
@@ -99,7 +104,7 @@ public class TunerManager {
             try {
                 field.update();
             } catch(Exception ex) {
-                Log.error("Error while updating field " + field.getFieldName(), ex);
+                logger.error("Error while updating field " + field.getFieldName(), ex);
             }
 
             //check if this field has requested to reevaluate config for all panels
@@ -117,6 +122,29 @@ public class TunerManager {
         init();
     }
 
+    public Class<? extends TunableField> getTunableFieldOf(Field field) {
+        //we only accept non-final fields
+        if (Modifier.isFinal(field.getModifiers())) return null;
+
+        Class<?> type = field.getType();
+        if (field.getType().isPrimitive()) { //wrap to java object equivalent if field type is primitive
+            type = ReflectUtil.wrap(type);
+        }
+
+        Class<? extends TunableField> tunableFieldClass = null;
+
+        if(tunableFieldsTypes.containsKey(type)) {
+            tunableFieldClass = tunableFieldsTypes.get(type);
+        } else {
+            //if we don't have a class yet, use our acceptors
+            if(acceptorManager != null) tunableFieldClass = acceptorManager.accept(type);
+            //still haven't got anything, give up here.
+            if(tunableFieldClass == null) return null;
+        }
+
+        return tunableFieldClass;
+    }
+
     public void addFieldsFrom(OpenCvPipeline pipeline) {
 
         if (pipeline == null) return;
@@ -124,25 +152,10 @@ public class TunerManager {
         Field[] fields = pipeline.getClass().getFields();
 
         for (Field field : fields) {
+            Class<? extends TunableField> tunableFieldClass = getTunableFieldOf(field);
 
-            //we only accept non-final fields
-            if (Modifier.isFinal(field.getModifiers())) continue;
-
-            Class<?> type = field.getType();
-            if (field.getType().isPrimitive()) { //wrap to java object equivalent if field type is primitive
-                type = ReflectUtil.wrap(type);
-            }
-
-            Class<? extends TunableField> tunableFieldClass = null;
-
-            if(tunableFieldsTypes.containsKey(type)) {
-                tunableFieldClass = tunableFieldsTypes.get(type);
-            } else {
-                //if we don't have a class yet, use our acceptors
-                if(acceptorManager != null) tunableFieldClass = acceptorManager.accept(type);
-                //still haven't got anything, give up here.
-                if(tunableFieldClass == null) continue;
-            }
+            // we can't handle this type
+            if(tunableFieldClass == null) continue;
 
             //yay we have a registered TunableField which handles this
             //now, lets do some more reflection to instantiate this TunableField
@@ -150,9 +163,14 @@ public class TunerManager {
             try {
                 Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(OpenCvPipeline.class, Field.class, EOCVSim.class);
                 this.fields.add(constructor.newInstance(pipeline, field, eocvSim));
+            } catch(InvocationTargetException e) {
+                if(e.getCause() instanceof CancelTunableFieldAddingException) {
+                    String message = e.getCause().getMessage();
+                    logger.info("Field " + field.getName() + " wasn't added due to \"" + message + "\"");
+                }
             } catch (Exception ex) {
                 //oops rip
-                Log.error("TunerManager", "Reflection error while processing field: " + field.getName(), ex);
+                logger.error("Reflection error while processing field: " + field.getName(), ex);
             }
 
         }

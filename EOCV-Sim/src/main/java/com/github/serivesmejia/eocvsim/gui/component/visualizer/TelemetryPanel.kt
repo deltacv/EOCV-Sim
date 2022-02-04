@@ -1,6 +1,7 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer
 
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryTransmissionReceiver
 import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -9,7 +10,7 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionListener
 import javax.swing.*
 
-class TelemetryPanel : JPanel() {
+class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
 
     val telemetryScroll = JScrollPane()
     val telemetryList  = JList<String>()
@@ -69,17 +70,14 @@ class TelemetryPanel : JPanel() {
         telemetryScroll.repaint()
     }
 
-    fun updateTelemetry(telemetry: Telemetry?) {
-        val cacheTelemetryText = telemetry.toString()
+    fun updateTelemetry(telemetryText: String?, captionSeparator: String, itemSeparator: String) {
 
-        var telemetryText: String? = null
-
-        if (telemetry != null && telemetry.hasChanged()) {
-            telemetryText = cacheTelemetryText
-
+        if (telemetryText != null) {
             val listModel = DefaultListModel<String>()
             for (line in telemetryText.split("\n").toTypedArray()) {
-                listModel.addElement(line)
+                if(line != captionSeparator && line != itemSeparator) {
+                    listModel.addElement(line)
+                }
             }
 
             telemetryList.model = listModel
@@ -95,6 +93,17 @@ class TelemetryPanel : JPanel() {
         telemetryList.fixedCellWidth = 240
 
         revalAndRepaint()
+    }
+
+    private var lastTelemetry = "";
+
+    override fun onTelemetryTransmission(text: String, srcTelemetry: Telemetry) {
+        SwingUtilities.invokeLater {
+            if(lastTelemetry != text) {
+                updateTelemetry(text, srcTelemetry.captionValueSeparator, srcTelemetry.itemSeparator)
+            }
+            lastTelemetry = text
+        }
     }
 
 }

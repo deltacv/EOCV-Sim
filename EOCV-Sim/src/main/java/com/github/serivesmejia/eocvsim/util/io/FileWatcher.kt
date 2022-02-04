@@ -1,8 +1,32 @@
+/*
+ * Copyright (c) 2021 Sebastian Erives
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+
 package com.github.serivesmejia.eocvsim.util.io
 
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import com.github.serivesmejia.eocvsim.util.Log
+import com.github.serivesmejia.eocvsim.util.loggerOf
+import org.slf4j.Logger
 import java.io.File
 import java.util.*
 
@@ -11,11 +35,12 @@ class FileWatcher(private val watchingDirectories: List<File>,
                   name: String) {
 
     private val TAG = "FileWatcher-$name"
-
     val onChange = EventHandler("OnChange-$TAG")
 
+    val logger by loggerOf(TAG)
+
     private val watcherThread = Thread(
-        Runner(watchingDirectories, watchingFileExtensions, onChange),
+        Runner(watchingDirectories, watchingFileExtensions, onChange, logger),
         TAG
     )
 
@@ -27,21 +52,22 @@ class FileWatcher(private val watchingDirectories: List<File>,
         watcherThread.interrupt()
     }
 
-    private class Runner(val watchingDirectories: List<File>,
-                         val fileExts: List<String>?,
-                         val onChange: EventHandler) : Runnable {
+    private class Runner(
+        val watchingDirectories: List<File>,
+        val fileExts: List<String>?,
+        val onChange: EventHandler,
+        val logger: Logger
+    ) : Runnable {
 
         private val lastModifyDates = mutableMapOf<String, Long>()
 
         override fun run() {
-            val TAG = Thread.currentThread().name!!
-
             val directoriesList = StringBuilder()
             for(directory in watchingDirectories) {
                 directoriesList.appendLine(directory.absolutePath)
             }
 
-            Log.info(TAG, "Starting to watch directories in:\n$directoriesList")
+            logger.info("Starting to watch directories in:\n$directoriesList")
 
             while(!Thread.currentThread().isInterrupted) {
                 var changeDetected = false
@@ -55,7 +81,7 @@ class FileWatcher(private val watchingDirectories: List<File>,
                         val lastModified = file.lastModified()
 
                         if(lastModifyDates.containsKey(path) && lastModified > lastModifyDates[path]!! && !changeDetected) {
-                            Log.info(TAG, "Change detected on ${directory.absolutePath}")
+                            logger.info("Change detected on ${directory.absolutePath}")
 
                             onChange.run()
                             changeDetected = true
@@ -68,7 +94,7 @@ class FileWatcher(private val watchingDirectories: List<File>,
                 Thread.sleep(1200) //check every 800 ms
             }
 
-            Log.info(TAG, "Stopping watching directories:\n$directoriesList")
+            logger.info("Stopping watching directories:\n$directoriesList")
         }
 
     }
