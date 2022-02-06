@@ -173,7 +173,7 @@ class IpcServer(
                     handlers[messageClass] = handlerClass.getConstructor().newInstance() as IpcMessageHandler<M>
                     handlers[messageClass]!! as IpcMessageHandler<M>
                 } catch(ignored: NoSuchMethodException) {
-                    logger.trace("Handler class ${handlerClass.typeName} doesn't implement a constructor with no parameters, it cannot be instantiated")
+                    logger.debug("Handler class ${handlerClass.typeName} doesn't implement a constructor with no parameters, it cannot be instantiated")
                     null
                 }
             } else null

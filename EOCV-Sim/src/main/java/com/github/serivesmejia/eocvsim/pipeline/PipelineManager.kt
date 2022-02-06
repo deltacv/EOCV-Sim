@@ -56,7 +56,7 @@ import kotlin.math.roundToLong
 class PipelineManager(var eocvSim: EOCVSim) {
 
     companion object {
-        const val MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS = 5
+        const val MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS = 10
 
         var staticSnapshot: PipelineSnapshot? = null
             private set
@@ -230,6 +230,14 @@ class PipelineManager(var eocvSim: EOCVSim) {
     fun update(inputMat: Mat?) {
         val telemetry = currentTelemetry
         onUpdate.run()
+
+        activePipelineContexts.iterator().apply {
+            while(hasNext()) {
+                if(!next().isActive) {
+                    remove()
+                }
+            }
+        }
 
         if(activePipelineContexts.size > MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS) {
             throw MaxActiveContextsException("Current amount of active pipeline coroutine contexts (${activePipelineContexts.size}) is more than the maximum allowed. This generally means that there are multiple pipelines stuck in processFrame() running in the background, check for any lengthy operations in your pipelines.")
@@ -635,6 +643,9 @@ class PipelineManager(var eocvSim: EOCVSim) {
         currentPipelineIndex       = index
 
         virtualReflect = pipelineData.handler.virtualReflectOf(pipelineClass)
+
+        nextTelemetry.update()
+        nextTelemetry.forceTelemetryTransmission()
 
         applyStream()
 

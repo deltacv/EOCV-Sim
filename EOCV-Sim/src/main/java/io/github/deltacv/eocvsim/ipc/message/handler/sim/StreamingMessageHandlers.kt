@@ -14,11 +14,9 @@ import io.github.deltacv.eocvsim.ipc.message.sim.StopStreamingMessage
     IsStreamingMessage::class
 )
 class IsStreamingMessageHandler : IpcMessageHandler<IsStreamingMessage>() {
-
     override fun handle(ctx: IpcServer.IpcTransactionContext<IsStreamingMessage>) {
         ctx.respond(IpcBooleanResponse(ctx.eocvSim.pipelineManager.streamData != null))
     }
-
 }
 
 @IpcMessageHandler.Register(
@@ -48,11 +46,9 @@ class StartStreamingMessageHandler : IpcMessageHandler<StartStreamingMessage>() 
     StopStreamingMessage::class
 )
 class StopStreamingMessageHandler : IpcMessageHandler<StopStreamingMessage>() {
-
     override fun handle(ctx: IpcServer.IpcTransactionContext<StopStreamingMessage>) {
         ctx.eocvSim.pipelineManager.onUpdate.doOnce {
             ctx.eocvSim.pipelineManager.stopPipelineStream()
         }
     }
-
 }

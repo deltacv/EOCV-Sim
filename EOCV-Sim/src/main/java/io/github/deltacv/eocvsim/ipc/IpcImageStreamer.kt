@@ -31,6 +31,7 @@ class IpcImageStreamer(
         if(img.empty()) return
 
         val scaledImg = matRecycler.takeMat()
+        scaledImg.release()
 
         try {
             if (img.size() == resolution) { //nice, the mat size is the exact same as the video size

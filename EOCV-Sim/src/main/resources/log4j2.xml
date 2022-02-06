@@ -20,10 +20,10 @@
         </File>
     </Appenders>
     <Loggers>
-        <Root level="TRACE">
+        <Root level="DEBUG">
             <AppenderRef ref="stdout" level="INFO"/>
             <AppenderRef ref="stderr" level="INFO"/>
-            <AppenderRef ref="logfile" level="TRACE"/>
+            <AppenderRef ref="logfile" level="DEBUG"/>
         </Root>
     </Loggers>
 </Configuration>
