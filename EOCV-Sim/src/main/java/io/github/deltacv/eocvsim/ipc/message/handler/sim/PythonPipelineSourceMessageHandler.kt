@@ -23,42 +23,38 @@
 
 package io.github.deltacv.eocvsim.ipc.message.handler.sim
 
-import io.github.deltacv.eocvsim.ipc.IpcServer
 import io.github.deltacv.eocvsim.ipc.message.handler.IpcMessageHandler
-import io.github.deltacv.eocvsim.ipc.message.response.IpcBooleanResponse
-import io.github.deltacv.eocvsim.ipc.message.response.IpcOkResponse
+import io.github.deltacv.eocvsim.ipc.message.handler.dsl.IpcMessageHandlerDsl
 import io.github.deltacv.eocvsim.ipc.message.sim.PythonPipelineSourceMessage
 import io.github.deltacv.eocvsim.pipeline.py.PythonPipeline
 import io.github.deltacv.eocvsim.pipeline.py.addPythonPipeline
 import io.github.deltacv.eocvsim.pipeline.py.removePythonPipeline
 
-@IpcMessageHandler.Register(
-    PythonPipelineSourceMessage::class
-)
-class PythonPipelineSourceMessageHandler : IpcMessageHandler<PythonPipelineSourceMessage>() {
+@IpcMessageHandler.Register(PythonPipelineSourceMessage::class)
+class PythonPipelineSourceMessageHandler : IpcMessageHandlerDsl<PythonPipelineSourceMessage>({
 
-    override fun handle(ctx: IpcServer.IpcTransactionContext<PythonPipelineSourceMessage>) {
-        val pipelineManager = ctx.eocvSim.pipelineManager
+    handle {
+        val pipelineManager = eocvSim.pipelineManager
 
         pipelineManager.onUpdate.doOnce {
             val currentPipeline = pipelineManager.currentPipeline
-            val isCurrentlyRunning = currentPipeline is PythonPipeline && currentPipeline.name == ctx.message.pipelineName
+            val isCurrentlyRunning = currentPipeline is PythonPipeline && currentPipeline.name == message.pipelineName
 
             if(isCurrentlyRunning) {
-                (currentPipeline as PythonPipeline).source = ctx.message.pythonSource
-                ctx.eocvSim.tunerManager.reset()
+                (currentPipeline as PythonPipeline).source = message.pythonSource
+                eocvSim.tunerManager.reset()
             }
 
-            pipelineManager.removePythonPipeline(ctx.message.pipelineName,
+            pipelineManager.removePythonPipeline(message.pipelineName,
                 updateGui = false,
                 changeToDefaultIfRemoved = false
             )
-            pipelineManager.addPythonPipeline(ctx.message.pipelineName, ctx.message.pythonSource,
+            pipelineManager.addPythonPipeline(message.pipelineName, message.pythonSource,
                 updateGui = !isCurrentlyRunning
             )
 
-            ctx.respond(IpcBooleanResponse(isCurrentlyRunning))
+            ok(isCurrentlyRunning)
         }
     }
 
-}
+})

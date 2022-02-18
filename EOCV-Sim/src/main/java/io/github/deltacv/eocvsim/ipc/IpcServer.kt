@@ -29,8 +29,10 @@ import com.google.gson.Gson
 import io.github.deltacv.eocvsim.ipc.message.AuthMessage
 import io.github.deltacv.eocvsim.ipc.message.IpcMessage
 import io.github.deltacv.eocvsim.ipc.message.handler.IpcMessageHandler
+import io.github.deltacv.eocvsim.ipc.message.response.IpcBooleanResponse
 import io.github.deltacv.eocvsim.ipc.message.response.IpcErrorResponse
 import io.github.deltacv.eocvsim.ipc.message.response.IpcMessageResponse
+import io.github.deltacv.eocvsim.ipc.message.response.IpcOkResponse
 import io.github.deltacv.eocvsim.ipc.security.PassToken
 import io.github.deltacv.eocvsim.ipc.security.secureRandomString
 import io.github.deltacv.eocvsim.ipc.serialization.ipcGson
@@ -64,9 +66,9 @@ class IpcServer(
 
     private val daemonBuffers = mutableMapOf<Int, WeakReference<ByteBuffer>>()
 
-    fun broadcastBinary(opcode: Byte, id: Short, data: ByteArray) {
-        // 1 byte for opcode + 2 bytes for short id + n bytes for data
-        val requiredSize = 1 + 2 + data.size
+    fun broadcastBinary(opcode: Byte, id: Int, data: ByteArray) {
+        // 1 byte for opcode + 4 bytes for int id + n bytes for data
+        val requiredSize = 1 + 4 + data.size
 
         val buffer: ByteBuffer
 
@@ -85,7 +87,7 @@ class IpcServer(
         buffer.clear()
 
         buffer.put(opcode)
-        buffer.putShort(id)
+        buffer.putInt(id)
         buffer.put(data)
 
         buffer.clear()
@@ -192,6 +194,18 @@ class IpcServer(
         fun respond(response: IpcMessageResponse) {
             response.id = message.id
             wsCtx.send(gson.toJson(response))
+        }
+
+        fun ok(info: String = "") {
+            respond(IpcOkResponse(info))
+        }
+
+        fun ok(bool: Boolean) {
+            respond(IpcBooleanResponse(bool))
+        }
+
+        fun error(reason: String = "", exception: Exception? = null) {
+            respond(IpcErrorResponse(reason, exception))
         }
 
     }

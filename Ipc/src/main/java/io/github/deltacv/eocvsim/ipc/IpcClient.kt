@@ -24,7 +24,7 @@ class IpcClient(
 
     private val gson = ipcGson
 
-    private val binaryHandlers = mutableMapOf<Byte, MutableList<(Short, ByteBuffer) -> Unit>>()
+    private val binaryHandlers = mutableMapOf<Byte, MutableList<(Int, ByteBuffer) -> Unit>>()
     private val awaitingResponseMessages = mutableMapOf<Int, IpcMessage>()
 
     fun broadcast(message: IpcMessage) {
@@ -34,7 +34,7 @@ class IpcClient(
         awaitingResponseMessages[message.id] = message
     }
 
-    fun binaryHandler(opcode: Byte, callback: (Short, ByteBuffer) -> Unit) {
+    fun binaryHandler(opcode: Byte, callback: (Int, ByteBuffer) -> Unit) {
         val list = binaryHandlers[opcode] ?: mutableListOf()
         list.add(callback)
 
@@ -75,8 +75,8 @@ class IpcClient(
         // following small spec
         val opcode = bytes.get() // first byte indicates the opcode (determines who will take this data)
 
-        val id = bytes.short // third and fourth bytes correspond to a signed java short
-                             // optionally contains an id (can be left to 0 if not needed)
+        val id = bytes.int // second to fifth bytes correspond to a signed java int
+                           // optionally contains an id (can be left to 0 if not needed)
 
         val callbacks = binaryHandlers[opcode]
         if(callbacks == null) {

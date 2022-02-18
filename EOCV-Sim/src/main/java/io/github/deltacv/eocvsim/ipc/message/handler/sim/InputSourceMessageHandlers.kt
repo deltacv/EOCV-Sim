@@ -5,20 +5,23 @@ import io.github.deltacv.eocvsim.input.InputSourceData
 import io.github.deltacv.eocvsim.input.InputSourceType
 import io.github.deltacv.eocvsim.ipc.IpcServer
 import io.github.deltacv.eocvsim.ipc.message.handler.IpcMessageHandler
+import io.github.deltacv.eocvsim.ipc.message.handler.dsl.IpcMessageHandlerDsl
 import io.github.deltacv.eocvsim.ipc.message.response.IpcOkResponse
+import io.github.deltacv.eocvsim.ipc.message.response.IpcStringResponse
 import io.github.deltacv.eocvsim.ipc.message.response.sim.InputSourcesListResponse
+import io.github.deltacv.eocvsim.ipc.message.sim.GetCurrentInputSourceMessage
 import io.github.deltacv.eocvsim.ipc.message.sim.InputSourcesListMessage
 import io.github.deltacv.eocvsim.ipc.message.sim.SetInputSourceMessage
 
 @IpcMessageHandler.Register(InputSourcesListMessage::class)
-class InputSourcesListMessageHandler : IpcMessageHandler<InputSourcesListMessage>() {
+class InputSourcesListMessageHandler : IpcMessageHandlerDsl<InputSourcesListMessage>({
 
-    override fun handle(ctx: IpcServer.IpcTransactionContext<InputSourcesListMessage>) {
-        ctx.eocvSim.onMainUpdate.doOnce {
+    handle {
+        eocvSim.onMainUpdate.doOnce {
             val sources = mutableListOf<InputSourceData>()
 
-            for((name, _) in ctx.eocvSim.inputSourceManager.sources) {
-                val type = ctx.eocvSim.inputSourceManager.getSourceType(name)!!
+            for((name, _) in eocvSim.inputSourceManager.sources) {
+                val type = eocvSim.inputSourceManager.getSourceType(name)!!
 
                 sources.add(InputSourceData(name, when(type) {
                     SourceType.IMAGE -> InputSourceType.IMAGE
@@ -28,20 +31,25 @@ class InputSourcesListMessageHandler : IpcMessageHandler<InputSourcesListMessage
                 }))
             }
 
-            ctx.respond(InputSourcesListResponse(sources.toTypedArray()))
+            respond(InputSourcesListResponse(sources.toTypedArray()))
         }
     }
 
-}
+})
 
-class SetInputSourceMessageHandler : IpcMessageHandler<SetInputSourceMessage>() {
+@IpcMessageHandler.Register(GetCurrentInputSourceMessage::class)
+class GetCurrentInputSourceMessageHandler : IpcMessageHandlerDsl<GetCurrentInputSourceMessage>({
+    respondWith { IpcStringResponse(eocvSim.inputSourceManager.currentInputSource.name) }
+})
 
-    override fun handle(ctx: IpcServer.IpcTransactionContext<SetInputSourceMessage>) {
-        ctx.eocvSim.onMainUpdate.doOnce {
-            ctx.eocvSim.inputSourceManager.setInputSource(ctx.message.name)
+@IpcMessageHandler.Register(SetInputSourceMessage::class)
+class SetInputSourceMessageHandler : IpcMessageHandlerDsl<SetInputSourceMessage>({
 
-            ctx.respond(IpcOkResponse())
+    handle {
+        eocvSim.onMainUpdate.doOnce {
+            eocvSim.inputSourceManager.setInputSource(message.name)
+            ok()
         }
     }
 
-}
+})

@@ -59,7 +59,6 @@ dependencies {
 }
 
 task(writeBuildClassJava) {
-
     String date = DateTimeFormatter.ofPattern("yyyy-M-d hh:mm:ss").format(LocalDateTime.now())
 
     File versionFile = Paths.get(

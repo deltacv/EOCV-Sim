@@ -4,7 +4,7 @@ open class IpcOkResponse(var info: String = "")  : IpcMessageResponse() {
     override val status = true
 
     override fun toString(): String {
-        return "IpcOkResponse(info=\"$info\")"
+        return "IpcOkResponse(type=\"${this::class.java.typeName}\", info=\"$info\")"
     }
 }
 
@@ -15,6 +15,6 @@ open class IpcErrorResponse(
     override val status = false
 
     override fun toString(): String {
-        return "IpcErrorResponse(reason=\"$reason\", exception=\"$exception\")"
+        return "IpcErrorResponse(type=\"${this::class.java.typeName}\", reason=\"$reason\", exception=\"$exception\")"
     }
 }

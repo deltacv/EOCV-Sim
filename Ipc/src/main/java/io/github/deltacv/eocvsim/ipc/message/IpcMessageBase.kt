@@ -40,6 +40,13 @@ abstract class IpcMessageBase : IpcMessage {
         return this
     }
 
+    inline fun <reified T : IpcMessageResponse> onResponseWith(crossinline callback: (T) -> Unit) =
+        onResponse {
+            if(it is T) {
+                callback(it)
+            }
+        }
+
     override fun toString() = "IpcMessageBase(type=\"${this::class.java.typeName}\", id=$id)"
 
 }

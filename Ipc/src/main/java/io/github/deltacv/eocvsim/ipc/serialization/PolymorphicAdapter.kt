@@ -21,7 +21,7 @@ open class PolymorphicAdapter<T>(val name: String) : JsonSerializer<T>, JsonDese
         val className = json.asJsonObject.get("${name}Class").asString
         val clazz = Class.forName(className)
 
-        return gson.fromJson(json.asJsonObject.get("$name"), clazz) as T
+        return gson.fromJson(json.asJsonObject.get(name), clazz) as T
     }
 
 }

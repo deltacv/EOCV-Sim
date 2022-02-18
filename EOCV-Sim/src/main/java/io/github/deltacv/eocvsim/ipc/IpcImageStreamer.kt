@@ -4,10 +4,7 @@ import com.github.serivesmejia.eocvsim.util.CvUtil
 import com.github.serivesmejia.eocvsim.util.extension.aspectRatio
 import com.github.serivesmejia.eocvsim.util.extension.clipTo
 import com.github.serivesmejia.eocvsim.util.image.BufferedImageRecycler
-import org.opencv.core.Mat
-import org.opencv.core.Point
-import org.opencv.core.Rect
-import org.opencv.core.Size
+import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 import org.openftc.easyopencv.MatRecycler
 import java.awt.Dimension
