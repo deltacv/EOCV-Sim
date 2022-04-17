@@ -75,7 +75,6 @@ class IpcServer(
         synchronized(daemonBuffers) {
             var buff = daemonBuffers[requiredSize]?.get()
             if(buff == null) {
-                println("created new bufffff")
                 buff = ByteBuffer.allocate(requiredSize)
             }
 
@@ -123,7 +122,7 @@ class IpcServer(
             }
         }
 
-        logger.trace("Received message $messageObject with id $messageObject.id from ${conn.localSocketAddress.hostString}")
+        logger.trace("Received message $messageObject with id ${messageObject.id}from ${conn.localSocketAddress.hostString}")
 
         val handler = handlerFor(messageObject::class.java)
         handler?.let {

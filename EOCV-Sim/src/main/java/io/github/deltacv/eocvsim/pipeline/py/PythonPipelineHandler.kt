@@ -63,8 +63,8 @@ class PythonPipelineHandler(
 
 fun PipelineManager.addPythonPipeline(
     name: String, sourceCode: String,
-    updateGui: Boolean = true
-) = addPipelineClass(PythonPipeline::class.java, PythonPipelineHandler(name, sourceCode), refreshGuiPipelineList = updateGui)
+    notifyAdd: Boolean = true
+) = addPipelineClass(PythonPipeline::class.java, PythonPipelineHandler(name, sourceCode), notifyAdd = notifyAdd)
 
 fun PipelineManager.removePythonPipeline(
     name: String,

@@ -130,7 +130,7 @@ public class Visualizer {
 
         pipelineSelectorPanel = new PipelineSelectorPanel(eocvSim);
         sourceSelectorPanel   = new SourceSelectorPanel(eocvSim);
-        telemetryPanel        = new TelemetryPanel();
+        telemetryPanel        = new TelemetryPanel(eocvSim);
 
         rightContainer = new JPanel();
 

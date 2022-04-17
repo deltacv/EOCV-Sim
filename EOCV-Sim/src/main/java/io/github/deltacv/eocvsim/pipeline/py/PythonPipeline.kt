@@ -112,12 +112,12 @@ class PythonPipeline(
     // or "stream(Int, Mat)"
     private class Streamer(private val pipeline: PythonPipeline) : PyObject() {
         override fun __call__(id: PyObject, image: PyObject): PyObject {
-            pipeline.streamFrame(id.asInt().toShort(), Py.tojava(image, Mat::class.java))
+            pipeline.streamFrame(id.asInt(), Py.tojava(image, Mat::class.java))
             return Py.None
         }
 
         override fun __call__(id: PyObject, image: PyObject, cvtColor: PyObject): PyObject {
-            pipeline.streamFrame(id.asInt().toShort(), Py.tojava(image, Mat::class.java), cvtColor.asInt())
+            pipeline.streamFrame(id.asInt(), Py.tojava(image, Mat::class.java), cvtColor.asInt())
             return Py.None
         }
 
@@ -132,7 +132,7 @@ class PythonPipeline(
             val image = args[1]
             val cvtColor = if(args.size == 3) args[2] else null
 
-            pipeline.streamFrame(id.asInt().toShort(), Py.tojava(image, Mat::class.java), cvtColor?.asInt())
+            pipeline.streamFrame(id.asInt(), Py.tojava(image, Mat::class.java), cvtColor?.asInt())
 
             return Py.None
         }

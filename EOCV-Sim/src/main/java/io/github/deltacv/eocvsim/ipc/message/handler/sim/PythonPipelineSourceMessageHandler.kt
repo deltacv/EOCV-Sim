@@ -50,7 +50,7 @@ class PythonPipelineSourceMessageHandler : IpcMessageHandlerDsl<PythonPipelineSo
                 changeToDefaultIfRemoved = false
             )
             pipelineManager.addPythonPipeline(message.pipelineName, message.pythonSource,
-                updateGui = !isCurrentlyRunning
+                notifyAdd = !isCurrentlyRunning
             )
 
             ok(isCurrentlyRunning)

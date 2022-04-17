@@ -105,6 +105,14 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
 
         selectWorkspBtt.addActionListener { eocvSim.visualizer.selectPipelinesWorkspace() }
         workspaceButtonsPanel.add(selectWorkspBtt, GridBagConstraints().apply { gridx = 1 })
+
+        eocvSim.pipelineManager.onPause {
+            pipelinePauseBtt.isSelected = true
+        }
+
+        eocvSim.pipelineManager.onResume {
+            pipelinePauseBtt.isSelected = false
+        }
     }
 
 }

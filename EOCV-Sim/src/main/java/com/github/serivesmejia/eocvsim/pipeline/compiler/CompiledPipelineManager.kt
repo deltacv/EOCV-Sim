@@ -145,8 +145,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             PipelineCompileStatus.NO_SOURCE -> {
                 //delete jar if we had no sources, the most logical outcome in this case
                 deleteJarFile()
-                if(pipelineManager.eocvSim.visualizer.hasFinishedInit())
-                    pipelineManager.refreshGuiPipelineList()
+                pipelineManager.onPipelineAdd.run()
 
                 "Build cancelled, no source files to compile $messageEnd"
             }
@@ -159,7 +158,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         val beforePipeline = pipelineManager.currentPipelineData
 
         pipelineManager.onUpdate.doOnce {
-            pipelineManager.refreshGuiPipelineList()
+            pipelineManager.onPipelineAdd.run()
 
             if(fixSelectedPipeline) {
                 if(beforePipeline != null) {
@@ -250,7 +249,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
                 logger.trace("Added ${pipelineClass.simpleName} from jar")
             }
 
-            pipelineManager.requestAddPipelineClasses(pipelines, source = PipelineSource.COMPILED_ON_RUNTIME, refreshGuiPipelineList = false)
+            pipelineManager.requestAddPipelineClasses(pipelines, source = PipelineSource.COMPILED_ON_RUNTIME, notifyAdd = false)
         } catch(e: Exception) {
             logger.error("Uncaught exception thrown while loading jar $PIPELINES_OUTPUT_JAR", e)
         }

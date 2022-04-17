@@ -122,7 +122,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
             logger.info("Confirmed claiming of the lock file in ${EOCVSimFolder.absolutePath}")
         }
 
-        DialogFactory.createSplashScreen(visualizer.onInitFinished)
+        if(!params.daemonMode) {
+            DialogFactory.createSplashScreen(visualizer.onInitFinished)
+        }
 
         logger.info("-- Initializing EasyOpenCV Simulator v$VERSION ($hexCode) --")
 
@@ -141,34 +143,39 @@ class EOCVSim(val params: Parameters = Parameters()) {
         //loading native lib only once in the app runtime
         loadOpenCvLib()
 
-        visualizer.initAsync(configManager.config.simTheme) //create gui in the EDT
+
+        if(!params.daemonMode) {
+            visualizer.initAsync(configManager.config.simTheme) //create gui in the EDT
+
+            //shows a warning when a pipeline gets "stuck"
+            pipelineManager.onPipelineTimeout {
+                visualizer.asyncPleaseWaitDialog(
+                    "Current pipeline took too long to ${pipelineManager.lastPipelineAction}",
+                    "Falling back to DefaultPipeline",
+                    "Close", Dimension(310, 150), true, true
+                )
+            }
+        }
 
         inputSourceManager.init() //loading user created input sources
         pipelineManager.init() //init pipeline manager (scan for pipelines)
         tunerManager.init() //init tunable variables manager
 
-        //shows a warning when a pipeline gets "stuck"
-        pipelineManager.onPipelineTimeout {
-            visualizer.asyncPleaseWaitDialog(
-                "Current pipeline took too long to ${pipelineManager.lastPipelineAction}",
-                "Falling back to DefaultPipeline",
-                "Close", Dimension(310, 150), true, true
-            )
-        }
-
         inputSourceManager.inputSourceLoader.saveInputSourcesToFile()
 
-        visualizer.waitForFinishingInit()
+        if(!params.daemonMode) {
+            visualizer.waitForFinishingInit()
 
-        visualizer.sourceSelectorPanel.updateSourcesList() //update sources and pick first one
-        visualizer.sourceSelectorPanel.sourceSelector.selectedIndex = 0
-        visualizer.sourceSelectorPanel.allowSourceSwitching = true
+            visualizer.sourceSelectorPanel.updateSourcesList() //update sources and pick first one
+            visualizer.sourceSelectorPanel.sourceSelector.selectedIndex = 0
+            visualizer.sourceSelectorPanel.allowSourceSwitching = true
 
-        visualizer.pipelineSelectorPanel.updatePipelinesList() //update pipelines and pick first one (DefaultPipeline)
-        visualizer.pipelineSelectorPanel.selectedIndex = 0
+            visualizer.pipelineSelectorPanel.updatePipelinesList() //update pipelines and pick first one (DefaultPipeline)
+            visualizer.pipelineSelectorPanel.selectedIndex = 0
 
-        //post output mats from the pipeline to the visualizer viewport
-        pipelineManager.pipelineOutputPosters.add(visualizer.viewport.matPoster)
+            //post output mats from the pipeline to the visualizer viewport
+            pipelineManager.pipelineOutputPosters.add(visualizer.viewport.matPoster)
+        }
 
         start()
     }
@@ -223,7 +230,9 @@ def processFrame(input):
             //run all pending requested runnables
             onMainUpdate.run()
 
-            updateVisualizerTitle()
+            if(!params.daemonMode) {
+                updateVisualizerTitle()
+            }
 
             inputSourceManager.update(pipelineManager.paused)
             tunerManager.update()
@@ -406,6 +415,8 @@ def processFrame(input):
 
         var initialPipelineName: String? = null
         var initialPipelineSource: PipelineSource? = null
+
+        var daemonMode = false
     }
 
 }

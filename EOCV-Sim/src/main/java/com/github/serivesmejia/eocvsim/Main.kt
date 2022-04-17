@@ -30,6 +30,9 @@ class EOCVSimCommandInterface : Runnable {
     @CommandLine.Option(names = ["-s", "--source"], description = ["Specifies the source of the pipeline that will be selected when the simulator starts, from the --pipeline argument. Defaults to CLASSPATH. Possible values: \${COMPLETION-CANDIDATES}"])
     @JvmField var initialPipelineSource = PipelineSource.CLASSPATH
 
+    @CommandLine.Option(names = ["-d", "--daemon"], description = ["Sets the sim to daemon mode for IPC usage, the UI is not displayed"])
+    @JvmField var daemonMode = false
+
     override fun run() {
         val parameters = EOCVSim.Parameters()
 
@@ -57,6 +60,8 @@ class EOCVSimCommandInterface : Runnable {
             parameters.initialPipelineName = initialPipeline
             parameters.initialPipelineSource = initialPipelineSource
         }
+
+        parameters.daemonMode = daemonMode
 
         EOCVSim(parameters).init()
     }

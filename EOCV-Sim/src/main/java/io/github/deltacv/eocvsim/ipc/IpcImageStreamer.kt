@@ -21,7 +21,7 @@ class IpcImageStreamer(
     private val bytes = ByteArray(resolution.width.toInt() * resolution.height.toInt() * 3)
 
     fun sendFrame(
-        id: Short,
+        id: Int,
         img: Mat,
         cvtCode: Int?
     ) {

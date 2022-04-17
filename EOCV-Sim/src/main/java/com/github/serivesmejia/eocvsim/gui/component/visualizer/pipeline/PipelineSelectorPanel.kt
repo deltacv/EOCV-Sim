@@ -98,6 +98,13 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     }
 
     private fun registerListeners() {
+        eocvSim.pipelineManager.onPipelineAdd {
+            updatePipelinesList()
+        }
+
+        eocvSim.pipelineManager.onPipelineChange {
+            selectedIndex = eocvSim.pipelineManager.currentPipelineIndex
+        }
 
         //listener for changing pipeline
         pipelineSelector.addListSelectionListener { evt: ListSelectionEvent ->

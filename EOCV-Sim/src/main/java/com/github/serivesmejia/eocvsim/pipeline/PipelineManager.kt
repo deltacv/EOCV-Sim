@@ -65,6 +65,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
     }
 
     @JvmField val onUpdate          = EventHandler("OnPipelineUpdate")
+    @JvmField val onPipelineAdd     = EventHandler("OnPipelineAdd")
     @JvmField val onPipelineChange  = EventHandler("OnPipelineChange")
     @JvmField val onPipelineTimeout = EventHandler("OnPipelineTimeout")
     @JvmField val onPause           = EventHandler("OnPipelinePause")
@@ -101,7 +102,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
     val activePipelineContexts = ArrayList<ExecutorCoroutineDispatcher>()
     private var currentPipelineContext: ExecutorCoroutineDispatcher? = null
 
-    @Volatile var currentTelemetry: Telemetry? = null
+    @Volatile var currentTelemetry: TelemetryImpl? = null
         private set
 
     @Volatile var paused = false
@@ -220,8 +221,6 @@ class PipelineManager(var eocvSim: EOCVSim) {
                     forceChangePipeline(0)
                 }
             }
-
-            eocvSim.visualizer.pipelineSelectorPanel.allowPipelineSwitching = true
         }
     }
 
@@ -457,13 +456,13 @@ class PipelineManager(var eocvSim: EOCVSim) {
         handler: PipelineHandler = DefaultPipelineHandler,
         source: PipelineSource? = null,
         customDisplayName: String? = null,
-        refreshGuiPipelineList: Boolean = false
+        notifyAdd: Boolean = false
     ) {
         onUpdate.doOnce {
             for(clazz in classes) {
-                addPipelineClass(clazz, handler, source, customDisplayName, refreshGuiPipelineList = false)
+                addPipelineClass(clazz, handler, source, customDisplayName, notifyAdd = false)
             }
-            if(refreshGuiPipelineList) refreshGuiPipelineList()
+            if(notifyAdd) onPipelineAdd.run()
         }
     }
 
@@ -473,7 +472,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         handler: PipelineHandler = DefaultPipelineHandler,
         source: PipelineSource? = null,
         customDisplayName: String? = null,
-        refreshGuiPipelineList: Boolean = true
+        notifyAdd: Boolean = true
     ) {
         try {
             val pipelineClass = C as Class<out OpenCvPipeline>
@@ -483,11 +482,11 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 source ?: handler.sourceOf(pipelineClass), pipelineClass, displayName, handler
             ))
 
-            if(refreshGuiPipelineList) {
+            if(notifyAdd) {
                 val allowSwitching = eocvSim.visualizer.pipelineSelectorPanel?.allowPipelineSwitching ?: true
 
                 eocvSim.visualizer.pipelineSelectorPanel?.allowPipelineSwitching = false
-                refreshGuiPipelineList()
+                onPipelineAdd.run()
 
                 eocvSim.visualizer.pipelineSelectorPanel?.selectedIndex = currentPipelineIndex
                 eocvSim.visualizer.pipelineSelectorPanel?.allowPipelineSwitching = allowSwitching
@@ -500,7 +499,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     fun removePipeline(
         pipelineData: PipelineData,
-        refreshGuiPipelineList: Boolean = true,
+        notifyAdd: Boolean = true,
         changeToDefaultIfRemoved: Boolean = true
     ) {
         pipelines.remove(pipelineData)
@@ -510,7 +509,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 requestChangePipeline(0) //change to default pipeline if the current pipeline was deleted
         }
 
-        if(refreshGuiPipelineList) refreshGuiPipelineList()
+        if(notifyAdd) onPipelineAdd.run()
     }
 
     fun removePipeline(
@@ -597,7 +596,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         captureSnapshot()
 
         val nextPipeline: OpenCvPipeline?
-        val nextTelemetry: Telemetry?
+        val nextTelemetry: TelemetryImpl?
         val pipelineData = pipelines[index]
         val pipelineClass = pipelines[index].clazz
 
@@ -606,10 +605,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         logger.info("Changing to pipeline $name")
 
         try {
-            nextTelemetry = TelemetryImpl().apply {
-                // send telemetry updates to the ui
-                addTransmissionReceiver(eocvSim.visualizer.telemetryPanel)
-            }
+            nextTelemetry = TelemetryImpl()
 
             nextPipeline = pipelineData.handler.instantiate(
                 pipelineClass, nextTelemetry
@@ -664,8 +660,6 @@ class PipelineManager(var eocvSim: EOCVSim) {
         currentPipelineContext = newSingleThreadContext("Pipeline-$currentPipelineShortName")
 
         activePipelineContexts.add(currentPipelineContext!!)
-
-        eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = currentPipelineIndex
 
         setPaused(false)
 
@@ -767,8 +761,6 @@ class PipelineManager(var eocvSim: EOCVSim) {
             this.pauseReason = PauseReason.NOT_PAUSED
             onResume.run()
         }
-
-        eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelinePauseBtt.isSelected = paused
     }
 
     fun togglePause() = setPaused(!paused)
@@ -776,12 +768,6 @@ class PipelineManager(var eocvSim: EOCVSim) {
     @JvmOverloads
     fun requestSetPaused(paused: Boolean, pauseReason: PauseReason = PauseReason.USER_REQUESTED) {
         eocvSim.onMainUpdate.doOnce { setPaused(paused, pauseReason) }
-    }
-
-    fun refreshGuiPipelineList() {
-        if(eocvSim.visualizer.hasFinishedInit()) {
-            eocvSim.visualizer.pipelineSelectorPanel.updatePipelinesList()
-        }
     }
 
     data class PipelineStream(

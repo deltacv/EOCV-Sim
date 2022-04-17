@@ -1,5 +1,6 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer
 
+import com.github.serivesmejia.eocvsim.EOCVSim
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryTransmissionReceiver
 import java.awt.FlowLayout
@@ -10,7 +11,7 @@ import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionListener
 import javax.swing.*
 
-class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
+class TelemetryPanel(eocvSim: EOCVSim) : JPanel(), TelemetryTransmissionReceiver {
 
     val telemetryScroll = JScrollPane()
     val telemetryList  = JList<String>()
@@ -61,6 +62,10 @@ class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
             ipadx = 120
             ipady = 20
         })
+
+        eocvSim.pipelineManager.onPipelineChange {
+            eocvSim.pipelineManager.currentTelemetry?.addTransmissionReceiver(this)
+        }
     }
 
     fun revalAndRepaint() {
