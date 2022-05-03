@@ -71,6 +71,14 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+
+### [v3.4.1 - Custom OpenCV native support](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.4.1)
+
+   - This is the 15th release for EOCV-Sim
+ 
+      - Changelog:      
+        - Adds command line argument for specifying the path to the opencv native library, falls back to normal loadLocal in case of a failure
+
 ### [v3.4.0 - Webcam stability improvements](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.4.0)
 
    - This is the 14th release for EOCV-Sim
