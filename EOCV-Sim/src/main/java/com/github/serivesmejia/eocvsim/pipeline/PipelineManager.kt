@@ -221,6 +221,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
                     forceChangePipeline(0)
                 }
             }
+
+            eocvSim.visualizer.pipelineSelectorPanel?.allowPipelineSwitching = true
         }
     }
 

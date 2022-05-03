@@ -23,7 +23,6 @@
 
 package com.github.serivesmejia.eocvsim.pipeline;
 
-import io.github.deltacv.eocvsim.virtualreflect.jvm.Label;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -31,7 +30,6 @@ import org.openftc.easyopencv.OpenCvPipeline;
 
 public class DefaultPipeline extends OpenCvPipeline {
 
-    @Label(name = "mai")
     public int blur = 0;
 
     private Telemetry telemetry;
