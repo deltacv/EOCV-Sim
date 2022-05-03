@@ -85,12 +85,12 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
                     isNativeLibLoaded = true
                     logger.info("Successfully loaded the OpenCV native lib from specified path")
+
+                    return
                 } catch(ex: Throwable) {
                     logger.error("Failure loading the OpenCV native lib from specified path", ex)
                     logger.info("Retrying with loadLocally...")
                 }
-
-                return
             }
 
             try {

@@ -47,7 +47,7 @@ class EOCVSimCommandInterface : Runnable {
 
 
         if(opencvNativePath != null) {
-            parameters.opencvNativeLibrary = checkPath("OpenCV Native", opencvNativePath!!, true)
+            parameters.opencvNativeLibrary = checkPath("OpenCV Native", opencvNativePath!!, false)
         }
 
         EOCVSim(parameters).init()
@@ -60,13 +60,13 @@ class EOCVSimCommandInterface : Runnable {
             file = Paths.get(System.getProperty("user.dir"), path).toFile()
 
             if(!file.exists()) {
-                System.err.println("${parameter} path is not valid, folder doesn't exist (tried in \"$path\" and \"${file.absolutePath})\"")
+                System.err.println("$parameter path is not valid, it doesn't exist (tried in \"$path\" and \"${file.absolutePath})\"")
                 exitProcess(1)
             }
         }
 
         if(shouldBeDirectory && !file.isDirectory) {
-            System.err.println("${parameter} path is not valid, the specified path is not a folder")
+            System.err.println("$parameter path is not valid, the specified path is not a folder")
             exitProcess(1)
         }
 
