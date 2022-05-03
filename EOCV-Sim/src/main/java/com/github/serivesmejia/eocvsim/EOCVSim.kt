@@ -60,7 +60,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         const val VERSION = Build.versionString
         const val DEFAULT_EOCV_WIDTH = 320
         const val DEFAULT_EOCV_HEIGHT = 240
-        @JvmField val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
+        @JvmField
+        val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
 
         private var hasScanned = false
         private val classpathScan = ClasspathScan()
@@ -73,10 +74,24 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         private var isNativeLibLoaded = false
 
-        fun loadOpenCvLib() {
+        fun loadOpenCvLib(alternativeNative: File? = null) {
             if (isNativeLibLoaded) return
 
-            logger.info("Loading native lib...")
+            if (alternativeNative != null) {
+                logger.info("Loading native lib from ${alternativeNative.absolutePath}...")
+
+                try {
+                    System.load(alternativeNative.absolutePath)
+
+                    isNativeLibLoaded = true
+                    logger.info("Successfully loaded the OpenCV native lib from specified path")
+                } catch(ex: Throwable) {
+                    logger.error("Failure loading the OpenCV native lib from specified path", ex)
+                    logger.info("Retrying with loadLocally...")
+                }
+
+                return
+            }
 
             try {
                 OpenCV.loadLocally()
@@ -151,7 +166,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         EOCVSimUncaughtExceptionHandler.register()
 
         //loading native lib only once in the app runtime
-        loadOpenCvLib()
+        loadOpenCvLib(params.opencvNativeLibrary)
 
         if(!hasScanned) {
             classpathScan.asyncScan()
@@ -383,6 +398,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         var initialPipelineName: String? = null
         var initialPipelineSource: PipelineSource? = null
+
+        var opencvNativeLibrary: File? = null
     }
 
 }
