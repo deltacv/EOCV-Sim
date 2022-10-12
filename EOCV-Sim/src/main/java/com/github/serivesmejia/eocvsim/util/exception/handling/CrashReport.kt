@@ -132,7 +132,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
 
     fun saveCrashReport(filename: String) {
         val workingDir = File(System.getProperty("user.dir"))
-        val crashLogFile = workingDir + "/$filename.log"
+        val crashLogFile = workingDir + File.separator + "$filename.log"
 
         saveCrashReport(crashLogFile)
     }
