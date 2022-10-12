@@ -71,7 +71,15 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+### [v3.4.2 - AprilTags fixes & Mac support](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.4.2)
 
+   - This is the 16th release for EOCV-Sim
+ 
+      - Changelog:      
+        - Bumps apriltags to 1.2.0, providing Mac support and removing OpenCV dependency on native code to hopefully remove crashes
+      - Bug fixes:
+        - Fixes path of crash reports to use corresponding separator
+	
 ### [v3.4.1 - Custom OpenCV native support](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.4.1)
 
    - This is the 15th release for EOCV-Sim
