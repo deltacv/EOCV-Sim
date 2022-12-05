@@ -44,7 +44,7 @@ public class SysUtil {
     static Logger logger = LoggerFactory.getLogger(SysUtil.class);
 
     public static OperatingSystem OS = SysUtil.getOS();
-    public static SystemArchitecture ARCH = SystemArchitecture.ARMv8;//SysUtil.getArch();
+    public static SystemArchitecture ARCH = SysUtil.getArch();
     public static int MB = 1024 * 1024;
 
     public static OperatingSystem getOS() {
