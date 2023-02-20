@@ -23,7 +23,6 @@
 
 package com.github.serivesmejia.eocvsim.input.source;
 
-import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.util.FileFilters;
 import com.google.gson.annotations.Expose;
@@ -37,19 +36,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.filechooser.FileFilter;
-import java.util.Objects;
 
 public class VideoSource extends InputSource {
 
     @Expose
     private String videoPath = null;
 
-    private transient VideoCapture video = null;
+    private transient VideoCapture video;
 
-    private transient MatRecycler.RecyclableMat lastFramePaused = null;
-    private transient MatRecycler.RecyclableMat lastFrame = null;
+    private transient MatRecycler.RecyclableMat lastFramePaused;
+    private transient MatRecycler.RecyclableMat lastFrame;
 
-    private transient boolean initialized = false;
+    private transient boolean initialized;
 
     @Expose
     private volatile Size size;
@@ -60,9 +58,10 @@ public class VideoSource extends InputSource {
 
     private transient long capTimeNanos = 0;
 
-    Logger logger = LoggerFactory.getLogger(getClass());
+    private transient Logger logger = LoggerFactory.getLogger(getClass());
 
-    public VideoSource() {}
+    public VideoSource() {
+    }
 
     public VideoSource(String videoPath, Size size) {
         this.videoPath = videoPath;
@@ -109,9 +108,9 @@ public class VideoSource extends InputSource {
 
         if (video != null && video.isOpened()) video.release();
 
-        if(lastFrame != null && lastFrame.isCheckedOut())
+        if (lastFrame != null && lastFrame.isCheckedOut())
             lastFrame.returnMat();
-        if(lastFramePaused != null && lastFramePaused.isCheckedOut())
+        if (lastFramePaused != null && lastFramePaused.isCheckedOut())
             lastFramePaused.returnMat();
 
         matRecycler.releaseAll();
@@ -124,8 +123,8 @@ public class VideoSource extends InputSource {
     @Override
     public void close() {
 
-        if(video != null && video.isOpened()) video.release();
-        if(lastFrame != null) lastFrame.returnMat();
+        if (video != null && video.isOpened()) video.release();
+        if (lastFrame != null) lastFrame.returnMat();
 
         if (lastFramePaused != null) {
             lastFramePaused.returnMat();
