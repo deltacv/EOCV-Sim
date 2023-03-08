@@ -24,14 +24,10 @@
 package com.github.serivesmejia.eocvsim.util;
 
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder;
-import org.opencv.core.Core;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryPoolMXBean;
-import java.lang.management.MemoryType;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -48,8 +44,8 @@ public class SysUtil {
     static Logger logger = LoggerFactory.getLogger(SysUtil.class);
 
     public static OperatingSystem OS = SysUtil.getOS();
+    public static SystemArchitecture ARCH = SysUtil.getArch();
     public static int MB = 1024 * 1024;
-    public static String GH_NATIVE_LIBS_URL = "https://github.com/serivesmejia/OpenCVNativeLibs/raw/master/";
 
     public static OperatingSystem getOS() {
         String osName = System.getProperty("os.name").toLowerCase();
@@ -63,6 +59,22 @@ public class SysUtil {
         }
 
         return OperatingSystem.UNKNOWN;
+    }
+
+    public static SystemArchitecture getArch() {
+        String arch = System.getProperty("os.arch");
+
+        if(arch.contains("amd64") || arch.contains("x86_64")) {
+            return SystemArchitecture.X86_64;
+        } else if(arch.contains("x86") || arch.contains("i38")) {
+            return SystemArchitecture.X86_64;
+        } else if(arch.contains("arm")) {
+            return SystemArchitecture.ARMv7;
+        } else if(arch.contains("arm64") || arch.contains("aarch")) {
+            return SystemArchitecture.ARMv8;
+        }
+
+        return SystemArchitecture.UNKNOWN;
     }
 
     public static void copyStream(File inFile, OutputStream out) throws IOException {
@@ -310,6 +322,11 @@ public class SysUtil {
         WINDOWS,
         LINUX,
         MACOS,
+        UNKNOWN
+    }
+
+    public enum SystemArchitecture {
+        X86, X86_64, ARMv7, ARMv8,
         UNKNOWN
     }
 
