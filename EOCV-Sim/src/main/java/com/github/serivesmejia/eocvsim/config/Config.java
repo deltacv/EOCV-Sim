@@ -30,6 +30,7 @@ import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineFps;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager;
+import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Size;
 
 import java.util.HashMap;
@@ -48,7 +49,6 @@ public class Config {
     public volatile PipelineFps videoRecordingFps = PipelineFps.MEDIUM;
 
     public volatile WebcamDriver preferredWebcamDriver = WebcamDriver.OpenIMAJ;
-
     public volatile String workspacePath  = CompiledPipelineManager.Companion.getDEF_WORKSPACE_FOLDER().getAbsolutePath();
 
     public volatile TunableFieldPanelConfig.Config globalTunableFieldsConfig =
@@ -60,5 +60,11 @@ public class Config {
             );
 
     public volatile HashMap<String, TunableFieldPanelConfig.Config> specificTunableFieldConfig = new HashMap<>();
+
+    public Config() {
+        if(SysUtil.ARCH != SysUtil.SystemArchitecture.X86_64) {
+            preferredWebcamDriver = WebcamDriver.OpenCV;
+        }
+    }
 
 }

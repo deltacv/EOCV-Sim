@@ -386,7 +386,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         val workspaceMsg = " - ${workspaceManager.workspaceFile.absolutePath} $isBuildRunning"
 
         val pipelineFpsMsg = " (${pipelineManager.pipelineFpsCounter.fps} Pipeline FPS)"
-        val posterFpsMsg = " (${visualizer.viewport.matPoster.fpsCounter.fps} Poster FPS)"
+        val posterFpsMsg = " (${visualizer.viewport.matPoster.fpsCounter.fps} Viewport FPS)"
         val isPaused = if (pipelineManager.paused) " (Paused)" else ""
         val isRecording = if (isCurrentlyRecording()) " RECORDING" else ""
 

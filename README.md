@@ -71,6 +71,12 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+### [v3.4.3 - M1 Mac OpenCV Support](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.4.3)
+   - This is the 17th release for EOCV-Sim
+     - Changelog
+       - Update OpenCV to 4.5.5, adding M1 support
+       - Disables OpenIMAJ webcams when not using x86_64
+
 ### [v3.4.2 - AprilTags fixes & Mac support](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.4.2)
 
    - This is the 16th release for EOCV-Sim

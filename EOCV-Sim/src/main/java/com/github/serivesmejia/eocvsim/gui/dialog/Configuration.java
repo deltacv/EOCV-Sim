@@ -31,9 +31,13 @@ import com.github.serivesmejia.eocvsim.gui.theme.Theme;
 import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineFps;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout;
+import com.github.serivesmejia.eocvsim.util.SysUtil;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class Configuration {
 
@@ -117,6 +121,11 @@ public class Configuration {
                 "Preferred Webcam Driver: ", WebcamDriver.class,
                 WebcamDriver.values()
         );
+
+        if(SysUtil.ARCH != SysUtil.SystemArchitecture.X86_64) {
+            preferredWebcamDriver.removeEnumOption(WebcamDriver.OpenIMAJ);
+        }
+
         preferredWebcamDriver.setSelectedEnum(config.preferredWebcamDriver);
         inputSourcesPanel.add(preferredWebcamDriver);
 
