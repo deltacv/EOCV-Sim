@@ -80,7 +80,7 @@ public class InputSourceManager {
         inputSourceLoader.loadInputSourcesFromFile();
 
         for (Map.Entry<String, InputSource> entry : inputSourceLoader.loadedInputSources.entrySet()) {
-            logger.info("loaded input source " + entry.getKey());
+            logger.info("Loaded input source " + entry.getKey());
             addInputSource(entry.getKey(), entry.getValue());
         }
     }
