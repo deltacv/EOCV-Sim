@@ -98,7 +98,7 @@ public class Configuration {
         themePanel.add(this.themeComboBox);
         uiPanel.add(themePanel);
 
-        tabbedPane.addTab("Inteface", uiPanel);
+        tabbedPane.addTab("Interface", uiPanel);
 
         /*
         INPUT SOURCES TAB

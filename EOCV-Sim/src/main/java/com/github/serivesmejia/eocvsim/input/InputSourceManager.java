@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.SourceSelectorPanel;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
+import com.github.serivesmejia.eocvsim.input.source.VideoSource;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Mat;
@@ -79,13 +80,13 @@ public class InputSourceManager {
         inputSourceLoader.loadInputSourcesFromFile();
 
         for (Map.Entry<String, InputSource> entry : inputSourceLoader.loadedInputSources.entrySet()) {
+            logger.info("Loaded input source " + entry.getKey());
             addInputSource(entry.getKey(), entry.getValue());
         }
     }
 
     private void createDefaultImgInputSource(String resourcePath, String fileName, String sourceName, Size imgSize) {
         try {
-
             InputStream is = InputSource.class.getResourceAsStream(resourcePath);
             File f = SysUtil.copyFileIsTemp(is, fileName, true).file;
 
@@ -94,7 +95,6 @@ public class InputSourceManager {
             src.createdOn = sources.size();
 
             addInputSource(sourceName, src);
-
         } catch (IOException e) {
             e.printStackTrace();
         }

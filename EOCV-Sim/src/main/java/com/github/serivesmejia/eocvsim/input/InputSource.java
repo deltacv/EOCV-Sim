@@ -30,20 +30,23 @@ import javax.swing.filechooser.FileFilter;
 
 public abstract class InputSource implements Comparable<InputSource> {
 
-    public transient boolean isDefault = false;
-    public transient EOCVSim eocvSim = null;
+    public transient boolean isDefault;
+    public transient EOCVSim eocvSim;
 
     protected transient String name = "";
-    protected transient boolean isPaused = false;
-    private transient boolean beforeIsPaused = false;
+    protected transient boolean isPaused;
+    private transient boolean beforeIsPaused;
 
-    protected long createdOn = -1L;
+    protected transient long createdOn = -1L;
 
     public abstract boolean init();
+
     public abstract void reset();
+
     public abstract void close();
 
     public abstract void onPause();
+
     public abstract void onResume();
 
     public Mat update() {
@@ -51,7 +54,7 @@ public abstract class InputSource implements Comparable<InputSource> {
     }
 
     public final InputSource cloneSource() {
-        InputSource source = internalCloneSource();
+        final InputSource source = internalCloneSource();
         source.createdOn = createdOn;
         return source;
     }

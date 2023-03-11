@@ -60,7 +60,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
         const val VERSION = Build.versionString
         const val DEFAULT_EOCV_WIDTH = 320
         const val DEFAULT_EOCV_HEIGHT = 240
-        @JvmField val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
+
+        @JvmField
+        val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
 
         private var hasScanned = false
         private val classpathScan = ClasspathScan()
@@ -86,7 +88,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
                     logger.info("Successfully loaded the OpenCV native lib from specified path")
 
                     return
-                } catch(ex: Throwable) {
+                } catch (ex: Throwable) {
                     logger.error("Failure loading the OpenCV native lib from specified path", ex)
                     logger.info("Retrying with loadLocally...")
                 }
@@ -116,12 +118,16 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
     @JvmField
     val configManager = ConfigManager()
+
     @JvmField
     val inputSourceManager = InputSourceManager(this)
+
     @JvmField
     val pipelineManager = PipelineManager(this)
+
     @JvmField
     val tunerManager = TunerManager(this)
+
     @JvmField
     val workspaceManager = WorkspaceManager(this)
 
@@ -146,10 +152,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
     fun init() {
         eocvSimThread = Thread.currentThread()
 
-        if(!EOCVSimFolder.couldLock) {
+        if (!EOCVSimFolder.couldLock) {
             logger.error(
-                "Couldn't finally claim lock file in \"${EOCVSimFolder.absolutePath}\"! " +
-                        "Is the folder opened by another EOCV-Sim instance?"
+                "Couldn't finally claim lock file in \"${EOCVSimFolder.absolutePath}\"! " + "Is the folder opened by another EOCV-Sim instance?"
             )
 
             logger.error("Unable to continue with the execution, the sim will exit now.")
@@ -167,7 +172,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         //loading native lib only once in the app runtime
         loadOpenCvLib(params.opencvNativeLibrary)
 
-        if(!hasScanned) {
+        if (!hasScanned) {
             classpathScan.asyncScan()
             hasScanned = true
         }
@@ -187,7 +192,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
             visualizer.asyncPleaseWaitDialog(
                 "Current pipeline took too long to ${pipelineManager.lastPipelineAction}",
                 "Falling back to DefaultPipeline",
-                "Close", Dimension(310, 150), true, true
+                "Close",
+                Dimension(310, 150),
+                true,
+                true
             )
         }
 
@@ -222,7 +230,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
             try {
                 pipelineManager.update(
-                    if(inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
+                    if (inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
                         inputSourceManager.lastMatFromSource
                     } else null
                 )
@@ -232,7 +240,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
                     "To avoid further issues, EOCV-Sim will exit now.",
                     "Ok",
                     Dimension(450, 150),
-                    true, true
+                    true,
+                    true
                 ).onCancel {
                     destroy(DestroyReason.CRASH) //destroy eocv sim when pressing "exit"
                 }
@@ -259,14 +268,14 @@ class EOCVSim(val params: Parameters = Parameters()) {
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
             try {
                 fpsLimiter.sync()
-            } catch(e: InterruptedException) {
+            } catch (e: InterruptedException) {
                 break
             }
         }
 
         logger.warn("Main thread interrupted ($hexCode)")
 
-        if(isRestarting) {
+        if (isRestarting) {
             isRestarting = false
             EOCVSim(params).init()
         }
@@ -288,8 +297,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         eocvSimThread.interrupt()
 
-        if(reason == DestroyReason.USER_REQUESTED || reason == DestroyReason.CRASH)
-            jvmMainThread.interrupt()
+        if (reason == DestroyReason.USER_REQUESTED || reason == DestroyReason.CRASH) jvmMainThread.interrupt()
     }
 
     fun destroy() {
@@ -331,8 +339,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             logger.info("Recording session stopped")
 
             DialogFactory.createFileChooser(
-                visualizer.frame,
-                DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT, FileFilters.recordedVideoFilter
+                visualizer.frame, DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT, FileFilters.recordedVideoFilter
             ).addCloseListener { _: Int, file: File?, selectedFileFilter: FileFilter? ->
                 onMainUpdate.doOnce {
                     if (file != null) {
