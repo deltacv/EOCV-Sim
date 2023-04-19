@@ -158,7 +158,7 @@ public class VideoSource extends InputSource {
         if (newFrame.empty()) {
             newFrame.returnMat();
             
-            this.reset()
+            this.reset();
             this.init();
             return lastFrame;
         }
