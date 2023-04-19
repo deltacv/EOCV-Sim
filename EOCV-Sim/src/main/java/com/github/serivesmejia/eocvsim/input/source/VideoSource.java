@@ -157,7 +157,9 @@ public class VideoSource extends InputSource {
         //in next update
         if (newFrame.empty()) {
             newFrame.returnMat();
-            video.set(Videoio.CAP_PROP_POS_FRAMES, 0);
+            
+            this.reset()
+            this.init();
             return lastFrame;
         }
 
