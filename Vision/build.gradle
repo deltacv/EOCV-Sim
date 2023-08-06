@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+    id 'kotlin'
+    id 'maven-publish'
+}
+
+apply from: '../build.common.gradle'
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+}
+
+dependencies {
+    implementation project(':Common')
+
+    implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"
+
+    api "org.openpnp:opencv:$opencv_version"
+    implementation "org.slf4j:slf4j-api:$slf4j_version"
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+}
