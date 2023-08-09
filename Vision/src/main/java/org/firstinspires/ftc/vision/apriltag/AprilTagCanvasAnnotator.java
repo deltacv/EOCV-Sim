@@ -36,8 +36,8 @@ package org.firstinspires.ftc.vision.apriltag;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Typeface;
 
+import android.graphics.Typeface;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;

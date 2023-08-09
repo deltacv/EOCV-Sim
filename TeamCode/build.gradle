@@ -9,7 +9,6 @@ apply from: '../build.common.gradle'
 
 dependencies {
     implementation project(':EOCV-Sim')
-    implementation project(':Common')
 
     implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"
 

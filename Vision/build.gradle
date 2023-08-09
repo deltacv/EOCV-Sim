@@ -20,12 +20,29 @@ publishing {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        cacheChangingModulesFor 0, 'seconds'
+    }
+}
+
 dependencies {
     implementation project(':Common')
 
-    implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"
+    implementation("com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version")  {
+        if(env == 'dev') { changing = true }
+    }
 
     api "org.openpnp:opencv:$opencv_version"
+
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+
+    // Compatibility: Skija supports many platforms but we will only be adding
+    // those that are supported by AprilTagDesktop as well
+
+    implementation("io.github.humbleui:skija-windows-x64:$skija_version")
+    implementation("io.github.humbleui:skija-linux-x64:$skija_version")
+    implementation("io.github.humbleui:skija-macos-x64:$skija_version")
+    implementation("io.github.humbleui:skija-macos-arm64:$skija_version")
 }

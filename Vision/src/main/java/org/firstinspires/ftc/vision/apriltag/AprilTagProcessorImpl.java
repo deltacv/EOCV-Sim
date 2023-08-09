@@ -34,10 +34,8 @@
 package org.firstinspires.ftc.vision.apriltag;
 
 import android.graphics.Canvas;
-import android.util.Log;
 
 import com.qualcomm.robotcore.util.MovingStatistics;
-import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.matrices.GeneralMatrixF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -57,12 +55,14 @@ import org.opencv.core.Point3;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.apriltag.AprilTagDetectorJNI;
 import org.openftc.apriltag.ApriltagDetectionJNI;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 
 public class AprilTagProcessorImpl extends AprilTagProcessor
 {
     public static final String TAG = "AprilTagProcessorImpl";
+    Logger logger = org.slf4j.LoggerFactory.getLogger(TAG);
 
     private long nativeApriltagPtr;
     private Mat grey = new Mat();
@@ -143,7 +143,7 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
             cx = calibration.principalPointX;
             cy = calibration.principalPointY;
 
-            Log.d(TAG, String.format("User did not provide a camera calibration; but we DO have a built in calibration we can use.\n [%dx%d] (may be scaled) %s\nfx=%7.3f fy=%7.3f cx=%7.3f cy=%7.3f",
+            logger.warn(String.format("User did not provide a camera calibration; but we DO have a built in calibration we can use.\n [%dx%d] (may be scaled) %s\nfx=%7.3f fy=%7.3f cx=%7.3f cy=%7.3f",
                     calibration.getSize().getWidth(), calibration.getSize().getHeight(), calibration.getIdentity().toString(), fx, fy, cx, cy));
         }
         else if (fx == 0 && fy == 0 && cx == 0 && cy == 0)
@@ -151,17 +151,17 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
             // set it to *something* so we don't crash the native code
 
             String warning = "User did not provide a camera calibration, nor was a built-in calibration found for this camera; 6DOF pose data will likely be inaccurate.";
-            Log.d(TAG, warning);
-            RobotLog.addGlobalWarningMessage(warning);
+            logger.warn(TAG, warning);
+            // RobotLog.addGlobalWarningMessage(warning);
 
             fx = 578.272;
             fy = 578.272;
-            cx = width/2;
-            cy = height/2;
+            cx = (double) width /2;
+            cy = (double) height /2;
         }
         else
         {
-            Log.d(TAG, String.format("User provided their own camera calibration fx=%7.3f fy=%7.3f cx=%7.3f cy=%7.3f",
+            logger.warn(String.format("User provided their own camera calibration fx=%7.3f fy=%7.3f cx=%7.3f cy=%7.3f",
                     fx, fy, cx, cy));
         }
 
