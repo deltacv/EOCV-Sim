@@ -1,18 +1,12 @@
-package com.qualcomm.robotcore.external.hardware;
+package com.qualcomm.robotcore.hardware;
 
-import com.qualcomm.robotcore.hardware.camera.CameraName;
-import io.github.deltacv.vision.util.FrameQueue;
-import org.openftc.easyopencv.QueueOpenCvCamera;
+import io.github.deltacv.vision.source.SourceHander;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
+import org.openftc.easyopencv.OpenCvViewport;
 
 public class HardwareMap {
 
-    private FrameQueue cameraFramesQueue;
-    private FrameQueue viewportOutputQueue;
-
-
-    public HardwareMap(FrameQueue cameraFramesQueue, FrameQueue viewportOutputQueue) {
-        this.cameraFramesQueue = cameraFramesQueue;
-        this.viewportOutputQueue = viewportOutputQueue;
+    public HardwareMap(SourceHander sourceHander, OpenCvViewport viewport) {
     }
 
     public static boolean hasSuperclass(Class<?> clazz, Class<?> superClass) {
@@ -27,7 +21,7 @@ public class HardwareMap {
     @SuppressWarnings("unchecked")
     public <T> T get(Class<T> classType, String deviceName) {
         if(hasSuperclass(classType, CameraName.class)) {
-            return (T) new QueueOpenCvCamera(cameraFramesQueue, viewportOutputQueue);
+           //  return (T) new QueueOpenCvCamera(cameraFramesQueue, viewportOutputQueue);
         }
 
         return null;

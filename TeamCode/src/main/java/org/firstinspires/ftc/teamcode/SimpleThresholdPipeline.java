@@ -31,6 +31,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+@Disabled
 public class SimpleThresholdPipeline extends OpenCvPipeline {
 
     /*

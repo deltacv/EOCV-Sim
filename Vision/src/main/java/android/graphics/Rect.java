@@ -613,4 +613,8 @@ public final class Rect {
             split.bottom = split.top + splitHeight;
         }
     }
+
+    public org.jetbrains.skia.Rect toSkijaRect() {
+        return new org.jetbrains.skia.Rect(left, top, right, bottom);
+    }
 }

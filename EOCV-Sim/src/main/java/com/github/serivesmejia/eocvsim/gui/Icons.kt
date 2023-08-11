@@ -25,6 +25,7 @@ package com.github.serivesmejia.eocvsim.gui
 
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.vision.gui.util.ImgUtil
 import java.awt.image.BufferedImage
 import java.util.NoSuchElementException
 import javax.swing.ImageIcon
@@ -94,7 +95,7 @@ object Icons {
         val icon = if(resizedIcons.contains(resIconName)) {
             resizedIcons[resIconName]
         } else {
-            resizedIcons[resIconName] = GuiUtil.scaleImage(getImage(name), width, height)
+            resizedIcons[resIconName] = ImgUtil.scaleImage(getImage(name), width, height)
             resizedIcons[resIconName]
         }
 

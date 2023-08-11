@@ -78,13 +78,14 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val fileSaveMat = JMenuItem("Save current image")
 
+        /*
         fileSaveMat.addActionListener {
             GuiUtil.saveMatFileChooser(
                 visualizer.frame,
-                visualizer.viewport.lastVisualizedMat,
+                visualizer.viewport.,
                 eocvSim
             )
-        }
+        }*/ // TODO: Fix this
         mFileMenu.add(fileSaveMat)
 
         mFileMenu.addSeparator()

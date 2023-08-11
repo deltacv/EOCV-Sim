@@ -30,15 +30,11 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-package com.qualcomm.robotcore.external.hardware.camera;
-
-import android.content.Context;
+package org.firstinspires.ftc.robotcore.external.hardware.camera;
 
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 
 import org.firstinspires.ftc.robotcore.external.function.Consumer;
-import org.firstinspires.ftc.robotcore.external.function.Continuation;
-import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 
 /**
  * {@link CameraName} identifies a {@link HardwareDevice} which is a camera.
@@ -77,38 +73,6 @@ public interface CameraName
      * @return whether or not this name represents that of an unknown or indeterminate camera
      */
     boolean isUnknown();
-
-    /**
-     * Requests from the user permission to use the camera if same has not already been granted.
-     * This may take a long time, as interaction with the user may be necessary. When the outcome
-     * is known, the reportResult continuation is called with the result. The report may occur either
-     * before or after the call to {@link #asyncRequestCameraPermission} has itself returned. The report will
-     * be delivered using the indicated {@link Continuation}
-     *
-     * @param context       the context in which the permission request should run
-     * @param deadline      the time by which the request must be honored or given up as ungranted.
-     *                      If this {@link Deadline} is cancelled while the request is outstanding,
-     *                      then the permission request will be aborted and false reported as
-     *                      the result of the request.
-     * @param continuation  the dispatcher used to deliver results of the permission request
-     *
-     * @throws IllegalArgumentException if the cameraName does not match any known camera device.
-     *
-     * @see #requestCameraPermission
-     */
-    void asyncRequestCameraPermission(Context context, Deadline deadline, final Continuation<? extends Consumer<Boolean>> continuation);
-
-    /**
-     * Requests from the user permission to use the camera if same has not already been granted.
-     * This may take a long time, as interaction with the user may be necessary. The call is made
-     * synchronously: the calling thread blocks until an answer is obtained.
-     *
-     * @param deadline      the time by which the request must be honored or given up as ungranted
-     * @return              whether or not permission to use the camera has been granted.
-     *
-     * @see #asyncRequestCameraPermission
-     */
-    boolean requestCameraPermission(Deadline deadline);
 
     /**
      * <p>Query the capabilities of a camera device. These capabilities are

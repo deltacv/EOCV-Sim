@@ -26,7 +26,7 @@ package com.github.serivesmejia.eocvsim.gui;
 import com.formdev.flatlaf.FlatLaf;
 import com.github.serivesmejia.eocvsim.Build;
 import com.github.serivesmejia.eocvsim.EOCVSim;
-import com.github.serivesmejia.eocvsim.gui.component.Viewport;
+import io.github.deltacv.vision.gui.SwingOpenCvViewport;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.InputSourceDropTarget;
@@ -41,6 +41,7 @@ import com.github.serivesmejia.eocvsim.util.event.EventHandler;
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher;
 import com.github.serivesmejia.eocvsim.workspace.util.template.GradleWorkspaceTemplate;
 import kotlin.Unit;
+import org.opencv.core.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class Visualizer {
 
@@ -64,7 +64,8 @@ public class Visualizer {
     private final EOCVSim eocvSim;
     public JFrame frame;
 
-    public Viewport viewport = null;
+    public SwingOpenCvViewport viewport = null;
+
     public TopMenuBar menuBar = null;
     public JPanel tunerMenuPanel = new JPanel();
 
@@ -122,7 +123,11 @@ public class Visualizer {
 
         //instantiate all swing elements after theme installation
         frame = new JFrame();
-        viewport = new Viewport(eocvSim, eocvSim.getConfig().pipelineMaxFps.getFps());
+
+        viewport = new SwingOpenCvViewport(new Size(1080, 720));
+        JLayeredPane panel = viewport.skiaPanel();
+
+        frame.add(panel);
 
         menuBar = new TopMenuBar(this, eocvSim);
 
@@ -144,7 +149,7 @@ public class Visualizer {
          * IMG VISUALIZER & SCROLL PANE
          */
 
-        imgScrollPane = new JScrollPane(viewport);
+        imgScrollPane = new JScrollPane();
 
         imgScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         imgScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
@@ -157,25 +162,29 @@ public class Visualizer {
         /*
          * PIPELINE SELECTOR
          */
+        /*
         pipelineSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(pipelineSelectorPanel);
+        rightContainer.add(pipelineSelectorPanel); */
 
         /*
          * SOURCE SELECTOR
          */
-        sourceSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(sourceSelectorPanel);
+/*        sourceSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
+        rightContainer.add(sourceSelectorPanel);/*
 
         /*
          * TELEMETRY
          */
+
+        /*
         telemetryPanel.setBorder(new EmptyBorder(0, 20, 20, 20));
-        rightContainer.add(telemetryPanel);
+        rightContainer.add(telemetryPanel);*/
 
         /*
          * SPLIT
          */
 
+        /*
         //left side, image scroll & tuner menu split panel
         imageTunerSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, imgScrollPane, tunerMenuPanel);
 
@@ -192,7 +201,7 @@ public class Visualizer {
 
         globalSplitPane.setDropTarget(new InputSourceDropTarget(eocvSim));
 
-        frame.add(globalSplitPane, BorderLayout.CENTER);
+        frame.add(globalSplitPane, BorderLayout.CENTER); */
 
         //initialize other various stuff of the frame
         frame.setSize(780, 645);
@@ -207,9 +216,9 @@ public class Visualizer {
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        globalSplitPane.setDividerLocation(1070);
+        // globalSplitPane.setDividerLocation(1070);
 
-        colorPicker = new ColorPicker(viewport.image);
+        // colorPicker = new ColorPicker(viewport.image);
 
         frame.setVisible(true);
 
@@ -238,7 +247,7 @@ public class Visualizer {
         });
 
         //handling onViewportTapped evts
-        viewport.addMouseListener(new MouseAdapter() {
+        viewport.getComponent().addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if(!colorPicker.isPicking())
                     eocvSim.pipelineManager.callViewportTapped();
@@ -248,8 +257,8 @@ public class Visualizer {
         //VIEWPORT RESIZE HANDLING
         imgScrollPane.addMouseWheelListener(e -> {
             if (isCtrlPressed) { //check if control key is pressed
-                double scale = viewport.getViewportScale() - (0.15 * e.getPreciseWheelRotation());
-                viewport.setViewportScale(scale);
+                // double scale = viewport.getViewportScale() - (0.15 * e.getPreciseWheelRotation());
+                // viewport.setViewportScale(scale);
             }
         });
 
@@ -311,7 +320,7 @@ public class Visualizer {
     public void close() {
         SwingUtilities.invokeLater(() -> {
             frame.setVisible(false);
-            viewport.stop();
+            viewport.deactivate();
 
             //close all asyncpleasewait dialogs
             for (AsyncPleaseWaitDialog dialog : pleaseWaitDialogs) {
@@ -342,7 +351,7 @@ public class Visualizer {
 
             childDialogs.clear();
             frame.dispose();
-            viewport.flush();
+            viewport.deactivate();
         });
     }
 

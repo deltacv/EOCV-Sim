@@ -23,16 +23,35 @@
 
 package android.graphics;
 
-import io.github.humbleui.skija.Font;
-import io.github.humbleui.types.RRect;
-import org.firstinspires.ftc.vision.apriltag.AprilTagCanvasAnnotator;
+import org.jetbrains.skia.*;
 
 public class Canvas {
 
-    public final io.github.humbleui.skija.Canvas theCanvas;
+    public final org.jetbrains.skia.Canvas theCanvas;
+
+    private Bitmap backingBitmap = null;
+
+    final Object surfaceLock = new Object();
+    private int providedWidth;
+    private int providedHeight;
 
     public Canvas(Bitmap bitmap) {
-        theCanvas = new io.github.humbleui.skija.Canvas(bitmap.theBitmap);
+        theCanvas = new org.jetbrains.skia.Canvas(bitmap.theBitmap, new SurfaceProps());
+        backingBitmap = bitmap;
+    }
+
+    public Canvas(Surface surface) {
+        theCanvas = surface.getCanvas();
+
+        providedWidth = surface.getWidth();
+        providedHeight = surface.getHeight();
+    }
+
+    public Canvas(org.jetbrains.skia.Canvas skiaCanvas, int width, int height) {
+        theCanvas = skiaCanvas;
+
+        providedWidth = width;
+        providedHeight = height;
     }
 
     public Canvas drawLine(float x, float y, float x1, float y1, Paint paint) {
@@ -49,7 +68,7 @@ public class Canvas {
 
 
     public Canvas drawText(String text, float x, float y, Paint paint) {
-        Font font = FontCache.makeFont(paint.getTypeface().theTypeface, paint.getTextSize());
+        Font font = FontCache.makeFont(paint.getTypeface(), paint.getTextSize());
         theCanvas.drawString(text, x, y, font, paint.thePaint);
 
         return this;
@@ -77,5 +96,63 @@ public class Canvas {
     public Canvas drawLines(float[] points, Paint paint) {
         theCanvas.drawLines(points, paint.thePaint);
         return this;
+    }
+
+    public void drawRect(Rect rect, Paint paint) {
+        theCanvas.drawRect(rect.toSkijaRect(), paint.thePaint);
+    }
+
+    public void drawBitmap(Bitmap bitmap, Rect src, Rect rect, Paint paint) {
+        int left, top, right, bottom;
+        if (src == null) {
+            left = top = 0;
+            right = bitmap.getWidth();
+            bottom = bitmap.getHeight();
+        } else {
+            left = src.left;
+            top = src.top;
+            right = src.right;
+            bottom = src.bottom;
+        }
+
+        org.jetbrains.skia.Paint thePaint = null;
+
+        if(paint != null) {
+            thePaint = paint.thePaint;
+        }
+
+        theCanvas.drawImageRect(
+                Image.Companion.makeFromBitmap(bitmap.theBitmap),
+                new org.jetbrains.skia.Rect(left, top, right, bottom),
+                rect.toSkijaRect(), thePaint
+        );
+    }
+
+    public void translate(int dx, int dy) {
+        theCanvas.translate(dx, dy);
+    }
+
+    public void restoreToCount(int saveCount) {
+        theCanvas.restoreToCount(saveCount);
+    }
+
+    public void drawColor(int color) {
+        theCanvas.clear(color);
+    }
+
+    public int getWidth() {
+        if(backingBitmap != null) {
+            return backingBitmap.getWidth();
+        }
+
+        return providedWidth;
+    }
+
+    public int getHeight() {
+        if(backingBitmap != null) {
+            return backingBitmap.getHeight();
+        }
+
+        return providedHeight;
     }
 }

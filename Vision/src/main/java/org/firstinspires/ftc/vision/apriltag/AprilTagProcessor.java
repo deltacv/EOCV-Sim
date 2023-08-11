@@ -193,8 +193,8 @@ public abstract class AprilTagProcessor implements VisionProcessor
 
         /**
          * Create a {@link VisionProcessor} object which may be attached to
-         * a {@link org.firstinspires.ftc.vision.VisionPortal} using
-         * {@link org.firstinspires.ftc.vision.VisionPortal.Builder#addProcessor(VisionProcessor)}
+         * a {link org.firstinspires.ftc.vision.VisionPortal} using
+         * {link org.firstinspires.ftc.vision.VisionPortal.Builder#addProcessor(VisionProcessor)}
          * @return a {@link VisionProcessor} object
          */
         public AprilTagProcessor build()

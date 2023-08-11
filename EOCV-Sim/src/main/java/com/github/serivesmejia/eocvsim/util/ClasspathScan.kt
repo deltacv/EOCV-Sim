@@ -43,7 +43,6 @@ class ClasspathScan {
             "io.github.classgraph",
             "io.github.deltacv",
             "com.github.serivesmejia.eocvsim.pipeline",
-            "org.openftc",
             "org.lwjgl",
             "org.apache",
             "org.codehaus",
@@ -79,24 +78,40 @@ class ClasspathScan {
         logger.info("ClassGraph finished scanning (took ${timer.seconds()}s)")
         
         val tunableFieldClassesInfo = scanResult.getClassesWithAnnotation(RegisterTunableField::class.java.name)
-        val pipelineClassesInfo = scanResult.getSubclasses(OpenCvPipeline::class.java.name)
 
         val pipelineClasses = mutableListOf<Class<out OpenCvPipeline>>()
 
-        for(pipelineClassInfo in pipelineClassesInfo) {
-            val clazz = if(classLoader != null) {
-                classLoader.loadClass(pipelineClassInfo.name)
-            } else Class.forName(pipelineClassInfo.name)
+        // i...don't even know how to name this, sorry, future readers
+        // but classgraph for some reason does not have a recursive search for subclasses...
+        fun searchPipelinesOfSuperclass(superclass: String) {
+            val pipelineClassesInfo = scanResult.getSubclasses(superclass)
 
-            if(ReflectUtil.hasSuperclass(clazz, OpenCvPipeline::class.java)) {
-                if(clazz.isAnnotationPresent(Disabled::class.java)) {
-                    logger.info("Found @Disabled pipeline ${clazz.typeName}")
-                } else {
-                    logger.info("Found pipeline ${clazz.typeName}")
-                    pipelineClasses.add(clazz as Class<out OpenCvPipeline>)
+            for(pipelineClassInfo in pipelineClassesInfo) {
+                for(pipelineSubclassInfo in pipelineClassInfo.subclasses) {
+                    searchPipelinesOfSuperclass(pipelineSubclassInfo.name) // naming is my passion
+                }
+
+                if(pipelineClassInfo.isAbstract || pipelineClassInfo.isInterface) {
+                    continue // nope'd outta here
+                }
+
+                val clazz = if(classLoader != null) {
+                    classLoader.loadClass(pipelineClassInfo.name)
+                } else Class.forName(pipelineClassInfo.name)
+
+                if(!pipelineClasses.contains(clazz) && ReflectUtil.hasSuperclass(clazz, OpenCvPipeline::class.java)) {
+                    if(clazz.isAnnotationPresent(Disabled::class.java)) {
+                        logger.info("Found @Disabled pipeline ${clazz.typeName}")
+                    } else {
+                        logger.info("Found pipeline ${clazz.typeName}")
+                        pipelineClasses.add(clazz as Class<out OpenCvPipeline>)
+                    }
                 }
             }
         }
+
+        // start recursive hell
+        searchPipelinesOfSuperclass(OpenCvPipeline::class.java.name)
 
         logger.info("Found ${pipelineClasses.size} pipelines")
 

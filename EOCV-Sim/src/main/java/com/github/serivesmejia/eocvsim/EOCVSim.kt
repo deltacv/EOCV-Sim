@@ -45,8 +45,11 @@ import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import nu.pattern.OpenCV
 import org.opencv.core.Size
+import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.awt.Dimension
 import java.io.File
 import javax.swing.SwingUtilities
@@ -58,6 +61,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
     companion object {
         const val VERSION = Build.versionString
+
         const val DEFAULT_EOCV_WIDTH = 320
         const val DEFAULT_EOCV_HEIGHT = 240
 
@@ -184,7 +188,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
         visualizer.initAsync(configManager.config.simTheme) //create gui in the EDT
 
         inputSourceManager.init() //loading user created input sources
+
         pipelineManager.init() //init pipeline manager (scan for pipelines)
+        pipelineManager.subscribePipelineHandler(TimestampedPipelineHandler())
+        pipelineManager.subscribePipelineHandler(OpModePipelineHandler())
+
         tunerManager.init() //init tunable variables manager
 
         //shows a warning when a pipeline gets "stuck"
@@ -211,7 +219,15 @@ class EOCVSim(val params: Parameters = Parameters()) {
         visualizer.pipelineSelectorPanel.selectedIndex = 0
 
         //post output mats from the pipeline to the visualizer viewport
-        pipelineManager.pipelineOutputPosters.add(visualizer.viewport.matPoster)
+        pipelineManager.pipelineOutputPosters.add(visualizer.viewport)
+
+        pipelineManager.onPipelineChange {
+            if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
+                visualizer.viewport.activate()
+            } else {
+                visualizer.viewport.deactivate()
+            }
+        }
 
         start()
     }
@@ -386,7 +402,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         val workspaceMsg = " - ${workspaceManager.workspaceFile.absolutePath} $isBuildRunning"
 
         val pipelineFpsMsg = " (${pipelineManager.pipelineFpsCounter.fps} Pipeline FPS)"
-        val posterFpsMsg = " (${visualizer.viewport.matPoster.fpsCounter.fps} Viewport FPS)"
+        val posterFpsMsg = " (${visualizer.viewport} Viewport FPS)"
         val isPaused = if (pipelineManager.paused) " (Paused)" else ""
         val isRecording = if (isCurrentlyRecording()) " RECORDING" else ""
 

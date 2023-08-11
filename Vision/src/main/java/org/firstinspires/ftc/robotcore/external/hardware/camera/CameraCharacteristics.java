@@ -66,13 +66,13 @@ public interface CameraCharacteristics
      * <p>The {@code format} should be a supported format (one of the formats returned by
      * {@link #getAndroidFormats}).</p>
      *
-     * @param androidFormat an image format from {@link ImageFormat} or {@link PixelFormat}
+     * @param androidFormat an image format from {link ImageFormat} or {link PixelFormat}
      * @return
      *          an array of supported sizes,
      *          or {@code null} if the {@code format} is not a supported output
      *
-     * @see ImageFormat
-     * @see PixelFormat
+     * see ImageFormat
+     * see PixelFormat
      * @see #getAndroidFormats
      */
     Size[] getSizes(int androidFormat);
@@ -86,7 +86,7 @@ public interface CameraCharacteristics
      * <p>{@code format} should be one of the ones returned by {@link #getAndroidFormats()}.</p>
      * <p>{@code size} should be one of the ones returned by {@link #getSizes(int)}.</p>
      *
-     * @param androidFormat an image format from {@link ImageFormat} or {@link PixelFormat}
+     * @param androidFormat an image format from {link ImageFormat} or {link PixelFormat}
      * @param size an output-compatible size
      * @return a minimum frame duration {@code >} 0 in nanoseconds, or
      *          0 if the minimum frame duration is not available.
@@ -94,8 +94,8 @@ public interface CameraCharacteristics
      * @throws IllegalArgumentException if {@code format} or {@code size} was not supported
      * @throws NullPointerException if {@code size} was {@code null}
      *
-     * @see ImageFormat
-     * @see PixelFormat
+     * see ImageFormat
+     * see PixelFormat
      */
     long getMinFrameDuration(int androidFormat, Size size);
 

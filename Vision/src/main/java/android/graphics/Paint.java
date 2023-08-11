@@ -23,8 +23,8 @@
 
 package android.graphics;
 
-import io.github.humbleui.skija.PaintStrokeCap;
-import io.github.humbleui.skija.PaintStrokeJoin;
+import org.jetbrains.skia.PaintStrokeCap;
+import org.jetbrains.skia.PaintStrokeJoin;
 
 public class Paint {
 
@@ -142,13 +142,13 @@ public class Paint {
         final int nativeInt;
     }
 
-    public final io.github.humbleui.skija.Paint thePaint;
+    public final org.jetbrains.skia.Paint thePaint;
 
     private Typeface typeface;
     private float textSize;
 
     public Paint() {
-        thePaint = new io.github.humbleui.skija.Paint();
+        thePaint = new org.jetbrains.skia.Paint();
     }
 
     public Paint setColor(int color) {
@@ -265,6 +265,10 @@ public class Paint {
     }
 
     public Typeface getTypeface() {
+        if(typeface == null) {
+            typeface = Typeface.DEFAULT;
+        }
+
         return typeface;
     }
 

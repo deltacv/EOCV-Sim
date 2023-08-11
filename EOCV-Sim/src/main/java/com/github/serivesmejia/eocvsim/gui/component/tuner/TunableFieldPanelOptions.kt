@@ -26,7 +26,7 @@ package com.github.serivesmejia.eocvsim.gui.component.tuner
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.Icons
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
-import com.github.serivesmejia.eocvsim.util.extension.cvtColor
+import io.github.deltacv.vision.util.extension.cvtColor
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
 import java.awt.FlowLayout
 import java.awt.GridLayout
@@ -118,12 +118,12 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
 
             //start picking if global color picker is not being used by other panel
             if(!colorPicker.isPicking && colorPickButton.isSelected) {
-                startPicking(colorPicker)
+                // startPicking(colorPicker) // TODO: Fix color picker
             } else { //handles cases when cancelling picking
-                colorPicker.stopPicking()
+                //colorPicker.stopPicking() // TODO: Fix color picker
                 //if we weren't the ones controlling the last picking,
                 //start picking again to gain control for this panel
-                if(colorPickButton.isSelected) startPicking(colorPicker)
+                // if(colorPickButton.isSelected) startPicking(colorPicker)
             }
         }
 

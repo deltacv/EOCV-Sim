@@ -25,8 +25,8 @@ package com.github.serivesmejia.eocvsim.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.gui.util.MatPoster
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.handler.PipelineHandler
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
 import com.github.serivesmejia.eocvsim.util.StrUtil
@@ -34,12 +34,14 @@ import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import io.github.deltacv.common.image.MatPoster
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
-import org.openftc.easyopencv.TimestampedPipelineHandler
+import org.openftc.easyopencv.OpenCvViewport
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.util.*
@@ -119,8 +121,9 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     //manages and builds pipelines in runtime
     @JvmField val compiledPipelineManager = CompiledPipelineManager(this)
-    //this will be handling the special pipeline "timestamped" type
-    val timestampedPipelineHandler = TimestampedPipelineHandler()
+
+    private val pipelineHandlers = mutableListOf<PipelineHandler>()
+
     //counting and tracking exceptions for logging and reporting purposes
     val pipelineExceptionTracker = PipelineExceptionTracker(this)
 
@@ -129,7 +132,6 @@ class PipelineManager(var eocvSim: EOCVSim) {
     enum class PauseReason {
         USER_REQUESTED, IMAGE_ONE_ANALYSIS, NOT_PAUSED
     }
-
     fun init() {
         logger.info("Initializing...")
 
@@ -180,8 +182,22 @@ class PipelineManager(var eocvSim: EOCVSim) {
             }
         }
 
+        onUpdate {
+            if(currentPipeline != null) {
+                for (pipelineHandler in pipelineHandlers) {
+                    pipelineHandler.processFrame(eocvSim.inputSourceManager.currentInputSource)
+                }
+            }
+        }
+
         onPipelineChange {
             openedPipelineOutputCount = 0
+
+            if(currentPipeline != null) {
+                for (pipelineHandler in pipelineHandlers) {
+                    pipelineHandler.onChange(currentPipeline!!, currentTelemetry!!)
+                }
+            }
         }
     }
 
@@ -234,8 +250,6 @@ class PipelineManager(var eocvSim: EOCVSim) {
             return
         }
 
-        timestampedPipelineHandler.update(currentPipeline, eocvSim.inputSourceManager.currentInputSource)
-
         lastPipelineAction = if(!hasInitCurrentPipeline) {
             "init/processFrame"
         } else {
@@ -255,7 +269,15 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 //haven't done so.
 
                 if(!hasInitCurrentPipeline && inputMat != null) {
+                    for(pipeHandler in pipelineHandlers) {
+                        pipeHandler.preInit();
+                    }
+
                     currentPipeline?.init(inputMat)
+
+                    for(pipeHandler in pipelineHandlers) {
+                        pipeHandler.init();
+                    }
 
                     logger.info("Initialized pipeline $currentPipelineName")
 
@@ -271,10 +293,10 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
                             for (poster in pipelineOutputPosters.toTypedArray()) {
                                 try {
-                                    poster.post(outputMat)
+                                    poster.post(outputMat, OpenCvViewport.FrameContext(currentPipeline, currentPipeline?.userContextForDrawHook))
                                 } catch (ex: Exception) {
                                     logger.error(
-                                        "Uncaught exception thrown while posting pipeline output Mat to ${poster.name} poster",
+                                        "Uncaught exception thrown while posting pipeline output Mat to poster",
                                         ex
                                     )
                                 }
@@ -392,6 +414,10 @@ class PipelineManager(var eocvSim: EOCVSim) {
             }
             if(refreshGui) refreshGuiPipelineList()
         }
+    }
+
+    fun subscribePipelineHandler(handler: PipelineHandler) {
+        pipelineHandlers.add(handler)
     }
 
     @Suppress("UNCHECKED_CAST")

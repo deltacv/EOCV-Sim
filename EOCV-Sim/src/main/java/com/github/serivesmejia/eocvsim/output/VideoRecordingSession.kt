@@ -23,10 +23,10 @@
 
 package com.github.serivesmejia.eocvsim.output
 
-import com.github.serivesmejia.eocvsim.gui.util.MatPoster
+import com.github.serivesmejia.eocvsim.gui.util.MatPosterImpl
 import com.github.serivesmejia.eocvsim.util.StrUtil
-import com.github.serivesmejia.eocvsim.util.extension.aspectRatio
-import com.github.serivesmejia.eocvsim.util.extension.clipTo
+import io.github.deltacv.vision.util.extension.aspectRatio
+import io.github.deltacv.vision.util.extension.clipTo
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
@@ -47,7 +47,7 @@ class VideoRecordingSession(
 
     @Volatile private var videoMat: Mat? = null
 
-    val matPoster = MatPoster("VideoRec", videoFps.toInt())
+    val matPoster = MatPosterImpl("VideoRec", videoFps.toInt())
 
     private val fpsCounter = FpsCounter()
 

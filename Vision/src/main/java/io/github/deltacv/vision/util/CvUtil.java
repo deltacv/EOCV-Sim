@@ -21,9 +21,9 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.util;
+package io.github.deltacv.vision.util;
 
-import com.github.serivesmejia.eocvsim.util.extension.CvExt;
+import io.github.deltacv.vision.util.extension.CvExt;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.Size;

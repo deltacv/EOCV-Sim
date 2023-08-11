@@ -26,7 +26,7 @@ package com.github.serivesmejia.eocvsim.gui.util;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.DialogFactory;
 import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists;
-import com.github.serivesmejia.eocvsim.util.CvUtil;
+import io.github.deltacv.vision.util.CvUtil;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Mat;
 import org.slf4j.Logger;
@@ -80,25 +80,6 @@ public final class GuiUtil {
                 super.replace(fb, offset, length, text, attrs);
             }
         });
-
-    }
-
-    public static ImageIcon scaleImage(ImageIcon icon, int w, int h) {
-
-        int nw = icon.getIconWidth();
-        int nh = icon.getIconHeight();
-
-        if (icon.getIconWidth() > w) {
-            nw = w;
-            nh = (nw * icon.getIconHeight()) / icon.getIconWidth();
-        }
-
-        if (nh > h) {
-            nh = h;
-            nw = (icon.getIconWidth() * nh) / icon.getIconHeight();
-        }
-
-        return new ImageIcon(icon.getImage().getScaledInstance(nw, nh, Image.SCALE_SMOOTH));
 
     }
 

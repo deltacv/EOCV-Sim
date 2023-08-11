@@ -37,7 +37,7 @@ dependencies {
     api project(':Common')
     api project(':Vision')
 
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 
     implementation "org.eclipse.jdt:ecj:3.21.0"
 

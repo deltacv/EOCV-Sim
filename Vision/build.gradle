@@ -36,13 +36,13 @@ dependencies {
     api "org.openpnp:opencv:$opencv_version"
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 
-    // Compatibility: Skija supports many platforms but we will only be adding
+    // Compatibility: Skiko supports many platforms but we will only be adding
     // those that are supported by AprilTagDesktop as well
 
-    implementation("io.github.humbleui:skija-windows-x64:$skija_version")
-    implementation("io.github.humbleui:skija-linux-x64:$skija_version")
-    implementation("io.github.humbleui:skija-macos-x64:$skija_version")
-    implementation("io.github.humbleui:skija-macos-arm64:$skija_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:$skiko_version")
 }
