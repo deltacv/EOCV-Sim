@@ -56,14 +56,14 @@ import org.opencv.imgproc.Imgproc;
 import org.openftc.apriltag.AprilTagDetectorJNI;
 import org.openftc.apriltag.ApriltagDetectionJNI;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
 public class AprilTagProcessorImpl extends AprilTagProcessor
 {
     public static final String TAG = "AprilTagProcessorImpl";
-    Logger logger = org.slf4j.LoggerFactory.getLogger(TAG);
-
+    Logger logger = LoggerFactory.getLogger(TAG);
     private long nativeApriltagPtr;
     private Mat grey = new Mat();
     private ArrayList<AprilTagDetection> detections = new ArrayList<>();
@@ -126,7 +126,7 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
         }
         else
         {
-            System.out.println("AprilTagDetectionPipeline.finalize(): nativeApriltagPtr was NULL");
+            logger.warn("AprilTagDetectionPipeline.finalize(): nativeApriltagPtr was NULL");
         }
     }
 
@@ -151,7 +151,7 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
             // set it to *something* so we don't crash the native code
 
             String warning = "User did not provide a camera calibration, nor was a built-in calibration found for this camera; 6DOF pose data will likely be inaccurate.";
-            logger.warn(TAG, warning);
+            logger.warn(warning);
             // RobotLog.addGlobalWarningMessage(warning);
 
             fx = 578.272;

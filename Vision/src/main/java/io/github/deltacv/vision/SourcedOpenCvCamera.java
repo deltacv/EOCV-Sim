@@ -74,18 +74,7 @@ public class SourcedOpenCvCamera extends OpenCvCameraBase implements Sourced {
 
     @Override
     protected OpenCvViewport setupViewport() {
-        handedViewport.setRenderHook((canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity, context) -> {
-            OpenCvViewport.FrameContext frameContext = (OpenCvViewport.FrameContext) context;
-
-            // We must make sure that we call onDrawFrame() for the same pipeline which set the
-            // context object when requesting a draw hook. (i.e. we can't just call onDrawFrame()
-            // for whatever pipeline happens to be currently attached; it might have an entirely
-            // different notion of what to expect in the context object)
-            if (frameContext.generatingPipeline != null)
-            {
-                frameContext.generatingPipeline.onDrawFrame(canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity, frameContext.userContext);
-            }
-        });
+        handedViewport.setRenderHook(PipelineRenderHook.INSTANCE);
 
         return handedViewport;
     }

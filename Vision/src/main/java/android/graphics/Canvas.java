@@ -75,7 +75,7 @@ public class Canvas {
     }
 
     public Canvas rotate(float degrees, float xCenter, float yCenter) {
-        theCanvas.rotate(degrees);
+        theCanvas.rotate(degrees, xCenter, yCenter);
         return this;
     }
 

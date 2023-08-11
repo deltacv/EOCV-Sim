@@ -125,13 +125,15 @@ public class Visualizer {
         frame = new JFrame();
 
         viewport = new SwingOpenCvViewport(new Size(1080, 720));
-        JLayeredPane panel = viewport.skiaPanel();
+        JLayeredPane skiaPanel = viewport.skiaPanel();
+        skiaPanel.setLayout(new BorderLayout());
 
-        frame.add(panel);
+        frame.add(skiaPanel);
 
         menuBar = new TopMenuBar(this, eocvSim);
 
         tunerMenuPanel = new JPanel();
+        skiaPanel.add(tunerMenuPanel, BorderLayout.SOUTH);
 
         pipelineSelectorPanel = new PipelineSelectorPanel(eocvSim);
         sourceSelectorPanel   = new SourceSelectorPanel(eocvSim);
@@ -149,59 +151,32 @@ public class Visualizer {
          * IMG VISUALIZER & SCROLL PANE
          */
 
-        imgScrollPane = new JScrollPane();
-
-        imgScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        imgScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-
-        imgScrollPane.getHorizontalScrollBar().setUnitIncrement(16);
-        imgScrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
         rightContainer.setLayout(new BoxLayout(rightContainer, BoxLayout.Y_AXIS));
 
         /*
          * PIPELINE SELECTOR
          */
-        /*
+
         pipelineSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(pipelineSelectorPanel); */
+        rightContainer.add(pipelineSelectorPanel);
 
         /*
          * SOURCE SELECTOR
          */
-/*        sourceSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(sourceSelectorPanel);/*
+        sourceSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
+        rightContainer.add(sourceSelectorPanel);
 
         /*
          * TELEMETRY
          */
 
-        /*
         telemetryPanel.setBorder(new EmptyBorder(0, 20, 20, 20));
-        rightContainer.add(telemetryPanel);*/
-
-        /*
-         * SPLIT
-         */
-
-        /*
-        //left side, image scroll & tuner menu split panel
-        imageTunerSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, imgScrollPane, tunerMenuPanel);
-
-        imageTunerSplitPane.setResizeWeight(1);
-        imageTunerSplitPane.setOneTouchExpandable(false);
-        imageTunerSplitPane.setContinuousLayout(true);
+        rightContainer.add(telemetryPanel);
 
         //global
-        globalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imageTunerSplitPane, rightContainer);
+        frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));
 
-        globalSplitPane.setResizeWeight(1);
-        globalSplitPane.setOneTouchExpandable(false);
-        globalSplitPane.setContinuousLayout(true);
-
-        globalSplitPane.setDropTarget(new InputSourceDropTarget(eocvSim));
-
-        frame.add(globalSplitPane, BorderLayout.CENTER); */
+        frame.add(rightContainer, BorderLayout.EAST);
 
         //initialize other various stuff of the frame
         frame.setSize(780, 645);
@@ -215,8 +190,6 @@ public class Visualizer {
         frame.setLocationRelativeTo(null);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        // globalSplitPane.setDividerLocation(1070);
 
         // colorPicker = new ColorPicker(viewport.image);
 
@@ -249,18 +222,18 @@ public class Visualizer {
         //handling onViewportTapped evts
         viewport.getComponent().addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                if(!colorPicker.isPicking())
+//                if(!colorPicker.isPicking())
                     eocvSim.pipelineManager.callViewportTapped();
             }
         });
 
         //VIEWPORT RESIZE HANDLING
-        imgScrollPane.addMouseWheelListener(e -> {
-            if (isCtrlPressed) { //check if control key is pressed
+        // imgScrollPane.addMouseWheelListener(e -> {
+        //    if (isCtrlPressed) { //check if control key is pressed
                 // double scale = viewport.getViewportScale() - (0.15 * e.getPreciseWheelRotation());
                 // viewport.setViewportScale(scale);
-            }
-        });
+        //    }
+        // });
 
         //listening for keyboard presses and releases, to check if ctrl key was pressed or released (handling zoom)
         KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(ke -> {

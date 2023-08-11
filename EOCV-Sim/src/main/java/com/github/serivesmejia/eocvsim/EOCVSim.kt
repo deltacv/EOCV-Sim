@@ -47,6 +47,7 @@ import com.github.serivesmejia.eocvsim.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
+import io.github.deltacv.vision.PipelineRenderHook
 import nu.pattern.OpenCV
 import org.opencv.core.Size
 import org.openftc.easyopencv.TimestampedPipelineHandler
@@ -223,8 +224,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         pipelineManager.onPipelineChange {
             if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
+                // do some hand holding as pipelines cannot do this themselves...
                 visualizer.viewport.activate()
+                visualizer.viewport.setRenderHook(PipelineRenderHook) // calls OpenCvPipeline#onDrawFrame on the viewport (UI) thread
             } else {
+                // opmodes are on their own, lol
                 visualizer.viewport.deactivate()
             }
         }

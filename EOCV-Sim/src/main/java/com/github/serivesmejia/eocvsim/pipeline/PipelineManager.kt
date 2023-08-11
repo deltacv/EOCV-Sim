@@ -42,6 +42,7 @@ import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport
+import org.openftc.easyopencv.processFrameInternal
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.util.*
@@ -268,26 +269,16 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 //a different pipeline at this point. we also call init if we
                 //haven't done so.
 
-                if(!hasInitCurrentPipeline && inputMat != null) {
-                    for(pipeHandler in pipelineHandlers) {
-                        pipeHandler.preInit();
-                    }
-
-                    currentPipeline?.init(inputMat)
-
-                    for(pipeHandler in pipelineHandlers) {
-                        pipeHandler.init();
-                    }
-
-                    logger.info("Initialized pipeline $currentPipelineName")
-
-                    hasInitCurrentPipeline = true
-                }
-
                 //check if we're still active (not timeouted)
                 //after initialization
                 if(inputMat != null) {
-                    currentPipeline?.processFrame(inputMat)?.let { outputMat ->
+                    if(!hasInitCurrentPipeline) {
+                        for(pipeHandler in pipelineHandlers) {
+                            pipeHandler.preInit();
+                        }
+                    }
+
+                    currentPipeline?.processFrameInternal(inputMat)?.let { outputMat ->
                         if (isActive) {
                             pipelineFpsCounter.update()
 
@@ -302,6 +293,16 @@ class PipelineManager(var eocvSim: EOCVSim) {
                                 }
                             }
                         }
+                    }
+
+                    if(!hasInitCurrentPipeline) {
+                        for(pipeHandler in pipelineHandlers) {
+                            pipeHandler.init();
+                        }
+
+                        logger.info("Initialized pipeline $currentPipelineName")
+
+                        hasInitCurrentPipeline = true
                     }
                 }
 

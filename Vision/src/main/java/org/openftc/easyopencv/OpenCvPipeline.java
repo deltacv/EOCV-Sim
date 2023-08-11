@@ -6,7 +6,7 @@ import org.opencv.core.Mat;
 public abstract class OpenCvPipeline {
 
     private Object userContext;
-    private boolean isFirstFrame;
+    private boolean isFirstFrame = true;
     private long firstFrameTimestamp;
 
     public abstract Mat processFrame(Mat input);
@@ -64,6 +64,7 @@ public abstract class OpenCvPipeline {
         if(isFirstFrame)
         {
             init(input);
+
             firstFrameTimestamp = System.currentTimeMillis();
             isFirstFrame = false;
         }

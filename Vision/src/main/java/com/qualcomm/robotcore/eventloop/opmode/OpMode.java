@@ -108,6 +108,7 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
     @Override
     public final void init(Mat mat) {
         init();
+        telemetry.update();
     }
 
     private boolean startCalled = false;
@@ -117,9 +118,11 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
         if(!startCalled) {
             start();
             startCalled = true;
+            telemetry.update();
         }
 
         loop();
+        telemetry.update();
 
         return null; // OpModes don't actually show anything to the viewport, we'll delegate that
     }
