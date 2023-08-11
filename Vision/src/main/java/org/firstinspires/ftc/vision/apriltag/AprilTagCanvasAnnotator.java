@@ -276,8 +276,6 @@ public class AprilTagCanvasAnnotator
         float tag_id_text_x = id_x + 10*canvasDensityScale;
         float tag_id_text_y = id_y + 40*canvasDensityScale;
 
-        System.out.println(id_x + " " + id_y + " - " + tag_id_width + " " + tag_id_height + " - " + tag_id_text_x + " " + tag_id_text_y);
-
         Point lowerLeft = detection.corners[0];
         Point lowerRight = detection.corners[1];
 

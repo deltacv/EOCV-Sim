@@ -96,7 +96,7 @@ class SwingOpenCvViewport(size: Size) : OpenCvViewport, MatPoster {
 
         skiaLayer.skikoView = GenericSkikoView(skiaLayer, object: SkikoView {
             override fun onRender(canvas: org.jetbrains.skia.Canvas, width: Int, height: Int, nanoTime: Long) {
-                renderCanvas(Canvas(canvas, width, height))
+                // renderCanvas(Canvas(canvas, width, height))
             }
         })
 

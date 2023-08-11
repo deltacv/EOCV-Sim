@@ -196,7 +196,7 @@ public class Bitmap {
 
     public static Bitmap createBitmap(int width, int height, Config config) {
         Bitmap bm = new Bitmap();
-        bm.theBitmap.allocPixels(new ImageInfo(width, height, configToColorType(config), ColorAlphaType.OPAQUE));
+        bm.theBitmap.allocPixels(new ImageInfo(width, height, configToColorType(config), ColorAlphaType.PREMUL));
 
         bm.theBitmap.erase(0);
 

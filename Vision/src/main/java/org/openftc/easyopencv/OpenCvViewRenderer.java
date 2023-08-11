@@ -250,13 +250,11 @@ public class OpenCvViewRenderer
             }
 
             bitmapFromMat = Bitmap.createBitmap(mat.width(), mat.height(), Bitmap.Config.ARGB_8888);
-
-            System.out.println("create bitmapFromMat");
         }
 
         //Convert that Mat to a bitmap we can render
-        // Utils.matToBitmap(mat, bitmapFromMat, false);
-
+        Utils.matToBitmap(mat, bitmapFromMat, false);
+        
         width = bitmapFromMat.getWidth();
         height = bitmapFromMat.getHeight();
         aspectRatio = (float) width / height;

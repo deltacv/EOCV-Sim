@@ -1,9 +1,12 @@
 package org.opencv.android;
 
 import android.graphics.Bitmap;
+import org.jetbrains.skia.impl.BufferUtil;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
+
+import java.nio.ByteBuffer;
 
 public class Utils {
 
@@ -69,6 +72,8 @@ public class Utils {
 
     }
 
+    private static byte[] data = new byte[0];
+
     private static void nMatToBitmap2(Mat src, Bitmap b, boolean premultiplyAlpha) {
         Mat tmp;
 
@@ -97,10 +102,18 @@ public class Utils {
             }
         }
 
-        byte[] data = new byte[tmp.rows() * tmp.cols()];
+        int size = tmp.rows() * tmp.cols();
+
+        if(data.length != tmp.rows() * tmp.cols()) {
+            data = new byte[size];
+        }
+
         tmp.get(0, 0, data);
 
-        b.theBitmap.installPixels(data);
+        long addr = b.theBitmap.peekPixels().getAddr();
+        ByteBuffer buffer = BufferUtil.INSTANCE.getByteBufferFromPointer(addr, tmp.cols() * tmp.rows());
+
+        buffer.put(data);
 
         tmp.release();
     }
