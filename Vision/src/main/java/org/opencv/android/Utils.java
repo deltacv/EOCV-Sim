@@ -87,7 +87,7 @@ public class Utils {
                 Imgproc.cvtColor(src, tmp, Imgproc.COLOR_RGB2BGRA);
             } else if(src.type() == CvType.CV_8UC4){
                 if(premultiplyAlpha) Imgproc.cvtColor(src, tmp, Imgproc.COLOR_RGBA2mRGBA);
-                else src.copyTo(tmp);
+                else Imgproc.cvtColor(src, tmp, Imgproc.COLOR_RGBA2BGRA);
             }
         } else {
             tmp = new Mat(b.getWidth(), b.getHeight(), CvType.CV_8UC2);
@@ -102,16 +102,16 @@ public class Utils {
             }
         }
 
-        int size = tmp.rows() * tmp.cols();
+        int size = tmp.rows() * tmp.cols() * tmp.channels();
 
-        if(data.length != tmp.rows() * tmp.cols()) {
+        if(data.length != size) {
             data = new byte[size];
         }
 
         tmp.get(0, 0, data);
 
         long addr = b.theBitmap.peekPixels().getAddr();
-        ByteBuffer buffer = BufferUtil.INSTANCE.getByteBufferFromPointer(addr, tmp.cols() * tmp.rows());
+        ByteBuffer buffer = BufferUtil.INSTANCE.getByteBufferFromPointer(addr, size);
 
         buffer.put(data);
 

@@ -32,6 +32,7 @@ import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
+import com.github.serivesmejia.eocvsim.pipeline.util.PipelineStatisticsCalculator
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
@@ -128,7 +129,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
     val inputSourceManager = InputSourceManager(this)
 
     @JvmField
-    val pipelineManager = PipelineManager(this)
+    val pipelineStatisticsCalculator = PipelineStatisticsCalculator()
+
+    @JvmField
+    val pipelineManager = PipelineManager(this, pipelineStatisticsCalculator)
 
     @JvmField
     val tunerManager = TunerManager(this)
@@ -222,14 +226,29 @@ class EOCVSim(val params: Parameters = Parameters()) {
         //post output mats from the pipeline to the visualizer viewport
         pipelineManager.pipelineOutputPosters.add(visualizer.viewport)
 
+        // now that we have two different runnable units (OpenCvPipeline and OpMode)
+        // we have to give a more special treatment to the OpenCvPipeline
+        // OpModes can take care of themselves, setting up their own stuff
+        // but we need to do some hand holding for OpenCvPipelines...
         pipelineManager.onPipelineChange {
+            pipelineStatisticsCalculator.init()
+
             if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
-                // do some hand holding as pipelines cannot do this themselves...
                 visualizer.viewport.activate()
                 visualizer.viewport.setRenderHook(PipelineRenderHook) // calls OpenCvPipeline#onDrawFrame on the viewport (UI) thread
             } else {
                 // opmodes are on their own, lol
                 visualizer.viewport.deactivate()
+            }
+        }
+
+        pipelineManager.onUpdate {
+            if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
+                visualizer.viewport.notifyStatistics(
+                        pipelineStatisticsCalculator.avgFps,
+                        pipelineStatisticsCalculator.avgPipelineTime,
+                        pipelineStatisticsCalculator.avgOverheadTime
+                )
             }
         }
 
@@ -244,6 +263,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
             onMainUpdate.run()
 
             updateVisualizerTitle()
+
+            pipelineStatisticsCalculator.newInputFrameStart()
 
             inputSourceManager.update(pipelineManager.paused)
             tunerManager.update()

@@ -133,5 +133,12 @@ public class MatRecycler {
 
         public boolean isCheckedOut() { return checkedOut; }
 
+        @Override
+        public void copyTo(Mat mat) {
+            super.copyTo(mat);
+            if(mat instanceof RecyclableMat) {
+                ((RecyclableMat) mat).setContext(getContext());
+            }
+        }
     }
 }

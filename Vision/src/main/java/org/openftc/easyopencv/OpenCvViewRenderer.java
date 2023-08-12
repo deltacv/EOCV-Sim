@@ -50,9 +50,10 @@ public class OpenCvViewRenderer
     private double aspectRatio;
 
     private boolean fpsMeterEnabled = true;
-    private float fps = 0;
-    private int pipelineMs = 0;
-    private int overheadMs = 0;
+    private String fpsMeterDescriptor;
+    private volatile float fps = 0;
+    private volatile int pipelineMs = 0;
+    private volatile int overheadMs = 0;
 
     private int width;
     private int height;
@@ -66,9 +67,10 @@ public class OpenCvViewRenderer
 
     private Bitmap bitmapFromMat;
 
-    public OpenCvViewRenderer(boolean renderingOffsceen)
+    public OpenCvViewRenderer(boolean renderingOffsceen, String fpsMeterDescriptor)
     {
         offscreen = renderingOffsceen;
+        this.fpsMeterDescriptor = fpsMeterDescriptor;
 
         metricsScale = 1.0f;
 
@@ -208,7 +210,7 @@ public class OpenCvViewRenderer
         int textLine3Y = textLine2Y + statBoxTextLineSpacing;
 
         // Draw the 3 text lines
-        canvas.drawText(String.format("deltacv EOCV-Sim"), statBoxLTxtStart, textLine1Y, fpsMeterTextPaint);
+        canvas.drawText(fpsMeterDescriptor, statBoxLTxtStart, textLine1Y, fpsMeterTextPaint);
         canvas.drawText(String.format("FPS@%dx%d: %.2f", width, height, fps), statBoxLTxtStart, textLine2Y, fpsMeterTextPaint);
         canvas.drawText(String.format("Pipeline: %dms - Overhead: %dms", pipelineMs, overheadMs), statBoxLTxtStart, textLine3Y, fpsMeterTextPaint);
     }
@@ -322,7 +324,7 @@ public class OpenCvViewRenderer
         int textLine3Y = textLine2Y + statBoxTextLineSpacing;
 
         // Draw the 3 text lines
-        canvas.drawText(String.format("deltacv EOCV-Sim"), statBoxLTxtStart, textLine1Y, fpsMeterTextPaint);
+        canvas.drawText(fpsMeterDescriptor, statBoxLTxtStart, textLine1Y, fpsMeterTextPaint);
         canvas.drawText("VIEWPORT PAUSED", statBoxLTxtStart, textLine2Y, fpsMeterTextPaint);
         //canvas.drawText("Hi", statBoxLTxtStart, textLine3Y, fpsMeterTextPaint);
     }

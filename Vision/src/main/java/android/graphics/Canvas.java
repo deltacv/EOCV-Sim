@@ -23,6 +23,7 @@
 
 package android.graphics;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.skia.*;
 
 public class Canvas {
@@ -98,11 +99,12 @@ public class Canvas {
         return this;
     }
 
-    public void drawRect(Rect rect, Paint paint) {
+    public Canvas drawRect(Rect rect, Paint paint) {
         theCanvas.drawRect(rect.toSkijaRect(), paint.thePaint);
+        return this;
     }
 
-    public void drawBitmap(Bitmap bitmap, Rect src, Rect rect, Paint paint) {
+    public Canvas drawBitmap(Bitmap bitmap, Rect src, Rect rect, Paint paint) {
         int left, top, right, bottom;
         if (src == null) {
             left = top = 0;
@@ -126,18 +128,27 @@ public class Canvas {
                 new org.jetbrains.skia.Rect(left, top, right, bottom),
                 rect.toSkijaRect(), thePaint
         );
+
+        return this;
     }
 
-    public void translate(int dx, int dy) {
+    public Canvas translate(int dx, int dy) {
         theCanvas.translate(dx, dy);
+        return this;
     }
 
-    public void restoreToCount(int saveCount) {
+    public Canvas restoreToCount(int saveCount) {
         theCanvas.restoreToCount(saveCount);
+        return this;
     }
 
-    public void drawColor(int color) {
+    public boolean readPixels(@NotNull Bitmap lastFrame, int srcX, int srcY) {
+        return theCanvas.readPixels(lastFrame.theBitmap, srcX, srcY);
+    }
+
+    public Canvas drawColor(int color) {
         theCanvas.clear(color);
+        return this;
     }
 
     public int getWidth() {

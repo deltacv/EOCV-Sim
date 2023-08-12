@@ -50,7 +50,7 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 
-class SwingOpenCvViewport(size: Size) : OpenCvViewport, MatPoster {
+class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Vision") : OpenCvViewport, MatPoster {
 
     private val syncObj = Any()
 
@@ -76,7 +76,7 @@ class SwingOpenCvViewport(size: Size) : OpenCvViewport, MatPoster {
 
     @Volatile
     private var internalRenderingState = RenderingState.STOPPED
-    val renderer: OpenCvViewRenderer = OpenCvViewRenderer(false)
+    val renderer: OpenCvViewRenderer = OpenCvViewRenderer(false, fpsMeterDescriptor)
 
     private val skiaLayer = SkiaLayer()
     val component: JComponent get() = skiaLayer
@@ -96,7 +96,7 @@ class SwingOpenCvViewport(size: Size) : OpenCvViewport, MatPoster {
 
         skiaLayer.skikoView = GenericSkikoView(skiaLayer, object: SkikoView {
             override fun onRender(canvas: org.jetbrains.skia.Canvas, width: Int, height: Int, nanoTime: Long) {
-                // renderCanvas(Canvas(canvas, width, height))
+                renderCanvas(Canvas(canvas, width, height))
             }
         })
 
@@ -278,15 +278,20 @@ class SwingOpenCvViewport(size: Size) : OpenCvViewport, MatPoster {
         }
     }
 
+    private lateinit var lastFrame: MatRecycler.RecyclableMat
 
     private fun renderCanvas(canvas: Canvas) {
+        if(!::lastFrame.isInitialized) {
+            lastFrame = framebufferRecycler!!.takeMat()
+        }
+
         when (internalRenderingState) {
             RenderingState.ACTIVE -> {
                 shouldPaintOrange = true
 
-                var mat: MatRecycler.RecyclableMat = try {
+                val mat: MatRecycler.RecyclableMat = try {
                     //Grab a Mat from the frame queue
-                    val frame = visionPreviewFrameQueue.poll(10, TimeUnit.MILLISECONDS) ?: return;
+                    val frame = visionPreviewFrameQueue.poll(10, TimeUnit.MILLISECONDS) ?: lastFrame
 
                     frame
                 } catch (e: InterruptedException) {
@@ -297,6 +302,12 @@ class SwingOpenCvViewport(size: Size) : OpenCvViewport, MatPoster {
                     //be set, and since we break immediately right here, the close will be handled cleanly.
                     //Thread.currentThread().interrupt();
                     return
+                }
+
+                mat.copyTo(lastFrame)
+
+                if(mat.empty()) {
+                    return // nope out
                 }
 
                 /*
@@ -313,7 +324,9 @@ class SwingOpenCvViewport(size: Size) : OpenCvViewport, MatPoster {
                 }
 
                 //We're done with that Mat object; return it to the Mat recycler so it can be used again later
-                framebufferRecycler!!.returnMat(mat)
+                if(mat != lastFrame) {
+                    framebufferRecycler!!.returnMat(mat)
+                }
             }
 
             RenderingState.PAUSED -> {
@@ -344,6 +357,6 @@ class SwingOpenCvViewport(size: Size) : OpenCvViewport, MatPoster {
 
     companion object {
         private const val VISION_PREVIEW_FRAME_QUEUE_CAPACITY = 2
-        private const val FRAMEBUFFER_RECYCLER_CAPACITY = VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 2 //So that the evicting queue can be full, and the render thread has one checked out (+1) and post() can still take one (+1).
+        private const val FRAMEBUFFER_RECYCLER_CAPACITY = VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 3 //So that the evicting queue can be full, and the render thread has one checked out (+1) and post() can still take one (+1).
     }
 }

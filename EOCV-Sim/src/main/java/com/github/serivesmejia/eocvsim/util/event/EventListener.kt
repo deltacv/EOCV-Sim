@@ -32,11 +32,18 @@ class EventListenerRemover(
     val listener: EventListener,
     val isOnceListener: Boolean
 ) {
+
+    private val attached = mutableListOf<EventListenerRemover>()
+
     fun removeThis() {
         if(isOnceListener)
             handler.removeOnceListener(listener)
         else
             handler.removePersistentListener(listener)
+    }
+
+    fun attach(remover: EventListenerRemover) {
+
     }
 
 }

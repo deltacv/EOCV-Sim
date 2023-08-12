@@ -221,6 +221,10 @@ public class Bitmap {
         return theBitmap.getHeight();
     }
 
+    public Rect getBounds() {
+        return new Rect(0, 0, getWidth(), getHeight());
+    }
+
     public Config getConfig() {
         return colorTypeToConfig(theBitmap.getColorType());
     }

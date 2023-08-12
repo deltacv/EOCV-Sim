@@ -25,6 +25,7 @@ package com.github.serivesmejia.eocvsim.input.source;
 
 import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.util.FileFilters;
+import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter;
 import com.google.gson.annotations.Expose;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -43,6 +44,8 @@ public class VideoSource extends InputSource {
     private String videoPath = null;
 
     private transient VideoCapture video;
+
+    private transient FpsLimiter fpsLimiter = new FpsLimiter(30);
 
     private transient MatRecycler.RecyclableMat lastFramePaused;
     private transient MatRecycler.RecyclableMat lastFrame;
@@ -70,7 +73,6 @@ public class VideoSource extends InputSource {
 
     @Override
     public boolean init() {
-
         if (initialized) return false;
         initialized = true;
 
@@ -94,16 +96,16 @@ public class VideoSource extends InputSource {
             return false;
         }
 
+        fpsLimiter.setMaxFPS(video.get(Videoio.CAP_PROP_FPS));
+
         newFrame.release();
         matRecycler.returnMat(newFrame);
 
         return true;
-
     }
 
     @Override
     public void reset() {
-
         if (!initialized) return;
 
         if (video != null && video.isOpened()) video.release();
@@ -117,7 +119,6 @@ public class VideoSource extends InputSource {
 
         video = null;
         initialized = false;
-
     }
 
     @Override
@@ -135,12 +136,17 @@ public class VideoSource extends InputSource {
 
     @Override
     public Mat update() {
-
         if (isPaused) {
             return lastFramePaused;
         } else if (lastFramePaused != null) {
             lastFramePaused.returnMat();
             lastFramePaused = null;
+        }
+
+        try {
+            fpsLimiter.sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
         if (lastFrame == null) lastFrame = matRecycler.takeMat();
@@ -171,12 +177,10 @@ public class VideoSource extends InputSource {
         matRecycler.returnMat(newFrame);
 
         return lastFrame;
-
     }
 
     @Override
     public void onPause() {
-
         if (lastFrame != null) lastFrame.release();
         if (lastFramePaused == null) lastFramePaused = matRecycler.takeMat();
 
@@ -191,7 +195,6 @@ public class VideoSource extends InputSource {
 
         video.release();
         video = null;
-
     }
 
     @Override
