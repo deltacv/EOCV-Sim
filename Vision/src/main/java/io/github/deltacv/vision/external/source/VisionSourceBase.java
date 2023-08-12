@@ -43,12 +43,28 @@ public abstract class VisionSourceBase implements VisionSource {
     public final boolean stop() {
         helperThread.interrupt();
 
+        for(VisionSourced sourced : sourceds) {
+            synchronized (sourced) {
+                sourced.stop();
+            }
+        }
+
         return stopSource();
     }
 
     public abstract boolean stopSource();
 
     public abstract Timestamped<Mat> pullFrame();
+
+    private Timestamped<Mat> pullFrameInternal() {
+        for(VisionSourced sourced : sourceds) {
+            synchronized (sourced) {
+                sourced.onFrameStart();
+            }
+        }
+
+        return pullFrame();
+    }
 
     private static class SourceBaseHelperThread extends Thread {
 
@@ -62,7 +78,7 @@ public abstract class VisionSourceBase implements VisionSource {
         @Override
         public void run() {
             while (!isInterrupted()) {
-                Timestamped<Mat> frame = sourceBase.pullFrame();
+                Timestamped<Mat> frame = sourceBase.pullFrameInternal();
 
                 VisionSourced[] sourceds;
 
@@ -71,11 +87,12 @@ public abstract class VisionSourceBase implements VisionSource {
                 }
 
                 for(VisionSourced sourced : sourceds) {
-                    sourced.onNewFrame(frame.getValue(), frame.getTimestamp());
+                    synchronized (sourced) {
+                        sourced.onNewFrame(frame.getValue(), frame.getTimestamp());
+                    }
                 }
             }
         }
-
     }
 
 }

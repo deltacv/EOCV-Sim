@@ -14,8 +14,8 @@ public class SourcedOpenCvCamera extends OpenCvCameraBase implements OpenCvWebca
 
     boolean streaming = false;
 
-    public SourcedOpenCvCamera(VisionSource source, OpenCvViewport handedViewport) {
-        super(handedViewport);
+    public SourcedOpenCvCamera(VisionSource source, OpenCvViewport handedViewport, boolean viewportEnabled) {
+        super(handedViewport, viewportEnabled);
 
         this.source = source;
         this.handedViewport = handedViewport;
@@ -23,6 +23,8 @@ public class SourcedOpenCvCamera extends OpenCvCameraBase implements OpenCvWebca
 
     @Override
     public int openCameraDevice() {
+        prepareForOpenCameraDevice();
+
         return source.init();
     }
 
@@ -56,7 +58,12 @@ public class SourcedOpenCvCamera extends OpenCvCameraBase implements OpenCvWebca
 
     @Override
     public void startStreaming(int width, int height) {
-        setupViewport();
+        startStreaming(width, height, getDefaultRotation());
+    }
+
+    @Override
+    public void startStreaming(int width, int height, OpenCvCameraRotation rotation) {
+        prepareForStartStreaming(width, height, rotation);
 
         synchronized (source) {
             source.start(new Size(width, height));
@@ -67,22 +74,9 @@ public class SourcedOpenCvCamera extends OpenCvCameraBase implements OpenCvWebca
     }
 
     @Override
-    public void startStreaming(int width, int height, OpenCvCameraRotation rotation) {
-        startStreaming(width, height);
-    }
-
-    @Override
     public void stopStreaming() {
         source.stop();
-        handedViewport.deactivate();
-    }
-
-    @Override
-    protected OpenCvViewport setupViewport() {
-        handedViewport.setRenderHook(PipelineRenderHook.INSTANCE);
-        handedViewport.activate();
-
-        return handedViewport;
+        cleanupForEndStreaming();
     }
 
     @Override
@@ -129,11 +123,30 @@ public class SourcedOpenCvCamera extends OpenCvCameraBase implements OpenCvWebca
 
     @Override
     protected boolean isStreaming() {
-        return false;
+        return streaming;
     }
 
     @Override
+    public void onFrameStart() {
+        if(!isStreaming()) return;
+
+        notifyStartOfFrameProcessing();
+    }
+
+    //
+    // Inheritance from Sourced
+    //
+
+    @Override
     public void onNewFrame(Mat frame, long timestamp) {
+        if(!isStreaming()) return;
+        if(frame.empty() || frame == null) return;
+
         handleFrameUserCrashable(frame, timestamp);
+    }
+
+    @Override
+    public void stop() {
+        closeCameraDevice();
     }
 }

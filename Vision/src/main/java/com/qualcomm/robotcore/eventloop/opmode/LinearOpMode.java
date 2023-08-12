@@ -3,12 +3,9 @@ package com.qualcomm.robotcore.eventloop.opmode;
 import io.github.deltacv.vision.external.source.ThreadSourceHander;
 
 public abstract class LinearOpMode extends OpMode {
-
     protected final Object lock = new Object();
-
     private LinearOpModeHelperThread helper = new LinearOpModeHelperThread(this);
     private RuntimeException catchedException = null;
-
 
     public LinearOpMode() {
     }
@@ -125,6 +122,9 @@ public abstract class LinearOpMode extends OpMode {
 
     @Override
     public final void init() {
+        isStarted = false;
+        stopRequested = false;
+
         ThreadSourceHander.register(helper, ThreadSourceHander.threadHander());
 
         helper.start();
@@ -132,6 +132,12 @@ public abstract class LinearOpMode extends OpMode {
 
     @Override
     public final void init_loop() { }
+
+    @Override
+    public final void start() {
+        stopRequested = false;
+        isStarted = true;
+    }
 
     @Override
     public final void loop() {
@@ -144,6 +150,13 @@ public abstract class LinearOpMode extends OpMode {
 
     @Override
     public final void stop() {
+        /*
+         * Get out of dodge. Been here, done this.
+         */
+        if(stopRequested)  { return; }
+
+        stopRequested = true;
+
         helper.interrupt();
     }
 

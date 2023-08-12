@@ -134,7 +134,7 @@ public class VisionPortalImpl extends VisionPortal
         }
         else if (cameraName instanceof SourcedCameraName) // Webcams
         {
-            camera = OpenCvCameraFactory.getInstance().createWebcam((WebcamName) cameraName);
+            camera = OpenCvCameraFactory.getInstance().createWebcam((WebcamName) cameraName, cameraMonitorViewId);
         }
         else // ¯\_(ツ)_/¯
         {

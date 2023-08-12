@@ -125,7 +125,10 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
             visionPreviewFrameQueue.clear()
             framebufferRecycler = MatRecycler(FRAMEBUFFER_RECYCLER_CAPACITY)
 
-            skiaLayer.setSize(width, height)
+            SwingUtilities.invokeLater {
+                skiaLayer.setSize(width, height)
+                skiaLayer.repaint()
+            }
 
             surfaceExistsAndIsReady = true
             checkState()
@@ -278,6 +281,7 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
         }
     }
 
+    private val canvasLock = Any()
     private lateinit var lastFrame: MatRecycler.RecyclableMat
 
     private fun renderCanvas(canvas: Canvas) {
@@ -285,68 +289,78 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
             lastFrame = framebufferRecycler!!.takeMat()
         }
 
-        when (internalRenderingState) {
-            RenderingState.ACTIVE -> {
-                shouldPaintOrange = true
+        synchronized(canvasLock) {
+            when (internalRenderingState) {
+                RenderingState.ACTIVE -> {
+                    shouldPaintOrange = true
 
-                val mat: MatRecycler.RecyclableMat = try {
-                    //Grab a Mat from the frame queue
-                    val frame = visionPreviewFrameQueue.poll(10, TimeUnit.MILLISECONDS) ?: lastFrame
+                    val mat: MatRecycler.RecyclableMat = try {
+                        //Grab a Mat from the frame queue
+                        val frame = visionPreviewFrameQueue.poll(10, TimeUnit.MILLISECONDS) ?: lastFrame
 
-                    frame
-                } catch (e: InterruptedException) {
+                        frame
+                    } catch (e: InterruptedException) {
 
-                    //Note: we actually don't re-interrupt ourselves here, because interrupts are also
-                    //used to simply make sure we properly pick up a transition to the PAUSED state, not
-                    //just when we're trying to close. If we're trying to close, then exitRequested will
-                    //be set, and since we break immediately right here, the close will be handled cleanly.
-                    //Thread.currentThread().interrupt();
-                    return
-                }
+                        //Note: we actually don't re-interrupt ourselves here, because interrupts are also
+                        //used to simply make sure we properly pick up a transition to the PAUSED state, not
+                        //just when we're trying to close. If we're trying to close, then exitRequested will
+                        //be set, and since we break immediately right here, the close will be handled cleanly.
+                        //Thread.currentThread().interrupt();
+                        return
+                    }
 
-                mat.copyTo(lastFrame)
+                    mat.copyTo(lastFrame)
 
-                if(mat.empty()) {
-                    return // nope out
-                }
+                    if (mat.empty()) {
+                        return // nope out
+                    }
 
-                /*
+                    /*
                  * For some reason, the canvas will very occasionally be null upon closing.
                  * Stack Overflow seems to suggest this means the canvas has been destroyed.
                  * However, surfaceDestroyed(), which is called right before the surface is
                  * destroyed, calls checkState(), which *SHOULD* block until we die. This
                  * works most of the time, but not always? We don't yet understand...
                  */
-                if (canvas != null) {
-                    renderer.render(mat, canvas, renderHook, mat.context)
-                } else {
-                    logger.info("Canvas was null")
+                    if (canvas != null) {
+                        renderer.render(mat, canvas, renderHook, mat.context)
+                    } else {
+                        logger.info("Canvas was null")
+                    }
+
+                    //We're done with that Mat object; return it to the Mat recycler so it can be used again later
+                    if (mat !== lastFrame) {
+                        framebufferRecycler!!.returnMat(mat)
+                    }
                 }
 
-                //We're done with that Mat object; return it to the Mat recycler so it can be used again later
-                if(mat != lastFrame) {
-                    framebufferRecycler!!.returnMat(mat)
-                }
-            }
+                RenderingState.PAUSED -> {
+                    if (shouldPaintOrange) {
+                        shouldPaintOrange = false
 
-            RenderingState.PAUSED -> {
-                if (shouldPaintOrange) {
-                    shouldPaintOrange = false
-
-                    /*
+                        /*
                      * For some reason, the canvas will very occasionally be null upon closing.
                      * Stack Overflow seems to suggest this means the canvas has been destroyed.
                      * However, surfaceDestroyed(), which is called right before the surface is
                      * destroyed, calls checkState(), which *SHOULD* block until we die. This
                      * works most of the time, but not always? We don't yet understand...
                      */
-                    if (canvas != null) {
-                        renderer.renderPaused(canvas)
+                        if (canvas != null) {
+                            renderer.renderPaused(canvas)
+                        }
                     }
                 }
-            }
 
-            else -> {}
+                else -> {}
+            }
+        }
+    }
+
+    fun clearViewport() {
+        visionPreviewFrameQueue.clear()
+
+        synchronized(canvasLock) {
+            lastFrame.release()
         }
     }
 
@@ -357,6 +371,6 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
 
     companion object {
         private const val VISION_PREVIEW_FRAME_QUEUE_CAPACITY = 2
-        private const val FRAMEBUFFER_RECYCLER_CAPACITY = VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 3 //So that the evicting queue can be full, and the render thread has one checked out (+1) and post() can still take one (+1).
+        private const val FRAMEBUFFER_RECYCLER_CAPACITY = VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 4 //So that the evicting queue can be full, and the render thread has one checked out (+1) and post() can still take one (+1).
     }
 }

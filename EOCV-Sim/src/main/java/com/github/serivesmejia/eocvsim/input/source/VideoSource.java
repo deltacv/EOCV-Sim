@@ -210,6 +210,11 @@ public class VideoSource extends InputSource {
     }
 
     @Override
+    public void setSize(Size size) {
+        this.size = size;
+    }
+
+    @Override
     public FileFilter getFileFilters() {
         return FileFilters.videoMediaFilter;
     }

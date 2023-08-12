@@ -26,6 +26,7 @@ import android.graphics.Canvas;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.MovingStatistics;
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator;
+import io.github.deltacv.vision.external.PipelineRenderHook;
 import org.opencv.android.Utils;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -33,8 +34,6 @@ import org.opencv.imgproc.Imgproc;
 public abstract class OpenCvCameraBase implements OpenCvCamera {
 
     private OpenCvPipeline pipeline = null;
-
-
 
     private OpenCvViewport viewport;
     private OpenCvCameraRotation rotation;
@@ -44,6 +43,9 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
     private Mat rotatedMat = new Mat();
     private Mat matToUseIfPipelineReturnedCropped;
     private Mat croppedColorCvtedMat = new Mat();
+
+    private boolean isStreaming = false;
+    private boolean viewportEnabled = true;
 
     private ViewportRenderer desiredViewportRenderer = ViewportRenderer.SOFTWARE;
     ViewportRenderingPolicy desiredRenderingPolicy = ViewportRenderingPolicy.MAXIMIZE_EFFICIENCY;
@@ -55,11 +57,14 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
 
     private PipelineStatisticsCalculator statistics = new PipelineStatisticsCalculator();
 
-    public OpenCvCameraBase(OpenCvViewport viewport) {
+    private double width;
+    private double height;
+
+    public OpenCvCameraBase(OpenCvViewport viewport, boolean viewportEnabled) {
         this.viewport = viewport;
         this.rotation = getDefaultRotation();
 
-        statistics.init();
+        this.viewportEnabled = viewportEnabled;
     }
 
     @Override
@@ -99,22 +104,22 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
 
     @Override
     public float getFps() {
-        return 0;
+        return statistics.getAvgFps();
     }
 
     @Override
     public int getPipelineTimeMs() {
-        return 0;
+        return statistics.getAvgPipelineTime();
     }
 
     @Override
     public int getOverheadTimeMs() {
-        return 0;
+        return statistics.getAvgOverheadTime();
     }
 
     @Override
     public int getTotalFrameTimeMs() {
-        return 0;
+        return getTotalFrameTimeMs();
     }
 
     @Override
@@ -128,6 +133,46 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
 
     @Override
     public void stopRecordingPipeline() {
+    }
+
+    protected void notifyStartOfFrameProcessing() {
+        statistics.newInputFrameStart();
+    }
+
+    public synchronized final void prepareForOpenCameraDevice()
+    {
+        if (viewportEnabled)
+        {
+            setupViewport();
+            viewport.setRenderingPolicy(desiredRenderingPolicy);
+        }
+    }
+
+    public synchronized final void prepareForStartStreaming(int width, int height, OpenCvCameraRotation rotation)
+    {
+        this.rotation = rotation;
+        this.statistics = new PipelineStatisticsCalculator();
+        this.statistics.init();
+
+        Size sizeAfterRotation = getFrameSizeAfterRotation(width, height, rotation);
+
+        this.width = sizeAfterRotation.width;
+        this.height = sizeAfterRotation.height;
+
+        if(viewport != null)
+        {
+            // viewport.setSize(width, height);
+            viewport.setOptimizedViewRotation(getOptimizedViewportRotation(rotation));
+            viewport.activate();
+        }
+    }
+
+    public synchronized final void cleanupForEndStreaming() {
+        matToUseIfPipelineReturnedCropped = null;
+
+        if (viewport != null) {
+            viewport.deactivate();
+        }
     }
 
     protected synchronized void handleFrameUserCrashable(Mat frame, long timestamp) {
@@ -277,7 +322,10 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
         }
     }
 
-    protected abstract OpenCvViewport setupViewport();
+    protected void setupViewport() {
+        viewport.setFpsMeterEnabled(fpsMeterDesired);
+        viewport.setRenderHook(PipelineRenderHook.INSTANCE);
+    }
 
     protected abstract OpenCvCameraRotation getDefaultRotation();
 
@@ -286,5 +334,26 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
     protected abstract boolean cameraOrientationIsTiedToDeviceOrientation();
 
     protected abstract boolean isStreaming();
+
+    protected Size getFrameSizeAfterRotation(int width, int height, OpenCvCameraRotation rotation)
+    {
+        int screenRenderedWidth, screenRenderedHeight;
+        int openCvRotateCode = mapRotationEnumToOpenCvRotateCode(rotation);
+
+        if(openCvRotateCode == Core.ROTATE_90_CLOCKWISE || openCvRotateCode == Core.ROTATE_90_COUNTERCLOCKWISE)
+        {
+            //noinspection SuspiciousNameCombination
+            screenRenderedWidth = height;
+            //noinspection SuspiciousNameCombination
+            screenRenderedHeight = width;
+        }
+        else
+        {
+            screenRenderedWidth = width;
+            screenRenderedHeight = height;
+        }
+
+        return new Size(screenRenderedWidth, screenRenderedHeight);
+    }
 
 }

@@ -215,7 +215,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         visualizer.waitForFinishingInit()
 
-        pipelineManager.subscribePipelineHandler(OpModePipelineHandler(visualizer.viewport))
+        pipelineManager.subscribePipelineHandler(OpModePipelineHandler(inputSourceManager, visualizer.viewport))
 
         visualizer.sourceSelectorPanel.updateSourcesList() //update sources and pick first one
         visualizer.sourceSelectorPanel.sourceSelector.selectedIndex = 0
@@ -240,6 +240,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             } else {
                 // opmodes are on their own, lol
                 visualizer.viewport.deactivate()
+                visualizer.viewport.clearViewport()
             }
         }
 

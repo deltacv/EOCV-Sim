@@ -97,7 +97,7 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
      * <p>
      * The stop method is optional. By default this method takes no action.
      */
-    public void stop() {};
+    public void stop() {}; // normally called by OpModePipelineHandler
 
     public void requestOpModeStop() {
         stop();
@@ -124,7 +124,7 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
         loop();
         telemetry.update();
 
-        return null; // OpModes don't actually show anything to the viewport, we'll delegate that
+        return null; // OpModes don't actually show anything to the viewport, we'll delegate that to OpenCvCamera-s
     }
 
     @Override

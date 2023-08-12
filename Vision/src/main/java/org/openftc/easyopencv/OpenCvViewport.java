@@ -50,12 +50,16 @@ public interface OpenCvViewport
     void setFpsMeterEnabled(boolean enabled);
     void pause();
     void resume();
+
     void activate();
     void deactivate();
+
     void setSize(int width, int height);
     void setOptimizedViewRotation(OptimizedRotation rotation);
+
     void notifyStatistics(float fps, int pipelineMs, int overheadMs);
     void setRecording(boolean recording);
+
     void post(Mat frame, Object userContext);
     void setRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy policy);
     void setRenderHook(RenderHook renderHook);

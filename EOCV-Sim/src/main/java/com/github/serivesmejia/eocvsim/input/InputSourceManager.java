@@ -302,6 +302,10 @@ public class InputSourceManager {
         return apwd;
     }
 
+    public String getDefaultInputSource() {
+        return defaultSource;
+    }
+
     public SourceType getSourceType(String sourceName) {
         if(sourceName == null) {
             return SourceType.UNKNOWN;
