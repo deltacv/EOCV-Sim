@@ -26,7 +26,7 @@ package com.github.serivesmejia.eocvsim.gui.util;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.DialogFactory;
 import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists;
-import io.github.deltacv.vision.util.CvUtil;
+import io.github.deltacv.vision.external.util.CvUtil;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Mat;
 import org.slf4j.Logger;

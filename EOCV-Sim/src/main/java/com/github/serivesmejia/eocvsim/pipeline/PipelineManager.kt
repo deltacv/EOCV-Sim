@@ -29,7 +29,7 @@ import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.handler.PipelineHandler
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
-import com.github.serivesmejia.eocvsim.pipeline.util.PipelineStatisticsCalculator
+import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException

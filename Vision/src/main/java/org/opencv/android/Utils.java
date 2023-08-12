@@ -82,7 +82,7 @@ public class Utils {
 
             if(src.type() == CvType.CV_8UC1)
             {
-                Imgproc.cvtColor(src, tmp, Imgproc.COLOR_GRAY2RGBA);
+                Imgproc.cvtColor(src, tmp, Imgproc.COLOR_GRAY2BGRA);
             } else if(src.type() == CvType.CV_8UC3){
                 Imgproc.cvtColor(src, tmp, Imgproc.COLOR_RGB2BGRA);
             } else if(src.type() == CvType.CV_8UC4){

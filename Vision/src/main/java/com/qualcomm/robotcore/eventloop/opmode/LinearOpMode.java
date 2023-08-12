@@ -1,6 +1,14 @@
 package com.qualcomm.robotcore.eventloop.opmode;
 
+import io.github.deltacv.vision.external.source.ThreadSourceHander;
+
 public abstract class LinearOpMode extends OpMode {
+
+    protected final Object lock = new Object();
+
+    private LinearOpModeHelperThread helper = new LinearOpModeHelperThread(this);
+    private RuntimeException catchedException = null;
+
 
     public LinearOpMode() {
     }
@@ -108,6 +116,60 @@ public abstract class LinearOpMode extends OpMode {
      */
     public final boolean isStopRequested() {
         return this.stopRequested || Thread.currentThread().isInterrupted();
+    }
+
+
+    //------------------------------------------------------------------------------------------------
+    // OpMode inheritance
+    //------------------------------------------------------------------------------------------------
+
+    @Override
+    public final void init() {
+        ThreadSourceHander.register(helper, ThreadSourceHander.threadHander());
+
+        helper.start();
+    }
+
+    @Override
+    public final void init_loop() { }
+
+    @Override
+    public final void loop() {
+        synchronized (lock) {
+            if (catchedException != null) {
+                throw catchedException;
+            }
+        }
+    }
+
+    @Override
+    public final void stop() {
+        helper.interrupt();
+    }
+
+    private static class LinearOpModeHelperThread extends Thread {
+
+        LinearOpMode opMode;
+
+        public LinearOpModeHelperThread(LinearOpMode opMode) {
+            super("Thread-LinearOpModeHelper-" + opMode.getClass().getSimpleName());
+
+            this.opMode = opMode;
+        }
+
+        @Override
+        public void run() {
+            try {
+                opMode.runOpMode();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (RuntimeException e) {
+                synchronized (opMode.lock) {
+                    opMode.catchedException = e;
+                }
+            }
+        }
+
     }
 
 }

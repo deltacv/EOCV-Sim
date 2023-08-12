@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 package com.qualcomm.robotcore.eventloop.opmode;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import io.github.deltacv.vision.util.FrameQueue;
+import io.github.deltacv.vision.external.util.FrameQueue;
 import org.openftc.easyopencv.TimestampedOpenCvPipeline;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Mat;

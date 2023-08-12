@@ -25,7 +25,7 @@ package com.github.serivesmejia.eocvsim.gui
 
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import io.github.deltacv.vision.gui.util.ImgUtil
+import io.github.deltacv.vision.external.gui.util.ImgUtil
 import java.awt.image.BufferedImage
 import java.util.NoSuchElementException
 import javax.swing.ImageIcon

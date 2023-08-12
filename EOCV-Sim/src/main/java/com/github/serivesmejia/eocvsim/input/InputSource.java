@@ -25,6 +25,7 @@ package com.github.serivesmejia.eocvsim.input;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import org.opencv.core.Mat;
+import org.opencv.core.Size;
 
 import javax.swing.filechooser.FileFilter;
 
@@ -48,6 +49,8 @@ public abstract class InputSource implements Comparable<InputSource> {
     public abstract void onPause();
 
     public abstract void onResume();
+
+    public void setSize(Size size) {}
 
     public Mat update() {
         return null;

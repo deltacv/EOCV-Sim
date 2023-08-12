@@ -25,7 +25,7 @@ package com.github.serivesmejia.eocvsim.gui.component.tuner
 
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.gui.Icons
-import io.github.deltacv.vision.gui.component.ImageX
+import io.github.deltacv.vision.external.gui.component.ImageX
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import org.opencv.core.Scalar
 import java.awt.Color

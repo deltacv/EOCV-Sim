@@ -32,7 +32,7 @@ import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
-import com.github.serivesmejia.eocvsim.pipeline.util.PipelineStatisticsCalculator
+import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
@@ -48,7 +48,7 @@ import com.github.serivesmejia.eocvsim.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
-import io.github.deltacv.vision.PipelineRenderHook
+import io.github.deltacv.vision.external.PipelineRenderHook
 import nu.pattern.OpenCV
 import org.opencv.core.Size
 import org.openftc.easyopencv.TimestampedPipelineHandler
@@ -196,7 +196,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         pipelineManager.init() //init pipeline manager (scan for pipelines)
         pipelineManager.subscribePipelineHandler(TimestampedPipelineHandler())
-        pipelineManager.subscribePipelineHandler(OpModePipelineHandler())
 
         tunerManager.init() //init tunable variables manager
 
@@ -215,6 +214,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         inputSourceManager.inputSourceLoader.saveInputSourcesToFile()
 
         visualizer.waitForFinishingInit()
+
+        pipelineManager.subscribePipelineHandler(OpModePipelineHandler(visualizer.viewport))
 
         visualizer.sourceSelectorPanel.updateSourcesList() //update sources and pick first one
         visualizer.sourceSelectorPanel.sourceSelector.selectedIndex = 0

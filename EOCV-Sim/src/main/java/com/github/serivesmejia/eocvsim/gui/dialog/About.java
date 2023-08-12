@@ -25,7 +25,7 @@ package com.github.serivesmejia.eocvsim.gui.dialog;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.Icons;
-import io.github.deltacv.vision.gui.component.ImageX;
+import io.github.deltacv.vision.external.gui.component.ImageX;
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 

@@ -101,6 +101,11 @@ public class CameraSource extends InputSource {
     }
 
     @Override
+    public void setSize(Size size) {
+        this.size = size;
+    }
+
+    @Override
     public boolean init() {
         if (initialized) return false;
         initialized = true;

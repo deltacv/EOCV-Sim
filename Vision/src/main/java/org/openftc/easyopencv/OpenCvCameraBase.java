@@ -25,6 +25,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.MovingStatistics;
+import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator;
 import org.opencv.android.Utils;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -33,10 +34,7 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
 
     private OpenCvPipeline pipeline = null;
 
-    private MovingStatistics msFrameIntervalRollingAverage;
-    private MovingStatistics msUserPipelineRollingAverage;
-    private MovingStatistics msTotalFrameProcessingTimeRollingAverage;
-    private ElapsedTime timer;
+
 
     private OpenCvViewport viewport;
     private OpenCvCameraRotation rotation;
@@ -54,11 +52,15 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
     private Scalar brown = new Scalar(82, 61, 46, 255);
 
     private int frameCount = 0;
-    private float avgFps;
-    private int avgPipelineTime;
-    private int avgOverheadTime;
-    private int avgTotalFrameTime;
-    private long currentFrameStartTime;
+
+    private PipelineStatisticsCalculator statistics = new PipelineStatisticsCalculator();
+
+    public OpenCvCameraBase(OpenCvViewport viewport) {
+        this.viewport = viewport;
+        this.rotation = getDefaultRotation();
+
+        statistics.init();
+    }
 
     @Override
     public void showFpsMeterOnViewport(boolean show) {
@@ -122,19 +124,15 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
 
     @Override
     public void startRecordingPipeline(PipelineRecordingParameters parameters) {
-
     }
 
     @Override
     public void stopRecordingPipeline() {
-
     }
 
     protected synchronized void handleFrameUserCrashable(Mat frame, long timestamp) {
-        msFrameIntervalRollingAverage.add(timer.milliseconds());
-        timer.reset();
-        double secondsPerFrame = msFrameIntervalRollingAverage.getMean() / 1000d;
-        avgFps = (float) (1d / secondsPerFrame);
+        statistics.newPipelineFrameStart();
+
         Mat userProcessedFrame = null;
 
         int rotateCode = mapRotationEnumToOpenCvRotateCode(rotation);
@@ -175,9 +173,11 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
                 ((TimestampedOpenCvPipeline) pipelineSafe).setTimestamp(timestamp);
             }
 
-            long pipelineStart = System.currentTimeMillis();
+            statistics.beforeProcessFrame();
+
             userProcessedFrame = pipelineSafe.processFrameInternal(frame);
-            msUserPipelineRollingAverage.add(System.currentTimeMillis() - pipelineStart);
+
+            statistics.afterProcessFrame();
         }
 
         // Will point to whatever mat we end up deciding to send to the screen
@@ -251,17 +251,13 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
             viewport.post(matForDisplay, new OpenCvViewport.FrameContext(pipelineSafe, pipelineSafe != null ? pipelineSafe.getUserContextForDrawHook() : null));
         }
 
-        avgPipelineTime = (int) Math.round(msUserPipelineRollingAverage.getMean());
-        avgTotalFrameTime = (int) Math.round(msTotalFrameProcessingTimeRollingAverage.getMean());
-        avgOverheadTime = avgTotalFrameTime - avgPipelineTime;
+        statistics.endFrame();
 
         if (viewport != null) {
-            viewport.notifyStatistics(avgFps, avgPipelineTime, avgOverheadTime);
+            viewport.notifyStatistics(statistics.getAvgFps(), statistics.getAvgPipelineTime(), statistics.getAvgOverheadTime());
         }
 
         frameCount++;
-
-        msTotalFrameProcessingTimeRollingAverage.add(System.currentTimeMillis() - currentFrameStartTime);
     }
 
 
