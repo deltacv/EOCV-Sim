@@ -1,9 +1,8 @@
 package com.qualcomm.robotcore.hardware;
 
 import io.github.deltacv.vision.external.source.ThreadSourceHander;
-import io.github.deltacv.vision.external.source.ftc.SourcedCameraNameImpl;
+import io.github.deltacv.vision.internal.source.ftc.SourcedCameraNameImpl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
-import org.openftc.easyopencv.OpenCvViewport;
 
 public class HardwareMap {
 

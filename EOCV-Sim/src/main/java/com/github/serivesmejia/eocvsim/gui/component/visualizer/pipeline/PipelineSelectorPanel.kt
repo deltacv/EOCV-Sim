@@ -26,6 +26,9 @@ package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.util.icon.PipelineListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.util.ReflectUtil
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.util.Range
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -52,6 +55,9 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     val pipelineSelectorScroll   = JScrollPane()
 
     val pipelineSelectorLabel = JLabel("Pipelines")
+
+    // <opModeSelector index, PipelineManager index>
+    private val indexMap = mutableMapOf<Int, Int>()
 
     val buttonsPanel = PipelineSelectorButtonsPanel(eocvSim)
 
@@ -104,7 +110,7 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
             if(!allowPipelineSwitching) return@addListSelectionListener
 
             if (pipelineSelector.selectedIndex != -1) {
-                val pipeline = pipelineSelector.selectedIndex
+                val pipeline = indexMap[pipelineSelector.selectedIndex] ?: return@addListSelectionListener
 
                 if (!evt.valueIsAdjusting && pipeline != beforeSelectedPipeline) {
                     if (!eocvSim.pipelineManager.paused) {
@@ -129,8 +135,17 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     fun updatePipelinesList() = runBlocking {
         launch(Dispatchers.Swing) {
             val listModel = DefaultListModel<String>()
-            for (pipeline in eocvSim.pipelineManager.pipelines) {
-                listModel.addElement(pipeline.clazz.simpleName)
+            var selectorIndex = Range.clip(listModel.size() - 1, 0, Int.MAX_VALUE)
+
+            indexMap.clear()
+
+            for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
+                if(!ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java)) {
+                    listModel.addElement(pipeline.clazz.simpleName)
+                    indexMap[selectorIndex] = managerIndex
+
+                    selectorIndex++
+                }
             }
 
             pipelineSelector.fixedCellWidth = 240

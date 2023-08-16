@@ -4,12 +4,12 @@ import java.time.format.DateTimeFormatter
 
 buildscript {
     ext {
-        kotlin_version = "1.8.0"
+        kotlin_version = "1.9.0"
         kotlinx_coroutines_version = "1.5.0-native-mt"
         slf4j_version = "1.7.32"
         log4j_version = "2.17.1"
         opencv_version = "4.5.5-1"
-        apriltag_plugin_version = "2.0.0-A"
+        apriltag_plugin_version = "2.0.0-B"
         skiko_version = "0.7.75"
 
         classgraph_version = "4.8.108"
@@ -31,9 +31,15 @@ buildscript {
     }
 }
 
+plugins {
+    id 'java'
+}
+
 allprojects {
     group 'com.github.deltacv'
     version '3.5.0'
+
+    apply plugin: 'java'
 
     ext {
         standardVersion = version

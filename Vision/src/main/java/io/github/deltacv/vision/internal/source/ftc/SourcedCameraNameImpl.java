@@ -1,10 +1,9 @@
-package io.github.deltacv.vision.external.source.ftc;
+package io.github.deltacv.vision.internal.source.ftc;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.qualcomm.robotcore.util.SerialNumber;
 import io.github.deltacv.vision.external.source.VisionSource;
-import io.github.deltacv.vision.internal.source.ftc.SourcedCameraName;
 import org.jetbrains.annotations.NotNull;
 
 public class SourcedCameraNameImpl extends SourcedCameraName {

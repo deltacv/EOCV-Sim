@@ -1,5 +1,4 @@
 plugins {
-    id 'java'
     id 'kotlin'
     id 'maven-publish'
 }
@@ -29,9 +28,7 @@ configurations.all {
 dependencies {
     implementation project(':Common')
 
-    implementation("com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version")  {
-        if(env == 'dev') { changing = true }
-    }
+    implementation "com.github.deltacv.AprilTagDesktop:AprilTagDesktop:$apriltag_plugin_version"
 
     api "org.openpnp:opencv:$opencv_version"
 

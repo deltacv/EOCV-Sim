@@ -682,7 +682,10 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         eocvSim.onMainUpdate.doOnce { setPaused(paused, pauseReason) }
     }
 
-    fun refreshGuiPipelineList() = eocvSim.visualizer.pipelineSelectorPanel.updatePipelinesList()
+    fun refreshGuiPipelineList() {
+        eocvSim.visualizer.pipelineSelectorPanel.updatePipelinesList()
+        eocvSim.visualizer.opModeSelectorPanel.updateOpModesList()
+    }
 
 }
 

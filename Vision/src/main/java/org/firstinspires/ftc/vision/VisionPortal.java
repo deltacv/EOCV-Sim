@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.github.deltacv.vision.external.source.ThreadSourceHander;
-import io.github.deltacv.vision.external.source.ftc.SourcedCameraNameImpl;
+import io.github.deltacv.vision.internal.source.ftc.SourcedCameraNameImpl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -196,9 +196,7 @@ public abstract class VisionPortal
          */
         public Builder enableCameraMonitoring(boolean enableLiveView)
         {
-            // dont care + l + ratio
-
-           // return setCameraMonitorViewId(viewId);
+            setCameraMonitorViewId(1);
             return this;
         }
 

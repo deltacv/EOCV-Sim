@@ -8,22 +8,33 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import io.github.deltacv.vision.external.source.ViewportAndSourceHander
 import io.github.deltacv.vision.external.source.VisionSource
 import io.github.deltacv.vision.external.source.VisionSourceHander
+import org.opencv.core.Mat
 import org.opencv.core.Size
+import org.opencv.videoio.VideoCapture
 import org.openftc.easyopencv.OpenCvViewport
 import java.io.File
+import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.net.URLConnection
+import javax.imageio.ImageIO
 
 class VisionInputSourceHander(val stopNotifier: EventHandler, val viewport: OpenCvViewport) : ViewportAndSourceHander {
 
-    private fun isImage(path: String): Boolean {
-        val mimeType: String = URLConnection.getFileNameMap().getContentTypeFor(path)
-        return mimeType.startsWith("image")
-    }
+    private fun isImage(path: String) = try {
+        ImageIO.read(File(path)) != null
+    } catch(ex: IOException) { false }
 
     private fun isVideo(path: String): Boolean {
-        val mimeType: String = URLConnection.getFileNameMap().getContentTypeFor(path)
-        return mimeType.startsWith("video")
+        val capture = VideoCapture(path)
+        val mat = Mat()
+
+        capture.read(mat)
+
+        val isVideo = !mat.empty()
+
+        capture.release()
+
+        return isVideo
     }
 
     override fun hand(name: String): VisionSource {

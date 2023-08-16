@@ -1,13 +1,5 @@
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_10
-    targetCompatibility = JavaVersion.VERSION_1_10
-}
-
-if (project.getPluginManager().hasPlugin("org.jetbrains.kotlin.jvm")) {
-    compileKotlin {
-        kotlinOptions {
-            jvmTarget = "10"
-            freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
-        }
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(10)
     }
 }

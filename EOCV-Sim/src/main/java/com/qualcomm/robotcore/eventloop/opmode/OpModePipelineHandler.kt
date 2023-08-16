@@ -12,6 +12,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport
 
+enum class OpModeState { SELECTED, INIT, START, STOP, STOPPED }
+
 class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private val viewport: OpenCvViewport) : SpecificPipelineHandler<OpMode>(
         { it is OpMode }
 ) {

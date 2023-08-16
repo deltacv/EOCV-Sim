@@ -195,7 +195,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
         inputSourceManager.init() //loading user created input sources
 
         pipelineManager.init() //init pipeline manager (scan for pipelines)
-        pipelineManager.subscribePipelineHandler(TimestampedPipelineHandler())
 
         tunerManager.init() //init tunable variables manager
 
@@ -213,8 +212,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         inputSourceManager.inputSourceLoader.saveInputSourcesToFile()
 
-        visualizer.waitForFinishingInit()
+        visualizer.joinInit()
 
+        pipelineManager.subscribePipelineHandler(TimestampedPipelineHandler())
         pipelineManager.subscribePipelineHandler(OpModePipelineHandler(inputSourceManager, visualizer.viewport))
 
         visualizer.sourceSelectorPanel.updateSourcesList() //update sources and pick first one
@@ -223,6 +223,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         visualizer.pipelineSelectorPanel.updatePipelinesList() //update pipelines and pick first one (DefaultPipeline)
         visualizer.pipelineSelectorPanel.selectedIndex = 0
+
+        visualizer.opModeSelectorPanel.updateOpModesList() //update opmodes and pick first one (DefaultPipeline)
+        visualizer.opModeSelectorPanel.selectedIndex = 0
 
         //post output mats from the pipeline to the visualizer viewport
         pipelineManager.pipelineOutputPosters.add(visualizer.viewport)

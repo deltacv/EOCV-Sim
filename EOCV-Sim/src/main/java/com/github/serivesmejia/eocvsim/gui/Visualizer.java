@@ -26,13 +26,11 @@ package com.github.serivesmejia.eocvsim.gui;
 import com.formdev.flatlaf.FlatLaf;
 import com.github.serivesmejia.eocvsim.Build;
 import com.github.serivesmejia.eocvsim.EOCVSim;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.*;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.OpModeSelectorPanel;
 import io.github.deltacv.vision.external.gui.SwingOpenCvViewport;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.InputSourceDropTarget;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.SourceSelectorPanel;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.TopMenuBar;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
 import com.github.serivesmejia.eocvsim.gui.util.ReflectTaskbar;
@@ -75,8 +73,13 @@ public class Visualizer {
     public JSplitPane globalSplitPane = null;
     public JSplitPane imageTunerSplitPane = null;
 
+    public PipelineOpModeSwitchablePanel pipelineOpModeSwitchablePanel = null;
+
     public PipelineSelectorPanel pipelineSelectorPanel = null;
     public SourceSelectorPanel sourceSelectorPanel = null;
+
+    public OpModeSelectorPanel opModeSelectorPanel = null;
+
     public TelemetryPanel telemetryPanel;
 
     private String title = "EasyOpenCV Simulator v" + Build.standardVersionString;
@@ -135,9 +138,14 @@ public class Visualizer {
         tunerMenuPanel = new JPanel();
         skiaPanel.add(tunerMenuPanel, BorderLayout.SOUTH);
 
-        pipelineSelectorPanel = new PipelineSelectorPanel(eocvSim);
-        sourceSelectorPanel   = new SourceSelectorPanel(eocvSim);
-        telemetryPanel        = new TelemetryPanel();
+        pipelineOpModeSwitchablePanel = new PipelineOpModeSwitchablePanel(eocvSim);
+
+        pipelineSelectorPanel = pipelineOpModeSwitchablePanel.getPipelineSelectorPanel();
+        sourceSelectorPanel = pipelineOpModeSwitchablePanel.getSourceSelectorPanel();
+
+        opModeSelectorPanel = pipelineOpModeSwitchablePanel.getOpModeSelectorPanel();
+
+        telemetryPanel = new TelemetryPanel();
 
         rightContainer = new JPanel();
 
@@ -153,18 +161,7 @@ public class Visualizer {
 
         rightContainer.setLayout(new BoxLayout(rightContainer, BoxLayout.Y_AXIS));
 
-        /*
-         * PIPELINE SELECTOR
-         */
-
-        pipelineSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(pipelineSelectorPanel);
-
-        /*
-         * SOURCE SELECTOR
-         */
-        sourceSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(sourceSelectorPanel);
+        rightContainer.add(pipelineOpModeSwitchablePanel);
 
         /*
          * TELEMETRY
@@ -284,7 +281,7 @@ public class Visualizer {
 
     public boolean hasFinishedInit() { return hasFinishedInitializing; }
 
-    public void waitForFinishingInit() {
+    public void joinInit() {
         while (!hasFinishedInitializing) {
             Thread.yield();
         }
