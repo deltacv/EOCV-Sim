@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
+import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.*
@@ -17,55 +18,63 @@ import javax.swing.event.ListSelectionEvent
 
 class OpModeSelectorPanel(val eocvSim: EOCVSim) : JPanel() {
 
-    var selectedIndex: Int
-        get() = opModeSelector.selectedIndex
+    var selectedIndex = -1
         set(value) {
-            runBlocking {
-                launch(Dispatchers.Swing) {
-                    opModeSelector.selectedIndex = value
-                }
-            }
+            field = value
         }
-
-    val opModeSelector         = JList<String>()
-    val opModeSelectorScroll   = JScrollPane()
-
-    val opModeSelectorLabel = JLabel("OpModes")
 
     // <opModeSelector index, PipelineManager index>
     private val indexMap = mutableMapOf<Int, Int>()
 
-    var allowOpModeSwitching = false
+    val autonomousButton = JButton("\\/")
 
+    val textPanel = JPanel()
+
+    val selectOpModeLabel = JLabel("Select Op Mode")
+    val buttonDescriptorLabel = JLabel("<- Autonomous | TeleOp ->")
+
+    val teleopButton = JButton("\\/")
+
+    var allowOpModeSwitching = false
     private var beforeSelectedPipeline = -1
 
     init {
         layout = GridBagLayout()
+        textPanel.layout = GridBagLayout()
 
-        opModeSelectorLabel.font = opModeSelectorLabel.font.deriveFont(20.0f)
-
-        opModeSelectorLabel.horizontalAlignment = JLabel.CENTER
-
-        add(opModeSelectorLabel, GridBagConstraints().apply {
+        add(autonomousButton, GridBagConstraints().apply {
+            gridx = 0
             gridy = 0
             ipady = 20
         })
 
-        opModeSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager)
-        opModeSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
+        selectOpModeLabel.horizontalTextPosition = JLabel.CENTER
+        selectOpModeLabel.horizontalAlignment = JLabel.CENTER
 
-        opModeSelectorScroll.setViewportView(opModeSelector)
-        opModeSelectorScroll.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        opModeSelectorScroll.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        buttonDescriptorLabel.horizontalTextPosition = JLabel.CENTER
+        buttonDescriptorLabel.horizontalAlignment = JLabel.CENTER
 
-        add(opModeSelectorScroll, GridBagConstraints().apply {
+        textPanel.add(selectOpModeLabel, GridBagConstraints().apply {
+            gridx = 0
+            gridy = 0
+            ipady = 0
+        })
+
+        textPanel.add(buttonDescriptorLabel, GridBagConstraints().apply {
+            gridx = 0
             gridy = 1
+            ipadx = 10
+        })
 
-            weightx = 0.5
-            weighty = 1.0
-            fill = GridBagConstraints.BOTH
+        add(textPanel, GridBagConstraints().apply {
+            gridx = 1
+            gridy = 0
+            ipadx = 20
+        })
 
-            ipadx = 120
+        add(teleopButton, GridBagConstraints().apply {
+            gridx = 2
+            gridy = 0
             ipady = 20
         })
 
@@ -74,35 +83,10 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim) : JPanel() {
 
     private fun registerListeners() {
 
-        //listener for changing pipeline
-        opModeSelector.addListSelectionListener { evt: ListSelectionEvent ->
-            if(!allowOpModeSwitching) return@addListSelectionListener
-
-            if (opModeSelector.selectedIndex != -1) {
-                val pipeline = indexMap[opModeSelector.selectedIndex] ?: return@addListSelectionListener
-
-                if (!evt.valueIsAdjusting && pipeline != beforeSelectedPipeline) {
-                    if (!eocvSim.pipelineManager.paused) {
-                        eocvSim.pipelineManager.requestChangePipeline(pipeline)
-                        beforeSelectedPipeline = pipeline
-                    } else {
-                        if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
-                            opModeSelector.setSelectedIndex(beforeSelectedPipeline)
-                        } else { //handling pausing
-                            eocvSim.pipelineManager.requestSetPaused(false)
-                            eocvSim.pipelineManager.requestChangePipeline(pipeline)
-                            beforeSelectedPipeline = pipeline
-                        }
-                    }
-                }
-            } else {
-                opModeSelector.setSelectedIndex(1)
-            }
-        }
     }
 
     fun updateOpModesList() = runBlocking {
-        launch(Dispatchers.Swing) {
+        /* launch(Dispatchers.Swing) {
             val listModel = DefaultListModel<String>()
             var selectorIndex = Range.clip(listModel.size() - 1, 0, Int.MAX_VALUE)
 
@@ -121,14 +105,14 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim) : JPanel() {
             opModeSelector.model = listModel
 
             revalAndRepaint()
-        }
+        }*/
     }
 
     fun revalAndRepaint() {
-        opModeSelector.revalidate()
+        /* opModeSelector.revalidate()
         opModeSelector.repaint()
         opModeSelectorScroll.revalidate()
-        opModeSelectorScroll.repaint()
+        opModeSelectorScroll.repaint() */
     }
 
 }

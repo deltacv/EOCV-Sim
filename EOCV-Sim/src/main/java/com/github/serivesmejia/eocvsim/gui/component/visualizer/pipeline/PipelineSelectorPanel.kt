@@ -42,11 +42,11 @@ import javax.swing.event.ListSelectionEvent
 class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
     var selectedIndex: Int
-        get() = pipelineSelector.selectedIndex
+        get() = indexMap[pipelineSelector.selectedIndex] ?: -1
         set(value) {
             runBlocking {
                 launch(Dispatchers.Swing) {
-                    pipelineSelector.selectedIndex = value
+                    pipelineSelector.selectedIndex = indexMap.entries.find { it.value == value }?.key ?: -1
                 }
             }
         }
