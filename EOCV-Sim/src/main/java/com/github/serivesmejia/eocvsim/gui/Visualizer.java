@@ -67,11 +67,7 @@ public class Visualizer {
     public TopMenuBar menuBar = null;
     public JPanel tunerMenuPanel = new JPanel();
 
-    public JScrollPane imgScrollPane = null;
-
     public JPanel rightContainer = null;
-    public JSplitPane globalSplitPane = null;
-    public JSplitPane imageTunerSplitPane = null;
 
     public PipelineOpModeSwitchablePanel pipelineOpModeSwitchablePanel = null;
 
@@ -88,9 +84,6 @@ public class Visualizer {
     private String beforeTitleMsg = "";
 
     public ColorPicker colorPicker = null;
-
-    //stuff for zooming handling
-    private volatile boolean isCtrlPressed = false;
 
     private volatile boolean hasFinishedInitializing = false;
 
@@ -236,25 +229,6 @@ public class Visualizer {
                 // viewport.setViewportScale(scale);
         //    }
         // });
-
-        //listening for keyboard presses and releases, to check if ctrl key was pressed or released (handling zoom)
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(ke -> {
-            switch (ke.getID()) {
-                case KeyEvent.KEY_PRESSED:
-                    if (ke.getKeyCode() == KeyEvent.VK_CONTROL) {
-                        isCtrlPressed = true;
-                        imgScrollPane.setWheelScrollingEnabled(false); //lock scrolling if ctrl is pressed
-                    }
-                    break;
-                case KeyEvent.KEY_RELEASED:
-                    if (ke.getKeyCode() == KeyEvent.VK_CONTROL) {
-                        isCtrlPressed = false;
-                        imgScrollPane.setWheelScrollingEnabled(true); //unlock
-                    }
-                    break;
-            }
-            return false; //idk let's just return false 'cause keyboard input doesn't work otherwise
-        });
 
         //resizes all three JLists in right panel to make buttons visible in smaller resolutions
         frame.addComponentListener(new ComponentAdapter() {

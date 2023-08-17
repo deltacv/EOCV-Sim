@@ -19,7 +19,7 @@ public class FrameQueue {
     }
 
     public Mat takeMatAndPost() {
-        Mat mat = matRecycler.takeMat();
+        Mat mat = matRecycler.takeMatOrNull();
         viewportQueue.add(mat);
 
         return mat;
@@ -27,7 +27,7 @@ public class FrameQueue {
 
 
     public Mat takeMat() {
-        return matRecycler.takeMat();
+        return matRecycler.takeMatOrNull();
     }
 
     public Mat poll() {

@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import io.github.deltacv.vision.external.source.ViewportAndSourceHander
 import io.github.deltacv.vision.external.source.VisionSource
 import io.github.deltacv.vision.external.source.VisionSourceHander
+import io.github.deltacv.vision.internal.opmode.OpModeNotifier
+import io.github.deltacv.vision.internal.opmode.OpModeState
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.opencv.videoio.VideoCapture
@@ -18,7 +20,7 @@ import java.lang.IllegalArgumentException
 import java.net.URLConnection
 import javax.imageio.ImageIO
 
-class VisionInputSourceHander(val stopNotifier: EventHandler, val viewport: OpenCvViewport) : ViewportAndSourceHander {
+class VisionInputSourceHander(val notifier: OpModeNotifier, val viewport: OpenCvViewport) : ViewportAndSourceHander {
 
     private fun isImage(path: String) = try {
         ImageIO.read(File(path)) != null
@@ -52,8 +54,14 @@ class VisionInputSourceHander(val stopNotifier: EventHandler, val viewport: Open
             CameraSource(index, Size(640.0, 480.0))
         })
 
-        stopNotifier.doOnce {
-            source.stop()
+        notifier.onStateChange {
+            when(notifier.state) {
+                OpModeState.STOPPED -> {
+                    source.stop()
+                    it.removeThis()
+                }
+                else -> {}
+            }
         }
 
         return source

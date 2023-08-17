@@ -12,6 +12,6 @@ interface PipelineHandler {
 
     fun processFrame(currentInputSource: InputSource?)
 
-    fun onChange(pipeline: OpenCvPipeline, telemetry: Telemetry)
+    fun onChange(beforePipeline: OpenCvPipeline?, newPipeline: OpenCvPipeline, telemetry: Telemetry)
 
 }

@@ -2,9 +2,7 @@ package io.github.deltacv.eocvsim.input
 
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import io.github.deltacv.vision.external.source.VisionSource
 import io.github.deltacv.vision.external.source.VisionSourceBase
-import io.github.deltacv.vision.external.source.VisionSourced
 import io.github.deltacv.vision.external.util.Timestamped
 import org.opencv.core.Mat
 import org.opencv.core.Size
@@ -36,14 +34,13 @@ class VisionInputSource(
         return true;
     }
 
-    private val emptyMat = Mat();
+    private val emptyMat = Mat()
 
     override fun pullFrame(): Timestamped<Mat> {
         try {
             val frame = inputSource.update();
             return Timestamped(frame, inputSource.captureTimeNanos)
         } catch(e: Exception) {
-            logger.warn("Exception thrown while pulling frame from input source", e)
             return Timestamped(emptyMat, 0)
         }
     }

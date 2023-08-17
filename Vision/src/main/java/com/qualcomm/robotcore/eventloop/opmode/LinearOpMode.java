@@ -1,6 +1,8 @@
 package com.qualcomm.robotcore.eventloop.opmode;
 
 import io.github.deltacv.vision.external.source.ThreadSourceHander;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class LinearOpMode extends OpMode {
     protected final Object lock = new Object();
@@ -153,16 +155,23 @@ public abstract class LinearOpMode extends OpMode {
         /*
          * Get out of dodge. Been here, done this.
          */
-        if(stopRequested)  { return; }
+        if(stopRequested) { return; }
 
         stopRequested = true;
 
         helper.interrupt();
+
+        try {
+            helper.join();
+        } catch (InterruptedException ignored) {
+        }
     }
 
     private static class LinearOpModeHelperThread extends Thread {
 
         LinearOpMode opMode;
+
+        static Logger logger = LoggerFactory.getLogger(LinearOpModeHelperThread.class);
 
         public LinearOpModeHelperThread(LinearOpMode opMode) {
             super("Thread-LinearOpModeHelper-" + opMode.getClass().getSimpleName());
@@ -172,15 +181,21 @@ public abstract class LinearOpMode extends OpMode {
 
         @Override
         public void run() {
+            logger.info("{}: starting", opMode.getClass().getSimpleName());
+
             try {
                 opMode.runOpMode();
+                Thread.sleep(0);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                logger.info("{}: interrupted", opMode.getClass().getSimpleName());
             } catch (RuntimeException e) {
                 synchronized (opMode.lock) {
                     opMode.catchedException = e;
                 }
             }
+
+            logger.info("{}: stopped", opMode.getClass().getSimpleName());
         }
 
     }

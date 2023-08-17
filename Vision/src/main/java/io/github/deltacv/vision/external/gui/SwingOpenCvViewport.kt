@@ -22,17 +22,14 @@
  */
 package io.github.deltacv.vision.external.gui
 
-import android.graphics.Bitmap
 import android.graphics.Canvas
-import io.github.deltacv.common.image.DynamicBufferedImageRecycler
 import io.github.deltacv.common.image.MatPoster
+import io.github.deltacv.vision.internal.util.KillException
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue
 import org.jetbrains.skia.Color
-import org.jetbrains.skiko.ExperimentalSkikoApi
 import org.jetbrains.skiko.GenericSkikoView
 import org.jetbrains.skiko.SkiaLayer
 import org.jetbrains.skiko.SkikoView
-import org.jetbrains.skiko.swing.SkiaSwingLayer
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.openftc.easyopencv.MatRecycler
@@ -42,13 +39,11 @@ import org.openftc.easyopencv.OpenCvViewport
 import org.openftc.easyopencv.OpenCvViewport.OptimizedRotation
 import org.openftc.easyopencv.OpenCvViewport.RenderHook
 import org.slf4j.LoggerFactory
-import java.awt.GridBagLayout
-import java.awt.image.BufferedImage
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import javax.swing.JComponent
-import javax.swing.JPanel
 import javax.swing.SwingUtilities
+import kotlin.jvm.Throws
 
 class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Vision") : OpenCvViewport, MatPoster {
 
@@ -179,6 +174,7 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
     }
 
     override fun setRecording(recording: Boolean) {}
+
     override fun post(mat: Mat, userContext: Any) {
         synchronized(syncObj) {
             //did they give us null?
@@ -201,7 +197,7 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
                  * instead of doing a new alloc and then having
                  * to free it after rendering/eviction from queue
                  */
-                val matToCopyTo = framebufferRecycler!!.takeMat()
+                val matToCopyTo = framebufferRecycler!!.takeMatOrInterrupt()
 
                 mat.copyTo(matToCopyTo)
                 matToCopyTo.context = userContext
@@ -288,7 +284,7 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
 
     private fun renderCanvas(canvas: Canvas) {
         if(!::lastFrame.isInitialized) {
-            lastFrame = framebufferRecycler!!.takeMat()
+            lastFrame = framebufferRecycler!!.takeMatOrNull()
         }
 
         synchronized(canvasLock) {

@@ -54,18 +54,27 @@ public class MatRecycler {
         this(num, 0, 0, CvType.CV_8UC3);
     }
 
-    public synchronized RecyclableMat takeMat() {
+    public synchronized RecyclableMat takeMatOrNull() {
         if (availableMats.size() == 0) {
+            return null;
+        }
+
+        try {
+            return takeMatOrInterrupt();
+        } catch (InterruptedException e) {
+            return null;
+        }
+    }
+
+    public synchronized RecyclableMat takeMatOrInterrupt() throws InterruptedException {
+        if(availableMats.size() == 0) {
             throw new RuntimeException("All mats have been checked out!");
         }
 
-        RecyclableMat mat = null;
-        try {
-            mat = availableMats.take();
-            mat.checkedOut = true;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        RecyclableMat mat;
+
+        mat = availableMats.take();
+        mat.checkedOut = true;
 
         return mat;
     }

@@ -91,7 +91,7 @@ public class MatPosterImpl implements MatPoster {
                 evict(postQueue.poll());
             }
 
-            MatRecycler.RecyclableMat recycledMat = matRecycler.takeMat();
+            MatRecycler.RecyclableMat recycledMat = matRecycler.takeMatOrNull();
             m.copyTo(recycledMat);
 
             postQueue.offer(recycledMat);

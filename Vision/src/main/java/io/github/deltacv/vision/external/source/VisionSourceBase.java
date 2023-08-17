@@ -1,10 +1,14 @@
 package io.github.deltacv.vision.external.source;
 
 import io.github.deltacv.vision.external.util.Timestamped;
+import io.github.deltacv.vision.internal.util.KillException;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public abstract class VisionSourceBase implements VisionSource {
 
@@ -41,13 +45,9 @@ public abstract class VisionSourceBase implements VisionSource {
 
     @Override
     public final boolean stop() {
-        helperThread.interrupt();
+        if(!helperThread.isAlive() || helperThread.isInterrupted()) return false;
 
-        for(VisionSourced sourced : sourceds) {
-            synchronized (sourced) {
-                sourced.stop();
-            }
-        }
+        helperThread.interrupt();
 
         return stopSource();
     }
@@ -69,29 +69,40 @@ public abstract class VisionSourceBase implements VisionSource {
     private static class SourceBaseHelperThread extends Thread {
 
         VisionSourceBase sourceBase;
+        boolean shouldStop = false;
+
+        Logger logger;
 
         public SourceBaseHelperThread(VisionSourceBase sourcedBase) {
             super("Thread-SourceBaseHelper-" + sourcedBase.getClass().getSimpleName());
+            logger = LoggerFactory.getLogger(getName());
 
             this.sourceBase = sourcedBase;
         }
+
         @Override
         public void run() {
-            while (!isInterrupted()) {
-                Timestamped<Mat> frame = sourceBase.pullFrameInternal();
+            VisionSourced[] sourceds = new VisionSourced[0];
 
-                VisionSourced[] sourceds;
+            logger.info("starting");
+
+            while (!isInterrupted() && !shouldStop) {
+                Timestamped<Mat> frame = sourceBase.pullFrameInternal();
 
                 synchronized (sourceBase.lock) {
                     sourceds = sourceBase.sourceds.toArray(new VisionSourced[0]);
                 }
 
-                for(VisionSourced sourced : sourceds) {
-                    synchronized (sourced) {
-                        sourced.onNewFrame(frame.getValue(), frame.getTimestamp());
-                    }
+                for (VisionSourced sourced : sourceds) {
+                    sourced.onNewFrame(frame.getValue(), frame.getTimestamp());
                 }
             }
+
+            for(VisionSourced sourced : sourceds) {
+                sourced.stop();
+            }
+
+            logger.info("stop");
         }
     }
 

@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.gui.component
 
+import com.github.serivesmejia.eocvsim.gui.util.Location
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import java.awt.Window
 import java.awt.event.KeyAdapter
@@ -97,6 +98,7 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
     companion object {
 
         fun JComponent.popUpXOnThis(panel: JPanel,
+                                    popupLocation: Location = Location.TOP,
                                     closeOnFocusLost: Boolean = true,
                                     fixX: Boolean = false,
                                     fixY: Boolean = true): PopupX {
@@ -104,7 +106,28 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
             val frame = SwingUtilities.getWindowAncestor(this)
             val location = locationOnScreen
 
-            return PopupX(frame, panel, location.x, location.y, closeOnFocusLost, fixX, fixY)
+            val popup = PopupX(frame, panel, location.x,
+                    if(popupLocation == Location.TOP) location.y else location.y + height,
+                    closeOnFocusLost, fixX, fixY
+            )
+
+            popup.onShow {
+                popup.setLocation(
+                        popup.window.location.x - width / 3,
+                        if(popupLocation == Location.TOP) popup.window.location.y else popup.window.location.y + popup.window.height
+                )
+
+                val topRightPointX = popup.window.location.x + popup.window.width
+
+                if(topRightPointX > frame.width) {
+                    popup.setLocation(
+                            popup.window.location.x - ((topRightPointX - frame.width) / 2),
+                            popup.window.location.y
+                    )
+                }
+            }
+
+            return popup
         }
 
     }

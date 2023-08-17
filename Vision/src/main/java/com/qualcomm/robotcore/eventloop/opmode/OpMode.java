@@ -33,13 +33,22 @@ package com.qualcomm.robotcore.eventloop.opmode;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import io.github.deltacv.vision.external.util.FrameQueue;
+import io.github.deltacv.vision.internal.opmode.OpModeNotification;
+import io.github.deltacv.vision.internal.opmode.OpModeNotifier;
+import io.github.deltacv.vision.internal.opmode.OpModeState;
 import org.openftc.easyopencv.TimestampedOpenCvPipeline;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Mat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my life would i have imagined...
 
+    private Logger logger = LoggerFactory.getLogger(OpMode.class);
+
     public Telemetry telemetry;
+
+    public OpModeNotifier notifier = new OpModeNotifier();
 
     volatile boolean isStarted = false;
     volatile boolean stopRequested = false;
@@ -100,29 +109,67 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
     public void stop() {}; // normally called by OpModePipelineHandler
 
     public void requestOpModeStop() {
-        stop();
+        notifier.notify(OpModeNotification.STOP);
     }
 
     /* BEGIN OpenCvPipeline Impl */
 
     @Override
     public final void init(Mat mat) {
-        init();
-        telemetry.update();
     }
-
-    private boolean startCalled = false;
 
     @Override
     public final Mat processFrame(Mat input, long captureTimeNanos) {
-        if(!startCalled) {
-            start();
-            startCalled = true;
-            telemetry.update();
+        OpModeNotification notification = notifier.poll();
+
+        if(notification != OpModeNotification.NOTHING) {
+            logger.info("OpModeNotification: {}, OpModeState: {}", notification, notifier.getState());
         }
 
-        loop();
-        telemetry.update();
+        switch(notification) {
+            case INIT:
+                if(notifier.getState() == OpModeState.START) break;
+
+                init();
+                notifier.notify(OpModeState.INIT);
+                break;
+            case START:
+                if(notifier.getState() == OpModeState.STOP || notifier.getState() == OpModeState.STOPPED) break;
+
+                start();
+                notifier.notify(OpModeState.START);
+                break;
+            case STOP:
+                notifier.notify(OpModeState.STOP);
+                stop();
+                notifier.notify(OpModeState.STOPPED);
+                break;
+            case NOTHING:
+                break;
+        }
+
+        OpModeState state = notifier.getState();
+
+        switch(state) {
+            case SELECTED:
+            case STOP:
+            case STOPPED:
+                break;
+            case INIT:
+                init_loop();
+
+                if(!(this instanceof LinearOpMode)) {
+                    telemetry.update();
+                }
+                break;
+            case START:
+                loop();
+
+                if(!(this instanceof LinearOpMode)) {
+                    telemetry.update();
+                }
+                break;
+        }
 
         return null; // OpModes don't actually show anything to the viewport, we'll delegate that to OpenCvCamera-s
     }

@@ -86,7 +86,7 @@ public class VideoSource extends InputSource {
 
         if (matRecycler == null) matRecycler = new MatRecycler(4);
 
-        MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
+        MatRecycler.RecyclableMat newFrame = matRecycler.takeMatOrNull();
         newFrame.release();
 
         video.read(newFrame);
@@ -123,15 +123,13 @@ public class VideoSource extends InputSource {
 
     @Override
     public void close() {
-
         if (video != null && video.isOpened()) video.release();
-        if (lastFrame != null) lastFrame.returnMat();
+        if (lastFrame != null && lastFrame.isCheckedOut()) lastFrame.returnMat();
 
         if (lastFramePaused != null) {
             lastFramePaused.returnMat();
             lastFramePaused = null;
         }
-
     }
 
     @Override
@@ -149,10 +147,10 @@ public class VideoSource extends InputSource {
             Thread.currentThread().interrupt();
         }
 
-        if (lastFrame == null) lastFrame = matRecycler.takeMat();
+        if (lastFrame == null) lastFrame = matRecycler.takeMatOrNull();
         if (video == null) return lastFrame;
 
-        MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
+        MatRecycler.RecyclableMat newFrame = matRecycler.takeMatOrNull();
 
         video.read(newFrame);
         capTimeNanos = System.nanoTime();
@@ -182,7 +180,7 @@ public class VideoSource extends InputSource {
     @Override
     public void onPause() {
         if (lastFrame != null) lastFrame.release();
-        if (lastFramePaused == null) lastFramePaused = matRecycler.takeMat();
+        if (lastFramePaused == null) lastFramePaused = matRecycler.takeMatOrNull();
 
         video.read(lastFramePaused);
 

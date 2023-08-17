@@ -86,6 +86,9 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         private set
     var previousPipelineIndex = 0
 
+    @Volatile var previousPipeline: OpenCvPipeline? = null
+        private set
+
     val activePipelineContexts = ArrayList<ExecutorCoroutineDispatcher>()
     private var currentPipelineContext: ExecutorCoroutineDispatcher? = null
 
@@ -196,7 +199,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
 
             if(currentPipeline != null) {
                 for (pipelineHandler in pipelineHandlers) {
-                    pipelineHandler.onChange(currentPipeline!!, currentTelemetry!!)
+                    pipelineHandler.onChange(previousPipeline, currentPipeline!!, currentTelemetry!!)
                 }
             }
         }
@@ -497,7 +500,17 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
     fun forceChangePipeline(index: Int?,
                             applyLatestSnapshot: Boolean = false,
                             applyStaticSnapshot: Boolean = false) {
-        if(index == null) return
+        if(index == null) {
+            previousPipelineIndex = currentPipelineIndex
+
+            currentPipeline = null
+            currentPipelineIndex = -1
+
+            onPipelineChange.run()
+            logger.info("Set to null pipeline")
+
+            return
+        }
 
         captureSnapshot()
 
@@ -544,6 +557,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         }
 
         previousPipelineIndex = currentPipelineIndex
+        previousPipeline = currentPipeline
 
         currentPipeline      = nextPipeline
         currentPipelineData  = pipelines[index]

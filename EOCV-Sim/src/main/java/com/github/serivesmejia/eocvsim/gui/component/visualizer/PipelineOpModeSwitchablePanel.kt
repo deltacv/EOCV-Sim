@@ -20,8 +20,8 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
     val opModePanel = JPanel()
 
-    val opModeSelectorPanel = OpModeSelectorPanel(eocvSim)
-    val opModeControlsPanel = OpModeControlsPanel()
+    val opModeControlsPanel = OpModeControlsPanel(eocvSim)
+    val opModeSelectorPanel = OpModeSelectorPanel(eocvSim, opModeControlsPanel)
 
     private var beforeAllowPipelineSwitching: Boolean? = null
 
@@ -51,9 +51,13 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
             if(index == 0 && beforeAllowPipelineSwitching != null) {
                 pipelineSelectorPanel.allowPipelineSwitching = beforeAllowPipelineSwitching!!
+
+                eocvSim.pipelineManager.requestChangePipeline(0)
             } else if(index == 1) {
                 beforeAllowPipelineSwitching = pipelineSelectorPanel.allowPipelineSwitching
                 pipelineSelectorPanel.allowPipelineSwitching = false
+
+                opModeSelectorPanel.reset()
             }
         }
     }

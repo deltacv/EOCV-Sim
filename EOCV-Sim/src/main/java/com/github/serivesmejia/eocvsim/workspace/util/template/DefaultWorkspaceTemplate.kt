@@ -25,7 +25,6 @@ package com.github.serivesmejia.eocvsim.workspace.util.template
 
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
 import com.github.serivesmejia.eocvsim.workspace.util.WorkspaceTemplate
 import net.lingala.zip4j.ZipFile
 import java.io.File

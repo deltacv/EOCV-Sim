@@ -12,8 +12,6 @@ import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport
 
-enum class OpModeState { SELECTED, INIT, START, STOP, STOPPED }
-
 enum class OpModeType { AUTONOMOUS, TELEOP }
 
 class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private val viewport: OpenCvViewport) : SpecificPipelineHandler<OpMode>(
@@ -23,9 +21,10 @@ class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private 
     private val onStop = EventHandler("OpModePipelineHandler-onStop")
 
     override fun preInit() {
-        inputSourceManager.setInputSource(inputSourceManager.defaultInputSource)
+        if(pipeline == null) return
 
-        ThreadSourceHander.register(VisionInputSourceHander(onStop, viewport))
+        inputSourceManager.setInputSource(inputSourceManager.defaultInputSource)
+        ThreadSourceHander.register(VisionInputSourceHander(pipeline!!.notifier, viewport))
 
         pipeline?.telemetry = telemetry
         pipeline?.hardwareMap = HardwareMap()
@@ -33,15 +32,30 @@ class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private 
 
     override fun init() { }
 
-
     override fun processFrame(currentInputSource: InputSource?) {
     }
 
-    override fun onChange(pipeline: OpenCvPipeline, telemetry: Telemetry) {
-        this.pipeline?.requestOpModeStop()
-        onStop.run()
+    override fun onChange(beforePipeline: OpenCvPipeline?, newPipeline: OpenCvPipeline, telemetry: Telemetry) {
+        if(beforePipeline is OpMode && beforePipeline == pipeline) {
+            beforePipeline.requestOpModeStop()
+            onStop.run()
+        }
 
-        super.onChange(pipeline, telemetry)
+        super.onChange(beforePipeline, newPipeline, telemetry)
     }
 
 }
+
+val Class<*>.opModeType get() = when {
+    this.autonomousAnnotation != null -> OpModeType.AUTONOMOUS
+    this.teleopAnnotation != null -> OpModeType.TELEOP
+    else -> null
+}
+
+val OpMode.opModeType get() = this.javaClass.opModeType
+
+val Class<*>.autonomousAnnotation get() = this.getAnnotation(Autonomous::class.java)
+val Class<*>.teleopAnnotation get() = this.getAnnotation(TeleOp::class.java)
+
+val OpMode.autonomousAnnotation get() = this.javaClass.autonomousAnnotation
+val OpMode.teleopAnnotation get() = this.javaClass.teleopAnnotation

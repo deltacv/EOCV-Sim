@@ -14,9 +14,9 @@ abstract class SpecificPipelineHandler<P: OpenCvPipeline>(
         private set
 
     @Suppress("UNCHECKED_CAST")
-    override fun onChange(pipeline: OpenCvPipeline, telemetry: Telemetry) {
-        if(typeChecker(pipeline)) {
-            this.pipeline = pipeline as P
+    override fun onChange(beforePipeline: OpenCvPipeline?, newPipeline: OpenCvPipeline, telemetry: Telemetry) {
+        if(typeChecker(newPipeline)) {
+            this.pipeline = newPipeline as P
             this.telemetry = telemetry
         } else {
             this.pipeline = null
