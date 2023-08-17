@@ -41,13 +41,13 @@ public abstract class InputSource implements Comparable<InputSource> {
     protected transient long createdOn = -1L;
 
     public abstract boolean init();
-
     public abstract void reset();
+
+    public void cleanIfDirty() { }
 
     public abstract void close();
 
     public abstract void onPause();
-
     public abstract void onResume();
 
     public void setSize(Size size) {}

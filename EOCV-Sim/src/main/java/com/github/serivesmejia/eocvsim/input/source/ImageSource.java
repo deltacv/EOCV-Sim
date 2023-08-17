@@ -142,16 +142,20 @@ public class ImageSource extends InputSource {
 
     @Override
     public Mat update() {
-
         if (isPaused) return lastCloneTo;
         if (lastCloneTo == null) lastCloneTo = matRecycler.takeMat();
 
         if (img == null) return null;
 
+        lastCloneTo.release();
         img.copyTo(lastCloneTo);
 
         return lastCloneTo;
+    }
 
+    @Override
+    public void cleanIfDirty() {
+        readImage();
     }
 
     @Override

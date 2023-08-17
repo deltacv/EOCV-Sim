@@ -245,7 +245,12 @@ public class InputSourceManager {
         logger.info("Set InputSource to " + currentInputSource.toString() + " (" + src.getClass().getSimpleName() + ")");
 
         return true;
+    }
 
+    public void cleanSourceIfDirty() {
+        if(currentInputSource != null) {
+            currentInputSource.cleanIfDirty();
+        }
     }
 
     public boolean isNameOnUse(String name) {
