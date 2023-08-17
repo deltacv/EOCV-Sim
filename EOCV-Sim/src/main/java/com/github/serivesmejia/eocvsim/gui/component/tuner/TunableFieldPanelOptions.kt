@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.gui.component.tuner
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.Icons
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import io.github.deltacv.vision.external.util.extension.cvtColor
@@ -39,10 +40,10 @@ import javax.swing.event.AncestorListener
 class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
                                eocvSim: EOCVSim) : JPanel() {
 
-    private val sliderIco    by Icons.lazyGetImageResized("ico_slider", 15, 15)
-    private val textBoxIco   by Icons.lazyGetImageResized("ico_textbox", 15, 15)
-    private val configIco    by Icons.lazyGetImageResized("ico_config", 15, 15)
-    private val colorPickIco by Icons.lazyGetImageResized("ico_colorpick", 15, 15)
+    private val sliderIco    by EOCVSimIconLibrary.icoSlider.lazyResized(15, 15)
+    private val textBoxIco   by EOCVSimIconLibrary.icoTextbox.lazyResized(15, 15)
+    private val configIco    by EOCVSimIconLibrary.icoConfig.lazyResized(15, 15)
+    private val colorPickIco by EOCVSimIconLibrary.icoColorPick.lazyResized(15, 15)
 
     private val textBoxSliderToggle   = JToggleButton()
     private val configButton          = JButton()

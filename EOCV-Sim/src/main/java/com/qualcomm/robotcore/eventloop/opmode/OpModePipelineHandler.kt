@@ -14,6 +14,8 @@ import org.openftc.easyopencv.OpenCvViewport
 
 enum class OpModeState { SELECTED, INIT, START, STOP, STOPPED }
 
+enum class OpModeType { AUTONOMOUS, TELEOP }
+
 class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private val viewport: OpenCvViewport) : SpecificPipelineHandler<OpMode>(
         { it is OpMode }
 ) {

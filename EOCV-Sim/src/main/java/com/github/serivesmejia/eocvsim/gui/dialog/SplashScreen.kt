@@ -1,5 +1,6 @@
 package com.github.serivesmejia.eocvsim.gui.dialog
 
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.Icons
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import java.awt.*
@@ -40,7 +41,7 @@ class SplashScreen(closeHandler: EventHandler? = null) : JDialog() {
     }
 
     class ImagePanel : JPanel(GridBagLayout()) {
-        val img = Icons.getImage("ico_eocvsim")
+        val img = EOCVSimIconLibrary.icoEOCVSim
 
         init {
             isOpaque = false

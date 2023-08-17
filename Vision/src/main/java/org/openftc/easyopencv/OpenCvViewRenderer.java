@@ -261,12 +261,6 @@ public class OpenCvViewRenderer
         height = bitmapFromMat.getHeight();
         aspectRatio = (float) width / height;
 
-        if (!offscreen)
-        {
-            //Draw the background each time to prevent double buffering problems
-            canvas.drawColor(RC_ACTIVITY_BG_COLOR);
-        }
-
         // Cache current state, can change behind our backs
         OpenCvViewport.OptimizedRotation optimizedRotationSafe = optimizedViewRotation;
 

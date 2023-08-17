@@ -65,6 +65,8 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
     @Volatile
     private var useGpuCanvas = false
 
+    var dark = false
+
     private enum class RenderingState {
         STOPPED,
         ACTIVE,
@@ -290,6 +292,12 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
         }
 
         synchronized(canvasLock) {
+            if(dark) {
+                canvas.drawColor(Color.BLACK)
+            } else {
+                canvas.drawColor(Color.WHITE)
+            }
+
             when (internalRenderingState) {
                 RenderingState.ACTIVE -> {
                     shouldPaintOrange = true

@@ -34,16 +34,13 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
         sourceSelectorPanel.border = EmptyBorder(0, 20, 20, 20)
         pipelinePanel.add(sourceSelectorPanel)
 
-        opModePanel.layout = GridBagLayout()
+        opModePanel.layout = GridLayout(2, 1)
 
-        opModePanel.add(opModeSelectorPanel, GridBagConstraints().apply {
-            gridy = 0
-            ipady = 20
-        })
-        opModePanel.add(opModeControlsPanel, GridBagConstraints().apply {
-            gridy = 1
-            ipady = 20
-        })
+        opModeSelectorPanel.border = EmptyBorder(0, 20, 20, 20)
+        opModePanel.add(opModeSelectorPanel)
+
+        opModeControlsPanel.border = EmptyBorder(0, 20, 20, 20)
+        opModePanel.add(opModeControlsPanel)
 
         add("Pipeline", pipelinePanel)
         add("OpMode", opModePanel)
@@ -59,6 +56,11 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
                 pipelineSelectorPanel.allowPipelineSwitching = false
             }
         }
+    }
+
+    fun updateSelectorLists() {
+        pipelineSelectorPanel.updatePipelinesList()
+        opModeSelectorPanel.updateOpModesList()
     }
 
 }

@@ -29,10 +29,7 @@ import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
-import javax.swing.JPanel
-import javax.swing.JPopupMenu
-import javax.swing.JWindow
-import javax.swing.Popup
+import javax.swing.*
 
 class PopupX @JvmOverloads constructor(windowAncestor: Window,
                                        private val panel: JPanel,
@@ -96,5 +93,20 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
     }
 
     fun setLocation(width: Int, height: Int) = window.setLocation(width, height)
+
+    companion object {
+
+        fun JComponent.popUpXOnThis(panel: JPanel,
+                                    closeOnFocusLost: Boolean = true,
+                                    fixX: Boolean = false,
+                                    fixY: Boolean = true): PopupX {
+
+            val frame = SwingUtilities.getWindowAncestor(this)
+            val location = locationOnScreen
+
+            return PopupX(frame, panel, location.x, location.y, closeOnFocusLost, fixX, fixY)
+        }
+
+    }
 
 }

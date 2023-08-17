@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.gui
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.vision.external.gui.util.ImgUtil
+import java.awt.Image
 import java.awt.image.BufferedImage
 import java.util.NoSuchElementException
 import javax.swing.ImageIcon
@@ -34,8 +35,8 @@ object Icons {
 
     private val bufferedImages = HashMap<String, Image>()
 
-    private val icons = HashMap<String, ImageIcon>()
-    private val resizedIcons = HashMap<String, ImageIcon>()
+    private val icons = HashMap<String, NamedImageIcon>()
+    private val resizedIcons = HashMap<String, NamedImageIcon>()
 
     private val futureIcons = mutableListOf<FutureIcon>()
 
@@ -43,25 +44,7 @@ object Icons {
 
     val logger by loggerForThis()
 
-    init {
-        addFutureImage("ico_eocvsim", "/images/icon/ico_eocvsim.png", false)
-
-        addFutureImage("ico_img", "/images/icon/ico_img.png")
-        addFutureImage("ico_cam", "/images/icon/ico_cam.png")
-        addFutureImage("ico_vid", "/images/icon/ico_vid.png")
-
-        addFutureImage("ico_config", "/images/icon/ico_config.png")
-        addFutureImage("ico_slider", "/images/icon/ico_slider.png")
-        addFutureImage("ico_textbox", "/images/icon/ico_textbox.png")
-        addFutureImage("ico_colorpick", "/images/icon/ico_colorpick.png")
-
-        addFutureImage("ico_gears", "/images/icon/ico_gears.png")
-        addFutureImage("ico_hammer", "/images/icon/ico_hammer.png")
-
-        addFutureImage("ico_colorpick_pointer", "/images/icon/ico_colorpick_pointer.png")
-    }
-
-    fun getImage(name: String): ImageIcon {
+    fun getImage(name: String): NamedImageIcon {
         for(futureIcon in futureIcons.toTypedArray()) {
             if(futureIcon.name == name) {
                 logger.trace("Loading future icon $name")
@@ -81,7 +64,7 @@ object Icons {
         getImageResized(name, width, height)
     }
 
-    fun getImageResized(name: String, width: Int, height: Int): ImageIcon {
+    fun getImageResized(name: String, width: Int, height: Int): NamedImageIcon {
         //determines the icon name from the:
         //name, widthxheight, is inverted or is original
         val resIconName = "$name-${width}x${height}${
@@ -95,7 +78,7 @@ object Icons {
         val icon = if(resizedIcons.contains(resIconName)) {
             resizedIcons[resIconName]
         } else {
-            resizedIcons[resIconName] = ImgUtil.scaleImage(getImage(name), width, height)
+            resizedIcons[resIconName] = NamedImageIcon(name, ImgUtil.scaleImage(getImage(name), width, height).image)
             resizedIcons[resIconName]
         }
 
@@ -113,7 +96,7 @@ object Icons {
         }
 
         bufferedImages[name] = Image(buffImg, allowInvert)
-        icons[name] = ImageIcon(buffImg)
+        icons[name] = NamedImageIcon(name, buffImg)
     }
 
     fun setDark(dark: Boolean) {
@@ -141,5 +124,26 @@ object Icons {
     data class Image(val img: BufferedImage, val allowInvert: Boolean)
 
     data class FutureIcon(val name: String, val resourcePath: String, val allowInvert: Boolean)
+
+    class NamedImageIcon internal constructor(val name: String, image: java.awt.Image) : ImageIcon(image) {
+        fun resized(width: Int, height: Int) = getImageResized(name, width, height)
+
+        fun lazyResized(width: Int, height: Int) = lazyGetImageResized(name, width, height)
+
+        fun scaleToFit(suggestedWidth: Int, suggestedHeight: Int): NamedImageIcon {
+            val width = iconWidth
+            val height = iconHeight
+
+            return if (width > height) {
+                val newWidth = suggestedWidth
+                val newHeight = (height * newWidth) / width
+                resized(newWidth, newHeight)
+            } else {
+                val newHeight = suggestedHeight
+                val newWidth = (width * newHeight) / height
+                resized(newWidth, newHeight)
+            }
+        }
+    }
 
 }

@@ -107,7 +107,9 @@ public class InputSourceManager {
             currentInputSource.setPaused(isPaused);
 
             Mat m = currentInputSource.update();
+
             if(m != null && !m.empty()) {
+                lastMatFromSource.release();
                 m.copyTo(lastMatFromSource);
                 // add an extra alpha channel because that's what eocv returns for some reason... (more realistic simulation lol)
                 Imgproc.cvtColor(lastMatFromSource, lastMatFromSource, Imgproc.COLOR_RGB2RGBA);

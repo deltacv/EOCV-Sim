@@ -1,5 +1,6 @@
 package com.github.serivesmejia.eocvsim.gui.util.icon
 
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.Icons
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
@@ -12,8 +13,8 @@ class PipelineListIconRenderer(
     private val pipelineManager: PipelineManager
 ) : DefaultListCellRenderer() {
 
-    private val gearsIcon  by Icons.lazyGetImageResized("ico_gears", 15, 15)
-    private val hammerIcon by Icons.lazyGetImageResized("ico_hammer", 15, 15)
+    private val gearsIcon  by EOCVSimIconLibrary.icoGears.lazyResized(15, 15)
+    private val hammerIcon by EOCVSimIconLibrary.icoHammer.lazyResized(15, 15)
 
     override fun getListCellRendererComponent(
         list: JList<*>,

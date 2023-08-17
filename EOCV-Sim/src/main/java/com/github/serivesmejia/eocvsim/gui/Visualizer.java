@@ -127,7 +127,12 @@ public class Visualizer {
         //instantiate all swing elements after theme installation
         frame = new JFrame();
 
-        viewport = new SwingOpenCvViewport(new Size(1080, 720), "deltacv EOCV-Sim v" + Build.standardVersionString);
+        String fpsMeterDescriptor = "deltacv EOCV-Sim v" + Build.standardVersionString;
+        if(Build.isDev) fpsMeterDescriptor += "-dev";
+
+        viewport = new SwingOpenCvViewport(new Size(1080, 720), fpsMeterDescriptor);
+        viewport.setDark(FlatLaf.isLafDark());
+
         JLayeredPane skiaPanel = viewport.skiaPanel();
         skiaPanel.setLayout(new BorderLayout());
 

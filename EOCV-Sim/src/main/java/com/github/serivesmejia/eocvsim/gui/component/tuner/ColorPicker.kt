@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.tuner
 
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.gui.Icons
 import io.github.deltacv.vision.external.gui.component.ImageX
@@ -42,7 +43,7 @@ class ColorPicker(private val imageX: ImageX) {
             200
         } else { 35 }
 
-        val colorPickIco = Icons.getImageResized("ico_colorpick_pointer", size, size).image
+        val colorPickIco = EOCVSimIconLibrary.icoColorPickPointer.resized(size, size).image
 
         val colorPickCursor = Toolkit.getDefaultToolkit().createCustomCursor(
             colorPickIco, Point(0, 0), "Color Pick Pointer"

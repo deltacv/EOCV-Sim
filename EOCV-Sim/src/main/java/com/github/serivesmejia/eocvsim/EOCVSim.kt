@@ -308,6 +308,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
                 }
 
                 break //bye bye
+            } catch (ex: InterruptedException) {
+                break // bye bye
             }
 
             //limit FPG
@@ -436,7 +438,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         val isPaused = if (pipelineManager.paused) " (Paused)" else ""
         val isRecording = if (isCurrentlyRecording()) " RECORDING" else ""
 
-        val msg = isRecording + pipelineFpsMsg + posterFpsMsg + isPaused
+        val msg = isRecording + isPaused
 
         if (pipelineManager.currentPipeline == null) {
             visualizer.setTitleMessage("No pipeline$msg${workspaceMsg}")

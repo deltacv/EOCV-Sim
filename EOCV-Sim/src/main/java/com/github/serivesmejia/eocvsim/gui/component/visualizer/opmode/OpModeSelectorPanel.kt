@@ -1,20 +1,15 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.gui.util.icon.PipelineListIconRenderer
-import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
-import com.github.serivesmejia.eocvsim.util.ReflectUtil
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import com.qualcomm.robotcore.util.Range
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
+import com.github.serivesmejia.eocvsim.gui.component.PopupX.Companion.popUpXOnThis
+import com.qualcomm.robotcore.eventloop.opmode.OpModeType
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.swing.Swing
-import java.awt.BorderLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import java.awt.Insets
 import javax.swing.*
-import javax.swing.event.ListSelectionEvent
+
 
 class OpModeSelectorPanel(val eocvSim: EOCVSim) : JPanel() {
 
@@ -26,26 +21,27 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim) : JPanel() {
     // <opModeSelector index, PipelineManager index>
     private val indexMap = mutableMapOf<Int, Int>()
 
-    val autonomousButton = JButton("\\/")
+    val autonomousButton = JButton()
 
     val textPanel = JPanel()
 
     val selectOpModeLabel = JLabel("Select Op Mode")
     val buttonDescriptorLabel = JLabel("<- Autonomous | TeleOp ->")
 
-    val teleopButton = JButton("\\/")
-
-    var allowOpModeSwitching = false
-    private var beforeSelectedPipeline = -1
+    val teleopButton = JButton()
 
     init {
         layout = GridBagLayout()
         textPanel.layout = GridBagLayout()
 
+        autonomousButton.icon = EOCVSimIconLibrary.icoArrowDropdown
+
         add(autonomousButton, GridBagConstraints().apply {
             gridx = 0
             gridy = 0
             ipady = 20
+
+            gridheight = 1
         })
 
         selectOpModeLabel.horizontalTextPosition = JLabel.CENTER
@@ -72,40 +68,27 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim) : JPanel() {
             ipadx = 20
         })
 
+        teleopButton.icon = EOCVSimIconLibrary.icoArrowDropdown
+
         add(teleopButton, GridBagConstraints().apply {
             gridx = 2
             gridy = 0
             ipady = 20
+
+            gridheight = 1
         })
 
         registerListeners()
     }
 
     private fun registerListeners() {
-
+        autonomousButton.addActionListener {
+            autonomousButton.popUpXOnThis(OpModePopupPanel()).show()
+        }
     }
 
     fun updateOpModesList() = runBlocking {
-        /* launch(Dispatchers.Swing) {
-            val listModel = DefaultListModel<String>()
-            var selectorIndex = Range.clip(listModel.size() - 1, 0, Int.MAX_VALUE)
 
-            indexMap.clear()
-
-            for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
-                if(ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java)) {
-                    listModel.addElement(pipeline.clazz.simpleName)
-                    indexMap[selectorIndex] = managerIndex
-
-                    selectorIndex++
-                }
-            }
-
-            opModeSelector.fixedCellWidth = 240
-            opModeSelector.model = listModel
-
-            revalAndRepaint()
-        }*/
     }
 
     fun revalAndRepaint() {
