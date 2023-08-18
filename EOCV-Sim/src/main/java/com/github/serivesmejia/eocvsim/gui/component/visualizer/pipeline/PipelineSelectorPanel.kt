@@ -36,6 +36,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
 
@@ -64,7 +66,6 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     val buttonsPanel = PipelineSelectorButtonsPanel(eocvSim)
 
     var allowPipelineSwitching = false
-    private var lastSwitching: Boolean? = false
 
     private var beforeSelectedPipeline = -1
 
@@ -107,31 +108,37 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     }
 
     private fun registerListeners() {
+        pipelineSelector.addMouseListener(object: MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                if (!allowPipelineSwitching) return
 
-        //listener for changing pipeline
-        pipelineSelector.addListSelectionListener { evt: ListSelectionEvent ->
-            if (!allowPipelineSwitching) return@addListSelectionListener
+                val index = (e.source as JList<*>).locationToIndex(e.point)
 
-            if (pipelineSelector.selectedIndex != -1) {
-                val pipeline = indexMap[pipelineSelector.selectedIndex] ?: return@addListSelectionListener
+                if (index != -1) {
+                    val pipeline = indexMap[index] ?: return
 
-                if (!evt.valueIsAdjusting && pipeline != beforeSelectedPipeline) {
-                    if (!eocvSim.pipelineManager.paused) {
-                        eocvSim.pipelineManager.requestChangePipeline(pipeline)
-                        beforeSelectedPipeline = pipeline
-                    } else {
-                        if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
-                            pipelineSelector.setSelectedIndex(beforeSelectedPipeline)
-                        } else { //handling pausing
-                            eocvSim.pipelineManager.requestSetPaused(false)
+                    if (pipeline != beforeSelectedPipeline) {
+                        if (!eocvSim.pipelineManager.paused) {
                             eocvSim.pipelineManager.requestChangePipeline(pipeline)
                             beforeSelectedPipeline = pipeline
+                        } else {
+                            if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
+                                pipelineSelector.setSelectedIndex(beforeSelectedPipeline)
+                            } else { //handling pausing
+                                eocvSim.pipelineManager.requestSetPaused(false)
+                                eocvSim.pipelineManager.requestChangePipeline(pipeline)
+                                beforeSelectedPipeline = pipeline
+                            }
                         }
                     }
+                } else {
+                    pipelineSelector.setSelectedIndex(0)
                 }
-            } else {
-                pipelineSelector.setSelectedIndex(1)
             }
+        })
+
+        eocvSim.pipelineManager.onPipelineChange {
+            selectedIndex = eocvSim.pipelineManager.currentPipelineIndex
         }
     }
 
@@ -193,17 +200,6 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         if(!changePipeline) {
             allowPipelineSwitching = beforeSwitching
         }
-    }
-
-    fun setLastSwitching() {
-        if(lastSwitching != null) {
-            allowPipelineSwitching = lastSwitching!!
-            lastSwitching = null
-        }
-    }
-
-    fun saveLastSwitching() {
-        lastSwitching = allowPipelineSwitching
     }
 
 }

@@ -9,10 +9,10 @@ import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.qualcomm.robotcore.eventloop.opmode.*
 import com.qualcomm.robotcore.util.Range
 import io.github.deltacv.vision.internal.opmode.OpModeState
-import kotlinx.coroutines.runBlocking
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import java.awt.Insets
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.*
 
 
@@ -56,8 +56,6 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             opModeControlsPanel.allowOpModeSwitching = value
             field = value
         }
-
-    private var lastSwitching: Boolean? = null
 
     init {
         layout = GridBagLayout()
@@ -162,23 +160,27 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             popup.show()
         }
 
-        autonomousSelector.addListSelectionListener {
-            if(!it.valueIsAdjusting) {
-                val index = autonomousSelector.selectedIndex
-                if(index != -1) {
+        autonomousSelector.addMouseListener(object: MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                if (!allowOpModeSwitching) return
+
+                val index = (e.source as JList<*>).locationToIndex(e.point)
+                if(index >= 0) {
                     autonomousSelected(index)
                 }
             }
-        }
+        })
 
-        teleopSelector.addListSelectionListener {
-            if(!it.valueIsAdjusting) {
-                val index = teleopSelector.selectedIndex
-                if(index != -1) {
+        teleopSelector.addMouseListener(object: MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                if (!allowOpModeSwitching) return
+
+                val index = (e.source as JList<*>).locationToIndex(e.point)
+                if(index >= 0) {
                     teleOpSelected(index)
                 }
             }
-        }
+        })
     }
 
     private fun teleOpSelected(index: Int) {
@@ -265,36 +267,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         }
 
         _selectedIndex = -1
-    }
-
-    fun refreshAndReselectCurrent() {
-        val currentIndex = selectedIndex
-        if(currentIndex < 0) return
-
-        val beforePipeline = pipelinesData[currentIndex]
-
-        updateOpModesList()
-
-        for((i, pipeline) in pipelinesData.withIndex()) {
-            if(pipeline.clazz.name == beforePipeline.clazz.name && pipeline.source == beforePipeline.source) {
-                selectedIndex = i
-                return
-            }
-        }
-
-        selectedIndex = -1
-    }
-
-
-    fun setLastSwitching() {
-        if(lastSwitching != null) {
-            allowOpModeSwitching = lastSwitching!!
-            lastSwitching = null
-        }
-    }
-
-    fun saveLastSwitching() {
-        lastSwitching = allowOpModeSwitching
+        opModeControlsPanel.stopCurrentOpMode()
     }
 
 }

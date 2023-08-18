@@ -68,22 +68,6 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
         }
     }
 
-    fun refreshAndReselectCurrent() {
-        saveLastSwitching()
-        disableSwitching()
-
-        pipelineSelectorPanel.refreshAndReselectCurrent()
-        opModeSelectorPanel.refreshAndReselectCurrent()
-
-        setLastSwitching()
-    }
-
-    fun refreshAndReselectCurrentBlocking() = runBlocking {
-        launch(Dispatchers.Swing) {
-            refreshAndReselectCurrent()
-        }
-    }
-
     fun enableSwitching() {
         pipelineSelectorPanel.allowPipelineSwitching = true
         opModeSelectorPanel.allowOpModeSwitching = true
@@ -92,16 +76,6 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
     fun disableSwitching() {
         pipelineSelectorPanel.allowPipelineSwitching = false
         opModeSelectorPanel.allowOpModeSwitching = false
-    }
-
-    fun saveLastSwitching() {
-        pipelineSelectorPanel.saveLastSwitching()
-        opModeSelectorPanel.saveLastSwitching()
-    }
-
-    fun setLastSwitching() {
-        pipelineSelectorPanel.setLastSwitching()
-        opModeSelectorPanel.setLastSwitching()
     }
 
     fun enableSwitchingBlocking() = runBlocking {

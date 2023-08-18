@@ -220,7 +220,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
                 }
             }
 
-            eocvSim.visualizer.pipelineSelectorPanel.allowPipelineSwitching = true
+            eocvSim.visualizer.pipelineOpModeSwitchablePanel.enableSwitchingBlocking()
         }
     }
 
@@ -506,6 +506,9 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
             previousPipelineIndex = currentPipelineIndex
 
             currentPipeline = null
+            currentPipelineName = ""
+            currentPipelineContext = null
+            currentPipelineData = null
             currentPipelineIndex = -1
 
             onPipelineChange.run()
@@ -702,8 +705,15 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         eocvSim.visualizer.pipelineOpModeSwitchablePanel.updateSelectorLists()
     }
 
-    fun refreshAndReselectCurrentPipeline() {
-        eocvSim.visualizer.pipelineOpModeSwitchablePanel.refreshAndReselectCurrent()
+    fun reloadPipelineByName() {
+        for((i, pipeline) in pipelines.withIndex()) {
+            if(pipeline.clazz.name == currentPipelineData?.clazz?.name && pipeline.source == currentPipelineData?.source) {
+                forceChangePipeline(i, true)
+                return
+            }
+        }
+
+        forceChangePipeline(0) // default pipeline
     }
 
 }

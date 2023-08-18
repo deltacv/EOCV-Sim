@@ -226,6 +226,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         visualizer.pipelineSelectorPanel.selectedIndex = 0 //update pipelines and pick first one (DefaultPipeline)
         visualizer.opModeSelectorPanel.selectedIndex = 0 //update opmodes and pick first one (DefaultPipeline)
 
+        visualizer.pipelineOpModeSwitchablePanel.enableSwitchingBlocking()
+
         //post output mats from the pipeline to the visualizer viewport
         pipelineManager.pipelineOutputPosters.add(visualizer.viewport)
 

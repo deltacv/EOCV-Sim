@@ -125,13 +125,6 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         currentPipelineClassLoader = null
         val messageEnd = "(took $timeElapsed seconds)\n\n${result.message}".trim()
 
-        val pipelineSelectorPanel = pipelineManager.eocvSim.visualizer.pipelineOpModeSwitchablePanel
-
-        pipelineSelectorPanel.saveLastSwitching()
-
-        if(fixSelectedPipeline)
-            pipelineSelectorPanel.disableSwitchingBlocking()
-
         pipelineManager.requestRemoveAllPipelinesFrom(
             PipelineSource.COMPILED_ON_RUNTIME,
             refreshGuiPipelineList = false,
@@ -158,20 +151,9 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         }
 
         pipelineManager.onUpdate.doOnce {
-            if(fixSelectedPipeline) {
-                pipelineManager.applyLatestSnapshotOnChange = true
-
-                pipelineManager.refreshAndReselectCurrentPipeline()
-
-                pipelineManager.onPipelineChange.doOnce {
-                    pipelineManager.applyLatestSnapshotOnChange = false
-                }
-            } else {
-                pipelineManager.refreshGuiPipelineList()
-            }
+            pipelineManager.refreshGuiPipelineList()
+            pipelineManager.reloadPipelineByName()
         }
-
-        pipelineSelectorPanel.setLastSwitching()
 
         if(result.status == PipelineCompileStatus.SUCCESS) {
             logger.info("$lastBuildOutputMessage\n")
