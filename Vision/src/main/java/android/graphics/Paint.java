@@ -23,6 +23,8 @@
 
 package android.graphics;
 
+import org.jetbrains.skia.Font;
+import org.jetbrains.skia.FontMetrics;
 import org.jetbrains.skia.PaintStrokeCap;
 import org.jetbrains.skia.PaintStrokeJoin;
 
@@ -140,6 +142,38 @@ public class Paint {
             this.nativeInt = nativeInt;
         }
         final int nativeInt;
+    }
+
+
+    /**
+     * Class that describes the various metrics for a font at a given text size.
+     * Remember, Y values increase going down, so those values will be positive,
+     * and values that measure distances going up will be negative. This class
+     * is returned by getFontMetrics().
+     */
+    public static class FontMetrics {
+        /**
+         * The maximum distance above the baseline for the tallest glyph in
+         * the font at a given text size.
+         */
+        public float   top;
+        /**
+         * The recommended distance above the baseline for singled spaced text.
+         */
+        public float   ascent;
+        /**
+         * The recommended distance below the baseline for singled spaced text.
+         */
+        public float   descent;
+        /**
+         * The maximum distance below the baseline for the lowest glyph in
+         * the font at a given text size.
+         */
+        public float   bottom;
+        /**
+         * The recommended additional space to add between lines of text.
+         */
+        public float   leading;
     }
 
     public final org.jetbrains.skia.Paint thePaint;
@@ -270,6 +304,23 @@ public class Paint {
         }
 
         return typeface;
+    }
+
+    private Font getFont() {
+        return FontCache.makeFont(getTypeface(), getTextSize());
+    }
+
+    public FontMetrics getFontMetrics() {
+        FontMetrics metrics = new FontMetrics();
+        org.jetbrains.skia.FontMetrics fontMetrics = getFont().getMetrics();
+
+        metrics.top = fontMetrics.getTop();
+        metrics.ascent = fontMetrics.getAscent();
+        metrics.descent = fontMetrics.getDescent();
+        metrics.bottom = fontMetrics.getBottom();
+        metrics.leading = fontMetrics.getLeading();
+
+        return metrics;
     }
 
     public float getTextSize() {
