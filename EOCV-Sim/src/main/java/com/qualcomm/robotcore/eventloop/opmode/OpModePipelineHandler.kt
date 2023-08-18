@@ -36,8 +36,8 @@ class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private 
     }
 
     override fun onChange(beforePipeline: OpenCvPipeline?, newPipeline: OpenCvPipeline, telemetry: Telemetry) {
-        if(beforePipeline is OpMode && beforePipeline == pipeline) {
-            beforePipeline.requestOpModeStop()
+        if(beforePipeline is OpMode) {
+            beforePipeline.forceStop()
             onStop.run()
         }
 

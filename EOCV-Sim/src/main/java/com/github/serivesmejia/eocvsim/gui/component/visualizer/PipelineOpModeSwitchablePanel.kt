@@ -51,8 +51,14 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
             if(index == 0) {
                 opModeSelectorPanel.reset(0)
+
+                pipelineSelectorPanel.isActive = true
+                opModeSelectorPanel.isActive = false
             } else if(index == 1) {
                 opModeSelectorPanel.reset()
+
+                pipelineSelectorPanel.isActive = false
+                opModeSelectorPanel.isActive = true
             }
         }
     }

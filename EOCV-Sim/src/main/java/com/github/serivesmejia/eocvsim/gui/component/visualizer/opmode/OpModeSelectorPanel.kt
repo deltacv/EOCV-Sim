@@ -6,6 +6,7 @@ import com.github.serivesmejia.eocvsim.gui.component.PopupX.Companion.popUpXOnTh
 import com.github.serivesmejia.eocvsim.gui.util.Location
 import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.qualcomm.robotcore.eventloop.opmode.*
 import com.qualcomm.robotcore.util.Range
 import io.github.deltacv.vision.internal.opmode.OpModeState
@@ -19,6 +20,8 @@ import javax.swing.*
 class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeControlsPanel) : JPanel() {
 
     private var _selectedIndex = -1
+
+    private val logger by loggerForThis()
 
     var selectedIndex: Int
         get() = _selectedIndex
@@ -56,6 +59,9 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             opModeControlsPanel.allowOpModeSwitching = value
             field = value
         }
+
+    var isActive = false
+        internal set
 
     init {
         layout = GridBagLayout()
@@ -181,6 +187,30 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
                 }
             }
         })
+
+        eocvSim.pipelineManager.onPipelineChange {
+            // we are doing this to detect external pipeline changes
+            // in the event that this change was triggered by us, OpModeSelectorPanel,
+            // we need to hold on a cycle so that the state has been fully updated,
+            // just to be able to check correctly.
+            eocvSim.pipelineManager.onUpdate.doOnce {
+                if(isActive && opModeControlsPanel.currentOpMode != eocvSim.pipelineManager.currentPipeline) {
+                    val opMode = eocvSim.pipelineManager.currentPipeline
+
+                    if(opMode is OpMode) {
+                        val name = if (opMode.opModeType == OpModeType.AUTONOMOUS)
+                            opMode.autonomousAnnotation.name
+                        else opMode.teleopAnnotation.name
+
+                        logger.info("External change detected \"$name\"")
+
+                        opModeSelected(eocvSim.pipelineManager.currentPipelineIndex, name, false)
+                    } else {
+                        reset(-1)
+                    }
+                }
+            }
+        }
     }
 
     private fun teleOpSelected(index: Int) {
@@ -191,15 +221,15 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         opModeSelected(autonomousIndexMap[index]!!, autonomousSelector.selectedValue!!)
     }
 
-    private fun opModeSelected(managerIndex: Int, name: String) {
+    private fun opModeSelected(managerIndex: Int, name: String, forceChangePipeline: Boolean = true) {
         opModeNameLabel.text = name
 
         textPanel.removeAll()
         textPanel.add(opModeNameLabelPanel)
 
-        _selectedIndex = managerIndex;
+        _selectedIndex = managerIndex
 
-        opModeControlsPanel.opModeSelected(managerIndex)
+        opModeControlsPanel.opModeSelected(managerIndex, forceChangePipeline)
     }
 
     fun updateOpModesList() {
@@ -256,11 +286,16 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
                     if(state == OpModeState.STOPPED) {
                         it.removeThis()
-                        eocvSim.pipelineManager.requestChangePipeline(nextPipeline)
+
+                        if(nextPipeline == null || nextPipeline >= 0) {
+                            eocvSim.pipelineManager.onUpdate.doOnce {
+                                eocvSim.pipelineManager.requestChangePipeline(nextPipeline)
+                            }
+                        }
                     }
                 }
             }
-        } else {
+        } else if(nextPipeline == null || nextPipeline >= 0) {
             eocvSim.pipelineManager.onUpdate.doOnce {
                 eocvSim.pipelineManager.requestChangePipeline(nextPipeline)
             }

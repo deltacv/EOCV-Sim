@@ -114,12 +114,21 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
 
     /* BEGIN OpenCvPipeline Impl */
 
+    private boolean stopped = false;
+
     @Override
     public final void init(Mat mat) {
+        if(stopped) {
+            throw new IllegalStateException("Trying to reuse already stopped OpMode");
+        }
     }
 
     @Override
     public final Mat processFrame(Mat input, long captureTimeNanos) {
+        if(stopped) {
+            throw new IllegalStateException("Trying to reuse already stopped OpMode");
+        }
+
         OpModeNotification notification = notifier.poll();
 
         if(notification != OpModeNotification.NOTHING) {
@@ -140,9 +149,7 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
                 notifier.notify(OpModeState.START);
                 break;
             case STOP:
-                notifier.notify(OpModeState.STOP);
-                stop();
-                notifier.notify(OpModeState.STOPPED);
+                forceStop();
                 break;
             case NOTHING:
                 break;
@@ -178,4 +185,13 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
     public final void onViewportTapped() {
     }
 
+    public void forceStop() {
+        if(stopped) return;
+
+        notifier.notify(OpModeState.STOP);
+        stop();
+        notifier.notify(OpModeState.STOPPED);
+
+        stopped = true;
+    }
 }

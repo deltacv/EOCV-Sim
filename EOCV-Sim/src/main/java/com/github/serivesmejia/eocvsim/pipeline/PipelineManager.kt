@@ -29,13 +29,13 @@ import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.handler.PipelineHandler
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
-import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.common.image.MatPoster
+import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
@@ -525,6 +525,8 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
 
         logger.info("Changing to pipeline ${pipelineClass.name}")
 
+        debugLogCalled("forceChangePipeline")
+
         var constructor: Constructor<*>
 
         try {
@@ -614,7 +616,11 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         }
     }
 
-    fun requestForceChangePipeline(index: Int) = onUpdate.doOnce { forceChangePipeline(index) }
+    fun requestForceChangePipeline(index: Int) {
+        debugLogCalled("requestForceChangePipeline")
+
+        onUpdate.doOnce { forceChangePipeline(index) }
+    }
 
     fun applyLatestSnapshot() {
         if(currentPipeline != null && latestSnapshot != null) {
@@ -714,6 +720,15 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         }
 
         forceChangePipeline(0) // default pipeline
+    }
+
+    private fun debugLogCalled(name: String) {
+        val builder = StringBuilder()
+        for (s in Thread.currentThread().stackTrace) {
+            builder.appendLine(s.toString())
+        }
+
+        logger.debug("$name called in: {}", builder.toString().trim())
     }
 
 }

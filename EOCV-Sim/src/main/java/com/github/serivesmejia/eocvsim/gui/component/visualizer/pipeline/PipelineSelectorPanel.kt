@@ -69,6 +69,9 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
     private var beforeSelectedPipeline = -1
 
+    var isActive = false
+        internal set
+
     init {
         layout = GridBagLayout()
 

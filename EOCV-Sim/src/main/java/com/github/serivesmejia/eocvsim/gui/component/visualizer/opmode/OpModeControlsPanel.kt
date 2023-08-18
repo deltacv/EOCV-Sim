@@ -71,6 +71,7 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
 
             if(state == OpModeState.STOPPED) {
                 opModeSelected(currentManagerIndex!!)
+                it.removeThis()
             }
         }
 
@@ -95,10 +96,10 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
         }
     }
 
-    fun opModeSelected(managerIndex: Int) {
+    fun opModeSelected(managerIndex: Int, forceChangePipeline: Boolean = true) {
         eocvSim.pipelineManager.setPaused(false)
 
-        eocvSim.pipelineManager.requestForceChangePipeline(managerIndex)
+        if(forceChangePipeline) eocvSim.pipelineManager.requestForceChangePipeline(managerIndex)
         currentManagerIndex = managerIndex
 
         eocvSim.pipelineManager.onUpdate.doOnce {
