@@ -125,11 +125,12 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         currentPipelineClassLoader = null
         val messageEnd = "(took $timeElapsed seconds)\n\n${result.message}".trim()
 
-        val pipelineSelectorPanel = pipelineManager.eocvSim.visualizer.pipelineSelectorPanel
-        val beforeAllowSwitching = pipelineSelectorPanel?.allowPipelineSwitching
+        val pipelineSelectorPanel = pipelineManager.eocvSim.visualizer.pipelineOpModeSwitchablePanel
+
+        pipelineSelectorPanel.saveLastSwitching()
 
         if(fixSelectedPipeline)
-            pipelineSelectorPanel?.allowPipelineSwitching = false
+            pipelineSelectorPanel.disableSwitchingBlocking()
 
         pipelineManager.requestRemoveAllPipelinesFrom(
             PipelineSource.COMPILED_ON_RUNTIME,
@@ -156,23 +157,21 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             }
         }
 
-        val beforePipeline = pipelineManager.currentPipelineData
-
         pipelineManager.onUpdate.doOnce {
-            pipelineManager.refreshGuiPipelineList()
-
             if(fixSelectedPipeline) {
-                if(beforePipeline != null) {
-                    val pipeline = pipelineManager.getIndexOf(beforePipeline.clazz, beforePipeline.source)
+                pipelineManager.applyLatestSnapshotOnChange = true
 
-                    pipelineManager.forceChangePipeline(pipeline, true)
-                } else {
-                    pipelineManager.changePipeline(0) //default pipeline
+                pipelineManager.refreshAndReselectCurrentPipeline()
+
+                pipelineManager.onPipelineChange.doOnce {
+                    pipelineManager.applyLatestSnapshotOnChange = false
                 }
-
-                pipelineSelectorPanel?.allowPipelineSwitching = beforeAllowSwitching!!
+            } else {
+                pipelineManager.refreshGuiPipelineList()
             }
         }
+
+        pipelineSelectorPanel.setLastSwitching()
 
         if(result.status == PipelineCompileStatus.SUCCESS) {
             logger.info("$lastBuildOutputMessage\n")

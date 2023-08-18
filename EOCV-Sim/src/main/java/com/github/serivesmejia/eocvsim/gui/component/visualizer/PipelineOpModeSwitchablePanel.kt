@@ -4,8 +4,10 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.OpModeControlsPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.OpModeSelectorPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.swing.Swing
 import java.awt.GridLayout
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
@@ -22,8 +24,6 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
     val opModeControlsPanel = OpModeControlsPanel(eocvSim)
     val opModeSelectorPanel = OpModeSelectorPanel(eocvSim, opModeControlsPanel)
-
-    private var beforeAllowPipelineSwitching: Boolean? = null
 
     init {
         pipelinePanel.layout = GridLayout(2, 1)
@@ -49,14 +49,9 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
             val sourceTabbedPane = it.source as JTabbedPane
             val index = sourceTabbedPane.selectedIndex
 
-            if(index == 0 && beforeAllowPipelineSwitching != null) {
-                pipelineSelectorPanel.allowPipelineSwitching = beforeAllowPipelineSwitching!!
-
-                eocvSim.pipelineManager.requestChangePipeline(0)
+            if(index == 0) {
+                opModeSelectorPanel.reset(0)
             } else if(index == 1) {
-                beforeAllowPipelineSwitching = pipelineSelectorPanel.allowPipelineSwitching
-                pipelineSelectorPanel.allowPipelineSwitching = false
-
                 opModeSelectorPanel.reset()
             }
         }
@@ -65,6 +60,60 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
     fun updateSelectorLists() {
         pipelineSelectorPanel.updatePipelinesList()
         opModeSelectorPanel.updateOpModesList()
+    }
+
+    fun updateSelectorListsBlocking() = runBlocking {
+        launch(Dispatchers.Swing) {
+            updateSelectorLists()
+        }
+    }
+
+    fun refreshAndReselectCurrent() {
+        saveLastSwitching()
+        disableSwitching()
+
+        pipelineSelectorPanel.refreshAndReselectCurrent()
+        opModeSelectorPanel.refreshAndReselectCurrent()
+
+        setLastSwitching()
+    }
+
+    fun refreshAndReselectCurrentBlocking() = runBlocking {
+        launch(Dispatchers.Swing) {
+            refreshAndReselectCurrent()
+        }
+    }
+
+    fun enableSwitching() {
+        pipelineSelectorPanel.allowPipelineSwitching = true
+        opModeSelectorPanel.allowOpModeSwitching = true
+    }
+
+    fun disableSwitching() {
+        pipelineSelectorPanel.allowPipelineSwitching = false
+        opModeSelectorPanel.allowOpModeSwitching = false
+    }
+
+    fun saveLastSwitching() {
+        pipelineSelectorPanel.saveLastSwitching()
+        opModeSelectorPanel.saveLastSwitching()
+    }
+
+    fun setLastSwitching() {
+        pipelineSelectorPanel.setLastSwitching()
+        opModeSelectorPanel.setLastSwitching()
+    }
+
+    fun enableSwitchingBlocking() = runBlocking {
+        launch(Dispatchers.Swing) {
+            enableSwitching()
+        }
+    }
+
+    fun disableSwitchingBlocking() = runBlocking {
+        launch(Dispatchers.Swing) {
+            disableSwitching()
+        }
     }
 
 }

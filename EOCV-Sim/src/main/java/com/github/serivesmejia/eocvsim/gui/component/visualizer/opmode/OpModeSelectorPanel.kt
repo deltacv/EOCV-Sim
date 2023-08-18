@@ -4,9 +4,11 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.component.PopupX.Companion.popUpXOnThis
 import com.github.serivesmejia.eocvsim.gui.util.Location
+import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.qualcomm.robotcore.eventloop.opmode.*
 import com.qualcomm.robotcore.util.Range
+import io.github.deltacv.vision.internal.opmode.OpModeState
 import kotlinx.coroutines.runBlocking
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -16,10 +18,16 @@ import javax.swing.*
 
 class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeControlsPanel) : JPanel() {
 
-    var selectedIndex = -1
+    private var _selectedIndex = -1
+
+    var selectedIndex: Int
+        get() = _selectedIndex
         set(value) {
-            field = value
+            opModeControlsPanel.opModeSelected(value)
+            _selectedIndex = value
         }
+
+    private var pipelinesData = arrayOf<PipelineData>()
 
     // <Selector index, PipelineManager index>
     private val autonomousIndexMap = mutableMapOf<Int, Int>()
@@ -42,6 +50,14 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
     val autonomousSelector = JList<String>()
     val teleopSelector     = JList<String>()
+
+    var allowOpModeSwitching = false
+        set(value) {
+            opModeControlsPanel.allowOpModeSwitching = value
+            field = value
+        }
+
+    private var lastSwitching: Boolean? = null
 
     init {
         layout = GridBagLayout()
@@ -179,12 +195,16 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         textPanel.removeAll()
         textPanel.add(opModeNameLabelPanel)
 
+        _selectedIndex = managerIndex;
+
         opModeControlsPanel.opModeSelected(managerIndex)
     }
 
-    fun updateOpModesList() = runBlocking {
+    fun updateOpModesList() {
         val autonomousListModel = DefaultListModel<String>()
         val teleopListModel = DefaultListModel<String>()
+
+        pipelinesData = eocvSim.pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
 
         var autonomousSelectorIndex = Range.clip(autonomousListModel.size() - 1, 0, Int.MAX_VALUE)
         var teleopSelectorIndex = Range.clip(teleopListModel.size() - 1, 0, Int.MAX_VALUE)
@@ -219,13 +239,62 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         teleopSelector.model = teleopListModel
     }
 
-    fun reset() {
+    fun reset(nextPipeline: Int? = null) {
         textPanel.removeAll()
         textPanel.add(selectOpModeLabelsPanel)
 
-        eocvSim.pipelineManager.requestChangePipeline(null)
-
         opModeControlsPanel.reset()
+
+        if(eocvSim.pipelineManager.currentPipeline == opModeControlsPanel.currentOpMode) {
+            val opMode = opModeControlsPanel.currentOpMode
+
+            opMode?.notifier?.onStateChange?.let {
+                it {
+                    val state = opMode.notifier.state
+
+                    if(state == OpModeState.STOPPED) {
+                        it.removeThis()
+                        eocvSim.pipelineManager.requestChangePipeline(nextPipeline)
+                    }
+                }
+            }
+        } else {
+            eocvSim.pipelineManager.onUpdate.doOnce {
+                eocvSim.pipelineManager.requestChangePipeline(nextPipeline)
+            }
+        }
+
+        _selectedIndex = -1
+    }
+
+    fun refreshAndReselectCurrent() {
+        val currentIndex = selectedIndex
+        if(currentIndex < 0) return
+
+        val beforePipeline = pipelinesData[currentIndex]
+
+        updateOpModesList()
+
+        for((i, pipeline) in pipelinesData.withIndex()) {
+            if(pipeline.clazz.name == beforePipeline.clazz.name && pipeline.source == beforePipeline.source) {
+                selectedIndex = i
+                return
+            }
+        }
+
+        selectedIndex = -1
+    }
+
+
+    fun setLastSwitching() {
+        if(lastSwitching != null) {
+            allowOpModeSwitching = lastSwitching!!
+            lastSwitching = null
+        }
+    }
+
+    fun saveLastSwitching() {
+        lastSwitching = allowOpModeSwitching
     }
 
 }

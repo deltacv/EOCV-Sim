@@ -17,7 +17,12 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
 
     val controlButton = JButton()
 
+    var currentOpMode: OpMode? = null
+        private set
+
     private var currentManagerIndex: Int? = null
+
+    var allowOpModeSwitching = false
 
     init {
         layout = BorderLayout()
@@ -25,7 +30,7 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
         add(controlButton, BorderLayout.CENTER)
 
         controlButton.isEnabled = false
-        controlButton.icon = EOCVSimIconLibrary.icoNotStarted
+        controlButton.icon = EOCVSimIconLibrary.icoFlag
 
         controlButton.addActionListener {
             eocvSim.pipelineManager.onUpdate.doOnce {
@@ -52,6 +57,8 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
     }
 
     private fun notifySelected() {
+        if(!allowOpModeSwitching) return
+
         if(eocvSim.pipelineManager.currentPipeline !is OpMode) return
         val opMode = eocvSim.pipelineManager.currentPipeline as OpMode
 
@@ -68,6 +75,8 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
         }
 
         opMode.notifier.notify(OpModeState.SELECTED)
+
+        currentOpMode = opMode
     }
 
     private fun updateButtonState(state: OpModeState) {
@@ -81,37 +90,27 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
             OpModeState.STOPPED -> {
                 controlButton.isEnabled = true
 
-                controlButton.icon = EOCVSimIconLibrary.icoNotStarted
+                controlButton.icon = EOCVSimIconLibrary.icoFlag
             }
         }
     }
 
     fun opModeSelected(managerIndex: Int) {
-        if (!eocvSim.pipelineManager.paused) {
-            eocvSim.pipelineManager.requestForceChangePipeline(managerIndex)
-            currentManagerIndex = managerIndex
+        eocvSim.pipelineManager.setPaused(false)
 
-            eocvSim.pipelineManager.onUpdate.doOnce {
-                notifySelected()
-            }
-        } else {
-            if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
-                controlButton.isEnabled = false
-            } else { //handling pausing
-                eocvSim.pipelineManager.requestSetPaused(false)
-                eocvSim.pipelineManager.requestForceChangePipeline(managerIndex)
-                currentManagerIndex = managerIndex
+        eocvSim.pipelineManager.requestForceChangePipeline(managerIndex)
+        currentManagerIndex = managerIndex
 
-                eocvSim.pipelineManager.onUpdate.doOnce {
-                    notifySelected()
-                }
-            }
+        eocvSim.pipelineManager.onUpdate.doOnce {
+            notifySelected()
         }
     }
 
     fun reset() {
         controlButton.isEnabled = false
-        controlButton.icon = EOCVSimIconLibrary.icoNotStarted
+        controlButton.icon = EOCVSimIconLibrary.icoFlag
+
+        currentOpMode?.requestOpModeStop()
     }
 
 }

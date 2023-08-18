@@ -15,6 +15,7 @@ object EOCVSimIconLibrary {
 
     val icoArrowDropdown by icon("ico_arrow_dropdown", "/images/icon/ico_arrow_dropdown.png")
 
+    val icoFlag by icon("ico_flag", "/images/icon/ico_flag.png")
     val icoNotStarted by icon("ico_not_started", "/images/icon/ico_not_started.png")
     val icoPlay by icon("ico_play", "/images/icon/ico_play.png")
     val icoStop by icon("ico_stop", "/images/icon/ico_stop.png")

@@ -115,6 +115,8 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
     var lastInitialSnapshot: PipelineSnapshot? = null
         private set
 
+    var applyLatestSnapshotOnChange = false
+
     val snapshotFieldFilter: (Field) -> Boolean = {
         // only snapshot fields managed by the variable tuner
         // when getTunableFieldOf returns null, it means that
@@ -498,7 +500,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun forceChangePipeline(index: Int?,
-                            applyLatestSnapshot: Boolean = false,
+                            applyLatestSnapshot: Boolean = applyLatestSnapshotOnChange,
                             applyStaticSnapshot: Boolean = false) {
         if(index == null) {
             previousPipelineIndex = currentPipelineIndex
@@ -698,6 +700,10 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
 
     fun refreshGuiPipelineList() {
         eocvSim.visualizer.pipelineOpModeSwitchablePanel.updateSelectorLists()
+    }
+
+    fun refreshAndReselectCurrentPipeline() {
+        eocvSim.visualizer.pipelineOpModeSwitchablePanel.refreshAndReselectCurrent()
     }
 
 }

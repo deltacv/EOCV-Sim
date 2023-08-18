@@ -137,6 +137,7 @@ public class Visualizer {
         skiaPanel.add(tunerMenuPanel, BorderLayout.SOUTH);
 
         pipelineOpModeSwitchablePanel = new PipelineOpModeSwitchablePanel(eocvSim);
+        pipelineOpModeSwitchablePanel.disableSwitching();
 
         pipelineSelectorPanel = pipelineOpModeSwitchablePanel.getPipelineSelectorPanel();
         sourceSelectorPanel = pipelineOpModeSwitchablePanel.getSourceSelectorPanel();
