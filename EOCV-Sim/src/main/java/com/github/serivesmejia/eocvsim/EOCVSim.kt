@@ -256,6 +256,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
                         pipelineStatisticsCalculator.avgOverheadTime
                 )
             }
+
+
+            updateVisualizerTitle() // update current pipeline in title
         }
 
         start()
@@ -267,8 +270,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
         while (!eocvSimThread.isInterrupted) {
             //run all pending requested runnables
             onMainUpdate.run()
-
-            updateVisualizerTitle()
 
             pipelineStatisticsCalculator.newInputFrameStart()
 
@@ -434,8 +435,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         val workspaceMsg = " - ${workspaceManager.workspaceFile.absolutePath} $isBuildRunning"
 
-        val pipelineFpsMsg = " (${pipelineManager.pipelineFpsCounter.fps} Pipeline FPS)"
-        val posterFpsMsg = " (${visualizer.viewport} Viewport FPS)"
         val isPaused = if (pipelineManager.paused) " (Paused)" else ""
         val isRecording = if (isCurrentlyRecording()) " RECORDING" else ""
 

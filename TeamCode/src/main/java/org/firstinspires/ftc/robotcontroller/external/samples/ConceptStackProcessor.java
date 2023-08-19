@@ -78,7 +78,6 @@ public class ConceptStackProcessor extends LinearOpMode {
 
         if (opModeIsActive()) {
             while (opModeIsActive()) {
-
                 telemetryAprilTag();
 
                 // Push telemetry to the Driver Station.
