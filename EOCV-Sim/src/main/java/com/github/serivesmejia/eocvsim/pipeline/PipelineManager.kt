@@ -27,8 +27,12 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.handler.PipelineHandler
+import com.github.serivesmejia.eocvsim.pipeline.instantiator.DefaultPipelineInstantiator
+import com.github.serivesmejia.eocvsim.pipeline.instantiator.PipelineInstantiator
+import com.github.serivesmejia.eocvsim.pipeline.instantiator.processor.ProcessorInstantiator
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
+import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
@@ -39,10 +43,12 @@ import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
+import org.firstinspires.ftc.vision.VisionProcessor
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport
 import org.openftc.easyopencv.processFrameInternal
+import java.lang.RuntimeException
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.util.*
@@ -129,6 +135,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
     @JvmField val compiledPipelineManager = CompiledPipelineManager(this)
 
     private val pipelineHandlers = mutableListOf<PipelineHandler>()
+    private val pipelineInstantiators = mutableMapOf<Class<*>, PipelineInstantiator>()
 
     //counting and tracking exceptions for logging and reporting purposes
     val pipelineExceptionTracker = PipelineExceptionTracker(this)
@@ -138,6 +145,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
     enum class PauseReason {
         USER_REQUESTED, IMAGE_ONE_ANALYSIS, NOT_PAUSED
     }
+
     fun init() {
         logger.info("Initializing...")
 
@@ -154,6 +162,11 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         }
 
         logger.info("Found " + pipelines.size + " pipeline(s)")
+
+        // add instantiator for OpenCvPipeline
+        addInstantiator(OpenCvPipeline::class.java, DefaultPipelineInstantiator)
+        // add instantiator for VisionProcessor (wraps a VisionProcessor around an OpenCvPipeline)
+        addInstantiator(VisionProcessor::class.java, ProcessorInstantiator)
 
         // changing to initial pipeline
         onUpdate.doOnce {
@@ -287,7 +300,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
 
                     pipelineStatisticsCalculator.beforeProcessFrame()
 
-                    val pipelineResult =currentPipeline?.processFrameInternal(inputMat)
+                    val pipelineResult = currentPipeline?.processFrameInternal(inputMat)
 
                     pipelineStatisticsCalculator.afterProcessFrame()
 
@@ -436,10 +449,24 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         pipelineHandlers.add(handler)
     }
 
+    fun addInstantiator(instantiatorFor: Class<*>, instantiator: PipelineInstantiator) {
+        pipelineInstantiators.put(instantiatorFor, instantiator)
+    }
+
+    fun getInstantiatorFor(clazz: Class<*>): PipelineInstantiator? {
+        for((instantiatorFor, instantiator) in pipelineInstantiators) {
+            if(ReflectUtil.hasSuperclass(clazz, instantiatorFor)) {
+                return instantiator
+            }
+        }
+
+        return null
+    }
+
     @Suppress("UNCHECKED_CAST")
     @JvmOverloads fun addPipelineClass(C: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH) {
         try {
-            pipelines.add(PipelineData(source, C as Class<out OpenCvPipeline>))
+            pipelines.add(PipelineData(source, C))
         } catch (ex: Exception) {
             logger.warn("Error while adding pipeline class", ex)
             updateExceptionTracker(ex)
@@ -527,7 +554,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
 
         debugLogCalled("forceChangePipeline")
 
-        var constructor: Constructor<*>
+        val instantiator = getInstantiatorFor(pipelineClass)
 
         try {
             nextTelemetry = TelemetryImpl().apply {
@@ -535,13 +562,8 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
                 addTransmissionReceiver(eocvSim.visualizer.telemetryPanel)
             }
 
-            try { //instantiate pipeline if it has a constructor of a telemetry parameter
-                constructor = pipelineClass.getConstructor(Telemetry::class.java)
-                nextPipeline = constructor.newInstance(nextTelemetry) as OpenCvPipeline
-            } catch (ex: NoSuchMethodException) { //instantiating with a constructor of no params
-                constructor = pipelineClass.getConstructor()
-                nextPipeline = constructor.newInstance() as OpenCvPipeline
-            }
+            nextPipeline = instantiator?.instantiate(pipelineClass, nextTelemetry)
+                ?: throw RuntimeException("No instantiator found for pipeline class ${pipelineClass.name}")
 
             logger.info("Instantiated pipeline class ${pipelineClass.name}")
         } catch (ex: NoSuchMethodException) {
@@ -769,6 +791,6 @@ enum class PipelineFps(val fps: Int, val coolName: String) {
     }
 }
 
-data class PipelineData(val source: PipelineSource, val clazz: Class<out OpenCvPipeline>)
+data class PipelineData(val source: PipelineSource, val clazz: Class<*>)
 
 enum class PipelineSource { CLASSPATH, COMPILED_ON_RUNTIME }

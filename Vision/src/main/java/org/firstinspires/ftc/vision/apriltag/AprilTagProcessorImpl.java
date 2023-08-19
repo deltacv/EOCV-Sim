@@ -35,6 +35,7 @@ package org.firstinspires.ftc.vision.apriltag;
 
 import android.graphics.Canvas;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.MovingStatistics;
 
 import org.firstinspires.ftc.robotcore.external.matrices.GeneralMatrixF;
@@ -60,6 +61,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
+@Disabled
 public class AprilTagProcessorImpl extends AprilTagProcessor
 {
     public static final String TAG = "AprilTagProcessorImpl";

@@ -38,7 +38,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
     private val zipFile = ZipFile(pipelinesJar)
     private val loadedClasses = mutableMapOf<String, Class<*>>()
 
-    var pipelineClasses: List<Class<out OpenCvPipeline>>
+    var pipelineClasses: List<Class<*>>
         private set
 
     init {
