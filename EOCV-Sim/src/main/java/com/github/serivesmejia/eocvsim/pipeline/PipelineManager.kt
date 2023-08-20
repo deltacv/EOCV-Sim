@@ -108,6 +108,8 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
             return field
         }
 
+    var pauseOnImages = true
+
     var pauseReason = PauseReason.NOT_PAUSED
         private set
         get() {
@@ -615,7 +617,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         setPaused(false)
 
         //if pause on images option is turned on by user
-        if (eocvSim.configManager.config.pauseOnImages) {
+        if (eocvSim.configManager.config.pauseOnImages && pauseOnImages) {
             //pause next frame if current selected input source is an image
             eocvSim.inputSourceManager.pauseIfImageTwoFrames()
         }

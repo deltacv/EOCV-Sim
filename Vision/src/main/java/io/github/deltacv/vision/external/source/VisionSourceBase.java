@@ -1,7 +1,6 @@
 package io.github.deltacv.vision.external.source;
 
 import io.github.deltacv.vision.external.util.Timestamped;
-import io.github.deltacv.vision.internal.util.KillException;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.slf4j.Logger;

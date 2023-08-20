@@ -8,8 +8,6 @@ import io.github.deltacv.vision.internal.opmode.OpModeNotification
 import io.github.deltacv.vision.internal.opmode.OpModeState
 import java.awt.BorderLayout
 import javax.swing.JPanel
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
 import javax.swing.JButton
 import javax.swing.SwingUtilities
 
@@ -21,8 +19,9 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
         private set
 
     private var currentManagerIndex: Int? = null
+    private var upcomingIndex: Int? = null
 
-    var allowOpModeSwitching = false
+    var isActive = false
 
     init {
         layout = BorderLayout()
@@ -35,6 +34,8 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
         controlButton.addActionListener {
             eocvSim.pipelineManager.onUpdate.doOnce {
                 if(eocvSim.pipelineManager.currentPipeline !is OpMode) return@doOnce
+
+                eocvSim.pipelineManager.setPaused(false, PipelineManager.PauseReason.NOT_PAUSED)
 
                 val opMode = eocvSim.pipelineManager.currentPipeline as OpMode
                 val state = opMode.notifier.state
@@ -50,17 +51,16 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
     }
 
     fun stopCurrentOpMode() {
-        if(eocvSim.pipelineManager.currentPipeline !is OpMode) return
-
-        val opMode = eocvSim.pipelineManager.currentPipeline as OpMode
-        opMode.notifier.notify(OpModeNotification.STOP)
+        if(eocvSim.pipelineManager.currentPipeline != currentOpMode || currentOpMode == null) return
+        currentOpMode!!.notifier.notify(OpModeNotification.STOP)
     }
 
     private fun notifySelected() {
-        if(!allowOpModeSwitching) return
+        if(!isActive) return
 
         if(eocvSim.pipelineManager.currentPipeline !is OpMode) return
         val opMode = eocvSim.pipelineManager.currentPipeline as OpMode
+        val opModeIndex = currentManagerIndex!!
 
         opMode.notifier.onStateChange {
             val state = opMode.notifier.state
@@ -70,7 +70,10 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
             }
 
             if(state == OpModeState.STOPPED) {
-                opModeSelected(currentManagerIndex!!)
+                if(isActive && opModeIndex == upcomingIndex) {
+                    opModeSelected(currentManagerIndex!!)
+                }
+
                 it.removeThis()
             }
         }
@@ -97,12 +100,16 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
     }
 
     fun opModeSelected(managerIndex: Int, forceChangePipeline: Boolean = true) {
-        eocvSim.pipelineManager.setPaused(false)
+        eocvSim.pipelineManager.requestSetPaused(false)
 
-        if(forceChangePipeline) eocvSim.pipelineManager.requestForceChangePipeline(managerIndex)
-        currentManagerIndex = managerIndex
+        if(forceChangePipeline) {
+            eocvSim.pipelineManager.requestForceChangePipeline(managerIndex)
+        }
+
+        upcomingIndex = managerIndex
 
         eocvSim.pipelineManager.onUpdate.doOnce {
+            currentManagerIndex = managerIndex
             notifySelected()
         }
     }

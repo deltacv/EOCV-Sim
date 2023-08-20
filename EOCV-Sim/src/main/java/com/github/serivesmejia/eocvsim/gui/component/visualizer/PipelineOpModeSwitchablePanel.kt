@@ -50,10 +50,10 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
             val index = sourceTabbedPane.selectedIndex
 
             if(index == 0) {
-                opModeSelectorPanel.reset(0)
-
                 pipelineSelectorPanel.isActive = true
                 opModeSelectorPanel.isActive = false
+
+                opModeSelectorPanel.reset(0)
             } else if(index == 1) {
                 opModeSelectorPanel.reset()
 
@@ -76,12 +76,12 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
     fun enableSwitching() {
         pipelineSelectorPanel.allowPipelineSwitching = true
-        opModeSelectorPanel.allowOpModeSwitching = true
+        opModeSelectorPanel.isActive = true
     }
 
     fun disableSwitching() {
         pipelineSelectorPanel.allowPipelineSwitching = false
-        opModeSelectorPanel.allowOpModeSwitching = false
+        opModeSelectorPanel.isActive = false
     }
 
     fun enableSwitchingBlocking() = runBlocking {
