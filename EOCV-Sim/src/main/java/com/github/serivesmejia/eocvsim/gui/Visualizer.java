@@ -33,7 +33,6 @@ import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
-import com.github.serivesmejia.eocvsim.gui.util.ReflectTaskbar;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompiler;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher;
@@ -94,10 +93,10 @@ public class Visualizer {
     }
 
     public void init(Theme theme) {
-        if(ReflectTaskbar.INSTANCE.isUsable()){
+        if(Taskbar.isTaskbarSupported()){
             try {
                 //set icon for mac os (and other systems which do support this method)
-                ReflectTaskbar.INSTANCE.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
+                Taskbar.getTaskbar().setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
             } catch (final UnsupportedOperationException e) {
                 logger.warn("Setting the Taskbar icon image is not supported on this platform");
             } catch (final SecurityException e) {
@@ -134,7 +133,6 @@ public class Visualizer {
         menuBar = new TopMenuBar(this, eocvSim);
 
         tunerMenuPanel = new JPanel();
-        skiaPanel.add(tunerMenuPanel, BorderLayout.SOUTH);
 
         pipelineOpModeSwitchablePanel = new PipelineOpModeSwitchablePanel(eocvSim);
         pipelineOpModeSwitchablePanel.disableSwitching();
@@ -160,6 +158,7 @@ public class Visualizer {
 
         rightContainer.setLayout(new BoxLayout(rightContainer, BoxLayout.Y_AXIS));
 
+        pipelineOpModeSwitchablePanel.setBorder(new EmptyBorder(0, 0, 0, 0));
         rightContainer.add(pipelineOpModeSwitchablePanel);
 
         /*
@@ -172,6 +171,7 @@ public class Visualizer {
         //global
         frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));
 
+        //frame.add(tunerMenuPanel, BorderLayout.SOUTH);
         frame.add(rightContainer, BorderLayout.EAST);
 
         //initialize other various stuff of the frame

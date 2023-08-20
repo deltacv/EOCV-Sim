@@ -596,6 +596,8 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         currentPipelineIndex = index
         currentPipelineName  = currentPipeline!!.javaClass.simpleName
 
+        currentTelemetry?.update() // clear telemetry
+
         val snap = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
 
         lastInitialSnapshot = if(applyLatestSnapshot) {
