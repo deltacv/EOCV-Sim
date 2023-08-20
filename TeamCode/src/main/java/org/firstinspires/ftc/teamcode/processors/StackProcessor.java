@@ -21,11 +21,11 @@ public class StackProcessor implements VisionProcessor {
     }
 
     private final static int TEST_RECT_X = 240;
-    private final static int TEST_RECT_Y = 146;
-    private final static int TEST_RECT_WIDTH = 20;
-    private final static int TEST_RECT_HEIGHT = 60;
-    private final static double FOUR_STACK_HUE_THRESHOLD = 70;
-    private final static double ONE_STACK_HUE_THRESHOLD = 58;
+    public static int TEST_RECT_Y = 146;
+    public static int TEST_RECT_WIDTH = 20;
+    public static int TEST_RECT_HEIGHT = 60;
+    public static double FOUR_STACK_HUE_THRESHOLD = 70;
+    public static double ONE_STACK_HUE_THRESHOLD = 58;
     private RingNumber result;
     Paint rectPaint;
     Paint textPaint;

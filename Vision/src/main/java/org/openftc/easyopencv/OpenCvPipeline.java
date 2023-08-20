@@ -14,8 +14,6 @@ public abstract class OpenCvPipeline {
     public void onViewportTapped() { }
 
     public void init(Mat mat) { }
-
-
     public Object getUserContextForDrawHook()
     {
         return userContext;

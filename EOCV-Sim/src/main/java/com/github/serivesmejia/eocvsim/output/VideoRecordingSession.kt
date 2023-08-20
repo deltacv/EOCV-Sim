@@ -23,7 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.output
 
-import com.github.serivesmejia.eocvsim.gui.util.MatPosterImpl
+import com.github.serivesmejia.eocvsim.gui.util.ThreadedMatPoster
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import io.github.deltacv.vision.external.util.extension.aspectRatio
 import io.github.deltacv.vision.external.util.extension.clipTo
@@ -47,7 +47,7 @@ class VideoRecordingSession(
 
     @Volatile private var videoMat: Mat? = null
 
-    val matPoster = MatPosterImpl("VideoRec", videoFps.toInt())
+    val matPoster = ThreadedMatPoster("VideoRec", videoFps.toInt())
 
     private val fpsCounter = FpsCounter()
 

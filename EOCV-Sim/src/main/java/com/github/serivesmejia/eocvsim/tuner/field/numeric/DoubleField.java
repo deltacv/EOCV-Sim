@@ -35,8 +35,8 @@ public class DoubleField extends NumericField<Double> {
 
     private double beforeValue;
 
-    public DoubleField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-        super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
+    public DoubleField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+        super(target, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
         value = (double) initialFieldValue;
     }
 

@@ -36,8 +36,8 @@ public class NumericField<T extends Number> extends TunableField<T> {
 
     protected volatile boolean hasChanged = false;
 
-    public NumericField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
-        super(instance, reflectionField, eocvSim, allowMode);
+    public NumericField(Object target, Field reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
+        super(target, reflectionField, eocvSim, allowMode);
     }
 
     @Override
@@ -50,7 +50,7 @@ public class NumericField<T extends Number> extends TunableField<T> {
         if (value == null) return;
 
         try {
-            value = (T) reflectionField.get(pipeline);
+            value = (T) reflectionField.get(target);
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }

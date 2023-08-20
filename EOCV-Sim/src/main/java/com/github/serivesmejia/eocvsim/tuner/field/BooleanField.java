@@ -38,15 +38,13 @@ public class BooleanField extends TunableField<Boolean> {
     boolean lastVal;
     volatile boolean hasChanged = false;
 
-    public BooleanField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-
-        super(instance, reflectionField, eocvSim, AllowMode.TEXT);
+    public BooleanField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+        super(target, reflectionField, eocvSim, AllowMode.TEXT);
 
         setGuiFieldAmount(0);
         setGuiComboBoxAmount(1);
 
         value = (boolean) initialFieldValue;
-
     }
 
     @Override

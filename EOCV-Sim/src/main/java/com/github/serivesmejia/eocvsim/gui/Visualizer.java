@@ -169,17 +169,25 @@ public class Visualizer {
          * TELEMETRY
          */
 
-        telemetryPanel.setBorder(new EmptyBorder(0, 20, 20, 20));
-        rightContainer.add(telemetryPanel);
+        JPanel telemetryWithInsets = new JPanel();
+        telemetryWithInsets.setLayout(new BoxLayout(telemetryWithInsets, BoxLayout.LINE_AXIS));
+        telemetryWithInsets.setBorder(new EmptyBorder(0, 20, 20, 20));
+
+        telemetryWithInsets.add(telemetryPanel);
+
+        rightContainer.add(telemetryWithInsets);
 
         //global
         frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));
 
-        tunerCollapsible = new CollapsiblePanelX("Tuner", null);
+        tunerCollapsible = new CollapsiblePanelX("Tuner", null, null);
         tunerCollapsible.setLayout(new BoxLayout(tunerCollapsible, BoxLayout.LINE_AXIS));
         tunerCollapsible.setVisible(false);
 
         JScrollPane tunerScrollPane = new JScrollPane(tunerMenuPanel);
+        tunerScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        tunerScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+
         tunerCollapsible.add(tunerScrollPane);
 
         frame.add(tunerCollapsible, BorderLayout.SOUTH);

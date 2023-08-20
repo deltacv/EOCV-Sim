@@ -35,8 +35,8 @@ public class LongField extends NumericField<Long> {
 
     private long beforeValue;
 
-    public LongField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-        super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS);
+    public LongField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+        super(target, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS);
         value = (long) initialFieldValue;
     }
 
