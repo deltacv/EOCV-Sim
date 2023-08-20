@@ -125,6 +125,10 @@ public abstract class TunableField<T> {
         return reflectionField.getName();
     }
 
+    public final String getFieldTypeName() {
+        return reflectionField.getType().getSimpleName();
+    }
+
     public final AllowMode getAllowMode() {
         return allowMode;
     }

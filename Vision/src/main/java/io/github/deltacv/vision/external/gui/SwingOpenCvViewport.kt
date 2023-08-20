@@ -372,6 +372,12 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
         this.renderHook = renderHook
     }
 
+    fun pollLastFrame(dst: Mat) {
+        synchronized(canvasLock) {
+            lastFrame.copyTo(dst)
+        }
+    }
+
     companion object {
         private const val VISION_PREVIEW_FRAME_QUEUE_CAPACITY = 2
         private const val FRAMEBUFFER_RECYCLER_CAPACITY = VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 4 //So that the evicting queue can be full, and the render thread has one checked out (+1) and post() can still take one (+1).

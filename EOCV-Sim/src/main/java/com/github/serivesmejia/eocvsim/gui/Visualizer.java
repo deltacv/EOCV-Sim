@@ -129,6 +129,8 @@ public class Visualizer {
         viewport = new SwingOpenCvViewport(new Size(1080, 720), fpsMeterDescriptor);
         viewport.setDark(FlatLaf.isLafDark());
 
+        colorPicker = new ColorPicker(viewport);
+
         JLayeredPane skiaPanel = viewport.skiaPanel();
         skiaPanel.setLayout(new BorderLayout());
 
@@ -206,8 +208,6 @@ public class Visualizer {
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // colorPicker = new ColorPicker(viewport.image);
-
         frame.setVisible(true);
 
         onInitFinished.run();
@@ -237,7 +237,7 @@ public class Visualizer {
         //handling onViewportTapped evts
         viewport.getComponent().addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-//                if(!colorPicker.isPicking())
+                if(!colorPicker.isPicking())
                     eocvSim.pipelineManager.callViewportTapped();
             }
         });
@@ -275,7 +275,7 @@ public class Visualizer {
 
         // stop color-picking mode when changing pipeline
         // TODO: find out why this breaks everything?????
-        // eocvSim.pipelineManager.onPipelineChange.doPersistent(() -> colorPicker.stopPicking());
+        eocvSim.pipelineManager.onPipelineChange.doPersistent(() -> colorPicker.stopPicking());
     }
 
     public boolean hasFinishedInit() { return hasFinishedInitializing; }

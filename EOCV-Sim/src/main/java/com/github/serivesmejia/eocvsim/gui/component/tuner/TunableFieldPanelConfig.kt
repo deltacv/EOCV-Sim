@@ -89,7 +89,7 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
         LOCAL("From local config"),
         GLOBAL("From global config"),
         GLOBAL_DEFAULT("From default global config"),
-        TYPE_SPECIFIC("From specific config")
+        TYPE_SPECIFIC("From type config")
     }
 
     data class Config(var sliderRange: Size,
@@ -294,6 +294,10 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
         }
 
         configSourceLabel.text = localConfig.source.description
+
+        if(currentConfig.source == ConfigSource.LOCAL || currentConfig.source == ConfigSource.TYPE_SPECIFIC) {
+            configSourceLabel.text += ": ${fieldOptions.fieldPanel.tunableField.fieldTypeName}"
+        }
     }
 
     //updates the actual configuration displayed on the field panel gui

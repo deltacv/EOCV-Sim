@@ -119,12 +119,12 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
 
             //start picking if global color picker is not being used by other panel
             if(!colorPicker.isPicking && colorPickButton.isSelected) {
-                // startPicking(colorPicker) // TODO: Fix color picker
+                startPicking(colorPicker)
             } else { //handles cases when cancelling picking
-                //colorPicker.stopPicking() // TODO: Fix color picker
-                //if we weren't the ones controlling the last picking,
-                //start picking again to gain control for this panel
-                // if(colorPickButton.isSelected) startPicking(colorPicker)
+                colorPicker.stopPicking()
+                // if we weren't the ones controlling the last picking,
+                // start picking again to gain control for this panel
+                if(colorPickButton.isSelected) startPicking(colorPicker)
             }
         }
 
