@@ -69,7 +69,7 @@ public class InputSourceManager {
         if(lastMatFromSource == null)
             lastMatFromSource = new Mat();
 
-        Size size = new Size(320, 240);
+        Size size = new Size(640, 480);
         createDefaultImgInputSource("/images/ug_4.jpg", "ug_eocvsim_4.jpg", "Ultimate Goal 4 Ring", size);
         createDefaultImgInputSource("/images/ug_1.jpg", "ug_eocvsim_1.jpg", "Ultimate Goal 1 Ring", size);
         createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size);

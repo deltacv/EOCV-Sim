@@ -27,17 +27,11 @@ class PipelineListIconRenderer(
             list, value, index, isSelected, cellHasFocus
         ) as JLabel
 
-        val runtimePipelinesAmount = pipelineManager.getPipelinesFrom(
-            PipelineSource.COMPILED_ON_RUNTIME
-        ).size
+        val source = pipelineManager.pipelines[index].source
 
-        if(runtimePipelinesAmount > 0) {
-            val source = pipelineManager.pipelines[index].source
-
-            label.icon = when(source) {
-                PipelineSource.COMPILED_ON_RUNTIME -> gearsIcon
-                else -> hammerIcon
-            }
+        label.icon = when(source) {
+            PipelineSource.COMPILED_ON_RUNTIME -> gearsIcon
+            else -> hammerIcon
         }
 
         return label

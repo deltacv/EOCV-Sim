@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 OpenFTC Team & Sebastian Erives
+ * Copyright (c) 2023 OpenFTC Team & EOCV-Sim implementation by Sebastian Erives
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -319,12 +319,12 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
                     }
 
                     /*
-                 * For some reason, the canvas will very occasionally be null upon closing.
-                 * Stack Overflow seems to suggest this means the canvas has been destroyed.
-                 * However, surfaceDestroyed(), which is called right before the surface is
-                 * destroyed, calls checkState(), which *SHOULD* block until we die. This
-                 * works most of the time, but not always? We don't yet understand...
-                 */
+                    * For some reason, the canvas will very occasionally be null upon closing.
+                    * Stack Overflow seems to suggest this means the canvas has been destroyed.
+                    * However, surfaceDestroyed(), which is called right before the surface is
+                    * destroyed, calls checkState(), which *SHOULD* block until we die. This
+                    * works most of the time, but not always? We don't yet understand...
+                    */
                     if (canvas != null) {
                         renderer.render(mat, canvas, renderHook, mat.context)
                     } else {

@@ -23,8 +23,9 @@
 
 package com.github.serivesmejia.eocvsim.gui.component
 
-import com.github.serivesmejia.eocvsim.gui.util.Location
+import com.github.serivesmejia.eocvsim.gui.util.Corner
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import java.awt.Point
 import java.awt.Window
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
@@ -97,32 +98,46 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
 
     companion object {
 
-        fun JComponent.popUpXOnThis(panel: JPanel,
-                                    popupLocation: Location = Location.TOP,
-                                    closeOnFocusLost: Boolean = true,
-                                    fixX: Boolean = false,
-                                    fixY: Boolean = true): PopupX {
+        fun JComponent.popUpXOnThis(
+                panel: JPanel,
+                buttonCorner: Corner = Corner.TOP_LEFT,
+                popupCorner: Corner = Corner.BOTTOM_LEFT,
+                closeOnFocusLost: Boolean = true
+        ): PopupX {
 
             val frame = SwingUtilities.getWindowAncestor(this)
             val location = locationOnScreen
 
-            val popup = PopupX(frame, panel, location.x,
-                    if(popupLocation == Location.TOP) location.y else location.y + height,
-                    closeOnFocusLost, fixX, fixY
+            val cornerLocation: Point = when(buttonCorner) {
+                Corner.TOP_LEFT -> Point(location.x, location.y)
+                Corner.TOP_RIGHT -> Point(location.x + width, location.y)
+                Corner.BOTTOM_LEFT -> Point(location.x, location.y + height)
+                Corner.BOTTOM_RIGHT -> Point(location.x + width, location.y + height)
+            }
+
+            val popup = PopupX(frame, panel,
+                    cornerLocation.x,
+                    cornerLocation.y,
+                    closeOnFocusLost
             )
 
             popup.onShow {
-                popup.setLocation(
-                        popup.window.location.x - width / 3,
-                        if(popupLocation == Location.TOP) popup.window.location.y else popup.window.location.y + popup.window.height
-                )
-
-                val topRightPointX = popup.window.location.x + popup.window.width
-
-                if(topRightPointX > frame.width) {
-                    popup.setLocation(
-                            popup.window.location.x - ((topRightPointX - frame.width) / 2),
-                            popup.window.location.y
+                when(popupCorner) {
+                    Corner.TOP_LEFT -> popup.setLocation(
+                            popup.window.location.x,
+                            popup.window.location.y + popup.window.height
+                    )
+                    Corner.TOP_RIGHT -> popup.setLocation(
+                            popup.window.location.x - popup.window.width,
+                            popup.window.location.y + popup.window.height
+                    )
+                    Corner.BOTTOM_LEFT -> popup.setLocation(
+                            popup.window.location.x + width,
+                            popup.window.location.y + popup.window.height
+                    )
+                    Corner.BOTTOM_RIGHT -> popup.setLocation(
+                            popup.window.location.x - popup.window.width,
+                            popup.window.location.y + popup.window.height
                     )
                 }
             }

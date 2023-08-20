@@ -12,10 +12,12 @@ import kotlinx.coroutines.swing.Swing
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.GridLayout
+import java.awt.Insets
 import javax.swing.BoxLayout
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.border.EmptyBorder
+import javax.swing.border.TitledBorder
 
 class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
@@ -32,7 +34,10 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
     init {
         pipelinePanel.layout = GridBagLayout()
 
-        pipelineSelectorPanel.border = EmptyBorder(20, 20, 0, 20)
+        pipelineSelectorPanel.border = TitledBorder("Pipelines").apply {
+            border = EmptyBorder(0, 0, 0, 0)
+        }
+
         pipelinePanel.add(pipelineSelectorPanel, GridBagConstraints().apply {
             gridx = 0
             gridy = 0
@@ -40,9 +45,13 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
             weightx = 1.0
             weighty = 1.0
             fill = GridBagConstraints.BOTH
+
+            insets = Insets(10, 20, 5, 20)
         })
 
-        sourceSelectorPanel.border = EmptyBorder(0, 20, -10, 20)
+        sourceSelectorPanel.border = TitledBorder("Sources").apply {
+            border = EmptyBorder(0, 0, 0, 0)
+        }
 
         pipelinePanel.add(sourceSelectorPanel, GridBagConstraints().apply {
             gridx = 0
@@ -51,6 +60,8 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
             weightx = 1.0
             weighty = 1.0
             fill = GridBagConstraints.BOTH
+
+            insets = Insets(-5, 20, -10, 20)
         })
 
         opModePanel.layout = GridLayout(2, 1)

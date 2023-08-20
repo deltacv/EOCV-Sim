@@ -84,7 +84,7 @@ public class TunerManager {
         }
 
         if (eocvSim.pipelineManager.getCurrentPipeline() != null) {
-            addFieldsFrom(eocvSim.pipelineManager.getCurrentPipeline());
+            addFieldsFrom(eocvSim.pipelineManager.getCurrentTunerTarget());
             eocvSim.visualizer.updateTunerFields(createTunableFieldPanels());
 
             for(TunableField field : fields.toArray(new TunableField[0])) {
@@ -145,11 +145,10 @@ public class TunerManager {
         return tunableFieldClass;
     }
 
-    public void addFieldsFrom(OpenCvPipeline pipeline) {
+    public void addFieldsFrom(Object target) {
+        if (target == null) return;
 
-        if (pipeline == null) return;
-
-        Field[] fields = pipeline.getClass().getFields();
+        Field[] fields = target.getClass().getFields();
 
         for (Field field : fields) {
             Class<? extends TunableField> tunableFieldClass = getTunableFieldOf(field);
@@ -161,8 +160,8 @@ public class TunerManager {
             //now, lets do some more reflection to instantiate this TunableField
             //and add it to the list...
             try {
-                Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(OpenCvPipeline.class, Field.class, EOCVSim.class);
-                this.fields.add(constructor.newInstance(pipeline, field, eocvSim));
+                Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(Object.class, Field.class, EOCVSim.class);
+                this.fields.add(constructor.newInstance(target, field, eocvSim));
             } catch(InvocationTargetException e) {
                 if(e.getCause() instanceof CancelTunableFieldAddingException) {
                     String message = e.getCause().getMessage();

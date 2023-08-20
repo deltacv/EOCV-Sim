@@ -196,7 +196,23 @@ public class Paint {
     }
 
     public Paint setStyle(Style style) {
-        // TODO: uh oh...
+        // Map Style to Skiko Mode enum
+        org.jetbrains.skia.PaintMode mode = null;
+
+        switch(style) {
+            case FILL:
+                mode = org.jetbrains.skia.PaintMode.FILL;
+                break;
+            case STROKE:
+                mode = org.jetbrains.skia.PaintMode.STROKE;
+                break;
+            case FILL_AND_STROKE:
+                mode = org.jetbrains.skia.PaintMode.STROKE_AND_FILL;
+                break;
+        }
+
+        thePaint.setMode(mode);
+
         return this;
     }
 

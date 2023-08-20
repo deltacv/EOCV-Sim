@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
-public class MatPosterImpl implements MatPoster {
+public class ThreadedMatPoster implements MatPoster {
     private final ArrayList<Postable> postables = new ArrayList<>();
 
     private final EvictingBlockingQueue<Mat> postQueue;
@@ -54,19 +54,19 @@ public class MatPosterImpl implements MatPoster {
 
     Logger logger;
 
-    public static MatPosterImpl createWithoutRecycler(String name, int maxQueueItems) {
-        return new MatPosterImpl(name, maxQueueItems, null);
+    public static ThreadedMatPoster createWithoutRecycler(String name, int maxQueueItems) {
+        return new ThreadedMatPoster(name, maxQueueItems, null);
     }
 
-    public MatPosterImpl(String name, int maxQueueItems) {
+    public ThreadedMatPoster(String name, int maxQueueItems) {
         this(name, new MatRecycler(maxQueueItems + 2));
     }
 
-    public MatPosterImpl(String name, MatRecycler recycler) {
+    public ThreadedMatPoster(String name, MatRecycler recycler) {
         this(name, recycler.getSize(), recycler);
     }
 
-    public MatPosterImpl(String name, int maxQueueItems, MatRecycler recycler) {
+    public ThreadedMatPoster(String name, int maxQueueItems, MatRecycler recycler) {
         postQueue = new EvictingBlockingQueue<>(new ArrayBlockingQueue<>(maxQueueItems));
         matRecycler = recycler;
         posterThread = new Thread(new PosterRunnable(), "MatPoster-" + name + "-Thread");

@@ -86,6 +86,8 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         private set
     @Volatile var currentPipelineData: PipelineData? = null
         private set
+    var currentTunerTarget: Any? = null
+        private set
     var currentPipelineName = ""
         private set
     var currentPipelineIndex = -1
@@ -595,6 +597,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
         currentTelemetry     = nextTelemetry
         currentPipelineIndex = index
         currentPipelineName  = currentPipeline!!.javaClass.simpleName
+        currentTunerTarget   = instantiator.variableTunerTargetObject(currentPipeline!!)
 
         currentTelemetry?.update() // clear telemetry
 

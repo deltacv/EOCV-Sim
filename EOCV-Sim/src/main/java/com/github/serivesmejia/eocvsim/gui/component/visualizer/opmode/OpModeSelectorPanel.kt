@@ -1,9 +1,32 @@
+/*
+ * Copyright (c) 2023 Sebastian Erives
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.component.PopupX.Companion.popUpXOnThis
-import com.github.serivesmejia.eocvsim.gui.util.Location
+import com.github.serivesmejia.eocvsim.gui.util.Corner
 import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.loggerForThis
@@ -15,7 +38,6 @@ import java.awt.GridBagLayout
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.*
-
 
 class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeControlsPanel) : JPanel() {
 
@@ -126,7 +148,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
     private fun registerListeners() {
         autonomousButton.addActionListener {
-            val popup = autonomousButton.popUpXOnThis(OpModePopupPanel(autonomousSelector), Location.BOTTOM)
+            val popup = autonomousButton.popUpXOnThis(OpModePopupPanel(autonomousSelector), Corner.BOTTOM_LEFT, Corner.TOP_LEFT)
 
             opModeControlsPanel.stopCurrentOpMode()
 
@@ -145,7 +167,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         }
 
         teleopButton.addActionListener {
-            val popup = teleopButton.popUpXOnThis(OpModePopupPanel(teleopSelector), Location.BOTTOM)
+            val popup = teleopButton.popUpXOnThis(OpModePopupPanel(teleopSelector), Corner.BOTTOM_RIGHT, Corner.TOP_RIGHT)
 
             opModeControlsPanel.stopCurrentOpMode()
 

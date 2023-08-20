@@ -9,6 +9,8 @@ import java.awt.GridLayout
 import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionListener
 import javax.swing.*
+import javax.swing.border.EmptyBorder
+import javax.swing.border.TitledBorder
 
 class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
 
@@ -18,6 +20,10 @@ class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
     val telemetryLabel = JLabel("Telemetry")
 
     init {
+        border = TitledBorder("Telemetry").apply {
+            border = EmptyBorder(0, 0, 0, 0)
+        }
+
         layout = GridBagLayout()
 
         /*
