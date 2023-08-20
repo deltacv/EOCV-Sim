@@ -23,6 +23,10 @@
 
 package com.github.serivesmejia.eocvsim.pipeline;
 
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -34,8 +38,20 @@ public class DefaultPipeline extends OpenCvPipeline {
 
     private Telemetry telemetry;
 
+    private Paint boxPaint;
+    private Paint textPaint;
+
     public DefaultPipeline(Telemetry telemetry) {
         this.telemetry = telemetry;
+
+        textPaint = new Paint();
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(30);
+        textPaint.setAntiAlias(true);
+
+        boxPaint = new Paint();
+        boxPaint.setColor(Color.BLACK);
+        boxPaint.setStyle(Paint.Style.FILL);
     }
 
     @Override
@@ -51,32 +67,18 @@ public class DefaultPipeline extends OpenCvPipeline {
 
         if (blur > 0 && blur % 2 == 1) {
             Imgproc.GaussianBlur(input, input, new Size(blur, blur), 0);
+        } else if (blur > 0) {
+            Imgproc.GaussianBlur(input, input, new Size(blur + 1, blur + 1), 0);
         }
 
-        // Outline
-        Imgproc.putText(
-                input,
-                "Default pipeline selected",
-                new Point(0, 22 * aspectRatioPercentage),
-                Imgproc.FONT_HERSHEY_PLAIN,
-                2 * aspectRatioPercentage,
-                new Scalar(255, 255, 255),
-                (int) Math.round(5 * aspectRatioPercentage)
-        );
-
-        //Text
-        Imgproc.putText(
-                input,
-                "Default pipeline selected",
-                new Point(0, 22 * aspectRatioPercentage),
-                Imgproc.FONT_HERSHEY_PLAIN,
-                2 * aspectRatioPercentage,
-                new Scalar(0, 0, 0),
-                (int) Math.round(2 * aspectRatioPercentage)
-        );
-
         return input;
+    }
 
+    @Override
+    public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
+        canvas.drawRect(new Rect(0, 0, 385, 45), boxPaint);
+
+        canvas.drawText("Default pipeline selected", 5, 33, textPaint);
     }
 
 }

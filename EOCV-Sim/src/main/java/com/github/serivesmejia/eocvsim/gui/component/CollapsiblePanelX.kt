@@ -1,3 +1,5 @@
+package com.github.serivesmejia.eocvsim.gui.component
+
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.event.MouseAdapter
@@ -7,13 +9,17 @@ import javax.swing.JPanel
 import javax.swing.border.LineBorder
 import javax.swing.border.TitledBorder
 
-class JCollapsiblePanel(title: String?, titleCol: Color?) : JPanel() {
+class CollapsiblePanelX(title: String?, titleCol: Color?) : JPanel() {
     private val border: TitledBorder
     private var visibleSize: Dimension? = null
     private var collapsible = true
 
+    var isHidden = false
+        private set
+
     init {
         border = TitledBorder(title)
+
         border.titleColor = titleCol
         border.border = LineBorder(Color.white)
         setBorder(border)
@@ -27,17 +33,22 @@ class JCollapsiblePanel(title: String?, titleCol: Color?) : JPanel() {
                 if (!collapsible) {
                     return
                 }
-                val i = getBorder().getBorderInsets(this@JCollapsiblePanel)
+
+                val i = getBorder().getBorderInsets(this@CollapsiblePanelX)
                 if (e.x < i.left + size.width && e.y < i.bottom + size.height) {
-                    if (visibleSize == null || height > size.height) {
-                        visibleSize = getSize()
+
+                    for(e in components) {
+                        e.isVisible = !isHidden
+
+                        border.title = if(isHidden) {
+                            "$title (hidden)"
+                        } else {
+                            title
+                        }
+
+                        isHidden = !isHidden
                     }
-                    if (getSize().height < visibleSize!!.height) {
-                        maximumSize = Dimension(visibleSize!!.width, 20000)
-                        minimumSize = visibleSize
-                    } else {
-                        maximumSize = Dimension(visibleSize!!.width, size.height)
-                    }
+
                     revalidate()
                     e.consume()
                 }

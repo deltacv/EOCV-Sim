@@ -4,6 +4,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.OpModeControlsPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.OpModeSelectorPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -31,7 +32,7 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
     init {
         pipelinePanel.layout = GridBagLayout()
 
-        pipelineSelectorPanel.border = EmptyBorder(0, 20, 0, 20)
+        pipelineSelectorPanel.border = EmptyBorder(20, 20, 0, 20)
         pipelinePanel.add(pipelineSelectorPanel, GridBagConstraints().apply {
             gridx = 0
             gridy = 0
@@ -41,7 +42,7 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
             fill = GridBagConstraints.BOTH
         })
 
-        sourceSelectorPanel.border = EmptyBorder(0, 20, 0, 20)
+        sourceSelectorPanel.border = EmptyBorder(0, 20, -10, 20)
 
         pipelinePanel.add(sourceSelectorPanel, GridBagConstraints().apply {
             gridx = 0

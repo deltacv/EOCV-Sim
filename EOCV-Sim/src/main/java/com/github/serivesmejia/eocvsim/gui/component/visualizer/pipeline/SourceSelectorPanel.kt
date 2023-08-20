@@ -1,7 +1,8 @@
-package com.github.serivesmejia.eocvsim.gui.component.visualizer
+package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.CreateSourcePanel
 import com.github.serivesmejia.eocvsim.gui.util.icon.SourcesListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
@@ -37,10 +38,10 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         sourceSelectorLabel.font = sourceSelectorLabel.font.deriveFont(20.0f)
         sourceSelectorLabel.horizontalAlignment = JLabel.CENTER
 
-        add(sourceSelectorLabel, GridBagConstraints().apply {
-            gridy = 0
-            ipady = 20
-        })
+        // add(sourceSelectorLabel, GridBagConstraints().apply {
+        //    gridy = 0
+        //    ipady = 20
+        //})
 
         sourceSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
 
@@ -49,7 +50,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         sourceSelectorScroll.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
 
         add(sourceSelectorScroll, GridBagConstraints().apply {
-            gridy = 1
+            gridy = 0
 
             weightx = 0.5
             weighty = 1.0
@@ -82,7 +83,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         sourceSelectorButtonsContainer.add(sourceSelectorDeleteBtt)
 
         add(sourceSelectorButtonsContainer, GridBagConstraints().apply {
-            gridy = 2
+            gridy = 1
             ipady = 20
         })
 

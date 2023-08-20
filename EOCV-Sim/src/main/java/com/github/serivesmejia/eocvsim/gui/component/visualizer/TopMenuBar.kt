@@ -49,7 +49,6 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
     @JvmField val mFileMenu   = JMenu("File")
     @JvmField val mWorkspMenu = JMenu("Workspace")
-    @JvmField val mEditMenu   = JMenu("Edit")
     @JvmField val mHelpMenu   = JMenu("Help")
 
     @JvmField val workspCompile = JMenuItem("Build java files")
@@ -89,6 +88,11 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         mFileMenu.add(fileSaveMat)
 
         mFileMenu.addSeparator()
+
+        val editSettings = JMenuItem("Settings")
+        editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
+
+        mFileMenu.add(editSettings)
 
         val fileRestart = JMenuItem("Restart")
 
@@ -136,14 +140,6 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         mWorkspMenu.add(workspVSCode)
 
         add(mWorkspMenu)
-
-        // EDIT
-
-        val editSettings = JMenuItem("Settings")
-        editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
-
-        mEditMenu.add(editSettings)
-        add(mEditMenu)
 
         // HELP
 
