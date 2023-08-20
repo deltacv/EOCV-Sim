@@ -27,10 +27,10 @@ class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
         telemetryLabel.font = telemetryLabel.font.deriveFont(20.0f)
         telemetryLabel.horizontalAlignment = JLabel.CENTER
 
-        add(telemetryLabel, GridBagConstraints().apply {
-            gridy = 0
-            ipady = 20
-        })
+        // add(telemetryLabel, GridBagConstraints().apply {
+        //    gridy = 0
+        //    ipady = 20
+        //})
 
         telemetryScroll.setViewportView(telemetryList)
         telemetryScroll.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
@@ -52,7 +52,7 @@ class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
         telemetryList.selectionMode = ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
 
         add(telemetryScroll, GridBagConstraints().apply {
-            gridy = 1
+            gridy = 0
 
             weightx = 0.5
             weighty = 1.0

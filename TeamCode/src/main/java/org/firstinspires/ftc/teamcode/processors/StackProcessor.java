@@ -62,9 +62,6 @@ public class StackProcessor implements VisionProcessor {
 
         double avgHueValue = Core.mean(ringHSV).val[0];
 
-        ring.release();
-        ringHSV.release();
-
         if (avgHueValue > FOUR_STACK_HUE_THRESHOLD) {
             result = RingNumber.FOUR;
         } else if (avgHueValue > ONE_STACK_HUE_THRESHOLD) {

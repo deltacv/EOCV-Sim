@@ -79,10 +79,10 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
         pipelineSelectorLabel.horizontalAlignment = JLabel.CENTER
 
-        add(pipelineSelectorLabel, GridBagConstraints().apply {
-            gridy = 0
-            ipady = 20
-        })
+        //add(pipelineSelectorLabel, GridBagConstraints().apply {
+        //    gridy = 0
+        //    ipady = 20
+        //})
 
         pipelineSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager)
         pipelineSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
@@ -92,7 +92,7 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         pipelineSelectorScroll.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
 
         add(pipelineSelectorScroll, GridBagConstraints().apply {
-            gridy = 1
+            gridy = 0
 
             weightx = 0.5
             weighty = 1.0
@@ -103,7 +103,7 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         })
 
         add(buttonsPanel, GridBagConstraints().apply {
-            gridy = 2
+            gridy = 1
             ipady = 20
         })
 

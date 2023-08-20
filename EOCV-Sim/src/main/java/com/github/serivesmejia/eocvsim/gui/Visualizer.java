@@ -26,14 +26,15 @@ package com.github.serivesmejia.eocvsim.gui;
 import com.formdev.flatlaf.FlatLaf;
 import com.github.serivesmejia.eocvsim.Build;
 import com.github.serivesmejia.eocvsim.EOCVSim;
+import com.github.serivesmejia.eocvsim.gui.component.CollapsiblePanelX;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.*;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.OpModeSelectorPanel;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel;
 import io.github.deltacv.vision.external.gui.SwingOpenCvViewport;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
-import com.github.serivesmejia.eocvsim.gui.util.ReflectTaskbar;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompiler;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher;
@@ -65,7 +66,7 @@ public class Visualizer {
     public SwingOpenCvViewport viewport = null;
 
     public TopMenuBar menuBar = null;
-    public JPanel tunerMenuPanel = new JPanel();
+    public JPanel tunerMenuPanel;
 
     public JPanel rightContainer = null;
 
@@ -77,6 +78,8 @@ public class Visualizer {
     public OpModeSelectorPanel opModeSelectorPanel = null;
 
     public TelemetryPanel telemetryPanel;
+
+    public JPanel tunerCollapsible;
 
     private String title = "EasyOpenCV Simulator v" + Build.standardVersionString;
     private String titleMsg = "No pipeline";
@@ -94,10 +97,10 @@ public class Visualizer {
     }
 
     public void init(Theme theme) {
-        if(ReflectTaskbar.INSTANCE.isUsable()){
+        if(Taskbar.isTaskbarSupported()){
             try {
                 //set icon for mac os (and other systems which do support this method)
-                ReflectTaskbar.INSTANCE.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
+                Taskbar.getTaskbar().setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
             } catch (final UnsupportedOperationException e) {
                 logger.warn("Setting the Taskbar icon image is not supported on this platform");
             } catch (final SecurityException e) {
@@ -134,7 +137,6 @@ public class Visualizer {
         menuBar = new TopMenuBar(this, eocvSim);
 
         tunerMenuPanel = new JPanel();
-        skiaPanel.add(tunerMenuPanel, BorderLayout.SOUTH);
 
         pipelineOpModeSwitchablePanel = new PipelineOpModeSwitchablePanel(eocvSim);
         pipelineOpModeSwitchablePanel.disableSwitching();
@@ -160,6 +162,7 @@ public class Visualizer {
 
         rightContainer.setLayout(new BoxLayout(rightContainer, BoxLayout.Y_AXIS));
 
+        pipelineOpModeSwitchablePanel.setBorder(new EmptyBorder(0, 0, 0, 0));
         rightContainer.add(pipelineOpModeSwitchablePanel);
 
         /*
@@ -172,6 +175,14 @@ public class Visualizer {
         //global
         frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));
 
+        tunerCollapsible = new CollapsiblePanelX("Tuner", null);
+        tunerCollapsible.setLayout(new BoxLayout(tunerCollapsible, BoxLayout.LINE_AXIS));
+        tunerCollapsible.setVisible(false);
+
+        JScrollPane tunerScrollPane = new JScrollPane(tunerMenuPanel);
+        tunerCollapsible.add(tunerScrollPane);
+
+        frame.add(tunerCollapsible, BorderLayout.SOUTH);
         frame.add(rightContainer, BorderLayout.EAST);
 
         //initialize other various stuff of the frame
@@ -329,6 +340,8 @@ public class Visualizer {
             tunerMenuPanel.add(fieldPanel);
             fieldPanel.showFieldPanel();
         }
+
+        tunerCollapsible.setVisible(!fields.isEmpty());
     }
 
     public void asyncCompilePipelines() {
@@ -349,7 +362,7 @@ public class Visualizer {
 
     public void compilingUnsupported() {
         asyncPleaseWaitDialog(
-                "Runtime compiling is not supported on this JVM",
+                "Runtime pipeline builds are not supported on this JVM",
                 "For further info, check the EOCV-Sim GitHub repo",
                 "Close",
                 new Dimension(320, 160),
@@ -397,7 +410,7 @@ public class Visualizer {
     }
 
     public void askOpenVSCode() {
-        DialogFactory.createYesOrNo(frame, "A new workspace was created. Do you wanna open VS Code?", "",
+        DialogFactory.createYesOrNo(frame, "A new workspace was created. Do you want to open VS Code?", "",
             (result) -> {
                 if(result == 0) {
                     VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile());

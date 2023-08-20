@@ -24,7 +24,6 @@ package io.github.deltacv.vision.external.gui
 
 import android.graphics.Canvas
 import io.github.deltacv.common.image.MatPoster
-import io.github.deltacv.vision.internal.util.KillException
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue
 import org.jetbrains.skia.Color
 import org.jetbrains.skiko.GenericSkikoView

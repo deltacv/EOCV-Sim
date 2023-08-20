@@ -224,7 +224,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         try {
             currentPipelineClassLoader = PipelineClassLoader(PIPELINES_OUTPUT_JAR)
 
-            val pipelines = mutableListOf<Class<out OpenCvPipeline>>()
+            val pipelines = mutableListOf<Class<*>>()
 
             for(pipelineClass in currentPipelineClassLoader!!.pipelineClasses) {
                 pipelines.add(pipelineClass)

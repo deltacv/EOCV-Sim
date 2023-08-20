@@ -30,6 +30,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.classgraph.ClassGraph
 import kotlinx.coroutines.*
+import org.firstinspires.ftc.vision.VisionProcessor
 import org.openftc.easyopencv.OpenCvPipeline
 
 class ClasspathScan {
@@ -58,7 +59,7 @@ class ClasspathScan {
     private lateinit var scanResultJob: Job
 
     @Suppress("UNCHECKED_CAST")
-    fun scan(jarFile: String? = null, classLoader: ClassLoader? = null): ScanResult {
+    fun scan(jarFile: String? = null, classLoader: ClassLoader? = null, addProcessorsAsPipelines: Boolean = true): ScanResult {
         val timer = ElapsedTime()
         val classGraph = ClassGraph()
             .enableClassInfo()
@@ -79,12 +80,18 @@ class ClasspathScan {
         
         val tunableFieldClassesInfo = scanResult.getClassesWithAnnotation(RegisterTunableField::class.java.name)
 
-        val pipelineClasses = mutableListOf<Class<out OpenCvPipeline>>()
+        val pipelineClasses = mutableListOf<Class<*>>()
 
         // i...don't even know how to name this, sorry, future readers
         // but classgraph for some reason does not have a recursive search for subclasses...
         fun searchPipelinesOfSuperclass(superclass: String) {
-            val pipelineClassesInfo = scanResult.getSubclasses(superclass)
+            val superclassClazz = if(classLoader != null) {
+                classLoader.loadClass(superclass)
+            } else Class.forName(superclass)
+
+            val pipelineClassesInfo = if(superclassClazz.isInterface)
+                scanResult.getClassesImplementing(superclass)
+                else scanResult.getSubclasses(superclass)
 
             for(pipelineClassInfo in pipelineClassesInfo) {
                 for(pipelineSubclassInfo in pipelineClassInfo.subclasses) {
@@ -99,12 +106,12 @@ class ClasspathScan {
                     classLoader.loadClass(pipelineClassInfo.name)
                 } else Class.forName(pipelineClassInfo.name)
 
-                if(!pipelineClasses.contains(clazz) && ReflectUtil.hasSuperclass(clazz, OpenCvPipeline::class.java)) {
+                if(!pipelineClasses.contains(clazz) && ReflectUtil.hasSuperclass(clazz, superclassClazz)) {
                     if(clazz.isAnnotationPresent(Disabled::class.java)) {
                         logger.info("Found @Disabled pipeline ${clazz.typeName}")
                     } else {
                         logger.info("Found pipeline ${clazz.typeName}")
-                        pipelineClasses.add(clazz as Class<out OpenCvPipeline>)
+                        pipelineClasses.add(clazz)
                     }
                 }
             }
@@ -112,6 +119,11 @@ class ClasspathScan {
 
         // start recursive hell
         searchPipelinesOfSuperclass(OpenCvPipeline::class.java.name)
+
+        if(addProcessorsAsPipelines) {
+            logger.info("Searching for VisionProcessors...")
+            searchPipelinesOfSuperclass(VisionProcessor::class.java.name)
+        }
 
         logger.info("Found ${pipelineClasses.size} pipelines")
 
@@ -166,7 +178,7 @@ class ClasspathScan {
 }
 
 data class ScanResult(
-    val pipelineClasses: Array<Class<out OpenCvPipeline>>,
+    val pipelineClasses: Array<Class<*>>,
     val tunableFieldClasses: Array<Class<out TunableField<*>>>,
     val tunableFieldAcceptorClasses: Map<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>
 )

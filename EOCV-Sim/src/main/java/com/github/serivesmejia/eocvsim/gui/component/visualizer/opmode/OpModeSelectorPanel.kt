@@ -54,14 +54,11 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
     val autonomousSelector = JList<String>()
     val teleopSelector     = JList<String>()
 
-    var allowOpModeSwitching = false
+    var isActive = false
         set(value) {
-            opModeControlsPanel.allowOpModeSwitching = value
+            opModeControlsPanel.isActive = value
             field = value
         }
-
-    var isActive = false
-        internal set
 
     init {
         layout = GridBagLayout()
@@ -168,7 +165,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
         autonomousSelector.addMouseListener(object: MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (!allowOpModeSwitching) return
+                if (!isActive) return
 
                 val index = (e.source as JList<*>).locationToIndex(e.point)
                 if(index >= 0) {
@@ -179,7 +176,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
         teleopSelector.addMouseListener(object: MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (!allowOpModeSwitching) return
+                if (!isActive) return
 
                 val index = (e.source as JList<*>).locationToIndex(e.point)
                 if(index >= 0) {
@@ -189,12 +186,17 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         })
 
         eocvSim.pipelineManager.onPipelineChange {
-            // we are doing this to detect external pipeline changes
+            if(!isActive) return@onPipelineChange
+
+            // we are doing this to detect external pipeline changes and reflect them
+            // accordingly in the UI.
+            //
             // in the event that this change was triggered by us, OpModeSelectorPanel,
             // we need to hold on a cycle so that the state has been fully updated,
-            // just to be able to check correctly.
+            // just to be able to check correctly and, if it was requested by
+            // OpModeSelectorPanel, skip this message and not do anything.
             eocvSim.pipelineManager.onUpdate.doOnce {
-                if(isActive && opModeControlsPanel.currentOpMode != eocvSim.pipelineManager.currentPipeline) {
+                if(isActive && opModeControlsPanel.currentOpMode != eocvSim.pipelineManager.currentPipeline && eocvSim.pipelineManager.currentPipeline != null) {
                     val opMode = eocvSim.pipelineManager.currentPipeline
 
                     if(opMode is OpMode) {
@@ -205,7 +207,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
                         logger.info("External change detected \"$name\"")
 
                         opModeSelected(eocvSim.pipelineManager.currentPipelineIndex, name, false)
-                    } else {
+                    } else if(isActive) {
                         reset(-1)
                     }
                 }
@@ -222,6 +224,8 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
     }
 
     private fun opModeSelected(managerIndex: Int, name: String, forceChangePipeline: Boolean = true) {
+        if(!isActive) return
+
         opModeNameLabel.text = name
 
         textPanel.removeAll()
@@ -277,9 +281,9 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
         opModeControlsPanel.reset()
 
-        if(eocvSim.pipelineManager.currentPipeline == opModeControlsPanel.currentOpMode) {
-            val opMode = opModeControlsPanel.currentOpMode
+        val opMode = opModeControlsPanel.currentOpMode
 
+        if(eocvSim.pipelineManager.currentPipeline == opMode && opMode != null && opMode.notifier.state != OpModeState.SELECTED) {
             opMode?.notifier?.onStateChange?.let {
                 it {
                     val state = opMode.notifier.state
@@ -289,7 +293,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
                         if(nextPipeline == null || nextPipeline >= 0) {
                             eocvSim.pipelineManager.onUpdate.doOnce {
-                                eocvSim.pipelineManager.requestChangePipeline(nextPipeline)
+                                eocvSim.pipelineManager.changePipeline(nextPipeline)
                             }
                         }
                     }
