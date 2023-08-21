@@ -61,50 +61,80 @@ public class Canvas {
     }
 
 
-    public Canvas drawRoundRect(float l, float t, float r, float b, float xRad, float yRad, Paint rectPaint) {
+    public void drawRoundRect(float l, float t, float r, float b, float xRad, float yRad, Paint rectPaint) {
         theCanvas.drawRRect(RRect.makeLTRB(l, t, r, b, xRad, yRad), rectPaint.thePaint);
-
-        return this;
     }
 
+    public void drawPath(Path path, Paint paint) {
+        theCanvas.drawPath(path.thePath, paint.thePaint);
+    }
 
-    public Canvas drawText(String text, float x, float y, Paint paint) {
+    public void drawCircle(float x, float y, float radius, Paint paint) {
+        theCanvas.drawCircle(x, y, radius, paint.thePaint);
+    }
+
+    public void drawOval(float left, float top, float right, float bottom, Paint paint) {
+        theCanvas.drawOval(new org.jetbrains.skia.Rect(left, top, right, bottom), paint.thePaint);
+    }
+
+    public void drawArc(float left, float top, float right, float bottom, float startAngle, float sweepAngle, boolean useCenter, Paint paint) {
+        theCanvas.drawArc(left, top, right, bottom, startAngle, sweepAngle, useCenter, paint.thePaint);
+    }
+
+    public void drawText(String text, int start, int end, float x, float y, Paint paint) {
+        Font font = FontCache.makeFont(paint.getTypeface(), paint.getTextSize());
+        theCanvas.drawString(text.substring(start, end), x, y, font, paint.thePaint);
+    }
+
+    public void drawText(String text, float x, float y, Paint paint) {
         Font font = FontCache.makeFont(paint.getTypeface(), paint.getTextSize());
         theCanvas.drawString(text, x, y, font, paint.thePaint);
-
-        return this;
     }
 
-    public Canvas rotate(float degrees, float xCenter, float yCenter) {
+    public void drawPoints(float[] points, int offset, int count, Paint paint) {
+        // not supported by the skija canvas so we have to do it manually
+        for(int i = offset; i < offset + count; i += 2) {
+            theCanvas.drawPoint(points[i], points[i + 1], paint.thePaint);
+        }
+    }
+
+    public void drawPoints(float[] points, Paint paint) {
+        theCanvas.drawPoints(points, paint.thePaint);
+    }
+
+    public void drawRGB(int r, int g, int b) {
+        theCanvas.clear(Color.rgb(r, g, b));
+    }
+
+    public void drawLines(float[] points, Paint paint) {
+        theCanvas.drawLines(points, paint.thePaint);
+    }
+
+    public void drawRect(Rect rect, Paint paint) {
+        theCanvas.drawRect(rect.toSkijaRect(), paint.thePaint);
+    }
+
+    public void drawRect(float left, float top, float right, float bottom, Paint paint) {
+        theCanvas.drawRect(new org.jetbrains.skia.Rect(left, top, right, bottom), paint.thePaint);
+    }
+
+    public void rotate(float degrees, float xCenter, float yCenter) {
         theCanvas.rotate(degrees, xCenter, yCenter);
-        return this;
     }
 
-    public Canvas rotate(float degrees) {
+    public void rotate(float degrees) {
         theCanvas.rotate(degrees);
-        return this;
     }
 
     public int save() {
         return theCanvas.save();
     }
 
-    public Canvas restore() {
+    public void restore() {
         theCanvas.restore();
-        return this;
     }
 
-    public Canvas drawLines(float[] points, Paint paint) {
-        theCanvas.drawLines(points, paint.thePaint);
-        return this;
-    }
-
-    public Canvas drawRect(Rect rect, Paint paint) {
-        theCanvas.drawRect(rect.toSkijaRect(), paint.thePaint);
-        return this;
-    }
-
-    public Canvas drawBitmap(Bitmap bitmap, Rect src, Rect rect, Paint paint) {
+    public void drawBitmap(Bitmap bitmap, Rect src, Rect rect, Paint paint) {
         int left, top, right, bottom;
         if (src == null) {
             left = top = 0;
@@ -128,18 +158,32 @@ public class Canvas {
                 new org.jetbrains.skia.Rect(left, top, right, bottom),
                 rect.toSkijaRect(), thePaint
         );
-
-        return this;
     }
 
-    public Canvas translate(int dx, int dy) {
+    public void drawBitmap(Bitmap bitmap, float left, float top, Paint paint) {
+        org.jetbrains.skia.Paint thePaint = null;
+
+        if(paint != null) {
+            thePaint = paint.thePaint;
+        }
+
+        theCanvas.drawImage(Image.Companion.makeFromBitmap(bitmap.theBitmap), left, top, thePaint);
+    }
+
+    public void skew(float sx, float sy) {
+        theCanvas.skew(sx, sy);
+    }
+
+    public void translate(int dx, int dy) {
         theCanvas.translate(dx, dy);
-        return this;
     }
 
-    public Canvas restoreToCount(int saveCount) {
+    public void scale(float sx, float sy) {
+        theCanvas.scale(sx, sy);
+    }
+
+    public void restoreToCount(int saveCount) {
         theCanvas.restoreToCount(saveCount);
-        return this;
     }
 
     public boolean readPixels(@NotNull Bitmap lastFrame, int srcX, int srcY) {

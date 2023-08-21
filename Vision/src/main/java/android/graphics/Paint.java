@@ -176,7 +176,7 @@ public class Paint {
         public float   leading;
     }
 
-    public final org.jetbrains.skia.Paint thePaint;
+    public org.jetbrains.skia.Paint thePaint;
 
     private Typeface typeface;
     private float textSize;
@@ -197,9 +197,8 @@ public class Paint {
         return this;
     }
 
-    public Paint setAntiAlias(boolean value) {
+    public void setAntiAlias(boolean value) {
         thePaint.setAntiAlias(value);
-        return this;
     }
 
     public Paint setStyle(Style style) {
@@ -233,6 +232,14 @@ public class Paint {
         return this;
     }
 
+    public void setARGB(int a, int r, int g, int b) {
+        thePaint.setColor(Color.argb(a, r, g, b));
+    }
+
+    public void setAlpha(int alpha) {
+        thePaint.setAlpha(alpha);
+    }
+
     public void setStrokeJoin(Join join) {
         PaintStrokeJoin strokeJoin = null;
 
@@ -251,6 +258,7 @@ public class Paint {
 
         thePaint.setStrokeJoin(strokeJoin);
     }
+
     public void setStrokeCap(Cap cap) {
         PaintStrokeCap strokeCap = null;
 
@@ -278,6 +286,22 @@ public class Paint {
         thePaint.setStrokeMiter(miter);
     }
 
+    public void set(Paint src) {
+        thePaint = src.thePaint.makeClone();
+        typeface = src.typeface;
+        textSize = src.textSize;
+    }
+
+    public void reset() {
+        thePaint = new org.jetbrains.skia.Paint();
+        typeface = null;
+        textSize = 0;
+    }
+
+    public boolean hasGlyph(String text) {
+        return typeface.theTypeface.getStringGlyphs(text).length != 0;
+    }
+
     // write getters here
     public int getColor() {
         return thePaint.getColor();
@@ -288,7 +312,14 @@ public class Paint {
     }
 
     public Style getStyle() {
-        return Style.FILL; // TODO: uh oh...
+        switch(thePaint.getMode()) {
+            case FILL:
+                return Style.FILL;
+            case STROKE:
+                return Style.STROKE;
+            default:
+                return Style.FILL_AND_STROKE;
+        }
     }
 
     public float getStrokeWidth() {
