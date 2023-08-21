@@ -28,6 +28,7 @@ import java.awt.Color
 import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import javax.swing.BorderFactory
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.border.LineBorder
@@ -54,7 +55,7 @@ class CollapsiblePanelX @JvmOverloads constructor(
         border = TitledBorder(titleAndDescriptor)
 
         border.titleColor = titleCol
-        border.border = LineBorder(borderCol)
+        border.border = BorderFactory.createMatteBorder(1, 1, 1, 1, borderCol)
 
         setBorder(border)
 

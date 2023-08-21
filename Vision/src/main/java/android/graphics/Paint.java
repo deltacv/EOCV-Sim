@@ -185,6 +185,13 @@ public class Paint {
         thePaint = new org.jetbrains.skia.Paint();
     }
 
+    public Paint(Paint paint) {
+        thePaint = paint.thePaint;
+
+        typeface = paint.typeface;
+        textSize = paint.textSize;
+    }
+
     public Paint setColor(int color) {
         thePaint.setColor(color);
         return this;

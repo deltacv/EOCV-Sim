@@ -163,6 +163,10 @@ public class Visualizer {
          */
 
         rightContainer.setLayout(new BoxLayout(rightContainer, BoxLayout.Y_AXIS));
+        // add pretty border
+        rightContainer.setBorder(
+                BorderFactory.createMatteBorder(0, 1, 0, 0, UIManager.getColor("Separator.foreground"))
+        );
 
         pipelineOpModeSwitchablePanel.setBorder(new EmptyBorder(0, 0, 0, 0));
         rightContainer.add(pipelineOpModeSwitchablePanel);
@@ -182,7 +186,7 @@ public class Visualizer {
         //global
         frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));
 
-        tunerCollapsible = new CollapsiblePanelX("Tuner", null, null);
+        tunerCollapsible = new CollapsiblePanelX("Variable Tuner", null, null);
         tunerCollapsible.setLayout(new BoxLayout(tunerCollapsible, BoxLayout.LINE_AXIS));
         tunerCollapsible.setVisible(false);
 
@@ -249,29 +253,6 @@ public class Visualizer {
                 // viewport.setViewportScale(scale);
         //    }
         // });
-
-        //resizes all three JLists in right panel to make buttons visible in smaller resolutions
-        frame.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent evt) {
-                double ratioH = frame.getSize().getHeight() / 645;
-
-                double fontSize = 17 * ratioH;
-                Font font = pipelineSelectorPanel.getPipelineSelectorLabel().getFont().deriveFont((float)fontSize);
-
-                pipelineSelectorPanel.getPipelineSelectorLabel().setFont(font);
-                pipelineSelectorPanel.revalAndRepaint();
-
-                sourceSelectorPanel.getSourceSelectorLabel().setFont(font);
-                sourceSelectorPanel.revalAndRepaint();
-
-                telemetryPanel.getTelemetryLabel().setFont(font);
-                telemetryPanel.revalAndRepaint();
-
-                rightContainer.revalidate();
-                rightContainer.repaint();
-            }
-        });
 
         // stop color-picking mode when changing pipeline
         // TODO: find out why this breaks everything?????

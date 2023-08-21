@@ -10,7 +10,8 @@ import javax.swing.*
 import java.awt.*
 
 class PipelineListIconRenderer(
-    private val pipelineManager: PipelineManager
+    private val pipelineManager: PipelineManager,
+    private val indexMapProvider: () -> Map<Int, Int>
 ) : DefaultListCellRenderer() {
 
     private val gearsIcon  by EOCVSimIconLibrary.icoGears.lazyResized(15, 15)
@@ -27,7 +28,7 @@ class PipelineListIconRenderer(
             list, value, index, isSelected, cellHasFocus
         ) as JLabel
 
-        val source = pipelineManager.pipelines[index].source
+        val source = pipelineManager.pipelines[indexMapProvider()[index]!!].source
 
         label.icon = when(source) {
             PipelineSource.COMPILED_ON_RUNTIME -> gearsIcon

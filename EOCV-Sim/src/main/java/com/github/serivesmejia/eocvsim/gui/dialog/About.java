@@ -129,7 +129,7 @@ public class About {
         osLibsList.addListSelectionListener(e -> {
             if(!e.getValueIsAdjusting()) {
 
-                String text = osLibsList.getModel().getElementAt(osLibsList.getSelectedIndex());
+                String text = osLibsList.getSelectedValue();
                 String[] urls = StrUtil.findUrlsInString(text);
 
                 if(urls.length > 0) {

@@ -84,7 +84,7 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         //    ipady = 20
         //})
 
-        pipelineSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager)
+        pipelineSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager) { indexMap }
         pipelineSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
 
         pipelineSelectorScroll.setViewportView(pipelineSelector)

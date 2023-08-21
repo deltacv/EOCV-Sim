@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.component.PopupX.Companion.popUpXOnThis
 import com.github.serivesmejia.eocvsim.gui.util.Corner
+import com.github.serivesmejia.eocvsim.gui.util.icon.PipelineListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.loggerForThis
@@ -88,6 +89,9 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
         autonomousSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
         teleopSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
+
+        autonomousSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager) { autonomousIndexMap }
+        teleopSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager) { teleopIndexMap }
 
         autonomousButton.icon = EOCVSimIconLibrary.icoArrowDropdown
 

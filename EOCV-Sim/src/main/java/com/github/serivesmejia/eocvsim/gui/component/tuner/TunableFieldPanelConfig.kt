@@ -57,10 +57,10 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
     private val sliderRangeFieldsPanel = JPanel()
 
     private var sliderRangeFields     = createRangeFields()
-    private val colorSpaceComboBox    = EnumComboBox("Color space: ", PickerColorSpace::class.java, PickerColorSpace.values())
+    private val colorSpaceComboBox    = EnumComboBox("Color space: ", PickerColorSpace::class.java, PickerColorSpace.entries.toTypedArray())
 
     private val applyToAllButtonPanel = JPanel(GridBagLayout())
-    private val applyToAllButton      = JToggleButton("Apply to all fields...")
+    private val applyToAllButton      = JToggleButton("Apply to all variables...")
 
     private val applyModesPanel             = JPanel()
     private val applyToAllGloballyButton    = JButton("Globally")

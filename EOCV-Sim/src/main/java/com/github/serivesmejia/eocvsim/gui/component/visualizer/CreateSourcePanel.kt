@@ -37,13 +37,13 @@ import javax.swing.JPanel
 class CreateSourcePanel(eocvSim: EOCVSim) : JPanel(GridLayout(2, 1)) {
 
     private val sourceSelectComboBox = EnumComboBox(
-        "", SourceType::class.java, SourceType.values(),
-        { it.coolName }, { SourceType.fromCoolName(it) }
+            "", SourceType::class.java, SourceType.values(),
+            { it.coolName }, { SourceType.fromCoolName(it) }
     )
 
     private val cameraDriverComboBox = EnumComboBox(
-        "Camera driver: ", WebcamDriver::class.java, WebcamDriver.values(),
-        { it.name.replace("_", " ") }, { WebcamDriver.valueOf(it.replace(" ", "_")) }
+            "Camera driver: ", WebcamDriver::class.java, WebcamDriver.values(),
+            { it.name.replace("_", " ") }, { WebcamDriver.valueOf(it.replace(" ", "_")) }
 
     )
 
