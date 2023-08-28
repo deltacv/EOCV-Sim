@@ -23,6 +23,7 @@ Since OpenCV in Java uses a native library, which is platform specific, the simu
 * Windows x86_64 (tested)
 * Windows x86 (untested)
 * MacOS x86_64 (tested)
+* MacOS AARCH64/Apple Silicon (untested)
 * Linux x86_64 (tested for Ubuntu 20.04)
 * Linux ARMv7 & ARMv8 (partially tested in Raspbian but not officially endorsed)<br/>
 
@@ -70,6 +71,21 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 # Change logs
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
+
+### [v3.5.0 - New VisionPortal and VisionProcessor API](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.0)
+   - This is the 18th release for EOCV-Sim
+     - Changelog
+       - Addresses the changes made in the FTC SDK 8.2 to prepare for the 2023-2024 season:
+         - EOCV-Sim's Viewport implementation has been changed to one using Skiko (Skia) rendering - to address new features implemented in [EasyOpenCV v1.7.0](https://github.com/OpenFTC/EasyOpenCV/releases/tag/v1.7.0)
+         - The VisionPortal & VisionProcessor interfaces have been implemented onto EOCV-Sim - VisionProcessors are treated just like OpenCvPipelines and are automatically detected by the sim to be executed from the user interface.
+         - In order to use the VisionPortal API, OpModes have been added onto the simulator - a new "OpMode" tab on the user interface has been added to address this addition. NOTE: OpModes are only limited to use VisionPortal APIs, other FTC SDK apis such as hardware DcMotor have not been implemented.
+         - A new public API for android.graphics has been adding onto the simulator, translating android.graphics API called by the user into Skiko calls, adding compatibility to the new features in [EasyOpenCV v1.7.0](https://github.com/OpenFTC/EasyOpenCV/releases/tag/v1.7.0) related to canvas drawing.
+         - AprilTagProcessor has also been implemented straight from the SDK, allowing its full API to be used and attached to a VisionProcessor - [see this example OpMode](https://github.com/deltacv/EOCV-Sim/blob/dev/TeamCode/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptAprilTagEasy.java).
+       - AprilTagDesktop plugin has been updated to match [EOCV-AprilTag-Plugin v2.0.0](https://github.com/OpenFTC/EOCV-AprilTag-Plugin/releases/tag/v2.0.0)
+       - Support for Apple Silicon Macs has been added to AprilTagDesktop
+       - Several quality of life upgrades to the UI
+      - Bug fixes: 
+        - Fixes issues related to pipeline and input source selection - UI components now exclusively react to user interactions as opposed to past versions where changes triggered by EOCV-Sim were picked up as user-made and caused several issues
 
 ### [v3.4.3 - M1 Mac OpenCV Support](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.4.3)
    - This is the 17th release for EOCV-Sim
