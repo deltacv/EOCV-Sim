@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.gui.util.icon;
 
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary;
 import com.github.serivesmejia.eocvsim.gui.Icons;
 import com.github.serivesmejia.eocvsim.input.InputSourceManager;
 
@@ -59,19 +60,19 @@ public class SourcesListIconRenderer extends DefaultListCellRenderer {
         switch (sourceManager.getSourceType((String) value)) {
             case IMAGE:
                 if(imageIcon == null) {
-                    imageIcon = Icons.INSTANCE.getImageResized("ico_img", 15, 15);
+                    imageIcon = EOCVSimIconLibrary.INSTANCE.getIcoImg().resized(15, 15);
                 }
                 label.setIcon(imageIcon);
                 break;
             case CAMERA:
                 if(camIcon == null) {
-                    camIcon = Icons.INSTANCE.getImageResized("ico_cam", 15, 15);
+                    camIcon = EOCVSimIconLibrary.INSTANCE.getIcoCam().resized(15, 15);
                 }
                 label.setIcon(camIcon);
                 break;
             case VIDEO:
                 if(vidIcon == null) {
-                    vidIcon = Icons.INSTANCE.getImageResized("ico_vid", 15, 15);
+                    vidIcon = EOCVSimIconLibrary.INSTANCE.getIcoVid().resized(15, 15);
                 }
                 label.setIcon(vidIcon);
                 break;

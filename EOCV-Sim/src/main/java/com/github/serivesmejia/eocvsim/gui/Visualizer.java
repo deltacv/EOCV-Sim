@@ -26,21 +26,21 @@ package com.github.serivesmejia.eocvsim.gui;
 import com.formdev.flatlaf.FlatLaf;
 import com.github.serivesmejia.eocvsim.Build;
 import com.github.serivesmejia.eocvsim.EOCVSim;
-import com.github.serivesmejia.eocvsim.gui.component.Viewport;
+import com.github.serivesmejia.eocvsim.gui.component.CollapsiblePanelX;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.*;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.OpModeSelectorPanel;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel;
+import io.github.deltacv.vision.external.gui.SwingOpenCvViewport;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.InputSourceDropTarget;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.SourceSelectorPanel;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.TopMenuBar;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
-import com.github.serivesmejia.eocvsim.gui.util.ReflectTaskbar;
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompiler;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher;
 import com.github.serivesmejia.eocvsim.workspace.util.template.GradleWorkspaceTemplate;
 import kotlin.Unit;
+import org.opencv.core.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class Visualizer {
 
@@ -64,19 +63,23 @@ public class Visualizer {
     private final EOCVSim eocvSim;
     public JFrame frame;
 
-    public Viewport viewport = null;
-    public TopMenuBar menuBar = null;
-    public JPanel tunerMenuPanel = new JPanel();
+    public SwingOpenCvViewport viewport = null;
 
-    public JScrollPane imgScrollPane = null;
+    public TopMenuBar menuBar = null;
+    public JPanel tunerMenuPanel;
 
     public JPanel rightContainer = null;
-    public JSplitPane globalSplitPane = null;
-    public JSplitPane imageTunerSplitPane = null;
+
+    public PipelineOpModeSwitchablePanel pipelineOpModeSwitchablePanel = null;
 
     public PipelineSelectorPanel pipelineSelectorPanel = null;
     public SourceSelectorPanel sourceSelectorPanel = null;
+
+    public OpModeSelectorPanel opModeSelectorPanel = null;
+
     public TelemetryPanel telemetryPanel;
+
+    public JPanel tunerCollapsible;
 
     private String title = "EasyOpenCV Simulator v" + Build.standardVersionString;
     private String titleMsg = "No pipeline";
@@ -84,9 +87,6 @@ public class Visualizer {
     private String beforeTitleMsg = "";
 
     public ColorPicker colorPicker = null;
-
-    //stuff for zooming handling
-    private volatile boolean isCtrlPressed = false;
 
     private volatile boolean hasFinishedInitializing = false;
 
@@ -97,10 +97,10 @@ public class Visualizer {
     }
 
     public void init(Theme theme) {
-        if(ReflectTaskbar.INSTANCE.isUsable()){
+        if(Taskbar.isTaskbarSupported()){
             try {
                 //set icon for mac os (and other systems which do support this method)
-                ReflectTaskbar.INSTANCE.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
+                Taskbar.getTaskbar().setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
             } catch (final UnsupportedOperationException e) {
                 logger.warn("Setting the Taskbar icon image is not supported on this platform");
             } catch (final SecurityException e) {
@@ -122,15 +122,33 @@ public class Visualizer {
 
         //instantiate all swing elements after theme installation
         frame = new JFrame();
-        viewport = new Viewport(eocvSim, eocvSim.getConfig().pipelineMaxFps.getFps());
+
+        String fpsMeterDescriptor = "deltacv EOCV-Sim v" + Build.standardVersionString;
+        if(Build.isDev) fpsMeterDescriptor += "-dev";
+
+        viewport = new SwingOpenCvViewport(new Size(1080, 720), fpsMeterDescriptor);
+        viewport.setDark(FlatLaf.isLafDark());
+
+        colorPicker = new ColorPicker(viewport);
+
+        JLayeredPane skiaPanel = viewport.skiaPanel();
+        skiaPanel.setLayout(new BorderLayout());
+
+        frame.add(skiaPanel);
 
         menuBar = new TopMenuBar(this, eocvSim);
 
         tunerMenuPanel = new JPanel();
 
-        pipelineSelectorPanel = new PipelineSelectorPanel(eocvSim);
-        sourceSelectorPanel   = new SourceSelectorPanel(eocvSim);
-        telemetryPanel        = new TelemetryPanel();
+        pipelineOpModeSwitchablePanel = new PipelineOpModeSwitchablePanel(eocvSim);
+        pipelineOpModeSwitchablePanel.disableSwitching();
+
+        pipelineSelectorPanel = pipelineOpModeSwitchablePanel.getPipelineSelectorPanel();
+        sourceSelectorPanel = pipelineOpModeSwitchablePanel.getSourceSelectorPanel();
+
+        opModeSelectorPanel = pipelineOpModeSwitchablePanel.getOpModeSelectorPanel();
+
+        telemetryPanel = new TelemetryPanel();
 
         rightContainer = new JPanel();
 
@@ -144,55 +162,42 @@ public class Visualizer {
          * IMG VISUALIZER & SCROLL PANE
          */
 
-        imgScrollPane = new JScrollPane(viewport);
-
-        imgScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        imgScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-
-        imgScrollPane.getHorizontalScrollBar().setUnitIncrement(16);
-        imgScrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
         rightContainer.setLayout(new BoxLayout(rightContainer, BoxLayout.Y_AXIS));
+        // add pretty border
+        rightContainer.setBorder(
+                BorderFactory.createMatteBorder(0, 1, 0, 0, UIManager.getColor("Separator.foreground"))
+        );
 
-        /*
-         * PIPELINE SELECTOR
-         */
-        pipelineSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(pipelineSelectorPanel);
-
-        /*
-         * SOURCE SELECTOR
-         */
-        sourceSelectorPanel.setBorder(new EmptyBorder(0, 20, 0, 20));
-        rightContainer.add(sourceSelectorPanel);
+        pipelineOpModeSwitchablePanel.setBorder(new EmptyBorder(0, 0, 0, 0));
+        rightContainer.add(pipelineOpModeSwitchablePanel);
 
         /*
          * TELEMETRY
          */
-        telemetryPanel.setBorder(new EmptyBorder(0, 20, 20, 20));
-        rightContainer.add(telemetryPanel);
 
-        /*
-         * SPLIT
-         */
+        JPanel telemetryWithInsets = new JPanel();
+        telemetryWithInsets.setLayout(new BoxLayout(telemetryWithInsets, BoxLayout.LINE_AXIS));
+        telemetryWithInsets.setBorder(new EmptyBorder(0, 20, 20, 20));
 
-        //left side, image scroll & tuner menu split panel
-        imageTunerSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, imgScrollPane, tunerMenuPanel);
+        telemetryWithInsets.add(telemetryPanel);
 
-        imageTunerSplitPane.setResizeWeight(1);
-        imageTunerSplitPane.setOneTouchExpandable(false);
-        imageTunerSplitPane.setContinuousLayout(true);
+        rightContainer.add(telemetryWithInsets);
 
         //global
-        globalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, imageTunerSplitPane, rightContainer);
+        frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));
 
-        globalSplitPane.setResizeWeight(1);
-        globalSplitPane.setOneTouchExpandable(false);
-        globalSplitPane.setContinuousLayout(true);
+        tunerCollapsible = new CollapsiblePanelX("Variable Tuner", null, null);
+        tunerCollapsible.setLayout(new BoxLayout(tunerCollapsible, BoxLayout.LINE_AXIS));
+        tunerCollapsible.setVisible(false);
 
-        globalSplitPane.setDropTarget(new InputSourceDropTarget(eocvSim));
+        JScrollPane tunerScrollPane = new JScrollPane(tunerMenuPanel);
+        tunerScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        tunerScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 
-        frame.add(globalSplitPane, BorderLayout.CENTER);
+        tunerCollapsible.add(tunerScrollPane);
+
+        frame.add(tunerCollapsible, BorderLayout.SOUTH);
+        frame.add(rightContainer, BorderLayout.EAST);
 
         //initialize other various stuff of the frame
         frame.setSize(780, 645);
@@ -206,10 +211,6 @@ public class Visualizer {
         frame.setLocationRelativeTo(null);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        globalSplitPane.setDividerLocation(1070);
-
-        colorPicker = new ColorPicker(viewport.image);
 
         frame.setVisible(true);
 
@@ -238,7 +239,7 @@ public class Visualizer {
         });
 
         //handling onViewportTapped evts
-        viewport.addMouseListener(new MouseAdapter() {
+        viewport.getComponent().addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if(!colorPicker.isPicking())
                     eocvSim.pipelineManager.callViewportTapped();
@@ -246,63 +247,21 @@ public class Visualizer {
         });
 
         //VIEWPORT RESIZE HANDLING
-        imgScrollPane.addMouseWheelListener(e -> {
-            if (isCtrlPressed) { //check if control key is pressed
-                double scale = viewport.getViewportScale() - (0.15 * e.getPreciseWheelRotation());
-                viewport.setViewportScale(scale);
-            }
-        });
-
-        //listening for keyboard presses and releases, to check if ctrl key was pressed or released (handling zoom)
-        KeyboardFocusManager.getCurrentKeyboardFocusManager().addKeyEventDispatcher(ke -> {
-            switch (ke.getID()) {
-                case KeyEvent.KEY_PRESSED:
-                    if (ke.getKeyCode() == KeyEvent.VK_CONTROL) {
-                        isCtrlPressed = true;
-                        imgScrollPane.setWheelScrollingEnabled(false); //lock scrolling if ctrl is pressed
-                    }
-                    break;
-                case KeyEvent.KEY_RELEASED:
-                    if (ke.getKeyCode() == KeyEvent.VK_CONTROL) {
-                        isCtrlPressed = false;
-                        imgScrollPane.setWheelScrollingEnabled(true); //unlock
-                    }
-                    break;
-            }
-            return false; //idk let's just return false 'cause keyboard input doesn't work otherwise
-        });
-
-        //resizes all three JLists in right panel to make buttons visible in smaller resolutions
-        frame.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent evt) {
-                double ratioH = frame.getSize().getHeight() / 645;
-
-                double fontSize = 17 * ratioH;
-                Font font = pipelineSelectorPanel.getPipelineSelectorLabel().getFont().deriveFont((float)fontSize);
-
-                pipelineSelectorPanel.getPipelineSelectorLabel().setFont(font);
-                pipelineSelectorPanel.revalAndRepaint();
-
-                sourceSelectorPanel.getSourceSelectorLabel().setFont(font);
-                sourceSelectorPanel.revalAndRepaint();
-
-                telemetryPanel.getTelemetryLabel().setFont(font);
-                telemetryPanel.revalAndRepaint();
-
-                rightContainer.revalidate();
-                rightContainer.repaint();
-            }
-        });
+        // imgScrollPane.addMouseWheelListener(e -> {
+        //    if (isCtrlPressed) { //check if control key is pressed
+                // double scale = viewport.getViewportScale() - (0.15 * e.getPreciseWheelRotation());
+                // viewport.setViewportScale(scale);
+        //    }
+        // });
 
         // stop color-picking mode when changing pipeline
         // TODO: find out why this breaks everything?????
-        // eocvSim.pipelineManager.onPipelineChange.doPersistent(() -> colorPicker.stopPicking());
+        eocvSim.pipelineManager.onPipelineChange.doPersistent(() -> colorPicker.stopPicking());
     }
 
     public boolean hasFinishedInit() { return hasFinishedInitializing; }
 
-    public void waitForFinishingInit() {
+    public void joinInit() {
         while (!hasFinishedInitializing) {
             Thread.yield();
         }
@@ -311,7 +270,7 @@ public class Visualizer {
     public void close() {
         SwingUtilities.invokeLater(() -> {
             frame.setVisible(false);
-            viewport.stop();
+            viewport.deactivate();
 
             //close all asyncpleasewait dialogs
             for (AsyncPleaseWaitDialog dialog : pleaseWaitDialogs) {
@@ -342,7 +301,7 @@ public class Visualizer {
 
             childDialogs.clear();
             frame.dispose();
-            viewport.flush();
+            viewport.deactivate();
         });
     }
 
@@ -370,6 +329,8 @@ public class Visualizer {
             tunerMenuPanel.add(fieldPanel);
             fieldPanel.showFieldPanel();
         }
+
+        tunerCollapsible.setVisible(!fields.isEmpty());
     }
 
     public void asyncCompilePipelines() {
@@ -390,7 +351,7 @@ public class Visualizer {
 
     public void compilingUnsupported() {
         asyncPleaseWaitDialog(
-                "Runtime compiling is not supported on this JVM",
+                "Runtime pipeline builds are not supported on this JVM",
                 "For further info, check the EOCV-Sim GitHub repo",
                 "Close",
                 new Dimension(320, 160),
@@ -438,7 +399,7 @@ public class Visualizer {
     }
 
     public void askOpenVSCode() {
-        DialogFactory.createYesOrNo(frame, "A new workspace was created. Do you wanna open VS Code?", "",
+        DialogFactory.createYesOrNo(frame, "A new workspace was created. Do you want to open VS Code?", "",
             (result) -> {
                 if(result == 0) {
                     VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile());

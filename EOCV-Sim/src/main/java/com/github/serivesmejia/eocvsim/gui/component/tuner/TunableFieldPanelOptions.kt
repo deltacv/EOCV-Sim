@@ -24,9 +24,10 @@
 package com.github.serivesmejia.eocvsim.gui.component.tuner
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.Icons
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
-import com.github.serivesmejia.eocvsim.util.extension.cvtColor
+import io.github.deltacv.vision.external.util.extension.cvtColor
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
 import java.awt.FlowLayout
 import java.awt.GridLayout
@@ -39,10 +40,10 @@ import javax.swing.event.AncestorListener
 class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
                                eocvSim: EOCVSim) : JPanel() {
 
-    private val sliderIco    by Icons.lazyGetImageResized("ico_slider", 15, 15)
-    private val textBoxIco   by Icons.lazyGetImageResized("ico_textbox", 15, 15)
-    private val configIco    by Icons.lazyGetImageResized("ico_config", 15, 15)
-    private val colorPickIco by Icons.lazyGetImageResized("ico_colorpick", 15, 15)
+    private val sliderIco    by EOCVSimIconLibrary.icoSlider.lazyResized(15, 15)
+    private val textBoxIco   by EOCVSimIconLibrary.icoTextbox.lazyResized(15, 15)
+    private val configIco    by EOCVSimIconLibrary.icoConfig.lazyResized(15, 15)
+    private val colorPickIco by EOCVSimIconLibrary.icoColorPick.lazyResized(15, 15)
 
     private val textBoxSliderToggle   = JToggleButton()
     private val configButton          = JButton()
@@ -121,8 +122,8 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
                 startPicking(colorPicker)
             } else { //handles cases when cancelling picking
                 colorPicker.stopPicking()
-                //if we weren't the ones controlling the last picking,
-                //start picking again to gain control for this panel
+                // if we weren't the ones controlling the last picking,
+                // start picking again to gain control for this panel
                 if(colorPickButton.isSelected) startPicking(colorPicker)
             }
         }

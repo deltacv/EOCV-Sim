@@ -25,21 +25,30 @@ package com.github.serivesmejia.eocvsim.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.gui.util.MatPoster
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.handler.PipelineHandler
+import com.github.serivesmejia.eocvsim.pipeline.instantiator.DefaultPipelineInstantiator
+import com.github.serivesmejia.eocvsim.pipeline.instantiator.PipelineInstantiator
+import com.github.serivesmejia.eocvsim.pipeline.instantiator.processor.ProcessorInstantiator
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
+import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.image.MatPoster
+import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
+import org.firstinspires.ftc.vision.VisionProcessor
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
-import org.openftc.easyopencv.TimestampedPipelineHandler
+import org.openftc.easyopencv.OpenCvViewport
+import org.openftc.easyopencv.processFrameInternal
+import java.lang.RuntimeException
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.util.*
@@ -47,7 +56,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong
 
 @OptIn(DelicateCoroutinesApi::class)
-class PipelineManager(var eocvSim: EOCVSim) {
+class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: PipelineStatisticsCalculator) {
 
     companion object {
         const val MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS = 5
@@ -77,11 +86,16 @@ class PipelineManager(var eocvSim: EOCVSim) {
         private set
     @Volatile var currentPipelineData: PipelineData? = null
         private set
+    var currentTunerTarget: Any? = null
+        private set
     var currentPipelineName = ""
         private set
     var currentPipelineIndex = -1
         private set
     var previousPipelineIndex = 0
+
+    @Volatile var previousPipeline: OpenCvPipeline? = null
+        private set
 
     val activePipelineContexts = ArrayList<ExecutorCoroutineDispatcher>()
     private var currentPipelineContext: ExecutorCoroutineDispatcher? = null
@@ -96,6 +110,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
             return field
         }
 
+    var pauseOnImages = true
+
     var pauseReason = PauseReason.NOT_PAUSED
         private set
         get() {
@@ -109,6 +125,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
     var lastInitialSnapshot: PipelineSnapshot? = null
         private set
 
+    var applyLatestSnapshotOnChange = false
+
     val snapshotFieldFilter: (Field) -> Boolean = {
         // only snapshot fields managed by the variable tuner
         // when getTunableFieldOf returns null, it means that
@@ -119,8 +137,10 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
     //manages and builds pipelines in runtime
     @JvmField val compiledPipelineManager = CompiledPipelineManager(this)
-    //this will be handling the special pipeline "timestamped" type
-    val timestampedPipelineHandler = TimestampedPipelineHandler()
+
+    private val pipelineHandlers = mutableListOf<PipelineHandler>()
+    private val pipelineInstantiators = mutableMapOf<Class<*>, PipelineInstantiator>()
+
     //counting and tracking exceptions for logging and reporting purposes
     val pipelineExceptionTracker = PipelineExceptionTracker(this)
 
@@ -146,6 +166,11 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
 
         logger.info("Found " + pipelines.size + " pipeline(s)")
+
+        // add instantiator for OpenCvPipeline
+        addInstantiator(OpenCvPipeline::class.java, DefaultPipelineInstantiator)
+        // add instantiator for VisionProcessor (wraps a VisionProcessor around an OpenCvPipeline)
+        addInstantiator(VisionProcessor::class.java, ProcessorInstantiator)
 
         // changing to initial pipeline
         onUpdate.doOnce {
@@ -180,8 +205,22 @@ class PipelineManager(var eocvSim: EOCVSim) {
             }
         }
 
+        onUpdate {
+            if(currentPipeline != null) {
+                for (pipelineHandler in pipelineHandlers) {
+                    pipelineHandler.processFrame(eocvSim.inputSourceManager.currentInputSource)
+                }
+            }
+        }
+
         onPipelineChange {
             openedPipelineOutputCount = 0
+
+            if(currentPipeline != null) {
+                for (pipelineHandler in pipelineHandlers) {
+                    pipelineHandler.onChange(previousPipeline, currentPipeline!!, currentTelemetry!!)
+                }
+            }
         }
     }
 
@@ -198,7 +237,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 }
             }
 
-            eocvSim.visualizer.pipelineSelectorPanel.allowPipelineSwitching = true
+            eocvSim.visualizer.pipelineOpModeSwitchablePanel.enableSwitchingBlocking()
         }
     }
 
@@ -234,13 +273,13 @@ class PipelineManager(var eocvSim: EOCVSim) {
             return
         }
 
-        timestampedPipelineHandler.update(currentPipeline, eocvSim.inputSourceManager.currentInputSource)
-
         lastPipelineAction = if(!hasInitCurrentPipeline) {
             "init/processFrame"
         } else {
             "processFrame"
         }
+
+        pipelineStatisticsCalculator.newPipelineFrameStart()
 
         //run our pipeline in the background until it finishes or gets cancelled
         val pipelineJob = GlobalScope.launch(currentPipelineContext!!) {
@@ -254,32 +293,46 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 //a different pipeline at this point. we also call init if we
                 //haven't done so.
 
-                if(!hasInitCurrentPipeline && inputMat != null) {
-                    currentPipeline?.init(inputMat)
-
-                    logger.info("Initialized pipeline $currentPipelineName")
-
-                    hasInitCurrentPipeline = true
-                }
-
                 //check if we're still active (not timeouted)
                 //after initialization
                 if(inputMat != null) {
-                    currentPipeline?.processFrame(inputMat)?.let { outputMat ->
+                    if(!hasInitCurrentPipeline) {
+                        for(pipeHandler in pipelineHandlers) {
+                            pipeHandler.preInit();
+                        }
+                    }
+
+                    pipelineStatisticsCalculator.beforeProcessFrame()
+
+                    val pipelineResult = currentPipeline?.processFrameInternal(inputMat)
+
+                    pipelineStatisticsCalculator.afterProcessFrame()
+
+                    pipelineResult?.let { outputMat ->
                         if (isActive) {
                             pipelineFpsCounter.update()
 
                             for (poster in pipelineOutputPosters.toTypedArray()) {
                                 try {
-                                    poster.post(outputMat)
+                                    poster.post(outputMat, OpenCvViewport.FrameContext(currentPipeline, currentPipeline?.userContextForDrawHook))
                                 } catch (ex: Exception) {
                                     logger.error(
-                                        "Uncaught exception thrown while posting pipeline output Mat to ${poster.name} poster",
+                                        "Uncaught exception thrown while posting pipeline output Mat to poster",
                                         ex
                                     )
                                 }
                             }
                         }
+                    }
+
+                    if(!hasInitCurrentPipeline) {
+                        for(pipeHandler in pipelineHandlers) {
+                            pipeHandler.init();
+                        }
+
+                        logger.info("Initialized pipeline $currentPipelineName")
+
+                        hasInitCurrentPipeline = true
                     }
                 }
 
@@ -305,6 +358,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
                     updateExceptionTracker(ex)
                 }
             }
+
+            pipelineStatisticsCalculator.endFrame()
         }
 
         runBlocking {
@@ -394,10 +449,28 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
     }
 
+    fun subscribePipelineHandler(handler: PipelineHandler) {
+        pipelineHandlers.add(handler)
+    }
+
+    fun addInstantiator(instantiatorFor: Class<*>, instantiator: PipelineInstantiator) {
+        pipelineInstantiators.put(instantiatorFor, instantiator)
+    }
+
+    fun getInstantiatorFor(clazz: Class<*>): PipelineInstantiator? {
+        for((instantiatorFor, instantiator) in pipelineInstantiators) {
+            if(ReflectUtil.hasSuperclass(clazz, instantiatorFor)) {
+                return instantiator
+            }
+        }
+
+        return null
+    }
+
     @Suppress("UNCHECKED_CAST")
     @JvmOverloads fun addPipelineClass(C: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH) {
         try {
-            pipelines.add(PipelineData(source, C as Class<out OpenCvPipeline>))
+            pipelines.add(PipelineData(source, C))
         } catch (ex: Exception) {
             logger.warn("Error while adding pipeline class", ex)
             updateExceptionTracker(ex)
@@ -458,9 +531,22 @@ class PipelineManager(var eocvSim: EOCVSim) {
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun forceChangePipeline(index: Int?,
-                            applyLatestSnapshot: Boolean = false,
+                            applyLatestSnapshot: Boolean = applyLatestSnapshotOnChange,
                             applyStaticSnapshot: Boolean = false) {
-        if(index == null) return
+        if(index == null) {
+            previousPipelineIndex = currentPipelineIndex
+
+            currentPipeline = null
+            currentPipelineName = ""
+            currentPipelineContext = null
+            currentPipelineData = null
+            currentPipelineIndex = -1
+
+            onPipelineChange.run()
+            logger.info("Set to null pipeline")
+
+            return
+        }
 
         captureSnapshot()
 
@@ -470,7 +556,9 @@ class PipelineManager(var eocvSim: EOCVSim) {
 
         logger.info("Changing to pipeline ${pipelineClass.name}")
 
-        var constructor: Constructor<*>
+        debugLogCalled("forceChangePipeline")
+
+        val instantiator = getInstantiatorFor(pipelineClass)
 
         try {
             nextTelemetry = TelemetryImpl().apply {
@@ -478,13 +566,8 @@ class PipelineManager(var eocvSim: EOCVSim) {
                 addTransmissionReceiver(eocvSim.visualizer.telemetryPanel)
             }
 
-            try { //instantiate pipeline if it has a constructor of a telemetry parameter
-                constructor = pipelineClass.getConstructor(Telemetry::class.java)
-                nextPipeline = constructor.newInstance(nextTelemetry) as OpenCvPipeline
-            } catch (ex: NoSuchMethodException) { //instantiating with a constructor of no params
-                constructor = pipelineClass.getConstructor()
-                nextPipeline = constructor.newInstance() as OpenCvPipeline
-            }
+            nextPipeline = instantiator?.instantiate(pipelineClass, nextTelemetry)
+                ?: throw RuntimeException("No instantiator found for pipeline class ${pipelineClass.name}")
 
             logger.info("Instantiated pipeline class ${pipelineClass.name}")
         } catch (ex: NoSuchMethodException) {
@@ -507,12 +590,16 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
 
         previousPipelineIndex = currentPipelineIndex
+        previousPipeline = currentPipeline
 
         currentPipeline      = nextPipeline
         currentPipelineData  = pipelines[index]
         currentTelemetry     = nextTelemetry
         currentPipelineIndex = index
         currentPipelineName  = currentPipeline!!.javaClass.simpleName
+        currentTunerTarget   = instantiator.variableTunerTargetObject(currentPipeline!!)
+
+        currentTelemetry?.update() // clear telemetry
 
         val snap = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
 
@@ -535,7 +622,7 @@ class PipelineManager(var eocvSim: EOCVSim) {
         setPaused(false)
 
         //if pause on images option is turned on by user
-        if (eocvSim.configManager.config.pauseOnImages) {
+        if (eocvSim.configManager.config.pauseOnImages && pauseOnImages) {
             //pause next frame if current selected input source is an image
             eocvSim.inputSourceManager.pauseIfImageTwoFrames()
         }
@@ -558,7 +645,11 @@ class PipelineManager(var eocvSim: EOCVSim) {
         }
     }
 
-    fun requestForceChangePipeline(index: Int) = onUpdate.doOnce { forceChangePipeline(index) }
+    fun requestForceChangePipeline(index: Int) {
+        debugLogCalled("requestForceChangePipeline")
+
+        onUpdate.doOnce { forceChangePipeline(index) }
+    }
 
     fun applyLatestSnapshot() {
         if(currentPipeline != null && latestSnapshot != null) {
@@ -645,7 +736,29 @@ class PipelineManager(var eocvSim: EOCVSim) {
         eocvSim.onMainUpdate.doOnce { setPaused(paused, pauseReason) }
     }
 
-    fun refreshGuiPipelineList() = eocvSim.visualizer.pipelineSelectorPanel.updatePipelinesList()
+    fun refreshGuiPipelineList() {
+        eocvSim.visualizer.pipelineOpModeSwitchablePanel.updateSelectorLists()
+    }
+
+    fun reloadPipelineByName() {
+        for((i, pipeline) in pipelines.withIndex()) {
+            if(pipeline.clazz.name == currentPipelineData?.clazz?.name && pipeline.source == currentPipelineData?.source) {
+                forceChangePipeline(i, true)
+                return
+            }
+        }
+
+        forceChangePipeline(0) // default pipeline
+    }
+
+    private fun debugLogCalled(name: String) {
+        val builder = StringBuilder()
+        for (s in Thread.currentThread().stackTrace) {
+            builder.appendLine(s.toString())
+        }
+
+        logger.debug("$name called in: {}", builder.toString().trim())
+    }
 
 }
 
@@ -685,6 +798,6 @@ enum class PipelineFps(val fps: Int, val coolName: String) {
     }
 }
 
-data class PipelineData(val source: PipelineSource, val clazz: Class<out OpenCvPipeline>)
+data class PipelineData(val source: PipelineSource, val clazz: Class<*>)
 
 enum class PipelineSource { CLASSPATH, COMPILED_ON_RUNTIME }

@@ -101,6 +101,11 @@ public class CameraSource extends InputSource {
     }
 
     @Override
+    public void setSize(Size size) {
+        this.size = size;
+    }
+
+    @Override
     public boolean init() {
         if (initialized) return false;
         initialized = true;
@@ -146,7 +151,7 @@ public class CameraSource extends InputSource {
         }
 
         if (matRecycler == null) matRecycler = new MatRecycler(4);
-        MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
+        MatRecycler.RecyclableMat newFrame = matRecycler.takeMatOrNull();
 
         camera.read(newFrame);
 
@@ -182,8 +187,15 @@ public class CameraSource extends InputSource {
         currentWebcamIndex = -1;
     }
 
+    private MatRecycler.RecyclableMat lastNewFrame = null;
+
     @Override
     public Mat update() {
+        if(lastNewFrame != null) {
+            lastNewFrame.returnMat();
+            lastNewFrame = null;
+        }
+
         if (isPaused) {
             return lastFramePaused;
         } else if (lastFramePaused != null) {
@@ -192,10 +204,11 @@ public class CameraSource extends InputSource {
             lastFramePaused = null;
         }
 
-        if (lastFrame == null) lastFrame = matRecycler.takeMat();
+        if (lastFrame == null) lastFrame = matRecycler.takeMatOrNull();
         if (camera == null) return lastFrame;
 
-        MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
+        MatRecycler.RecyclableMat newFrame = matRecycler.takeMatOrNull();
+        lastNewFrame = newFrame;
 
         camera.read(newFrame);
         capTimeNanos = System.nanoTime();
@@ -214,13 +227,15 @@ public class CameraSource extends InputSource {
         newFrame.release();
         newFrame.returnMat();
 
+        lastNewFrame = null;
+
         return lastFrame;
     }
 
     @Override
     public void onPause() {
         if (lastFrame != null) lastFrame.release();
-        if (lastFramePaused == null) lastFramePaused = matRecycler.takeMat();
+        if (lastFramePaused == null) lastFramePaused = matRecycler.takeMatOrNull();
 
         camera.read(lastFramePaused);
         Imgproc.cvtColor(lastFramePaused, lastFramePaused, Imgproc.COLOR_BGR2RGB);

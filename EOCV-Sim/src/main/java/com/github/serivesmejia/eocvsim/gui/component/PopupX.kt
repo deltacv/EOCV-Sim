@@ -23,16 +23,15 @@
 
 package com.github.serivesmejia.eocvsim.gui.component
 
+import com.github.serivesmejia.eocvsim.gui.util.Corner
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import java.awt.Point
 import java.awt.Window
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
-import javax.swing.JPanel
-import javax.swing.JPopupMenu
-import javax.swing.JWindow
-import javax.swing.Popup
+import javax.swing.*
 
 class PopupX @JvmOverloads constructor(windowAncestor: Window,
                                        private val panel: JPanel,
@@ -96,5 +95,56 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
     }
 
     fun setLocation(width: Int, height: Int) = window.setLocation(width, height)
+
+    companion object {
+
+        fun JComponent.popUpXOnThis(
+                panel: JPanel,
+                buttonCorner: Corner = Corner.TOP_LEFT,
+                popupCorner: Corner = Corner.BOTTOM_LEFT,
+                closeOnFocusLost: Boolean = true
+        ): PopupX {
+
+            val frame = SwingUtilities.getWindowAncestor(this)
+            val location = locationOnScreen
+
+            val cornerLocation: Point = when(buttonCorner) {
+                Corner.TOP_LEFT -> Point(location.x, location.y)
+                Corner.TOP_RIGHT -> Point(location.x + width, location.y)
+                Corner.BOTTOM_LEFT -> Point(location.x, location.y + height)
+                Corner.BOTTOM_RIGHT -> Point(location.x + width, location.y + height)
+            }
+
+            val popup = PopupX(frame, panel,
+                    cornerLocation.x,
+                    cornerLocation.y,
+                    closeOnFocusLost
+            )
+
+            popup.onShow {
+                when(popupCorner) {
+                    Corner.TOP_LEFT -> popup.setLocation(
+                            popup.window.location.x,
+                            popup.window.location.y + popup.window.height
+                    )
+                    Corner.TOP_RIGHT -> popup.setLocation(
+                            popup.window.location.x - popup.window.width,
+                            popup.window.location.y + popup.window.height
+                    )
+                    Corner.BOTTOM_LEFT -> popup.setLocation(
+                            popup.window.location.x + width,
+                            popup.window.location.y + popup.window.height
+                    )
+                    Corner.BOTTOM_RIGHT -> popup.setLocation(
+                            popup.window.location.x - popup.window.width,
+                            popup.window.location.y + popup.window.height
+                    )
+                }
+            }
+
+            return popup
+        }
+
+    }
 
 }

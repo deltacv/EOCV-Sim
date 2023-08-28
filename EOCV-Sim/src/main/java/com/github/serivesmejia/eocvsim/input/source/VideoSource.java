@@ -23,9 +23,9 @@
 
 package com.github.serivesmejia.eocvsim.input.source;
 
-import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.util.FileFilters;
+import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter;
 import com.google.gson.annotations.Expose;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -37,19 +37,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.filechooser.FileFilter;
-import java.util.Objects;
 
 public class VideoSource extends InputSource {
 
     @Expose
     private String videoPath = null;
 
-    private transient VideoCapture video = null;
+    private transient VideoCapture video;
 
-    private transient MatRecycler.RecyclableMat lastFramePaused = null;
-    private transient MatRecycler.RecyclableMat lastFrame = null;
+    private transient FpsLimiter fpsLimiter = new FpsLimiter(30);
 
-    private transient boolean initialized = false;
+    private transient MatRecycler.RecyclableMat lastFramePaused;
+    private transient MatRecycler.RecyclableMat lastFrame;
+
+    private transient boolean initialized;
 
     @Expose
     private volatile Size size;
@@ -60,9 +61,10 @@ public class VideoSource extends InputSource {
 
     private transient long capTimeNanos = 0;
 
-    Logger logger = LoggerFactory.getLogger(getClass());
+    private transient Logger logger = LoggerFactory.getLogger(getClass());
 
-    public VideoSource() {}
+    public VideoSource() {
+    }
 
     public VideoSource(String videoPath, Size size) {
         this.videoPath = videoPath;
@@ -71,7 +73,6 @@ public class VideoSource extends InputSource {
 
     @Override
     public boolean init() {
-
         if (initialized) return false;
         initialized = true;
 
@@ -85,7 +86,7 @@ public class VideoSource extends InputSource {
 
         if (matRecycler == null) matRecycler = new MatRecycler(4);
 
-        MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
+        MatRecycler.RecyclableMat newFrame = matRecycler.takeMatOrNull();
         newFrame.release();
 
         video.read(newFrame);
@@ -95,48 +96,44 @@ public class VideoSource extends InputSource {
             return false;
         }
 
+        fpsLimiter.setMaxFPS(video.get(Videoio.CAP_PROP_FPS));
+
         newFrame.release();
         matRecycler.returnMat(newFrame);
 
         return true;
-
     }
 
     @Override
     public void reset() {
-
         if (!initialized) return;
 
         if (video != null && video.isOpened()) video.release();
 
-        if(lastFrame != null && lastFrame.isCheckedOut())
+        if (lastFrame != null && lastFrame.isCheckedOut())
             lastFrame.returnMat();
-        if(lastFramePaused != null && lastFramePaused.isCheckedOut())
+        if (lastFramePaused != null && lastFramePaused.isCheckedOut())
             lastFramePaused.returnMat();
 
         matRecycler.releaseAll();
 
         video = null;
         initialized = false;
-
     }
 
     @Override
     public void close() {
-
-        if(video != null && video.isOpened()) video.release();
-        if(lastFrame != null) lastFrame.returnMat();
+        if (video != null && video.isOpened()) video.release();
+        if (lastFrame != null && lastFrame.isCheckedOut()) lastFrame.returnMat();
 
         if (lastFramePaused != null) {
             lastFramePaused.returnMat();
             lastFramePaused = null;
         }
-
     }
 
     @Override
     public Mat update() {
-
         if (isPaused) {
             return lastFramePaused;
         } else if (lastFramePaused != null) {
@@ -144,10 +141,16 @@ public class VideoSource extends InputSource {
             lastFramePaused = null;
         }
 
-        if (lastFrame == null) lastFrame = matRecycler.takeMat();
+        try {
+            fpsLimiter.sync();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        if (lastFrame == null) lastFrame = matRecycler.takeMatOrNull();
         if (video == null) return lastFrame;
 
-        MatRecycler.RecyclableMat newFrame = matRecycler.takeMat();
+        MatRecycler.RecyclableMat newFrame = matRecycler.takeMatOrNull();
 
         video.read(newFrame);
         capTimeNanos = System.nanoTime();
@@ -158,7 +161,9 @@ public class VideoSource extends InputSource {
         //in next update
         if (newFrame.empty()) {
             newFrame.returnMat();
-            video.set(Videoio.CAP_PROP_POS_FRAMES, 0);
+            
+            this.reset();
+            this.init();
             return lastFrame;
         }
 
@@ -170,14 +175,12 @@ public class VideoSource extends InputSource {
         matRecycler.returnMat(newFrame);
 
         return lastFrame;
-
     }
 
     @Override
     public void onPause() {
-
         if (lastFrame != null) lastFrame.release();
-        if (lastFramePaused == null) lastFramePaused = matRecycler.takeMat();
+        if (lastFramePaused == null) lastFramePaused = matRecycler.takeMatOrNull();
 
         video.read(lastFramePaused);
 
@@ -190,7 +193,6 @@ public class VideoSource extends InputSource {
 
         video.release();
         video = null;
-
     }
 
     @Override
@@ -203,6 +205,11 @@ public class VideoSource extends InputSource {
     @Override
     protected InputSource internalCloneSource() {
         return new VideoSource(videoPath, size);
+    }
+
+    @Override
+    public void setSize(Size size) {
+        this.size = size;
     }
 
     @Override

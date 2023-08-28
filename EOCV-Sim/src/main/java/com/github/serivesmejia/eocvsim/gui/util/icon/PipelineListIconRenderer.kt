@@ -1,5 +1,6 @@
 package com.github.serivesmejia.eocvsim.gui.util.icon
 
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.Icons
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
@@ -9,11 +10,12 @@ import javax.swing.*
 import java.awt.*
 
 class PipelineListIconRenderer(
-    private val pipelineManager: PipelineManager
+    private val pipelineManager: PipelineManager,
+    private val indexMapProvider: () -> Map<Int, Int>
 ) : DefaultListCellRenderer() {
 
-    private val gearsIcon  by Icons.lazyGetImageResized("ico_gears", 15, 15)
-    private val hammerIcon by Icons.lazyGetImageResized("ico_hammer", 15, 15)
+    private val gearsIcon  by EOCVSimIconLibrary.icoGears.lazyResized(15, 15)
+    private val hammerIcon by EOCVSimIconLibrary.icoHammer.lazyResized(15, 15)
 
     override fun getListCellRendererComponent(
         list: JList<*>,
@@ -26,17 +28,11 @@ class PipelineListIconRenderer(
             list, value, index, isSelected, cellHasFocus
         ) as JLabel
 
-        val runtimePipelinesAmount = pipelineManager.getPipelinesFrom(
-            PipelineSource.COMPILED_ON_RUNTIME
-        ).size
+        val source = pipelineManager.pipelines[indexMapProvider()[index]!!].source
 
-        if(runtimePipelinesAmount > 0) {
-            val source = pipelineManager.pipelines[index].source
-
-            label.icon = when(source) {
-                PipelineSource.COMPILED_ON_RUNTIME -> gearsIcon
-                else -> hammerIcon
-            }
+        label.icon = when(source) {
+            PipelineSource.COMPILED_ON_RUNTIME -> gearsIcon
+            else -> hammerIcon
         }
 
         return label

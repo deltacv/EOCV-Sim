@@ -201,4 +201,15 @@ public class EvictingBlockingQueue<E> extends AbstractQueue<E> implements Blocki
             return targetQueue.drainTo(c, maxElements);
         }
     }
+
+    @Override
+    public void clear() {
+        synchronized (theLock) {
+            for(E e : targetQueue)
+                if (evictAction != null)
+                    evictAction.accept(e);
+
+            targetQueue.clear();
+        }
+    }
 }

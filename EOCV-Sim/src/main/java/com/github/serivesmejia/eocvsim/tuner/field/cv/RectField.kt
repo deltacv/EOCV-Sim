@@ -31,8 +31,8 @@ import org.openftc.easyopencv.OpenCvPipeline
 import java.lang.reflect.Field
 
 @RegisterTunableField
-class RectField(instance: OpenCvPipeline, reflectionField: Field, eocvSim: EOCVSim) : 
-                TunableField<Rect>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
+class RectField(target: Any, reflectionField: Field, eocvSim: EOCVSim) :
+                TunableField<Rect>(target, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
 
     private var rect = arrayOf(0.0, 0.0, 0.0, 0.0)
     private var lastRect = arrayOf(0.0, 0.0, 0.0, 0.0)
@@ -56,7 +56,7 @@ class RectField(instance: OpenCvPipeline, reflectionField: Field, eocvSim: EOCVS
 
     override fun update() {
         if(hasChanged()){
-            initialRect = reflectionField.get(pipeline) as Rect
+            initialRect = reflectionField.get(target) as Rect
 
             rect[0] = initialRect.x.toDouble()
             rect[1] = initialRect.y.toDouble()

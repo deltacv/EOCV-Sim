@@ -136,12 +136,8 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
             val expiresIn = millisExceptionExpire - (System.currentTimeMillis() - data.millisThrown)
             val expiresInSecs = String.format("%.1f", expiresIn.toDouble() / 1000.0)
 
-            val shortStacktrace = StrUtil.cutStringBy(
-                data.stacktrace, "\n", cutStacktraceLines
-            ).trim()
-
             messageBuilder
-                .appendLine("> $shortStacktrace")
+                .appendLine("> ${data.stacktrace}")
                 .appendLine()
                 .appendLine("! It has been thrown ${data.count} times, and will expire in $expiresInSecs seconds !")
                 .appendLine()

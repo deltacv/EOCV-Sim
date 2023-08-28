@@ -121,7 +121,7 @@ public class ImageSource extends InputSource {
 
         Mat readMat = Imgcodecs.imread(this.imgPath);
 
-        if (img == null) img = matRecycler.takeMat();
+        if (img == null) img = matRecycler.takeMatOrNull();
 
         if (readMat.empty()) {
             return;
@@ -142,21 +142,29 @@ public class ImageSource extends InputSource {
 
     @Override
     public Mat update() {
-
-        if (isPaused) return lastCloneTo;
-        if (lastCloneTo == null) lastCloneTo = matRecycler.takeMat();
+        if (lastCloneTo == null) lastCloneTo = matRecycler.takeMatOrNull();
 
         if (img == null) return null;
 
+        lastCloneTo.release();
         img.copyTo(lastCloneTo);
 
         return lastCloneTo;
+    }
 
+    @Override
+    public void cleanIfDirty() {
+        readImage();
     }
 
     @Override
     protected InputSource internalCloneSource() {
         return new ImageSource(imgPath, size);
+    }
+
+    @Override
+    public void setSize(Size size) {
+        this.size = size;
     }
 
     @Override

@@ -28,7 +28,6 @@ import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.loggerOf
 import org.slf4j.Logger
 import java.io.File
-import java.util.*
 
 class FileWatcher(private val watchingDirectories: List<File>,
                   watchingFileExtensions: List<String>?,

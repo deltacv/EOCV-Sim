@@ -35,8 +35,8 @@ public class FloatField extends NumericField<Float> {
 
     protected float beforeValue;
 
-    public FloatField(OpenCvPipeline instance, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-        super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
+    public FloatField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+        super(target, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
         value = (float) initialFieldValue;
     }
 

@@ -1,0 +1,45 @@
+plugins {
+    id 'kotlin'
+    id 'maven-publish'
+}
+
+apply from: '../build.common.gradle'
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        cacheChangingModulesFor 0, 'seconds'
+    }
+}
+
+dependencies {
+    implementation project(':Common')
+
+    implementation "com.github.deltacv.AprilTagDesktop:AprilTagDesktop:$apriltag_plugin_version"
+
+    api "org.openpnp:opencv:$opencv_version"
+
+    implementation "org.slf4j:slf4j-api:$slf4j_version"
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+
+    // Compatibility: Skiko supports many platforms but we will only be adding
+    // those that are supported by AprilTagDesktop as well
+
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:$skiko_version")
+}

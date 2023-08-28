@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.compiler
 
+import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
@@ -31,6 +32,7 @@ import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfigLoader
 import com.github.serivesmejia.eocvsim.workspace.util.template.DefaultWorkspaceTemplate
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.*
@@ -40,10 +42,21 @@ import java.io.File
 class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
     companion object {
+        val logger by loggerForThis()
+
         val DEF_WORKSPACE_FOLDER  = File(SysUtil.getEOCVSimFolder(), File.separator + "default_workspace").apply {
             if(!exists()) {
                 mkdir()
                 DefaultWorkspaceTemplate.extractToIfEmpty(this)
+            } else {
+                val loader = WorkspaceConfigLoader(this)
+                val config = loader.loadWorkspaceConfig()
+
+                if(config?.eocvSimVersion != Build.standardVersionString) {
+                    logger.info("Replacing old default workspace with latest one (version mismatch)")
+                    SysUtil.deleteFilesUnder(this)
+                    DefaultWorkspaceTemplate.extractTo(this)
+                }
             }
         }
 
@@ -125,12 +138,6 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         currentPipelineClassLoader = null
         val messageEnd = "(took $timeElapsed seconds)\n\n${result.message}".trim()
 
-        val pipelineSelectorPanel = pipelineManager.eocvSim.visualizer.pipelineSelectorPanel
-        val beforeAllowSwitching = pipelineSelectorPanel?.allowPipelineSwitching
-
-        if(fixSelectedPipeline)
-            pipelineSelectorPanel?.allowPipelineSwitching = false
-
         pipelineManager.requestRemoveAllPipelinesFrom(
             PipelineSource.COMPILED_ON_RUNTIME,
             refreshGuiPipelineList = false,
@@ -156,22 +163,9 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             }
         }
 
-        val beforePipeline = pipelineManager.currentPipelineData
-
         pipelineManager.onUpdate.doOnce {
             pipelineManager.refreshGuiPipelineList()
-
-            if(fixSelectedPipeline) {
-                if(beforePipeline != null) {
-                    val pipeline = pipelineManager.getIndexOf(beforePipeline.clazz, beforePipeline.source)
-
-                    pipelineManager.forceChangePipeline(pipeline, true)
-                } else {
-                    pipelineManager.changePipeline(0) //default pipeline
-                }
-
-                pipelineSelectorPanel?.allowPipelineSwitching = beforeAllowSwitching!!
-            }
+            pipelineManager.reloadPipelineByName()
         }
 
         if(result.status == PipelineCompileStatus.SUCCESS) {
@@ -238,12 +232,12 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     fun loadFromPipelinesJar() {
         if(!PIPELINES_OUTPUT_JAR.exists()) return
 
-        logger.trace("Looking for pipelines in jar file $PIPELINES_OUTPUT_JAR")
+        logger.trace("Looking for pipelines in jar file {}", PIPELINES_OUTPUT_JAR)
 
         try {
             currentPipelineClassLoader = PipelineClassLoader(PIPELINES_OUTPUT_JAR)
 
-            val pipelines = mutableListOf<Class<out OpenCvPipeline>>()
+            val pipelines = mutableListOf<Class<*>>()
 
             for(pipelineClass in currentPipelineClassLoader!!.pipelineClasses) {
                 pipelines.add(pipelineClass)

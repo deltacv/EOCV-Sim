@@ -26,10 +26,8 @@ package com.github.serivesmejia.eocvsim.pipeline.compiler
 import com.github.serivesmejia.eocvsim.util.*
 import com.github.serivesmejia.eocvsim.util.compiler.JarPacker
 import com.github.serivesmejia.eocvsim.util.compiler.compiler
-import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler
 import java.io.File
 import java.io.PrintWriter
-import java.lang.reflect.Field
 import java.nio.charset.Charset
 import java.util.*
 import javax.tools.*

@@ -25,7 +25,7 @@ package com.github.serivesmejia.eocvsim.input;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.SourceSelectorPanel;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
@@ -69,7 +69,7 @@ public class InputSourceManager {
         if(lastMatFromSource == null)
             lastMatFromSource = new Mat();
 
-        Size size = new Size(320, 240);
+        Size size = new Size(640, 480);
         createDefaultImgInputSource("/images/ug_4.jpg", "ug_eocvsim_4.jpg", "Ultimate Goal 4 Ring", size);
         createDefaultImgInputSource("/images/ug_1.jpg", "ug_eocvsim_1.jpg", "Ultimate Goal 1 Ring", size);
         createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size);
@@ -79,13 +79,13 @@ public class InputSourceManager {
         inputSourceLoader.loadInputSourcesFromFile();
 
         for (Map.Entry<String, InputSource> entry : inputSourceLoader.loadedInputSources.entrySet()) {
+            logger.info("Loaded input source " + entry.getKey());
             addInputSource(entry.getKey(), entry.getValue());
         }
     }
 
     private void createDefaultImgInputSource(String resourcePath, String fileName, String sourceName, Size imgSize) {
         try {
-
             InputStream is = InputSource.class.getResourceAsStream(resourcePath);
             File f = SysUtil.copyFileIsTemp(is, fileName, true).file;
 
@@ -94,7 +94,6 @@ public class InputSourceManager {
             src.createdOn = sources.size();
 
             addInputSource(sourceName, src);
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -107,6 +106,7 @@ public class InputSourceManager {
             currentInputSource.setPaused(isPaused);
 
             Mat m = currentInputSource.update();
+
             if(m != null && !m.empty()) {
                 m.copyTo(lastMatFromSource);
                 // add an extra alpha channel because that's what eocv returns for some reason... (more realistic simulation lol)
@@ -245,7 +245,12 @@ public class InputSourceManager {
         logger.info("Set InputSource to " + currentInputSource.toString() + " (" + src.getClass().getSimpleName() + ")");
 
         return true;
+    }
 
+    public void cleanSourceIfDirty() {
+        if(currentInputSource != null) {
+            currentInputSource.cleanIfDirty();
+        }
     }
 
     public boolean isNameOnUse(String name) {
@@ -300,6 +305,10 @@ public class InputSourceManager {
         }
 
         return apwd;
+    }
+
+    public String getDefaultInputSource() {
+        return defaultSource;
     }
 
     public SourceType getSourceType(String sourceName) {

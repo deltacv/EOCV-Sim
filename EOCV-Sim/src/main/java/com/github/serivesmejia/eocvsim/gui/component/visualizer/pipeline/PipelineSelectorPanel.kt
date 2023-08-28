@@ -25,39 +25,52 @@ package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.util.icon.PipelineListIconRenderer
+import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.util.ReflectUtil
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.util.Range
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
-import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
 
 class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
     var selectedIndex: Int
-        get() = pipelineSelector.selectedIndex
+        get() = indexMap[pipelineSelector.selectedIndex] ?: -1
         set(value) {
             runBlocking {
                 launch(Dispatchers.Swing) {
-                    pipelineSelector.selectedIndex = value
+                    pipelineSelector.selectedIndex = indexMap.entries.find { it.value == value }?.key ?: -1
                 }
             }
         }
 
-    val pipelineSelector         = JList<String>()
-    val pipelineSelectorScroll   = JScrollPane()
+    private var pipelinesData = arrayOf<PipelineData>()
+
+    val pipelineSelector = JList<String>()
+    val pipelineSelectorScroll = JScrollPane()
 
     val pipelineSelectorLabel = JLabel("Pipelines")
+
+    // <opModeSelector index, PipelineManager index>
+    private val indexMap = mutableMapOf<Int, Int>()
 
     val buttonsPanel = PipelineSelectorButtonsPanel(eocvSim)
 
     var allowPipelineSwitching = false
 
     private var beforeSelectedPipeline = -1
+
+    var isActive = false
+        internal set
 
     init {
         layout = GridBagLayout()
@@ -66,12 +79,12 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
         pipelineSelectorLabel.horizontalAlignment = JLabel.CENTER
 
-        add(pipelineSelectorLabel, GridBagConstraints().apply {
-            gridy = 0
-            ipady = 20
-        })
+        //add(pipelineSelectorLabel, GridBagConstraints().apply {
+        //    gridy = 0
+        //    ipady = 20
+        //})
 
-        pipelineSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager)
+        pipelineSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager) { indexMap }
         pipelineSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
 
         pipelineSelectorScroll.setViewportView(pipelineSelector)
@@ -79,7 +92,7 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         pipelineSelectorScroll.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
 
         add(pipelineSelectorScroll, GridBagConstraints().apply {
-            gridy = 1
+            gridy = 0
 
             weightx = 0.5
             weighty = 1.0
@@ -90,7 +103,7 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         })
 
         add(buttonsPanel, GridBagConstraints().apply {
-            gridy = 2
+            gridy = 1
             ipady = 20
         })
 
@@ -98,46 +111,61 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     }
 
     private fun registerListeners() {
+        pipelineSelector.addMouseListener(object: MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                if (!allowPipelineSwitching) return
 
-        //listener for changing pipeline
-        pipelineSelector.addListSelectionListener { evt: ListSelectionEvent ->
-            if(!allowPipelineSwitching) return@addListSelectionListener
+                val index = (e.source as JList<*>).locationToIndex(e.point)
 
-            if (pipelineSelector.selectedIndex != -1) {
-                val pipeline = pipelineSelector.selectedIndex
+                if (index != -1) {
+                    val pipeline = indexMap[index] ?: return
 
-                if (!evt.valueIsAdjusting && pipeline != beforeSelectedPipeline) {
-                    if (!eocvSim.pipelineManager.paused) {
-                        eocvSim.pipelineManager.requestChangePipeline(pipeline)
-                        beforeSelectedPipeline = pipeline
-                    } else {
-                        if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
-                            pipelineSelector.setSelectedIndex(beforeSelectedPipeline)
-                        } else { //handling pausing
-                            eocvSim.pipelineManager.requestSetPaused(false)
+                    if (pipeline != beforeSelectedPipeline) {
+                        if (!eocvSim.pipelineManager.paused) {
                             eocvSim.pipelineManager.requestChangePipeline(pipeline)
                             beforeSelectedPipeline = pipeline
+                        } else {
+                            if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
+                                pipelineSelector.setSelectedIndex(beforeSelectedPipeline)
+                            } else { //handling pausing
+                                eocvSim.pipelineManager.requestSetPaused(false)
+                                eocvSim.pipelineManager.requestChangePipeline(pipeline)
+                                beforeSelectedPipeline = pipeline
+                            }
                         }
                     }
+                } else {
+                    pipelineSelector.setSelectedIndex(0)
                 }
-            } else {
-                pipelineSelector.setSelectedIndex(1)
             }
+        })
+
+        eocvSim.pipelineManager.onPipelineChange {
+            selectedIndex = eocvSim.pipelineManager.currentPipelineIndex
         }
     }
 
-    fun updatePipelinesList() = runBlocking {
-        launch(Dispatchers.Swing) {
-            val listModel = DefaultListModel<String>()
-            for (pipeline in eocvSim.pipelineManager.pipelines) {
+    fun updatePipelinesList() {
+        val listModel = DefaultListModel<String>()
+        var selectorIndex = Range.clip(listModel.size() - 1, 0, Int.MAX_VALUE)
+
+        indexMap.clear()
+
+        pipelinesData = eocvSim.pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
+
+        for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
+            if (!ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java)) {
                 listModel.addElement(pipeline.clazz.simpleName)
+                indexMap[selectorIndex] = managerIndex
+
+                selectorIndex++
             }
-
-            pipelineSelector.fixedCellWidth = 240
-            pipelineSelector.model = listModel
-
-            revalAndRepaint()
         }
+
+        pipelineSelector.fixedCellWidth = 240
+        pipelineSelector.model = listModel
+
+        revalAndRepaint()
     }
 
     fun revalAndRepaint() {
@@ -145,6 +173,36 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         pipelineSelector.repaint()
         pipelineSelectorScroll.revalidate()
         pipelineSelectorScroll.repaint()
+    }
+
+    fun refreshAndReselectCurrent(changePipeline: Boolean = false) {
+        val currentIndex = selectedIndex
+        val beforePipeline = pipelinesData[currentIndex]
+
+        updatePipelinesList()
+
+        val beforeSwitching = allowPipelineSwitching
+
+        if(!changePipeline) {
+            allowPipelineSwitching = false
+        }
+
+        for((i, pipeline) in pipelinesData.withIndex()) {
+            if(pipeline.clazz.name == beforePipeline.clazz.name && pipeline.source == beforePipeline.source) {
+                selectedIndex = i
+
+                if(!changePipeline) {
+                    allowPipelineSwitching = beforeSwitching
+                }
+                return
+            }
+        }
+
+        selectedIndex = 0 // default pipeline
+
+        if(!changePipeline) {
+            allowPipelineSwitching = beforeSwitching
+        }
     }
 
 }

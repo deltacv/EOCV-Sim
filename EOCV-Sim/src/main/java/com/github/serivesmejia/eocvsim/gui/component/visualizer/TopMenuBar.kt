@@ -33,6 +33,8 @@ import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
+import org.opencv.core.Mat
+import org.opencv.imgproc.Imgproc
 import java.awt.Desktop
 import java.io.File
 import java.net.URI
@@ -49,7 +51,6 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
     @JvmField val mFileMenu   = JMenu("File")
     @JvmField val mWorkspMenu = JMenu("Workspace")
-    @JvmField val mEditMenu   = JMenu("Edit")
     @JvmField val mHelpMenu   = JMenu("Help")
 
     @JvmField val workspCompile = JMenuItem("Build java files")
@@ -76,18 +77,30 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
             fileNewInputSourceSubmenu.add(fileNewInputSourceItem)
         }
 
-        val fileSaveMat = JMenuItem("Save current image")
+        val fileSaveMat = JMenuItem("Screenshot pipeline")
+
 
         fileSaveMat.addActionListener {
+            val mat = Mat()
+            visualizer.viewport.pollLastFrame(mat)
+            Imgproc.cvtColor(mat, mat, Imgproc.COLOR_RGB2BGR)
+
             GuiUtil.saveMatFileChooser(
                 visualizer.frame,
-                visualizer.viewport.lastVisualizedMat,
+                mat,
                 eocvSim
             )
+
+            mat.release()
         }
         mFileMenu.add(fileSaveMat)
 
         mFileMenu.addSeparator()
+
+        val editSettings = JMenuItem("Settings")
+        editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
+
+        mFileMenu.add(editSettings)
 
         val fileRestart = JMenuItem("Restart")
 
@@ -135,14 +148,6 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         mWorkspMenu.add(workspVSCode)
 
         add(mWorkspMenu)
-
-        // EDIT
-
-        val editSettings = JMenuItem("Settings")
-        editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
-
-        mEditMenu.add(editSettings)
-        add(mEditMenu)
 
         // HELP
 

@@ -24,11 +24,13 @@
 package com.github.serivesmejia.eocvsim.pipeline.compiler
 
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
-import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
 import org.openftc.easyopencv.OpenCvPipeline
-import java.io.*
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -38,7 +40,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
     private val zipFile = ZipFile(pipelinesJar)
     private val loadedClasses = mutableMapOf<String, Class<*>>()
 
-    var pipelineClasses: List<Class<out OpenCvPipeline>>
+    var pipelineClasses: List<Class<*>>
         private set
 
     init {

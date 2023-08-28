@@ -23,27 +23,27 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.tuner
 
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import com.github.serivesmejia.eocvsim.gui.Icons
-import com.github.serivesmejia.eocvsim.gui.component.ImageX
-import com.github.serivesmejia.eocvsim.gui.component.Viewport
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import io.github.deltacv.vision.external.gui.SwingOpenCvViewport
 import org.opencv.core.Scalar
-import java.awt.Color
 import java.awt.Cursor
 import java.awt.Point
+import java.awt.Robot
+import java.awt.Toolkit
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.awt.Toolkit
 
-class ColorPicker(private val imageX: ImageX) {
+
+class ColorPicker(private val viewport: SwingOpenCvViewport) {
 
     companion object {
         private val size = if(SysUtil.OS == SysUtil.OperatingSystem.WINDOWS) {
             200
         } else { 35 }
 
-        val colorPickIco = Icons.getImageResized("ico_colorpick_pointer", size, size).image
+        val colorPickIco = EOCVSimIconLibrary.icoColorPickPointer.resized(size, size).image
 
         val colorPickCursor = Toolkit.getDefaultToolkit().createCustomCursor(
             colorPickIco, Point(0, 0), "Color Pick Pointer"
@@ -68,10 +68,8 @@ class ColorPicker(private val imageX: ImageX) {
         override fun mouseClicked(e: MouseEvent) {
             //if clicked with primary button...
             if(e.button == MouseEvent.BUTTON1) {
-                //get the "packed" (in a single int value) color from the image at mouse position's pixel
-                val packedColor = imageX.image.getRGB(e.x, e.y)
-                //parse the "packed" color into four separate channels
-                val color = Color(packedColor, true)
+                // The pixel color at location x, y
+                val color = Robot().getPixelColor(e.xOnScreen, e.yOnScreen)
 
                 //wrap Java's color to OpenCV's Scalar since we're EOCV-Sim not JavaCv-Sim right?
                 colorRgb = Scalar(
@@ -93,10 +91,10 @@ class ColorPicker(private val imageX: ImageX) {
         isPicking = true
         hasPicked = false
 
-        imageX.addMouseListener(clickListener)
+        viewport.component.addMouseListener(clickListener)
 
-        initialCursor = imageX.cursor
-        imageX.cursor = colorPickCursor
+        initialCursor = viewport.component.cursor
+        viewport.component.cursor = colorPickCursor
     }
 
     fun stopPicking() {
@@ -108,8 +106,8 @@ class ColorPicker(private val imageX: ImageX) {
             onCancel.run()
         }
 
-        imageX.removeMouseListener(clickListener)
-        imageX.cursor = initialCursor
+        viewport.component.removeMouseListener(clickListener)
+        viewport.component.cursor = initialCursor
     }
 
 }

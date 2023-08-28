@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -98,13 +99,34 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
         })
 
         // WORKSPACE BUTTONS POPUP
+
         pipelineCompileBtt.addActionListener { eocvSim.visualizer.asyncCompilePipelines() }
-        workspaceButtonsPanel.add(pipelineCompileBtt, GridBagConstraints())
+        workspaceButtonsPanel.add(pipelineCompileBtt, GridBagConstraints().apply {
+            gridx = 0
+            gridy = 0
+        })
 
         val selectWorkspBtt = JButton("Select workspace")
 
         selectWorkspBtt.addActionListener { eocvSim.visualizer.selectPipelinesWorkspace() }
-        workspaceButtonsPanel.add(selectWorkspBtt, GridBagConstraints().apply { gridx = 1 })
+        workspaceButtonsPanel.add(selectWorkspBtt, GridBagConstraints().apply {
+            gridx = 1
+            gridy = 0
+        })
+
+        val outputBtt = JButton("Pipeline Output")
+
+        outputBtt.addActionListener { DialogFactory.createPipelineOutput(eocvSim) }
+        workspaceButtonsPanel.add(outputBtt, GridBagConstraints().apply {
+            gridy = 1
+            weightx = 1.0
+            gridwidth = 2
+
+            fill = GridBagConstraints.HORIZONTAL
+            anchor = GridBagConstraints.CENTER
+
+            insets = Insets(3, 0, 0, 0)
+        })
     }
 
 }

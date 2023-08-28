@@ -30,10 +30,7 @@ import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileWriter
-import java.nio.CharBuffer
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 

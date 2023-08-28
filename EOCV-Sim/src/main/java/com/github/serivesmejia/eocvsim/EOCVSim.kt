@@ -32,6 +32,7 @@ import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
+import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
@@ -45,8 +46,13 @@ import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
+import io.github.deltacv.vision.external.PipelineRenderHook
 import nu.pattern.OpenCV
+import org.opencv.core.Mat
 import org.opencv.core.Size
+import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.awt.Dimension
 import java.io.File
 import javax.swing.SwingUtilities
@@ -58,9 +64,12 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
     companion object {
         const val VERSION = Build.versionString
+
         const val DEFAULT_EOCV_WIDTH = 320
         const val DEFAULT_EOCV_HEIGHT = 240
-        @JvmField val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
+
+        @JvmField
+        val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
 
         private var hasScanned = false
         private val classpathScan = ClasspathScan()
@@ -82,11 +91,13 @@ class EOCVSim(val params: Parameters = Parameters()) {
                 try {
                     System.load(alternativeNative.absolutePath)
 
+                    Mat().release() //test if native lib is loaded correctly
+
                     isNativeLibLoaded = true
                     logger.info("Successfully loaded the OpenCV native lib from specified path")
 
                     return
-                } catch(ex: Throwable) {
+                } catch (ex: Throwable) {
                     logger.error("Failure loading the OpenCV native lib from specified path", ex)
                     logger.info("Retrying with loadLocally...")
                 }
@@ -116,12 +127,19 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
     @JvmField
     val configManager = ConfigManager()
+
     @JvmField
     val inputSourceManager = InputSourceManager(this)
+
     @JvmField
-    val pipelineManager = PipelineManager(this)
+    val pipelineStatisticsCalculator = PipelineStatisticsCalculator()
+
+    @JvmField
+    val pipelineManager = PipelineManager(this, pipelineStatisticsCalculator)
+
     @JvmField
     val tunerManager = TunerManager(this)
+
     @JvmField
     val workspaceManager = WorkspaceManager(this)
 
@@ -138,6 +156,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     private val hexCode = Integer.toHexString(hashCode())
 
     private var isRestarting = false
+    private var destroying = false
 
     enum class DestroyReason {
         USER_REQUESTED, RESTART, CRASH
@@ -146,10 +165,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
     fun init() {
         eocvSimThread = Thread.currentThread()
 
-        if(!EOCVSimFolder.couldLock) {
+        if (!EOCVSimFolder.couldLock) {
             logger.error(
-                "Couldn't finally claim lock file in \"${EOCVSimFolder.absolutePath}\"! " +
-                        "Is the folder opened by another EOCV-Sim instance?"
+                "Couldn't finally claim lock file in \"${EOCVSimFolder.absolutePath}\"! " + "Is the folder opened by another EOCV-Sim instance?"
             )
 
             logger.error("Unable to continue with the execution, the sim will exit now.")
@@ -167,7 +185,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         //loading native lib only once in the app runtime
         loadOpenCvLib(params.opencvNativeLibrary)
 
-        if(!hasScanned) {
+        if (!hasScanned) {
             classpathScan.asyncScan()
             hasScanned = true
         }
@@ -179,7 +197,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
         visualizer.initAsync(configManager.config.simTheme) //create gui in the EDT
 
         inputSourceManager.init() //loading user created input sources
+
         pipelineManager.init() //init pipeline manager (scan for pipelines)
+
         tunerManager.init() //init tunable variables manager
 
         //shows a warning when a pipeline gets "stuck"
@@ -187,42 +207,86 @@ class EOCVSim(val params: Parameters = Parameters()) {
             visualizer.asyncPleaseWaitDialog(
                 "Current pipeline took too long to ${pipelineManager.lastPipelineAction}",
                 "Falling back to DefaultPipeline",
-                "Close", Dimension(310, 150), true, true
+                "Close",
+                Dimension(310, 150),
+                true,
+                true
             )
         }
 
         inputSourceManager.inputSourceLoader.saveInputSourcesToFile()
 
-        visualizer.waitForFinishingInit()
+        visualizer.joinInit()
+
+        pipelineManager.subscribePipelineHandler(TimestampedPipelineHandler())
+        pipelineManager.subscribePipelineHandler(OpModePipelineHandler(inputSourceManager, visualizer.viewport))
 
         visualizer.sourceSelectorPanel.updateSourcesList() //update sources and pick first one
         visualizer.sourceSelectorPanel.sourceSelector.selectedIndex = 0
         visualizer.sourceSelectorPanel.allowSourceSwitching = true
 
-        visualizer.pipelineSelectorPanel.updatePipelinesList() //update pipelines and pick first one (DefaultPipeline)
-        visualizer.pipelineSelectorPanel.selectedIndex = 0
+        visualizer.pipelineOpModeSwitchablePanel.updateSelectorListsBlocking()
+
+        visualizer.pipelineSelectorPanel.selectedIndex = 0 //update pipelines and pick first one (DefaultPipeline)
+        visualizer.opModeSelectorPanel.selectedIndex = 0 //update opmodes and pick first one (DefaultPipeline)
+
+        visualizer.pipelineOpModeSwitchablePanel.enableSwitchingBlocking()
 
         //post output mats from the pipeline to the visualizer viewport
-        pipelineManager.pipelineOutputPosters.add(visualizer.viewport.matPoster)
+        pipelineManager.pipelineOutputPosters.add(visualizer.viewport)
+
+        // now that we have two different runnable units (OpenCvPipeline and OpMode)
+        // we have to give a more special treatment to the OpenCvPipeline
+        // OpModes can take care of themselves, setting up their own stuff
+        // but we need to do some hand holding for OpenCvPipelines...
+        pipelineManager.onPipelineChange {
+            pipelineStatisticsCalculator.init()
+
+            if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
+                visualizer.viewport.activate()
+                visualizer.viewport.setRenderHook(PipelineRenderHook) // calls OpenCvPipeline#onDrawFrame on the viewport (UI) thread
+            } else {
+                // opmodes are on their own, lol
+                visualizer.viewport.deactivate()
+                visualizer.viewport.clearViewport()
+            }
+        }
+
+        pipelineManager.onUpdate {
+            if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
+                visualizer.viewport.notifyStatistics(
+                        pipelineStatisticsCalculator.avgFps,
+                        pipelineStatisticsCalculator.avgPipelineTime,
+                        pipelineStatisticsCalculator.avgOverheadTime
+                )
+            }
+
+
+            updateVisualizerTitle() // update current pipeline in title
+        }
 
         start()
     }
 
     private fun start() {
+        if(Thread.currentThread() != eocvSimThread) {
+            throw IllegalStateException("start() must be called from the EOCVSim thread")
+        }
+
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
-        while (!eocvSimThread.isInterrupted) {
+        while (!eocvSimThread.isInterrupted && !destroying) {
             //run all pending requested runnables
             onMainUpdate.run()
 
-            updateVisualizerTitle()
+            pipelineStatisticsCalculator.newInputFrameStart()
 
             inputSourceManager.update(pipelineManager.paused)
             tunerManager.update()
 
             try {
                 pipelineManager.update(
-                    if(inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
+                    if (inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
                         inputSourceManager.lastMatFromSource
                     } else null
                 )
@@ -232,7 +296,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
                     "To avoid further issues, EOCV-Sim will exit now.",
                     "Ok",
                     Dimension(450, 150),
-                    true, true
+                    true,
+                    true
                 ).onCancel {
                     destroy(DestroyReason.CRASH) //destroy eocv sim when pressing "exit"
                 }
@@ -253,21 +318,24 @@ class EOCVSim(val params: Parameters = Parameters()) {
                 }
 
                 break //bye bye
+            } catch (ex: InterruptedException) {
+                break // bye bye
             }
 
             //limit FPG
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
             try {
                 fpsLimiter.sync()
-            } catch(e: InterruptedException) {
+            } catch (e: InterruptedException) {
                 break
             }
         }
 
         logger.warn("Main thread interrupted ($hexCode)")
 
-        if(isRestarting) {
-            isRestarting = false
+        if (isRestarting) {
+            Thread.interrupted() //clear interrupted flag
+
             EOCVSim(params).init()
         }
     }
@@ -287,9 +355,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
         visualizer.close()
 
         eocvSimThread.interrupt()
+        destroying = true
 
-        if(reason == DestroyReason.USER_REQUESTED || reason == DestroyReason.CRASH)
-            jvmMainThread.interrupt()
+        if (reason == DestroyReason.USER_REQUESTED || reason == DestroyReason.CRASH) jvmMainThread.interrupt()
     }
 
     fun destroy() {
@@ -331,24 +399,22 @@ class EOCVSim(val params: Parameters = Parameters()) {
             logger.info("Recording session stopped")
 
             DialogFactory.createFileChooser(
-                visualizer.frame,
-                DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT, FileFilters.recordedVideoFilter
+                visualizer.frame, DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT, FileFilters.recordedVideoFilter
             ).addCloseListener { _: Int, file: File?, selectedFileFilter: FileFilter? ->
                 onMainUpdate.doOnce {
                     if (file != null) {
-
-                        var correctedFile = File(file.absolutePath)
+                        var correctedFile = file
                         val extension = SysUtil.getExtensionByStringHandling(file.name)
 
                         if (selectedFileFilter is FileNameExtensionFilter) { //if user selected an extension
                             //get selected extension
-                            correctedFile = file + "." + selectedFileFilter.extensions[0]
+                            correctedFile = File(file.absolutePath + "." + selectedFileFilter.extensions[0])
                         } else if (extension.isPresent) {
                             if (!extension.get().equals("avi", true)) {
-                                correctedFile = file + ".avi"
+                                correctedFile = File(file.absolutePath + ".avi")
                             }
                         } else {
-                            correctedFile = file + ".avi"
+                            correctedFile = File(file.absolutePath + ".avi")
                         }
 
                         if (correctedFile.exists()) {
@@ -378,12 +444,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         val workspaceMsg = " - ${workspaceManager.workspaceFile.absolutePath} $isBuildRunning"
 
-        val pipelineFpsMsg = " (${pipelineManager.pipelineFpsCounter.fps} Pipeline FPS)"
-        val posterFpsMsg = " (${visualizer.viewport.matPoster.fpsCounter.fps} Viewport FPS)"
         val isPaused = if (pipelineManager.paused) " (Paused)" else ""
         val isRecording = if (isCurrentlyRecording()) " RECORDING" else ""
 
-        val msg = isRecording + pipelineFpsMsg + posterFpsMsg + isPaused
+        val msg = isRecording + isPaused
 
         if (pipelineManager.currentPipeline == null) {
             visualizer.setTitleMessage("No pipeline$msg${workspaceMsg}")

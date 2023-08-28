@@ -3,6 +3,7 @@ package com.github.serivesmejia.eocvsim.gui.util
 import java.awt.Image
 import java.lang.reflect.InvocationTargetException
 
+@Deprecated("Use JDK 9 Taskbar API instead, this used to be a workaround when EOCV-Sim targeted JDK 8 before v3.4.0")
 object ReflectTaskbar {
 
     private val taskbarClass by lazy { Class.forName("java.awt.Taskbar") }

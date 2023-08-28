@@ -183,7 +183,6 @@ public class SysUtil {
                 .filter(f -> f.contains("."))
                 .map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
-
     public static List<File> filesUnder(File parent, Predicate<File> predicate) {
         ArrayList<File> result = new ArrayList<>();
 
@@ -244,7 +243,6 @@ public class SysUtil {
     public static void deleteFilesUnder(File parent) {
         deleteFilesUnder(parent, null);
     }
-
     public static boolean migrateFile(File oldFile, File newFile) {
         if(newFile.exists() || !oldFile.exists()) return false;
 

@@ -3,7 +3,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 plugins {
-    id 'java'
     id 'org.jetbrains.kotlin.jvm'
     id 'com.github.johnrengelman.shadow'
     id 'maven-publish'
@@ -34,9 +33,10 @@ test {
 apply from: '../test-logging.gradle'
 
 dependencies {
-    implementation project(':Common')
+    api project(':Common')
+    api project(':Vision')
 
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 
     implementation "org.eclipse.jdt:ecj:3.21.0"
 
@@ -48,7 +48,7 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version"
 
     implementation "com.github.deltacv:steve:1.0.0"
-    implementation "com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version"
+    implementation "com.github.deltacv.AprilTagDesktop:AprilTagDesktop:$apriltag_plugin_version"
 
     implementation 'info.picocli:picocli:4.6.1'
     implementation 'com.google.code.gson:gson:2.8.7'

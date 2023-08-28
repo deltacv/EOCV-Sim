@@ -29,8 +29,9 @@ public class WorkspaceConfig {
 
     public String sourcesPath = ".";
     public String resourcesPath = ".";
-
     public ArrayList<String> excludedPaths = new ArrayList<>();
     public ArrayList<String> excludedFileExtensions = new ArrayList<>();
+
+    public String eocvSimVersion = "";
 
 }

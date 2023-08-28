@@ -25,8 +25,7 @@ package com.github.serivesmejia.eocvsim.gui.dialog;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.Icons;
-import com.github.serivesmejia.eocvsim.gui.Visualizer;
-import com.github.serivesmejia.eocvsim.gui.component.ImageX;
+import io.github.deltacv.vision.external.gui.component.ImageX;
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 
@@ -130,7 +129,7 @@ public class About {
         osLibsList.addListSelectionListener(e -> {
             if(!e.getValueIsAdjusting()) {
 
-                String text = osLibsList.getModel().getElementAt(osLibsList.getSelectedIndex());
+                String text = osLibsList.getSelectedValue();
                 String[] urls = StrUtil.findUrlsInString(text);
 
                 if(urls.length > 0) {

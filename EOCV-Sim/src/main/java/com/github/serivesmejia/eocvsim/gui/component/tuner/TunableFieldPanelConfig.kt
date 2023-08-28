@@ -57,10 +57,10 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
     private val sliderRangeFieldsPanel = JPanel()
 
     private var sliderRangeFields     = createRangeFields()
-    private val colorSpaceComboBox    = EnumComboBox("Color space: ", PickerColorSpace::class.java, PickerColorSpace.values())
+    private val colorSpaceComboBox    = EnumComboBox("Color space: ", PickerColorSpace::class.java, PickerColorSpace.entries.toTypedArray())
 
     private val applyToAllButtonPanel = JPanel(GridBagLayout())
-    private val applyToAllButton      = JToggleButton("Apply to all fields...")
+    private val applyToAllButton      = JToggleButton("Apply to all variables...")
 
     private val applyModesPanel             = JPanel()
     private val applyToAllGloballyButton    = JButton("Globally")
@@ -89,7 +89,7 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
         LOCAL("From local config"),
         GLOBAL("From global config"),
         GLOBAL_DEFAULT("From default global config"),
-        TYPE_SPECIFIC("From specific config")
+        TYPE_SPECIFIC("From type config")
     }
 
     data class Config(var sliderRange: Size,
@@ -294,6 +294,10 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
         }
 
         configSourceLabel.text = localConfig.source.description
+
+        if(currentConfig.source == ConfigSource.LOCAL || currentConfig.source == ConfigSource.TYPE_SPECIFIC) {
+            configSourceLabel.text += ": ${fieldOptions.fieldPanel.tunableField.fieldTypeName}"
+        }
     }
 
     //updates the actual configuration displayed on the field panel gui

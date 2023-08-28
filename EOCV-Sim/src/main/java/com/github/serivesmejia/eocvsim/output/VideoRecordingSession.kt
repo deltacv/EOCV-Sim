@@ -23,11 +23,12 @@
 
 package com.github.serivesmejia.eocvsim.output
 
-import com.github.serivesmejia.eocvsim.gui.util.MatPoster
+import com.github.serivesmejia.eocvsim.gui.util.ThreadedMatPoster
 import com.github.serivesmejia.eocvsim.util.StrUtil
-import com.github.serivesmejia.eocvsim.util.extension.aspectRatio
-import com.github.serivesmejia.eocvsim.util.extension.clipTo
+import io.github.deltacv.vision.external.util.extension.aspectRatio
+import io.github.deltacv.vision.external.util.extension.clipTo
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
+import io.github.deltacv.common.image.MatPoster
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 import org.opencv.videoio.VideoWriter
@@ -47,7 +48,7 @@ class VideoRecordingSession(
 
     @Volatile private var videoMat: Mat? = null
 
-    val matPoster = MatPoster("VideoRec", videoFps.toInt())
+    val matPoster = ThreadedMatPoster("VideoRec", videoFps.toInt())
 
     private val fpsCounter = FpsCounter()
 
@@ -62,12 +63,12 @@ class VideoRecordingSession(
         matPoster.addPostable { postMat(it) }
     }
 
-    fun startRecordingSession() {
+    @Synchronized fun startRecordingSession() {
         videoWriter.open(tempFile.toString(), VideoWriter.fourcc('M', 'J', 'P', 'G'), videoFps, videoSize)
         hasStarted = true;
     }
 
-    fun stopRecordingSession() {
+    @Synchronized fun stopRecordingSession() {
         videoWriter.release(); videoMat?.release(); matPoster.stop()
         hasStopped = true
     }
