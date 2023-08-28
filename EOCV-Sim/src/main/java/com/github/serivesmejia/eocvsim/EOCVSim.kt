@@ -50,6 +50,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import io.github.deltacv.vision.external.PipelineRenderHook
 import nu.pattern.OpenCV
+import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.awt.Dimension
@@ -89,6 +90,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
                 try {
                     System.load(alternativeNative.absolutePath)
+
+                    Mat().release() //test if native lib is loaded correctly
 
                     isNativeLibLoaded = true
                     logger.info("Successfully loaded the OpenCV native lib from specified path")
@@ -153,6 +156,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
     private val hexCode = Integer.toHexString(hashCode())
 
     private var isRestarting = false
+    private var destroying = false
 
     enum class DestroyReason {
         USER_REQUESTED, RESTART, CRASH
@@ -265,9 +269,13 @@ class EOCVSim(val params: Parameters = Parameters()) {
     }
 
     private fun start() {
+        if(Thread.currentThread() != eocvSimThread) {
+            throw IllegalStateException("start() must be called from the EOCVSim thread")
+        }
+
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
-        while (!eocvSimThread.isInterrupted) {
+        while (!eocvSimThread.isInterrupted && !destroying) {
             //run all pending requested runnables
             onMainUpdate.run()
 
@@ -326,7 +334,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         logger.warn("Main thread interrupted ($hexCode)")
 
         if (isRestarting) {
-            isRestarting = false
+            Thread.interrupted() //clear interrupted flag
+
             EOCVSim(params).init()
         }
     }
@@ -346,6 +355,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         visualizer.close()
 
         eocvSimThread.interrupt()
+        destroying = true
 
         if (reason == DestroyReason.USER_REQUESTED || reason == DestroyReason.CRASH) jvmMainThread.interrupt()
     }
