@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.util.StrUtil
 import io.github.deltacv.vision.external.util.extension.aspectRatio
 import io.github.deltacv.vision.external.util.extension.clipTo
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
+import io.github.deltacv.common.image.MatPoster
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 import org.opencv.videoio.VideoWriter
@@ -62,12 +63,12 @@ class VideoRecordingSession(
         matPoster.addPostable { postMat(it) }
     }
 
-    fun startRecordingSession() {
+    @Synchronized fun startRecordingSession() {
         videoWriter.open(tempFile.toString(), VideoWriter.fourcc('M', 'J', 'P', 'G'), videoFps, videoSize)
         hasStarted = true;
     }
 
-    fun stopRecordingSession() {
+    @Synchronized fun stopRecordingSession() {
         videoWriter.release(); videoMat?.release(); matPoster.stop()
         hasStopped = true
     }

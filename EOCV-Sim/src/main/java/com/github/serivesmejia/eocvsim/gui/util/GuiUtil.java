@@ -185,14 +185,12 @@ public final class GuiUtil {
     }
 
     public static void saveMatFileChooser(Component parent, Mat mat, EOCVSim eocvSim) {
-
         Mat clonedMat = mat.clone();
 
         BufferedImage img = CvUtil.matToBufferedImage(clonedMat);
         clonedMat.release();
 
         saveBufferedImageFileChooser(parent, img, eocvSim);
-
     }
 
     public static ListModel<String> isToListModel(InputStream is, Charset charset) throws UnsupportedEncodingException {

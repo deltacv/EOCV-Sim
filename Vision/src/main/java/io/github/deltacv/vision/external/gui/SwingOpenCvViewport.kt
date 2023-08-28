@@ -22,6 +22,7 @@
  */
 package io.github.deltacv.vision.external.gui
 
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import io.github.deltacv.common.image.MatPoster
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue
@@ -29,6 +30,7 @@ import org.jetbrains.skia.Color
 import org.jetbrains.skiko.GenericSkikoView
 import org.jetbrains.skiko.SkiaLayer
 import org.jetbrains.skiko.SkikoView
+import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.openftc.easyopencv.MatRecycler
@@ -67,12 +69,14 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
         PAUSED
     }
 
-    private val visionPreviewFrameQueue = EvictingBlockingQueue(ArrayBlockingQueue<MatRecycler.RecyclableMat>(VISION_PREVIEW_FRAME_QUEUE_CAPACITY))
+    private val visionPreviewFrameQueue = EvictingBlockingQueue(ArrayBlockingQueue<MatRecycler.RecyclableMat>(VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 1))
     private var framebufferRecycler: MatRecycler? = null
 
     @Volatile
     private var internalRenderingState = RenderingState.STOPPED
     val renderer: OpenCvViewRenderer = OpenCvViewRenderer(false, fpsMeterDescriptor)
+
+    private val outputPosters = mutableListOf<MatPoster>()
 
     private val skiaLayer = SkiaLayer()
     val component: JComponent get() = skiaLayer
@@ -93,9 +97,24 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
         skiaLayer.skikoView = GenericSkikoView(skiaLayer, object: SkikoView {
             override fun onRender(canvas: org.jetbrains.skia.Canvas, width: Int, height: Int, nanoTime: Long) {
                 renderCanvas(Canvas(canvas, width, height))
+
+                if(outputPosters.isNotEmpty()) {
+                    synchronized(outputPosters) {
+                        skiaLayer.screenshot().use { bmp ->
+                            framebufferRecycler?.takeMatOrNull().let { mat ->
+                                Utils.bitmapToMat(Bitmap(bmp), mat)
+
+                                outputPosters.forEach { poster ->
+                                    poster.post(mat)
+                                }
+
+                                framebufferRecycler?.returnMat(mat)
+                            }
+                        }
+                    }
+                }
             }
         })
-
 
         setSize(size.width.toInt(), size.height.toInt())
     }
@@ -107,6 +126,18 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
 
         SwingUtilities.invokeLater {
             skiaLayer.needRedraw()
+        }
+    }
+
+    fun attachOutputPoster(poster: MatPoster) {
+        synchronized(outputPosters) {
+            outputPosters.add(poster)
+        }
+    }
+
+    fun detachOutputPoster(poster: MatPoster) {
+        synchronized(outputPosters) {
+            outputPosters.remove(poster)
         }
     }
 

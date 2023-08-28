@@ -27,6 +27,8 @@ import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
 import com.qualcomm.robotcore.eventloop.opmode.Disabled
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.classgraph.ClassGraph
 import kotlinx.coroutines.*
@@ -63,7 +65,7 @@ class ClasspathScan {
         val timer = ElapsedTime()
         val classGraph = ClassGraph()
             .enableClassInfo()
-            //.verbose()
+            // .verbose()
             .enableAnnotationInfo()
             .rejectPackages(*ignoredPackages)
 
@@ -72,6 +74,10 @@ class ClasspathScan {
             logger.info("Starting to scan for classes in $jarFile...")
         } else {
             logger.info("Starting to scan classpath...")
+        }
+
+        if(classLoader != null) {
+            classGraph.overrideClassLoaders(classLoader)
         }
 
         val scanResult = classGraph.scan()
@@ -85,6 +91,8 @@ class ClasspathScan {
         // i...don't even know how to name this, sorry, future readers
         // but classgraph for some reason does not have a recursive search for subclasses...
         fun searchPipelinesOfSuperclass(superclass: String) {
+            logger.trace("searchPipelinesOfSuperclass: {}", superclass)
+
             val superclassClazz = if(classLoader != null) {
                 classLoader.loadClass(superclass)
             } else Class.forName(superclass)
@@ -94,6 +102,8 @@ class ClasspathScan {
                 else scanResult.getSubclasses(superclass)
 
             for(pipelineClassInfo in pipelineClassesInfo) {
+                logger.trace("pipelineClassInfo: {}", pipelineClassInfo.name)
+
                 for(pipelineSubclassInfo in pipelineClassInfo.subclasses) {
                     searchPipelinesOfSuperclass(pipelineSubclassInfo.name) // naming is my passion
                 }
@@ -105,6 +115,8 @@ class ClasspathScan {
                 val clazz = if(classLoader != null) {
                     classLoader.loadClass(pipelineClassInfo.name)
                 } else Class.forName(pipelineClassInfo.name)
+
+                logger.trace("class {} super {}", clazz.typeName, clazz.superclass.typeName)
 
                 if(!pipelineClasses.contains(clazz) && ReflectUtil.hasSuperclass(clazz, superclassClazz)) {
                     if(clazz.isAnnotationPresent(Disabled::class.java)) {
@@ -119,6 +131,15 @@ class ClasspathScan {
 
         // start recursive hell
         searchPipelinesOfSuperclass(OpenCvPipeline::class.java.name)
+
+        if(jarFile != null) {
+            // Since we removed EOCV-Sim from the scan classpath,
+            // ClassGraph does not know that OpMode and LinearOpMode
+            // are subclasses of OpenCvPipeline, so we have to scan them
+            // manually...
+            searchPipelinesOfSuperclass(OpMode::class.java.name)
+            searchPipelinesOfSuperclass(LinearOpMode::class.java.name)
+        }
 
         if(addProcessorsAsPipelines) {
             logger.info("Searching for VisionProcessors...")

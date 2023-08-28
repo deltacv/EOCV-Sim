@@ -393,19 +393,18 @@ class EOCVSim(val params: Parameters = Parameters()) {
             ).addCloseListener { _: Int, file: File?, selectedFileFilter: FileFilter? ->
                 onMainUpdate.doOnce {
                     if (file != null) {
-
-                        var correctedFile = File(file.absolutePath)
+                        var correctedFile = file
                         val extension = SysUtil.getExtensionByStringHandling(file.name)
 
                         if (selectedFileFilter is FileNameExtensionFilter) { //if user selected an extension
                             //get selected extension
-                            correctedFile = file + "." + selectedFileFilter.extensions[0]
+                            correctedFile = File(file.absolutePath + "." + selectedFileFilter.extensions[0])
                         } else if (extension.isPresent) {
                             if (!extension.get().equals("avi", true)) {
-                                correctedFile = file + ".avi"
+                                correctedFile = File(file.absolutePath + ".avi")
                             }
                         } else {
-                            correctedFile = file + ".avi"
+                            correctedFile = File(file.absolutePath + ".avi")
                         }
 
                         if (correctedFile.exists()) {

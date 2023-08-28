@@ -27,7 +27,15 @@ import org.jetbrains.skia.ColorAlphaType;
 import org.jetbrains.skia.ColorType;
 import org.jetbrains.skia.ImageInfo;
 
-public class Bitmap {
+import java.io.Closeable;
+import java.io.IOException;
+
+public class Bitmap implements AutoCloseable {
+
+    @Override
+    public void close() throws IOException {
+        theBitmap.close();
+    }
 
     /**
      * Possible bitmap configurations. A bitmap configuration describes
@@ -168,7 +176,7 @@ public class Bitmap {
         }
     }
 
-    public Config colorTypeToConfig(ColorType colorType) {
+    private Config colorTypeToConfig(ColorType colorType) {
         switch (colorType) {
             case ALPHA_8:
                 return Config.ALPHA_8;

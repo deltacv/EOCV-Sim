@@ -1,9 +1,11 @@
 package org.opencv.android;
 
 import android.graphics.Bitmap;
+import org.jetbrains.skia.ColorType;
 import org.jetbrains.skia.impl.BufferUtil;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
@@ -69,10 +71,30 @@ public class Utils {
     }
 
     private static void nBitmapToMat2(Bitmap b, Mat mat, boolean unPremultiplyAlpha) {
+        mat.create(new Size(b.getWidth(), b.getHeight()), CvType.CV_8UC4);
 
+        int size = b.getWidth() * b.getHeight() * 4;
+
+        long addr = b.theBitmap.peekPixels().getAddr();
+        ByteBuffer buffer = BufferUtil.INSTANCE.getByteBufferFromPointer(addr, size);
+
+        if( b.theBitmap.getImageInfo().getColorType() == ColorType.RGBA_8888 )
+        {
+            Mat tmp = new Mat(b.getWidth(), b.getHeight(), CvType.CV_8UC4, buffer);
+            if(unPremultiplyAlpha) Imgproc.cvtColor(tmp, mat, Imgproc.COLOR_mRGBA2RGBA);
+            else tmp.copyTo(mat);
+
+            tmp.release();
+        } else {
+            // info.format == ANDROID_BITMAP_FORMAT_RGB_565
+            Mat tmp = new Mat(b.getWidth(), b.getHeight(), CvType.CV_8UC2, buffer);
+            Imgproc.cvtColor(tmp, mat, Imgproc.COLOR_BGR5652RGBA);
+
+            tmp.release();
+        }
     }
 
-    private static byte[] data = new byte[0];
+    private static byte[] m2bData = new byte[0];
 
     private static void nMatToBitmap2(Mat src, Bitmap b, boolean premultiplyAlpha) {
         Mat tmp;
@@ -104,16 +126,16 @@ public class Utils {
 
         int size = tmp.rows() * tmp.cols() * tmp.channels();
 
-        if(data.length != size) {
-            data = new byte[size];
+        if(m2bData.length != size) {
+            m2bData = new byte[size];
         }
 
-        tmp.get(0, 0, data);
+        tmp.get(0, 0, m2bData);
 
         long addr = b.theBitmap.peekPixels().getAddr();
         ByteBuffer buffer = BufferUtil.INSTANCE.getByteBufferFromPointer(addr, size);
 
-        buffer.put(data);
+        buffer.put(m2bData);
 
         tmp.release();
     }
