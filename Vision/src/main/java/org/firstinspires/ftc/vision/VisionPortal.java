@@ -106,7 +106,7 @@ public abstract class VisionPortal
      * Split up the screen for using multiple vision portals with live views simultaneously
      * @param numPortals the number of portals to create space for on the screen
      * @param mpl the methodology for laying out the multiple live views on the screen
-     * @return an array of view IDs, whose elements may be passed to {@link Builder#setCameraMonitorViewId(int)}
+     * @return an array of view IDs, whose elements may be passed to {@link Builder#setLiveViewContainerId(int)}
      */
     public static int[] makeMultiPortalView(int numPortals, MultiPortalLayout mpl)
     {
@@ -194,9 +194,9 @@ public abstract class VisionPortal
          * @param enableLiveView whether or not to use a live preview
          * @return the {@link Builder} object, to allow for method chaining
          */
-        public Builder enableCameraMonitoring(boolean enableLiveView)
+        public Builder enableLiveView(boolean enableLiveView)
         {
-            setCameraMonitorViewId(1);
+            setLiveViewContainerId(1);
             return this;
         }
 
@@ -213,12 +213,12 @@ public abstract class VisionPortal
         }
 
         /**
-         * A more advanced version of {@link #enableCameraMonitoring(boolean)}; allows you
+         * A more advanced version of {@link #enableLiveView(boolean)}; allows you
          * to specify a specific view ID to use as a container, rather than just using the default one
          * @param cameraMonitorViewId view ID of container for live view
          * @return the {@link Builder} object, to allow for method chaining
          */
-        public Builder setCameraMonitorViewId(int cameraMonitorViewId)
+        public Builder setLiveViewContainerId(int cameraMonitorViewId)
         {
             this.cameraMonitorViewId = cameraMonitorViewId;
             return this;

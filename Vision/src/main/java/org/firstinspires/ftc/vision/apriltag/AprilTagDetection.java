@@ -40,46 +40,60 @@ public class AprilTagDetection
     /**
      * The numerical ID of the detection
      */
-    public int id;
+    public final int id;
 
     /**
      * The number of bits corrected when reading the tag ID payload
      */
-    public int hamming;
+    public final int hamming;
 
     /*
      * How much margin remains before the detector would decide to reject a tag
      */
-    public float decisionMargin;
+    public final float decisionMargin;
 
     /*
      * The image pixel coordinates of the center of the tag
      */
-    public Point center;
+    public final Point center;
 
     /*
      * The image pixel coordinates of the corners of the tag
      */
-    public Point[] corners;
+    public final Point[] corners;
 
     /*
      * Metadata known about this tag from the tag library set on the detector;
      * will be NULL if the tag was not in the tag library
      */
-    public AprilTagMetadata metadata;
+    public final AprilTagMetadata metadata;
 
     /*
      * 6DOF pose data formatted in useful ways for FTC gameplay
      */
-    public AprilTagPoseFtc ftcPose;
+    public final AprilTagPoseFtc ftcPose;
 
     /*
      * Raw translation vector and orientation matrix returned by the pose solver
      */
-    public AprilTagPoseRaw rawPose;
+    public final AprilTagPoseRaw rawPose;
 
     /*
      * Timestamp of when the image in which this detection was found was acquired
      */
-    public long frameAcquisitionNanoTime;
+    public final long frameAcquisitionNanoTime;
+
+    public AprilTagDetection(int id, int hamming, float decisionMargin, Point center, Point[] corners,
+                             AprilTagMetadata metadata, AprilTagPoseFtc ftcPose, AprilTagPoseRaw rawPose, long frameAcquisitionNanoTime)
+    {
+        this.id = id;
+        this.hamming = hamming;
+        this.decisionMargin = decisionMargin;
+        this.center = center;
+        this.corners = corners;
+        this.metadata = metadata;
+        this.ftcPose = ftcPose;
+        this.rawPose = rawPose;
+        this.frameAcquisitionNanoTime = frameAcquisitionNanoTime;
+    }
 }
