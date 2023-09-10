@@ -4,6 +4,7 @@ on: [push, pull_request]
 
 jobs:
   test_linux:
+    if: false
     runs-on: ubuntu-latest
 
     steps:

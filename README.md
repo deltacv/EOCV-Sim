@@ -72,6 +72,13 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+### [v3.5.1 - FTC SDK 9.0](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.1)
+   - This is the 18th release for EOCV-Sim
+     - Changelog
+       - Addresses the changes made in the FTC SDK 9.P for the 2023-2024 season:
+         - Fields in AprilTagDetection and AprilTagPose(ftc/raw) objects are now final
+         - VisionPortal builder method setCameraMonitorViewId() has been renamed to setLiveViewContainerId() and enableCameraMonitoring() has been renamed to enableLiveView()
+
 ### [v3.5.0 - New VisionPortal and VisionProcessor API](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.0)
    - This is the 18th release for EOCV-Sim
      - Changelog
