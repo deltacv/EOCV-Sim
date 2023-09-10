@@ -35,6 +35,7 @@ package org.firstinspires.ftc.vision.apriltag;
 
 import android.graphics.Canvas;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.MovingStatistics;
 import com.qualcomm.robotcore.util.RobotLog;
 
@@ -60,6 +61,7 @@ import org.openftc.apriltag.ApriltagDetectionJNI;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+@Disabled
 public class AprilTagProcessorImpl extends AprilTagProcessor
 {
     public static final String TAG = "AprilTagProcessorImpl";

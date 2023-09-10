@@ -51,13 +51,13 @@ dependencies {
     implementation "com.github.deltacv.AprilTagDesktop:AprilTagDesktop:$apriltag_plugin_version"
 
     implementation 'info.picocli:picocli:4.6.1'
-    implementation 'com.google.code.gson:gson:2.8.7'
+    implementation 'com.google.code.gson:gson:2.8.9'
     implementation "io.github.classgraph:classgraph:$classgraph_version"
 
     implementation 'com.formdev:flatlaf:1.2'
     implementation 'com.formdev:flatlaf-intellij-themes:1.2'
 
-    implementation 'net.lingala.zip4j:zip4j:2.8.0'
+    implementation 'net.lingala.zip4j:zip4j:2.10.0'
 
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-swing:$kotlinx_coroutines_version"
