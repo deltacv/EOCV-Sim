@@ -179,10 +179,6 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
         // Convert to greyscale
         Imgproc.cvtColor(input, grey, Imgproc.COLOR_RGBA2GRAY);
 
-        if(true) {
-            throw new RuntimeException("Ooops!"); // TODO: yes
-        }
-
         synchronized (decimationSync)
         {
             if(needToSetDecimation)
