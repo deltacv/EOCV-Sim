@@ -10,6 +10,7 @@ import io.github.deltacv.vision.external.source.VisionSource
 import io.github.deltacv.vision.external.source.VisionSourceHander
 import io.github.deltacv.vision.internal.opmode.OpModeNotifier
 import io.github.deltacv.vision.internal.opmode.OpModeState
+import io.github.deltacv.vision.internal.opmode.RedirectToOpModeThrowableHandler
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.opencv.videoio.VideoCapture
@@ -52,7 +53,7 @@ class VisionInputSourceHander(val notifier: OpModeNotifier, val viewport: OpenCv
                     else throw IllegalArgumentException("Unknown source $name")
 
             CameraSource(index, Size(640.0, 480.0))
-        })
+        }, RedirectToOpModeThrowableHandler(notifier))
 
         notifier.onStateChange {
             when(notifier.state) {

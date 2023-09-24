@@ -99,7 +99,7 @@ public abstract class OpenCvCameraBase implements OpenCvCamera {
 
     @Override
     public int getFrameCount() {
-        return 0;
+        return frameCount;
     }
 
     @Override

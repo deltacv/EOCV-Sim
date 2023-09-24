@@ -72,6 +72,13 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+### [v3.5.2 - CenterStage AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.2)
+   - This is the 20th release for EOCV-Sim
+     - Changelog
+       - Addresses the changes made in the FTC SDK 9.0 for the 2023-2024 season:
+         - Adds the CENTERSTAGE AprilTag Library with accurate tag locations
+       - Exceptions thrown from OpenCvCamera/VisionPortal's attached user code created within OpModes is now reported as part of EOCV-Sim's output dialog to allow for easier debugging
+
 ### [v3.5.1 - FTC SDK 9.0](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.1)
    - This is the 19th release for EOCV-Sim
      - Changelog

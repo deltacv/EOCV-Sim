@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
+import com.github.serivesmejia.eocvsim.input.source.NullSource;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Mat;
@@ -70,6 +71,7 @@ public class InputSourceManager {
             lastMatFromSource = new Mat();
 
         Size size = new Size(640, 480);
+
         createDefaultImgInputSource("/images/ug_4.jpg", "ug_eocvsim_4.jpg", "Ultimate Goal 4 Ring", size);
         createDefaultImgInputSource("/images/ug_1.jpg", "ug_eocvsim_1.jpg", "Ultimate Goal 1 Ring", size);
         createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size);
@@ -202,7 +204,13 @@ public class InputSourceManager {
     }
 
     public boolean setInputSource(String sourceName) {
-        InputSource src = sources.get(sourceName);
+        InputSource src = null;
+
+        if(sourceName == null) {
+            src = new NullSource();
+        } else {
+            src = sources.get(sourceName);
+        }
 
         if (src != null) {
             src.reset();

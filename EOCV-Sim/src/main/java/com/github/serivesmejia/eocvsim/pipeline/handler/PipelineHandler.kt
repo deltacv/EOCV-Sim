@@ -35,6 +35,8 @@ interface PipelineHandler {
 
     fun processFrame(currentInputSource: InputSource?)
 
+    fun onException()
+
     fun onChange(beforePipeline: OpenCvPipeline?, newPipeline: OpenCvPipeline, telemetry: Telemetry)
 
 }

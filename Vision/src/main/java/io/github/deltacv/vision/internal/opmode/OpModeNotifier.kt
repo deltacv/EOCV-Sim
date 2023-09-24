@@ -29,7 +29,8 @@ import java.util.concurrent.ArrayBlockingQueue
 
 class OpModeNotifier(maxNotificationsQueueSize: Int = 100) {
 
-    val notifications = EvictingBlockingQueue<OpModeNotification>(ArrayBlockingQueue(maxNotificationsQueueSize))
+    private val notifications = EvictingBlockingQueue<OpModeNotification>(ArrayBlockingQueue(maxNotificationsQueueSize))
+    private val exceptionQueue = EvictingBlockingQueue<Throwable>(ArrayBlockingQueue(maxNotificationsQueueSize))
 
     private val stateLock = Any()
     var state = OpModeState.STOPPED
@@ -63,6 +64,10 @@ class OpModeNotifier(maxNotificationsQueueSize: Int = 100) {
         onStateChange.run()
     }
 
+    fun notify(e: Throwable){
+        exceptionQueue.offer(e)
+    }
+
     fun reset() {
         notifications.clear()
         state = OpModeState.STOPPED
@@ -71,5 +76,7 @@ class OpModeNotifier(maxNotificationsQueueSize: Int = 100) {
     fun poll(): OpModeNotification {
         return notifications.poll() ?: OpModeNotification.NOTHING
     }
+
+    fun pollException() = exceptionQueue.poll() ?: null
 
 }
