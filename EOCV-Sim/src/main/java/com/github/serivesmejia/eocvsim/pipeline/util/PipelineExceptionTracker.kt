@@ -31,7 +31,7 @@ import com.github.serivesmejia.eocvsim.util.loggerForThis
 class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
 
     companion object {
-        const val millisExceptionExpire = 25000L
+        const val millisExceptionExpire = 35000L
         const val cutStacktraceLines = 9
     }
 
@@ -70,8 +70,8 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
                     ex
                 )
 
-                logger.warn("Note that to avoid spam, continuously equal thrown exceptions are only logged once.")
-                logger.warn("It will be reported once the pipeline stops throwing the exception after $millisExceptionExpire ms")
+                logger.info("Note that to avoid spam, continuously equal thrown exceptions are only logged once.")
+                logger.info("It will be reported if the pipeline stops throwing the exception after $millisExceptionExpire ms")
 
                 exceptionsThrown[ex] = PipelineException(
                     0, exStr, System.currentTimeMillis()
@@ -111,17 +111,17 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
 
     val message: String get() {
         if(currentPipeline == null)
-            return "**No pipeline selected**"
+            return "**Nothing currently running**"
 
         val messageBuilder = StringBuilder()
         val pipelineName = currentPipeline!!.clazz.simpleName
 
         if(exceptionsThrown.isNotEmpty()) {
             messageBuilder
-                .append("**Pipeline $pipelineName is throwing ${exceptionsThrown.size} exception(s)**")
+                .append("**\"$pipelineName\" is throwing ${exceptionsThrown.size} exception(s)**")
                 .appendLine("\n")
         } else {
-            messageBuilder.append("**Pipeline $pipelineName ")
+            messageBuilder.append("**\"$pipelineName\" ")
 
             if(pipelineManager.paused) {
                 messageBuilder.append("is paused (last time was running at ${pipelineManager.pipelineFpsCounter.fps} FPS)")

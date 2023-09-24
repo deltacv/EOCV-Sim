@@ -23,16 +23,23 @@ class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private 
     override fun preInit() {
         if(pipeline == null) return
 
-        inputSourceManager.setInputSource(inputSourceManager.defaultInputSource)
-        ThreadSourceHander.register(VisionInputSourceHander(pipeline!!.notifier, viewport))
+        inputSourceManager.setInputSource(null)
+        ThreadSourceHander.register(VisionInputSourceHander(pipeline?.notifier ?: return, viewport))
 
         pipeline?.telemetry = telemetry
-        pipeline?.hardwareMap = HardwareMap()
+        pipeline?.hardwareMap = HardwareMap();
     }
 
     override fun init() { }
 
     override fun processFrame(currentInputSource: InputSource?) {
+    }
+
+    override fun onException() {
+        if(pipeline != null) {
+            pipeline!!.forceStop()
+            onStop.run()
+        }
     }
 
     override fun onChange(beforePipeline: OpenCvPipeline?, newPipeline: OpenCvPipeline, telemetry: Telemetry) {

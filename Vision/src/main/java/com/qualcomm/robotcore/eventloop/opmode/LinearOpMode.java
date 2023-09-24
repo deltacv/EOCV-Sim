@@ -36,9 +36,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class LinearOpMode extends OpMode {
+
     protected final Object lock = new Object();
     private LinearOpModeHelperThread helper = new LinearOpModeHelperThread(this);
-    private RuntimeException catchedException = null;
 
     public LinearOpMode() {
     }
@@ -174,11 +174,6 @@ public abstract class LinearOpMode extends OpMode {
 
     @Override
     public final void loop() {
-        synchronized (lock) {
-            if (catchedException != null) {
-                throw catchedException;
-            }
-        }
     }
 
     @Override
@@ -221,9 +216,7 @@ public abstract class LinearOpMode extends OpMode {
                 Thread.currentThread().interrupt();
                 logger.info("{}: interrupted", opMode.getClass().getSimpleName());
             } catch (RuntimeException e) {
-                synchronized (opMode.lock) {
-                    opMode.catchedException = e;
-                }
+                opMode.notifier.notify(e);
             }
 
             logger.info("{}: stopped", opMode.getClass().getSimpleName());

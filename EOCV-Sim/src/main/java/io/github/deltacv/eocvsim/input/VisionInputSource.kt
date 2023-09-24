@@ -3,13 +3,15 @@ package io.github.deltacv.eocvsim.input
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.vision.external.source.VisionSourceBase
+import io.github.deltacv.vision.external.util.ThrowableHandler
 import io.github.deltacv.vision.external.util.Timestamped
 import org.opencv.core.Mat
 import org.opencv.core.Size
 
 class VisionInputSource(
-        private val inputSource: InputSource
-) : VisionSourceBase() {
+    private val inputSource: InputSource,
+    throwableHandler: ThrowableHandler? = null
+) : VisionSourceBase(throwableHandler) {
 
     val logger by loggerForThis()
 
@@ -37,11 +39,11 @@ class VisionInputSource(
     private val emptyMat = Mat()
 
     override fun pullFrame(): Timestamped<Mat> {
-        try {
+        return try {
             val frame = inputSource.update();
-            return Timestamped(frame, inputSource.captureTimeNanos)
+            Timestamped(frame, inputSource.captureTimeNanos)
         } catch(e: Exception) {
-            return Timestamped(emptyMat, 0)
+            Timestamped(emptyMat, 0)
         }
     }
 

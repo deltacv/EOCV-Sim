@@ -56,10 +56,13 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong
 
 @OptIn(DelicateCoroutinesApi::class)
-class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: PipelineStatisticsCalculator) {
+class PipelineManager(
+    var eocvSim: EOCVSim,
+    val pipelineStatisticsCalculator: PipelineStatisticsCalculator
+) {
 
     companion object {
-        const val MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS = 5
+        const val MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS = 18
 
         var staticSnapshot: PipelineSnapshot? = null
             private set
@@ -190,7 +193,7 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
 
             if(telemetry is TelemetryImpl) {
                 telemetry.errItem.caption = "[/!\\]"
-                telemetry.errItem.setValue("Uncaught exception thrown in\n pipeline, check Workspace -> Output.")
+                telemetry.errItem.setValue("Uncaught exception thrown, check Workspace -> Output.")
                 telemetry.forceTelemetryTransmission()
             }
         }
@@ -219,6 +222,14 @@ class PipelineManager(var eocvSim: EOCVSim, val pipelineStatisticsCalculator: Pi
             if(currentPipeline != null) {
                 for (pipelineHandler in pipelineHandlers) {
                     pipelineHandler.onChange(previousPipeline, currentPipeline!!, currentTelemetry!!)
+                }
+            }
+        }
+
+        pipelineExceptionTracker.onPipelineException {
+            if(currentPipeline != null) {
+                for (pipelineHandler in pipelineHandlers) {
+                    pipelineHandler.onException()
                 }
             }
         }

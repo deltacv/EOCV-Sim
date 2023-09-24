@@ -28,12 +28,14 @@ class PipelineListIconRenderer(
             list, value, index, isSelected, cellHasFocus
         ) as JLabel
 
-        val source = pipelineManager.pipelines[indexMapProvider()[index]!!].source
+        try {
+            val source = pipelineManager.pipelines[indexMapProvider()[index]!!].source
 
-        label.icon = when(source) {
-            PipelineSource.COMPILED_ON_RUNTIME -> gearsIcon
-            else -> hammerIcon
-        }
+            label.icon = when (source) {
+                PipelineSource.COMPILED_ON_RUNTIME -> gearsIcon
+                else -> hammerIcon
+            }
+        } catch(ignored: Exception) { }
 
         return label
     }

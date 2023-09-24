@@ -23,6 +23,7 @@
 
 package io.github.deltacv.vision.external.source;
 
+import io.github.deltacv.vision.external.util.ThrowableHandler;
 import io.github.deltacv.vision.external.util.Timestamped;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -38,7 +39,15 @@ public abstract class VisionSourceBase implements VisionSource {
 
     ArrayList<VisionSourced> sourceds = new ArrayList<>();
 
-    SourceBaseHelperThread helperThread = new SourceBaseHelperThread(this);
+    SourceBaseHelperThread helperThread;
+
+    public VisionSourceBase(ThrowableHandler throwableHandler) {
+        helperThread = new SourceBaseHelperThread(this, throwableHandler);
+    }
+
+    public VisionSourceBase() {
+        this(null);
+    }
 
     @Override
     public final boolean start(Size size) {
@@ -91,15 +100,18 @@ public abstract class VisionSourceBase implements VisionSource {
     private static class SourceBaseHelperThread extends Thread {
 
         VisionSourceBase sourceBase;
+        ThrowableHandler throwableHandler;
+
         boolean shouldStop = false;
 
         Logger logger;
 
-        public SourceBaseHelperThread(VisionSourceBase sourcedBase) {
+        public SourceBaseHelperThread(VisionSourceBase sourcedBase, ThrowableHandler throwableHandler) {
             super("Thread-SourceBaseHelper-" + sourcedBase.getClass().getSimpleName());
             logger = LoggerFactory.getLogger(getName());
 
             this.sourceBase = sourcedBase;
+            this.throwableHandler = throwableHandler;
         }
 
         @Override
@@ -109,14 +121,32 @@ public abstract class VisionSourceBase implements VisionSource {
             logger.info("starting");
 
             while (!isInterrupted() && !shouldStop) {
-                Timestamped<Mat> frame = sourceBase.pullFrameInternal();
+                Timestamped<Mat> frame = null;
+
+                try {
+                    frame = sourceBase.pullFrameInternal();
+                } catch(Throwable e) {
+                    logger.error("VisionSource threw an exception", e);
+
+                    if(throwableHandler != null) {
+                        throwableHandler.handle(e);
+                    }
+                }
 
                 synchronized (sourceBase.lock) {
                     sourceds = sourceBase.sourceds.toArray(new VisionSourced[0]);
                 }
 
                 for (VisionSourced sourced : sourceds) {
-                    sourced.onNewFrame(frame.getValue(), frame.getTimestamp());
+                    try {
+                        sourced.onNewFrame(frame.getValue(), frame.getTimestamp());
+                    } catch(Throwable e) {
+                        logger.error("Sourced threw an exception", e);
+
+                        if(throwableHandler != null) {
+                            throwableHandler.handle(e);
+                        }
+                    }
                 }
             }
 

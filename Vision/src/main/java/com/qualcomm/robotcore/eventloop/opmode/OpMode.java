@@ -113,7 +113,6 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
     }
 
     /* BEGIN OpenCvPipeline Impl */
-
     private boolean stopped = false;
 
     @Override
@@ -178,6 +177,18 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
                 break;
         }
 
+        Throwable e = notifier.pollException();
+
+        if(e != null) {
+            if(e instanceof RuntimeException) {
+                throw (RuntimeException) e;
+            } else if(e instanceof Error) {
+                throw (Error) e;
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
+
         return null; // OpModes don't actually show anything to the viewport, we'll delegate that to OpenCvCamera-s
     }
 
@@ -185,7 +196,7 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
     public final void onViewportTapped() {
     }
 
-    public void forceStop() {
+    protected void forceStop() {
         if(stopped) return;
 
         notifier.notify(OpModeState.STOP);

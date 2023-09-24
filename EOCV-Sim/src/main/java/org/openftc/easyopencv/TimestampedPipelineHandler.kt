@@ -41,4 +41,7 @@ class TimestampedPipelineHandler : SpecificPipelineHandler<TimestampedOpenCvPipe
     override fun processFrame(currentInputSource: InputSource?) {
         pipeline?.setTimestamp(currentInputSource?.captureTimeNanos ?: 0L)
     }
+
+    override fun onException() {
+    }
 }
