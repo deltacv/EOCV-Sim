@@ -159,7 +159,6 @@ public class SourcedOpenCvCamera extends OpenCvCameraBase implements OpenCvWebca
     //
     // Inheritance from Sourced
     //
-
     @Override
     public void onNewFrame(Mat frame, long timestamp) {
         if(!isStreaming()) return;
