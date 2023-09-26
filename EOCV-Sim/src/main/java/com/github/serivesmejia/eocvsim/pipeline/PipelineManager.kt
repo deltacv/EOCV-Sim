@@ -796,6 +796,7 @@ enum class PipelineFps(val fps: Int, val coolName: String) {
     MEDIUM(30, "Medium (30 FPS)"),
     HIGH(60, "High (60 FPS)"),
     HIGHEST(100, "Highest (100 FPS)");
+    UNLIMITED_POWER(Int.MAX_VALUE, "Unlimited Power! (no FPS cap);
 
     companion object {
         @JvmStatic
