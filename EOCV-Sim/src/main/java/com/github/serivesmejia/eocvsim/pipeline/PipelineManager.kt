@@ -356,9 +356,7 @@ class PipelineManager(
                 if(!hasInitCurrentPipeline) {
                     pipelineExceptionTracker.addMessage("Error while initializing requested pipeline, \"$currentPipelineName\". Falling back to previous one.")
                     pipelineExceptionTracker.addMessage(
-                        StrUtil.cutStringBy(
-                            StrUtil.fromException(ex), "\n", 9
-                        ).trim()
+                        StrUtil.fromException(ex).trim()
                     )
 
                     eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = previousPipelineIndex

@@ -136,7 +136,7 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
 
         switch(notification) {
             case INIT:
-                if(notifier.getState() == OpModeState.START) break;
+                if(notifier.getState() != OpModeState.SELECTED) break;
 
                 init();
                 notifier.notify(OpModeState.INIT);
