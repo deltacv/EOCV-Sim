@@ -25,7 +25,7 @@ package io.github.deltacv.vision.external.source;
 
 import org.opencv.core.Mat;
 
-public interface VisionSourced {
+public interface FrameReceiver {
 
     default void onFrameStart() {}
 
