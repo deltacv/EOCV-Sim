@@ -31,8 +31,8 @@ public interface VisionSource {
 
     boolean start(Size requestedSize);
 
-    boolean attach(VisionSourced sourced);
-    boolean remove(VisionSourced sourced);
+    boolean attach(FrameReceiver sourced);
+    boolean remove(FrameReceiver sourced);
 
     boolean stop();
 

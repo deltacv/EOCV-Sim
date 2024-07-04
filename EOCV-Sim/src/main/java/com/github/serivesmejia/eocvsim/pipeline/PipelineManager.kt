@@ -356,9 +356,7 @@ class PipelineManager(
                 if(!hasInitCurrentPipeline) {
                     pipelineExceptionTracker.addMessage("Error while initializing requested pipeline, \"$currentPipelineName\". Falling back to previous one.")
                     pipelineExceptionTracker.addMessage(
-                        StrUtil.cutStringBy(
-                            StrUtil.fromException(ex), "\n", 9
-                        ).trim()
+                        StrUtil.fromException(ex).trim()
                     )
 
                     eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = previousPipelineIndex
@@ -795,7 +793,8 @@ enum class PipelineFps(val fps: Int, val coolName: String) {
     LOW(10, "Low (10 FPS)"),
     MEDIUM(30, "Medium (30 FPS)"),
     HIGH(60, "High (60 FPS)"),
-    HIGHEST(100, "Highest (100 FPS)");
+    HIGHEST(100, "Highest (100 FPS)"),
+    UNLIMITED_POWER(Int.MAX_VALUE, "Unlimited Power! (no FPS cap)");
 
     companion object {
         @JvmStatic

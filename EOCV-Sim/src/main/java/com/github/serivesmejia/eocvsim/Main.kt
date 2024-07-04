@@ -62,7 +62,6 @@ class EOCVSimCommandInterface : Runnable {
             parameters.initialPipelineSource = initialPipelineSource
         }
 
-
         if (opencvNativePath != null) {
             parameters.opencvNativeLibrary = checkPath("OpenCV Native", opencvNativePath!!, false)
         }

@@ -186,7 +186,7 @@ public class Paint {
     }
 
     public Paint(Paint paint) {
-        thePaint = paint.thePaint;
+        thePaint = paint.thePaint.makeClone();
 
         typeface = paint.typeface;
         textSize = paint.textSize;

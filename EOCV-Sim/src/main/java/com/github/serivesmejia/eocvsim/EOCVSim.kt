@@ -261,7 +261,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
                 )
             }
 
-
             updateVisualizerTitle() // update current pipeline in title
         }
 

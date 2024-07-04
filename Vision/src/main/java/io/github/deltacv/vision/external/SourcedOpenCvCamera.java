@@ -24,13 +24,13 @@
 package io.github.deltacv.vision.external;
 
 import io.github.deltacv.vision.external.source.VisionSource;
-import io.github.deltacv.vision.external.source.VisionSourced;
+import io.github.deltacv.vision.external.source.FrameReceiver;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.openftc.easyopencv.*;
 
-public class SourcedOpenCvCamera extends OpenCvCameraBase implements OpenCvWebcam, VisionSourced {
+public class SourcedOpenCvCamera extends OpenCvCameraBase implements OpenCvWebcam, FrameReceiver {
 
     private final VisionSource source;
     OpenCvViewport handedViewport;

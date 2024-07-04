@@ -31,13 +31,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public abstract class VisionSourceBase implements VisionSource {
 
     private final Object lock = new Object();
 
-    ArrayList<VisionSourced> sourceds = new ArrayList<>();
+    ArrayList<FrameReceiver> sourceds = new ArrayList<>();
 
     SourceBaseHelperThread helperThread;
 
@@ -61,14 +60,14 @@ public abstract class VisionSourceBase implements VisionSource {
     public abstract boolean startSource(Size size);
 
     @Override
-    public boolean attach(VisionSourced sourced) {
+    public boolean attach(FrameReceiver sourced) {
         synchronized (lock) {
             return sourceds.add(sourced);
         }
     }
 
     @Override
-    public boolean remove(VisionSourced sourced) {
+    public boolean remove(FrameReceiver sourced) {
         synchronized (lock) {
             return sourceds.remove(sourced);
         }
@@ -88,7 +87,7 @@ public abstract class VisionSourceBase implements VisionSource {
     public abstract Timestamped<Mat> pullFrame();
 
     private Timestamped<Mat> pullFrameInternal() {
-        for(VisionSourced sourced : sourceds) {
+        for(FrameReceiver sourced : sourceds) {
             synchronized (sourced) {
                 sourced.onFrameStart();
             }
@@ -116,7 +115,7 @@ public abstract class VisionSourceBase implements VisionSource {
 
         @Override
         public void run() {
-            VisionSourced[] sourceds = new VisionSourced[0];
+            FrameReceiver[] sourceds = new FrameReceiver[0];
 
             logger.info("starting");
 
@@ -134,10 +133,10 @@ public abstract class VisionSourceBase implements VisionSource {
                 }
 
                 synchronized (sourceBase.lock) {
-                    sourceds = sourceBase.sourceds.toArray(new VisionSourced[0]);
+                    sourceds = sourceBase.sourceds.toArray(new FrameReceiver[0]);
                 }
 
-                for (VisionSourced sourced : sourceds) {
+                for (FrameReceiver sourced : sourceds) {
                     try {
                         sourced.onNewFrame(frame.getValue(), frame.getTimestamp());
                     } catch(Throwable e) {
@@ -150,7 +149,7 @@ public abstract class VisionSourceBase implements VisionSource {
                 }
             }
 
-            for(VisionSourced sourced : sourceds) {
+            for(FrameReceiver sourced : sourceds) {
                 sourced.stop();
             }
 
