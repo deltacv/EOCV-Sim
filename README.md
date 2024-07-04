@@ -18,7 +18,7 @@ transfer it onto your robot!
 
 # [Buy me a coffee](https://buymeacoffee.com/serivesmejia)
 
-For the past 4 years I've been developing and maintaining learning tools for robotics kids to have a better understanding of programming and computer vision. Now that  I've graduated from the robotics competition and I'm headed to college it is my goal to keep maintaining and improving these tools for future generations to keep learning, completely cost-free and open source. Your donation in [buy me a coffee](https://buymeacoffee.com/serivesmejia) will help me maintain those goals through the following years as life gets busier.
+For the past 4 years I've been developing and maintaining learning tools for robotics kids to have a better understanding of programming and computer vision. Now that  I've graduated from the robotics competition and I'm headed to college it is my goal to keep maintaining and improving these tools for future generations to keep learning, completely cost-free and open source. Your donation in [buy me a coffee](https://buymeacoffee.com/serivesmejia) will help me maintain those goals through the following years as life gets busier. It is completely voluntary, but your donation through Buy Me a Coffee will help ensure these tools remain accessible and continuously improved for future robotics enthusiasts. Thank you for considering supporting my passion for robotics!
 
 \- Sebastian Erives, deltacv's main dev
 
