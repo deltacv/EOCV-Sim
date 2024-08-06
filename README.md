@@ -88,7 +88,7 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
-### [v3.5.3 - CenterStage AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.3)
+### [v3.5.3 - Android Paint constructor fix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.3)
    - This is the 21st release for EOCV-Sim
      - Bug fixes:
        - Addresses #110 by properly cloning underlying skiko Paint in android.graphics.Paint(Paint) constructor
