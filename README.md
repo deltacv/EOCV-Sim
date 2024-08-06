@@ -22,6 +22,16 @@ For the past 4 years I've been developing and maintaining learning tools for rob
 
 \- Sebastian Erives, deltacv's main dev
 
+# Acknowledgments
+
+YourKit supports open source projects with innovative and intelligent tools
+for monitoring and profiling Java and .NET applications.
+YourKit is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>,
+<a href="https://www.yourkit.com/dotnet-profiler/">YourKit .NET Profiler</a>,
+and <a href="https://www.yourkit.com/youmonitor/">YourKit YouMonitor</a>.
+
+<img src='https://www.yourkit.com/images/yklogo.png' width='20%' height='20%'>
+
 # Compatibility
 
 Since OpenCV in Java uses a native library, which is platform specific, the simulator is currently limited to the following platforms:
@@ -78,7 +88,7 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
-### [v3.5.3 - CenterStage AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.3)
+### [v3.5.3 - Android Paint constructor fix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.3)
    - This is the 21st release for EOCV-Sim
      - Bug fixes:
        - Addresses #110 by properly cloning underlying skiko Paint in android.graphics.Paint(Paint) constructor
