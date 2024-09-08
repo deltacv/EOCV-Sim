@@ -23,7 +23,7 @@
 
 package org.openftc.easyopencv;
 
-import io.github.deltacv.vision.external.SourcedOpenCvCamera;
+import io.github.deltacv.vision.external.FrameReceiverOpenCvCamera;
 import io.github.deltacv.vision.external.source.VisionSource;
 import io.github.deltacv.vision.external.source.ThreadSourceHander;
 import io.github.deltacv.vision.external.source.ViewportAndSourceHander;
@@ -50,7 +50,7 @@ public class SourcedOpenCvCameraFactoryImpl extends OpenCvCameraFactory {
 
     @Override
     public OpenCvCamera createInternalCamera(OpenCvInternalCamera.CameraDirection direction) {
-        return new SourcedOpenCvCamera(source("default"), viewport(), false);
+        return new FrameReceiverOpenCvCamera(source("default"), viewport(), false);
     }
 
     @Override
@@ -59,12 +59,12 @@ public class SourcedOpenCvCameraFactoryImpl extends OpenCvCameraFactory {
             return createInternalCamera(direction);
         }
 
-        return new SourcedOpenCvCamera(source("default"), viewport(), true);
+        return new FrameReceiverOpenCvCamera(source("default"), viewport(), true);
     }
 
     @Override
     public OpenCvCamera createInternalCamera2(OpenCvInternalCamera2.CameraDirection direction) {
-        return new SourcedOpenCvCamera(source("default"), viewport(), false);
+        return new FrameReceiverOpenCvCamera(source("default"), viewport(), false);
     }
 
     @Override
@@ -73,13 +73,13 @@ public class SourcedOpenCvCameraFactoryImpl extends OpenCvCameraFactory {
             return createInternalCamera2(direction);
         }
 
-        return new SourcedOpenCvCamera(source("default"), viewport(), true);
+        return new FrameReceiverOpenCvCamera(source("default"), viewport(), true);
     }
 
     @Override
     public OpenCvWebcam createWebcam(WebcamName cameraName) {
         if(cameraName instanceof SourcedCameraName) {
-            return new SourcedOpenCvCamera(((SourcedCameraName) cameraName).getSource(), viewport(), false);
+            return new FrameReceiverOpenCvCamera(((SourcedCameraName) cameraName).getSource(), viewport(), false);
         } else {
             throw new IllegalArgumentException("cameraName is not compatible with SourcedOpenCvCamera");
         }
@@ -92,7 +92,7 @@ public class SourcedOpenCvCameraFactoryImpl extends OpenCvCameraFactory {
         }
 
         if(cameraName instanceof SourcedCameraName) {
-            return new SourcedOpenCvCamera(((SourcedCameraName) cameraName).getSource(), viewport(), true);
+            return new FrameReceiverOpenCvCamera(((SourcedCameraName) cameraName).getSource(), viewport(), true);
         } else {
             throw new IllegalArgumentException("cameraName is not compatible with SourcedOpenCvCamera");
         }

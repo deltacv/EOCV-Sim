@@ -36,7 +36,7 @@ public abstract class VisionSourceBase implements VisionSource {
 
     private final Object lock = new Object();
 
-    ArrayList<FrameReceiver> sourceds = new ArrayList<>();
+    ArrayList<FrameReceiver> frameReceivers = new ArrayList<>();
 
     SourceBaseHelperThread helperThread;
 
@@ -62,14 +62,14 @@ public abstract class VisionSourceBase implements VisionSource {
     @Override
     public boolean attach(FrameReceiver sourced) {
         synchronized (lock) {
-            return sourceds.add(sourced);
+            return frameReceivers.add(sourced);
         }
     }
 
     @Override
     public boolean remove(FrameReceiver sourced) {
         synchronized (lock) {
-            return sourceds.remove(sourced);
+            return frameReceivers.remove(sourced);
         }
     }
 
@@ -87,7 +87,7 @@ public abstract class VisionSourceBase implements VisionSource {
     public abstract Timestamped<Mat> pullFrame();
 
     private Timestamped<Mat> pullFrameInternal() {
-        for(FrameReceiver sourced : sourceds) {
+        for(FrameReceiver sourced : frameReceivers) {
             synchronized (sourced) {
                 sourced.onFrameStart();
             }
@@ -115,8 +115,6 @@ public abstract class VisionSourceBase implements VisionSource {
 
         @Override
         public void run() {
-            FrameReceiver[] sourceds = new FrameReceiver[0];
-
             logger.info("starting");
 
             while (!isInterrupted() && !shouldStop) {
@@ -133,24 +131,24 @@ public abstract class VisionSourceBase implements VisionSource {
                 }
 
                 synchronized (sourceBase.lock) {
-                    sourceds = sourceBase.sourceds.toArray(new FrameReceiver[0]);
-                }
+                    for (FrameReceiver frameReceiver : sourceBase.frameReceivers) {
+                        try {
+                            frameReceiver.onNewFrame(frame.getValue(), frame.getTimestamp());
+                        } catch(Throwable e) {
+                            logger.error("FrameReceiver threw an exception", e);
 
-                for (FrameReceiver sourced : sourceds) {
-                    try {
-                        sourced.onNewFrame(frame.getValue(), frame.getTimestamp());
-                    } catch(Throwable e) {
-                        logger.error("Sourced threw an exception", e);
-
-                        if(throwableHandler != null) {
-                            throwableHandler.handle(e);
+                            if(throwableHandler != null) {
+                                throwableHandler.handle(e);
+                            }
                         }
                     }
                 }
             }
 
-            for(FrameReceiver sourced : sourceds) {
-                sourced.stop();
+            synchronized (sourceBase.lock) {
+                for (FrameReceiver frameReceiver : sourceBase.frameReceivers) {
+                    frameReceiver.stop();
+                }
             }
 
             logger.info("stop");
