@@ -78,11 +78,15 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
-### [v3.5.4 - Into the Deep AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.4)
+### [v3.6.0 - Plugin System & Into the Deep AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.4)
 - This is the 22nd release for EOCV-Sim
     - Changelog
         - Addresses the changes made in the FTC SDK 10.0 for the 2024-2025 season:
-            - Adds the INTO THE DEEP AprilTag Library with accurate tag locations
+            - Adds the INTO THE DEEP AprilTag Library with accurate tag locations.
+        - Brand-new plugin system for EOCV-Sim, allowing for easy integration of new features and libraries from the community (documentation pending, oops).
+        - Adds the ability to load plugins from the user's filesystem.
+        - Implements virtual filesystem for plugins, allowing for a sandboxed environment away from the user's filesystem.
+        - Implements whitelist and blacklist for plugins and dynamically loaded pipelines, allowing for a sandboxed environment.
 ### [v3.5.3 - Android Paint Constructor Fix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.3)
    - This is the 21st release for EOCV-Sim
      - Bug fixes:
