@@ -36,7 +36,6 @@ import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfigLoader
 import com.github.serivesmejia.eocvsim.workspace.util.template.DefaultWorkspaceTemplate
 import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.*
-import org.openftc.easyopencv.OpenCvPipeline
 import java.io.File
 
 class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
@@ -97,7 +96,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    suspend fun uncheckedCompile(fixSelectedPipeline: Boolean = false): PipelineCompileResult {
+    suspend fun uncheckedCompile(): PipelineCompileResult {
         if(isBuildRunning) return PipelineCompileResult(
             PipelineCompileStatus.FAILED, "A build is already running"
         )
@@ -191,7 +190,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     }
 
     fun compile(fixSelectedPipeline: Boolean = true) = try {
-        runBlocking { uncheckedCompile(fixSelectedPipeline) }
+        runBlocking { uncheckedCompile() }
     } catch(e: Throwable) {
         isBuildRunning = false
         onBuildEnd.run()

@@ -18,7 +18,7 @@ transfer it onto your robot!
 
 # [Buy me a coffee](https://buymeacoffee.com/serivesmejia)
 
-For the past 4 years I've been developing and maintaining learning tools for robotics kids to have a better understanding of programming and computer vision. Now that  I've graduated from the robotics competition and I'm headed to college it is my goal to keep maintaining and improving these tools for future generations to keep learning, completely cost-free and open source. Your donation in [buy me a coffee](https://buymeacoffee.com/serivesmejia) will help me maintain those goals through the following years as life gets busier. It is completely voluntary, but your donation through Buy Me a Coffee will help ensure these tools remain accessible and continuously improved for future robotics enthusiasts. Thank you for considering supporting my passion for robotics!
+For the past 4 years I've been developing and maintaining learning tools for robotics kids to have a better understanding of programming and computer vision. Now that I've graduated from the robotics competition and I'm headed to college it is my goal to keep maintaining and improving these tools for future generations to keep learning, completely cost-free and open source. Your donation in [buy me a coffee](https://buymeacoffee.com/serivesmejia) will help me maintain those goals through the following years as life gets busier. It is completely voluntary, but it will help ensure these tools remain accessible and continuously improved for future robotics enthusiasts. Thank you for considering supporting my passion for robotics!
 
 \- Sebastian Erives, deltacv's main dev
 
@@ -78,7 +78,12 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
-### [v3.5.3 - CenterStage AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.3)
+### [v3.5.4 - Into the Deep AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.4)
+- This is the 22nd release for EOCV-Sim
+    - Changelog
+        - Addresses the changes made in the FTC SDK 10.0 for the 2024-2025 season:
+            - Adds the INTO THE DEEP AprilTag Library with accurate tag locations
+### [v3.5.3 - Android Paint Constructor Fix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.3)
    - This is the 21st release for EOCV-Sim
      - Bug fixes:
        - Addresses #110 by properly cloning underlying skiko Paint in android.graphics.Paint(Paint) constructor

@@ -48,6 +48,8 @@ import com.github.serivesmejia.eocvsim.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
+import io.github.deltacv.common.util.ParsedVersion
+import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.vision.external.PipelineRenderHook
 import nu.pattern.OpenCV
 import org.opencv.core.Mat
@@ -64,6 +66,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
     companion object {
         const val VERSION = Build.versionString
+        const val STANDARD_VERSION = Build.standardVersionString
+
+        val PARSED_VERSION = ParsedVersion(STANDARD_VERSION)
 
         const val DEFAULT_EOCV_WIDTH = 320
         const val DEFAULT_EOCV_HEIGHT = 240
@@ -150,6 +155,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
     var currentRecordingSession: VideoRecordingSession? = null
     val fpsLimiter = FpsLimiter(30.0)
 
+    val pluginManager = PluginManager(this)
+
     lateinit var eocvSimThread: Thread
         private set
 
@@ -189,6 +196,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
             classpathScan.asyncScan()
             hasScanned = true
         }
+
+        pluginManager.init() // woah
+        pluginManager.loadPlugins()
 
         configManager.init() //load config
 
@@ -263,6 +273,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
             updateVisualizerTitle() // update current pipeline in title
         }
+
+        pluginManager.enablePlugins()
 
         start()
     }
@@ -341,6 +353,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
     fun destroy(reason: DestroyReason) {
         logger.warn("-- Destroying current EOCVSim ($hexCode) due to $reason, it is normal to see InterruptedExceptions and other kinds of stack traces below --")
+
+        pluginManager.disablePlugins()
 
         //stop recording session if there's currently an ongoing one
         currentRecordingSession?.stopRecordingSession()

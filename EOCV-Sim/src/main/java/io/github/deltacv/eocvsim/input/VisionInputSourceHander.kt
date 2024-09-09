@@ -3,11 +3,8 @@ package io.github.deltacv.eocvsim.input
 import com.github.serivesmejia.eocvsim.input.source.CameraSource
 import com.github.serivesmejia.eocvsim.input.source.ImageSource
 import com.github.serivesmejia.eocvsim.input.source.VideoSource
-import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import io.github.deltacv.vision.external.source.ViewportAndSourceHander
 import io.github.deltacv.vision.external.source.VisionSource
-import io.github.deltacv.vision.external.source.VisionSourceHander
 import io.github.deltacv.vision.internal.opmode.OpModeNotifier
 import io.github.deltacv.vision.internal.opmode.OpModeState
 import io.github.deltacv.vision.internal.opmode.RedirectToOpModeThrowableHandler
@@ -17,8 +14,6 @@ import org.opencv.videoio.VideoCapture
 import org.openftc.easyopencv.OpenCvViewport
 import java.io.File
 import java.io.IOException
-import java.lang.IllegalArgumentException
-import java.net.URLConnection
 import javax.imageio.ImageIO
 
 class VisionInputSourceHander(val notifier: OpModeNotifier, val viewport: OpenCvViewport) : ViewportAndSourceHander {
@@ -46,7 +41,7 @@ class VisionInputSourceHander(val notifier: OpModeNotifier, val viewport: OpenCv
                 ImageSource(name)
             } else if(isVideo(name)) {
                 VideoSource(name, null)
-            } else throw IllegalArgumentException("File is not an image nor a video")
+            } else throw IllegalArgumentException("File is neither an image nor a video")
         } else {
             val index = name.toIntOrNull()
                     ?: if(name == "default" || name == "Webcam 1") 0

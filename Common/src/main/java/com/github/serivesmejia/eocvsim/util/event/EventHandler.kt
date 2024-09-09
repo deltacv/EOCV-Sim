@@ -24,8 +24,23 @@
 package com.github.serivesmejia.eocvsim.util.event
 
 import com.github.serivesmejia.eocvsim.util.loggerOf
+import java.lang.ref.WeakReference
 
 class EventHandler(val name: String) : Runnable {
+
+    companion object {
+        private val bannedClassLoaders = mutableListOf<WeakReference<ClassLoader>>()
+
+        fun banClassLoader(loader: ClassLoader) = bannedClassLoaders.add(WeakReference(loader))
+
+        fun isBanned(classLoader: ClassLoader): Boolean {
+            for(bannedClassLoader in bannedClassLoaders) {
+                if(bannedClassLoader.get() == classLoader) return true
+            }
+
+            return false
+        }
+    }
 
     val logger by loggerOf("${name}-EventHandler")
 
@@ -140,7 +155,27 @@ class EventHandler(val name: String) : Runnable {
 
     operator fun invoke(listener: EventListener) = doPersistent(listener)
 
-    private fun runListener(listener: EventListener, isOnce: Boolean) =
+    private fun runListener(listener: EventListener, isOnce: Boolean) {
+        if(isBanned(listener.javaClass.classLoader)) {
+            removeBannedListeners()
+            return
+        }
+
         listener.run(EventListenerRemover(this, listener, isOnce))
+    }
+
+    private fun removeBannedListeners() {
+        for(listener in internalListeners.toArray()) {
+            if(isBanned(listener.javaClass.classLoader)) {
+                internalListeners.remove(listener)
+                logger.warn("Removed banned listener from ${listener.javaClass.classLoader}")
+            }
+        }
+
+        for(listener in internalOnceListeners.toArray()) {
+            if(isBanned(listener.javaClass.classLoader)) internalOnceListeners.remove(listener)
+            logger.warn("Removed banned listener from ${listener.javaClass.classLoader}")
+        }
+    }
 
 }

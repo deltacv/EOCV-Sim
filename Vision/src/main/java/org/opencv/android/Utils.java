@@ -128,7 +128,6 @@ public class Utils {
 
         if(m2bData.length != size) {
             m2bData = new byte[size];
-            System.out.println("creating new byte[] " + size);
         }
 
         tmp.get(0, 0, m2bData);

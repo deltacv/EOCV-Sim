@@ -310,7 +310,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         val opMode = opModeControlsPanel.currentOpMode
 
         if(eocvSim.pipelineManager.currentPipeline == opMode && opMode != null && opMode.notifier.state != OpModeState.SELECTED) {
-            opMode?.notifier?.onStateChange?.let {
+            opMode.notifier?.onStateChange?.let {
                 it {
                     val state = opMode.notifier.state
 

@@ -54,6 +54,7 @@ import java.util.List;
 public class Visualizer {
 
     public final EventHandler onInitFinished = new EventHandler("OnVisualizerInitFinish");
+    public final EventHandler onPluginGuiAttachment = new EventHandler("OnPLuginGuiAttachment");
 
     public final ArrayList<AsyncPleaseWaitDialog> pleaseWaitDialogs = new ArrayList<>();
 
@@ -125,6 +126,8 @@ public class Visualizer {
 
         String fpsMeterDescriptor = "deltacv EOCV-Sim v" + Build.standardVersionString;
         if(Build.isDev) fpsMeterDescriptor += "-dev";
+
+        onPluginGuiAttachment.run();
 
         viewport = new SwingOpenCvViewport(new Size(1080, 720), fpsMeterDescriptor);
         viewport.setDark(FlatLaf.isLafDark());

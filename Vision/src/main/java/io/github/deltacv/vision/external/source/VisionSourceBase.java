@@ -135,6 +135,12 @@ public abstract class VisionSourceBase implements VisionSource {
                         try {
                             frameReceiver.onNewFrame(frame.getValue(), frame.getTimestamp());
                         } catch(Throwable e) {
+                            if(e instanceof InterruptedException) {
+                                logger.warn("FrameReceiver interrupted", e);
+                                Thread.currentThread().interrupt();
+                                continue;
+                            }
+
                             logger.error("FrameReceiver threw an exception", e);
 
                             if(throwableHandler != null) {
