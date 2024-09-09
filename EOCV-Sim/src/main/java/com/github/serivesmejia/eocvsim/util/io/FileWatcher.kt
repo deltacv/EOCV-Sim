@@ -29,11 +29,23 @@ import com.github.serivesmejia.eocvsim.util.loggerOf
 import org.slf4j.Logger
 import java.io.File
 
-class FileWatcher(private val watchingDirectories: List<File>,
-                  watchingFileExtensions: List<String>?,
-                  name: String) {
+/**
+ * Class to watch for changes in files in a directory
+ * @param watchingDirectories the directories to watch
+ * @param watchingFileExtensions the file extensions to watch, if null, all files will be watched
+ * @param name the name of the file watcher (for logging purposes)
+ */
+class FileWatcher(
+    watchingDirectories: List<File>,
+    watchingFileExtensions: List<String>?,
+    name: String
+) {
 
     private val TAG = "FileWatcher-$name"
+
+    /**
+     * Event handler for when a change is detected
+     */
     val onChange = EventHandler("OnChange-$TAG")
 
     val logger by loggerOf(TAG)
@@ -43,10 +55,16 @@ class FileWatcher(private val watchingDirectories: List<File>,
         TAG
     )
 
+    /**
+     * Start the file watcher
+     */
     fun init() {
         watcherThread.start()
     }
 
+    /**
+     * Stop the file watcher
+     */
     fun stop() {
         watcherThread.interrupt()
     }

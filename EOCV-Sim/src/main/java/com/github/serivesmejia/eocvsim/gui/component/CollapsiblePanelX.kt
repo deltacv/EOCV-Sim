@@ -72,8 +72,8 @@ class CollapsiblePanelX @JvmOverloads constructor(
                 val i = getBorder().getBorderInsets(this@CollapsiblePanelX)
                 if (e.x < i.left + size.width && e.y < i.bottom + size.height) {
 
-                    for(e in components) {
-                        e.isVisible = !isHidden
+                    for(c in components) {
+                        c.isVisible = !isHidden
 
                         border.title = if(isHidden) {
                             "$title (click here to expand)"

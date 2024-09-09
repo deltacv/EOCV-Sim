@@ -30,14 +30,14 @@ import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.openftc.easyopencv.*;
 
-public class SourcedOpenCvCamera extends OpenCvCameraBase implements OpenCvWebcam, FrameReceiver {
+public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenCvWebcam, FrameReceiver {
 
     private final VisionSource source;
     OpenCvViewport handedViewport;
 
     boolean streaming = false;
 
-    public SourcedOpenCvCamera(VisionSource source, OpenCvViewport handedViewport, boolean viewportEnabled) {
+    public FrameReceiverOpenCvCamera(VisionSource source, OpenCvViewport handedViewport, boolean viewportEnabled) {
         super(handedViewport, viewportEnabled);
 
         this.source = source;

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2021 Sebastian Erives
  *
@@ -101,6 +100,11 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
 
         mFileMenu.add(editSettings)
+
+        val filePlugins = JMenuItem("Plugins")
+        filePlugins.addActionListener { DialogFactory.createPluginsDialog(eocvSim) }
+
+        mFileMenu.addSeparator()
 
         val fileRestart = JMenuItem("Restart")
 

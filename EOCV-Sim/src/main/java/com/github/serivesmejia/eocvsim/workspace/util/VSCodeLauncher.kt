@@ -32,10 +32,20 @@ import com.github.serivesmejia.eocvsim.util.loggerForThis
 import kotlinx.coroutines.DelicateCoroutinesApi
 import java.io.File
 
+/**
+ * Utility class to launch Visual Studio Code
+ * in the workspace directory
+ * @see WorkspaceManager
+ * @see SysUtil.runShellCommand
+ */
 object VSCodeLauncher {
 
     val logger by loggerForThis()
 
+    /**
+     * Launches Visual Studio Code in the workspace directory
+     * @param workspace the workspace directory to open
+     */
     fun launch(workspace: File) {
         logger.info("Opening VS Code...")
 
@@ -49,6 +59,10 @@ object VSCodeLauncher {
             logger.info("VS Code failed to open")
     }
 
+    /**
+     * Launches Visual Studio Code in the workspace directory
+     * Runs in a coroutine in the IO dispatcher context
+     */
     @OptIn(DelicateCoroutinesApi::class)
     fun asyncLaunch(workspace: File) = GlobalScope.launch(Dispatchers.IO) { launch(workspace) }
 

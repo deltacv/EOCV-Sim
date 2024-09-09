@@ -4,6 +4,12 @@ import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import java.io.File
 
+/**
+ * Object to store easy access to the EOCV-Sim folder
+ * in the user's app data folder (Windows) or home folder (Linux)
+ * Also handles locking the folder to prevent multiple instances
+ * from running at the same time (which could cause issues).
+ */
 object EOCVSimFolder : File(SysUtil.getAppData().absolutePath + separator + ".eocvsim") {
 
     val logger by loggerForThis()

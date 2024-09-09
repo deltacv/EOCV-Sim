@@ -25,6 +25,9 @@ package com.github.serivesmejia.eocvsim.util.extension
 
 import java.io.File
 
+/**
+ * Operator function to concatenate a string to a file path
+ */
 operator fun File.plus(str: String): File {
     return File(this.absolutePath, str)
 }

@@ -47,7 +47,7 @@ public class AprilTagGameDatabase
     {
         return new AprilTagLibrary.Builder()
                 .addTags(getSampleTagLibrary())
-                .addTags(getCenterStageTagLibrary())
+                .addTags(getIntoTheDeepTagLibrary())
                 .build();
     }
 
@@ -59,35 +59,63 @@ public class AprilTagGameDatabase
     {
         return new AprilTagLibrary.Builder()
                 .addTag(1, "BlueAllianceLeft",
-                        2, new VectorF(60.25f,41.41f,4f), DistanceUnit.INCH,
-                        new Quaternion(0.683f,-0.183f,0.183f,0.683f,0))
+                        2, new VectorF(60.25f, 41.41f, 4f), DistanceUnit.INCH,
+                        new Quaternion(0.3535534f, -0.6123724f, 0.6123724f, -0.3535534f, 0))
                 .addTag(2, "BlueAllianceCenter",
-                        2, new VectorF(60.25f,35.41f,4f), DistanceUnit.INCH,
-                        new Quaternion(0.683f,-0.183f,0.183f,0.683f,0))
+                        2, new VectorF(60.25f, 35.41f, 4f), DistanceUnit.INCH,
+                        new Quaternion(0.3535534f, -0.6123724f, 0.6123724f, -0.3535534f, 0))
                 .addTag(3, "BlueAllianceRight",
-                        2, new VectorF(60.25f,29.41f,4f), DistanceUnit.INCH,
-                        new Quaternion(0.683f,-0.183f,0.183f,0.683f,0))
+                        2, new VectorF(60.25f, 29.41f, 4f), DistanceUnit.INCH,
+                        new Quaternion(0.3535534f, -0.6123724f, 0.6123724f, -0.3535534f, 0))
                 .addTag(4, "RedAllianceLeft",
-                        2, new VectorF(60.25f,-29.41f,4f), DistanceUnit.INCH,
-                        new Quaternion(0.683f,-0.183f,0.183f,0.683f,0))
+                        2, new VectorF(60.25f, -29.41f, 4f), DistanceUnit.INCH,
+                        new Quaternion(0.3535534f, -0.6123724f, 0.6123724f, -0.3535534f, 0))
                 .addTag(5, "RedAllianceCenter",
-                        2, new VectorF(60.25f,-35.41f,4f), DistanceUnit.INCH,
-                        new Quaternion(0.683f,-0.183f,0.183f,0.683f,0))
+                        2, new VectorF(60.25f, -35.41f, 4f), DistanceUnit.INCH,
+                        new Quaternion(0.3535534f, -0.6123724f, 0.6123724f, -0.3535534f, 0))
                 .addTag(6, "RedAllianceRight",
-                        2, new VectorF(60.25f,-41.41f,4f), DistanceUnit.INCH,
-                        new Quaternion(0.683f,-0.183f,0.183f,0.683f,0))
+                        2, new VectorF(60.25f, -41.41f, 4f), DistanceUnit.INCH,
+                        new Quaternion(0.3535534f, -0.6123724f, 0.6123724f, -0.3535534f, 0))
                 .addTag(7, "RedAudienceWallLarge",
-                        5, new VectorF(-70.25f,-40.625f,5.5f), DistanceUnit.INCH,
-                        new Quaternion(0.7071f,0,0,-7.071f,0))
+                        5, new VectorF(-70.25f, -40.625f, 5.5f), DistanceUnit.INCH,
+                        new Quaternion(0.5f, -0.5f, -0.5f, 0.5f, 0))
                 .addTag(8, "RedAudienceWallSmall",
-                        2, new VectorF(-70.25f,-35.125f,4f), DistanceUnit.INCH,
-                        new Quaternion(0.7071f,0,0,-7.071f,0))
+                        2, new VectorF(-70.25f, -35.125f, 4f), DistanceUnit.INCH,
+                        new Quaternion(0.5f, -0.5f, -0.5f, 0.5f, 0))
                 .addTag(9, "BlueAudienceWallSmall",
-                        2, new VectorF(-70.25f,35.125f,4f), DistanceUnit.INCH,
-                        new Quaternion(0.7071f,0,0,-7.071f,0))
+                        2, new VectorF(-70.25f, 35.125f, 4f), DistanceUnit.INCH,
+                        new Quaternion(0.5f, -0.5f, -0.5f, 0.5f, 0))
                 .addTag(10, "BlueAudienceWallLarge",
-                        5, new VectorF(-70.25f,40.625f,5.5f), DistanceUnit.INCH,
-                        new Quaternion(0.7071f,0,0,-7.071f,0))
+                        5, new VectorF(-70.25f, 40.625f, 5.5f), DistanceUnit.INCH,
+                        new Quaternion(0.5f, -0.5f, -0.5f, 0.5f, 0))
+                .build();
+    }
+
+    /**
+     * Get the {@link AprilTagLibrary} for the Into The Deep FTC game
+     * @return the {@link AprilTagLibrary} for the Into The Deep FTC game
+     */
+    public static AprilTagLibrary getIntoTheDeepTagLibrary()
+    {
+        return new AprilTagLibrary.Builder()
+                .addTag(11, "BlueAudienceWall",
+                        4, new VectorF(-70.25f, 46.83f, 5.75f), DistanceUnit.INCH,
+                        new Quaternion(0.5f, -0.5f, -0.5f, 0.5f, 0))
+                .addTag(12, "BlueAllianceWall",
+                        4, new VectorF(0.0f, 70.25f, 5.75f), DistanceUnit.INCH,
+                        new Quaternion(0.7071067f, -0.7071067f, 0.0f, 0.0f, 0))
+                .addTag(13, "BlueRearWall",
+                        4, new VectorF(70.25f, 46.83f, 5.75f), DistanceUnit.INCH,
+                        new Quaternion(0.5f, -0.5f, 0.5f, -0.5f, 0))
+                .addTag(14, "RedRearWall",
+                        4, new VectorF(70.25f, -46.83f, 5.75f), DistanceUnit.INCH,
+                        new Quaternion(0.5f, -0.5f, 0.5f, -0.5f, 0))
+                .addTag(15, "RedAllianceWall",
+                        4, new VectorF(0.0f, -70.25f, 5.75f), DistanceUnit.INCH,
+                        new Quaternion(0.0f, 0.0f, 0.7071067f, -0.7071067f, 0))
+                .addTag(16, "RedAudienceWall",
+                        4, new VectorF(-70.25f, -46.83f, 5.75f), DistanceUnit.INCH,
+                        new Quaternion(0.5f, -0.5f, -0.5f, 0.5f, 0))
                 .build();
     }
 

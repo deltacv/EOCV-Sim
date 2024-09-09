@@ -11,6 +11,11 @@ import kotlin.system.exitProcess
 val jvmMainThread: Thread = Thread.currentThread()
 var currentMainThread: Thread = jvmMainThread
 
+/**
+ * Main entry point for the EOCV-Sim CLI
+ * @param args the command line arguments
+ * @see CommandLine
+ */
 fun main(args: Array<String>) {
     val result = CommandLine(
         EOCVSimCommandInterface()
@@ -19,6 +24,14 @@ fun main(args: Array<String>) {
     exitProcess(result)
 }
 
+/**
+ * Command line interface for the EOCV-Sim CLI
+ * It uses picocli for command line parsing
+ * and allows for the user to specify the workspace, pipeline and OpenCV native path
+ * specified in the Parameters object
+ * @see CommandLine
+ * @see EOCVSim.Parameters
+ */
 @CommandLine.Command(name = "eocvsim", mixinStandardHelpOptions = true, version = [Build.versionString])
 class EOCVSimCommandInterface : Runnable {
 

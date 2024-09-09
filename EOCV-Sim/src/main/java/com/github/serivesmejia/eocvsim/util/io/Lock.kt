@@ -6,6 +6,10 @@ import java.io.File
 import java.io.RandomAccessFile
 import java.nio.channels.FileLock
 
+/**
+ * Class to handle a lock file to prevent multiple instances of a program from running at the same time
+ * @param pathname the path of the file to lock
+ */
 class LockFile(pathname: String) : File(pathname) {
 
     private val raf by lazy { RandomAccessFile(this, "rw") }
@@ -15,6 +19,9 @@ class LockFile(pathname: String) : File(pathname) {
 
     val logger by loggerForThis()
 
+    /**
+     * Check if we obtained the lock
+     */
     val isLocked get() = try {
         raf
         if(lock != null) !tryLock(false) else false
@@ -31,6 +38,11 @@ class LockFile(pathname: String) : File(pathname) {
             SysUtil.saveFileStr(this, "")
     }
 
+    /**
+     * Try to lock the lockfile
+     * @param log if true, logs will be printed
+     * @return true if the file was locked, false otherwise
+     */
     fun tryLock(log: Boolean = true): Boolean {
         return try {
             lock = raf.channel.tryLock()
@@ -42,6 +54,9 @@ class LockFile(pathname: String) : File(pathname) {
         }
     }
 
+    /**
+     * Unlock the lockfile to allow other instances to run
+     */
     fun unlock() {
         lock?.release()
         raf.close()
@@ -51,8 +66,15 @@ class LockFile(pathname: String) : File(pathname) {
 
 }
 
+/**
+ * Lock a directory to prevent multiple instances of a program from running at the same time
+ * @return the lock file if the directory was locked, null otherwise
+ */
 val File.directoryLockFile get() = LockFile(absolutePath + File.separator + ".lock")
 
+/**
+ * Check if a directory is locked
+ */
 val File.isDirectoryLocked: Boolean get() {
     val lock = directoryLockFile
     val isLocked = lock.isLocked
@@ -61,6 +83,10 @@ val File.isDirectoryLocked: Boolean get() {
     return isLocked
 }
 
+/**
+ * Lock a directory to prevent multiple instances of a program from running at the same time
+ * @return the lock file if the directory was locked, null otherwise
+ */
 fun File.lockDirectory(): LockFile? {
     if(!isDirectory)
         return null

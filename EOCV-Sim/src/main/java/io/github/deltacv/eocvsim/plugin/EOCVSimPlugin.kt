@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Sebastian Erives
+ * Copyright (c) 2024 Sebastian Erives
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,39 +21,48 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.util.event
+package io.github.deltacv.eocvsim.plugin
+
+import io.github.deltacv.eocvsim.plugin.loader.PluginContext
 
 /**
- * Functional interface to be used as an event listener
+ * Represents a plugin for EOCV-Sim
  */
-fun interface EventListener {
-    /**
-     * Function to be called when the event is emitted
-     * @param remover the remover object to remove the listener
-     */
-    fun run(remover: EventListenerRemover)
-}
-
-/**
- * Class to remove an event listener
- * @param handler the event handler
- * @param listener the event listener
- * @param isOnceListener whether the listener is a once listener
- */
-class EventListenerRemover(
-    val handler: EventHandler,
-    val listener: EventListener,
-    val isOnceListener: Boolean
-) {
+abstract class EOCVSimPlugin {
 
     /**
-     * Removes the listener from the event handler
+     * The context of the plugin, containing entry point objects
      */
-    fun removeThis() {
-        if(isOnceListener)
-            handler.removeOnceListener(listener)
-        else
-            handler.removePersistentListener(listener)
-    }
+    val context get() = PluginContext.current(this)
 
+    /**
+     * The EOCV-Sim instance, containing the main functionality of the program
+     */
+    val eocvSim get() = context.eocvSim
+
+    /**
+     * The virtual filesystem assigned to this plugin.
+     * With this filesystem, the plugin can access files in a sandboxed environment.
+     * Without SuperAccess, the plugin can only access files in its own virtual fs.
+     * @see SandboxFileSystem
+     */
+    val fileSystem get() = context.fileSystem
+
+    var enabled = false
+        internal set
+
+    /**
+     * Called when the plugin is loaded by the PluginLoader
+     */
+    abstract fun onLoad()
+
+    /**
+     * Called when the plugin is enabled by the PluginLoader
+     */
+    abstract fun onEnable()
+
+    /*
+     * Called when the plugin is disabled by the PluginLoader
+     */
+    abstract fun onDisable()
 }

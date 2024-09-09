@@ -118,6 +118,10 @@ public class DialogFactory {
         invokeLater(() -> new Configuration(eocvSim.visualizer.frame, eocvSim));
     }
 
+    public static void createPluginsDialog(EOCVSim eocvSim) {
+        invokeLater(() -> new Configuration(eocvSim.visualizer.frame, eocvSim));
+    }
+
     public static void createAboutDialog(EOCVSim eocvSim) {
         invokeLater(() -> new About(eocvSim.visualizer.frame, eocvSim));
     }

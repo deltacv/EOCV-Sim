@@ -54,6 +54,7 @@ import java.util.List;
 public class Visualizer {
 
     public final EventHandler onInitFinished = new EventHandler("OnVisualizerInitFinish");
+    public final EventHandler onPluginGuiAttachment = new EventHandler("OnPLuginGuiAttachment");
 
     public final ArrayList<AsyncPleaseWaitDialog> pleaseWaitDialogs = new ArrayList<>();
 
@@ -111,7 +112,7 @@ public class Visualizer {
         try {
             theme.install();
         } catch (Exception e) {
-            logger.error("Failed to install theme " + theme.name(), e);
+            logger.error("Failed to install theme {}", theme.name(), e);
         }
 
         Icons.INSTANCE.setDark(FlatLaf.isLafDark());
@@ -182,6 +183,8 @@ public class Visualizer {
         telemetryWithInsets.add(telemetryPanel);
 
         rightContainer.add(telemetryWithInsets);
+
+        onPluginGuiAttachment.run();
 
         //global
         frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));

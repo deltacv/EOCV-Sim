@@ -34,6 +34,11 @@ import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
+/**
+ * Class to generate a crash report on an uncaught exception event
+ * @param causedByException the exception that caused the crash
+ * @param isDummy if the crash report is a dummy one for exporting or testing purposes
+ */
 class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
 
     companion object {
@@ -51,6 +56,48 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             return "eocvsim-$dateTimeStr.log"
         }
 
+        private val wittyComments = setOf(
+            "Oh no! The robot is sad now :(",
+            "The robot is not happy about this",
+            "Who set us up the TNT?",
+            "Everything's going to plan. No, really, that was supposed to happen.",
+            "I'm sorry, Dave. I'm afraid I can't do that.",
+            "Oops.",
+            "Uh... Did I do that?",
+            "This is fine.",
+            "I'm not even angry. I'm being so sincere right now.",
+            "I feel sad now :(",
+            "I let you down. Sorry :(",
+            "On the bright side, I bought you a teddy bear!",
+            "Daisy, daisy...",
+            "Oh - I know what I did wrong!",
+            "Hey, that tickles! Hehehe!",
+            "I blame Dean Kamen.",
+            "You should try our sister simulator!",
+            "Don't be sad. I'll do better next time, I promise!",
+            "Don't be sad, have a hug! <3",
+            "I just don't know what went wrong :(",
+            "Quite honestly, I wouldn't worry myself about that.",
+            "Do not go gentle into that good night...",
+            "Sorry :(",
+            "Surprise! Haha. Well, this is awkward.",
+            "Hi. I'm EOCV-Sim, and I'm a crashaholic.",
+            "Ooh. Shiny.",
+            "This doesn't make any sense!",
+            "Why is it breaking :(",
+            "Don't do that.",
+            "Ouch. That hurt :(",
+            "This is a token for 1 free hug. Redeem at your nearest local team: [~~HUG~~]",
+            "But it works on my machine!",
+            "Y a través de las estrellas ella viaja...",
+            "Tras el extraño silencio del sol ausente",
+            "no lo pienses demasiado, todo estará bien,",
+            "encontrarás otro desastre que hacer,",
+            "¿qué será de sentarse bajo la tumba del sol sin nunca hacer un desastre?",
+            "y por una ultima noche juntos,"
+
+        )
+
         @JvmStatic val defaultCrashFileName get() = "crashreport-$defaultFileName"
     }
 
@@ -63,6 +110,8 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
         sb.appendLine("/--------------------------------\\").appendLine()
         sb.appendLine("  EOCV-Sim v${EOCVSim.VERSION} crash report").appendLine()
         sb.appendLine("\\--------------------------------/").appendLine()
+
+        sb.appendLine("! ${wittyComments.random()}").appendLine()
 
         sb.appendLine(": Crash stacktrace").appendLine()
         if(!isDummy) {
@@ -115,11 +164,18 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
         sb.appendLine(";")
     }
 
+    /**
+     * Save the crash report to a file
+     * @param f the file to save the crash report to
+     */
     fun saveCrashReport(f: File) {
         SysUtil.saveFileStr(f, toString())
         logger.info("Saved crash report to ${f.absolutePath}")
     }
 
+    /**
+     * Save the crash report to a file located in the working directory
+     */
     fun saveCrashReport() {
         val workingDir = File(System.getProperty("user.dir"))
 
@@ -128,6 +184,10 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
         saveCrashReport(crashLogFile)
     }
 
+    /**
+     * Save the crash report to a file located in the working directory
+     * @param filename the name of the file to save the crash report to
+     */
     fun saveCrashReport(filename: String) {
         val workingDir = File(System.getProperty("user.dir"))
         val crashLogFile = workingDir + File.separator + "$filename.log"
@@ -135,6 +195,9 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
         saveCrashReport(crashLogFile)
     }
 
+    /**
+     * Get the crash report as a string
+     */
     override fun toString() = sb.toString()
 
 }

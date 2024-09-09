@@ -35,6 +35,10 @@ import kotlinx.coroutines.*
 import org.firstinspires.ftc.vision.VisionProcessor
 import org.openftc.easyopencv.OpenCvPipeline
 
+/**
+ * Class to scan the classpath for classes
+ * It scans for OpenCvPipelines, OpModes, VisionProcessors and TunableFields
+ */
 class ClasspathScan {
 
     companion object {
@@ -60,6 +64,15 @@ class ClasspathScan {
 
     private lateinit var scanResultJob: Job
 
+    /**
+     * Perform the classpath scan using ClassGraph, surprisingly fast due to
+     * the miracles of said library using bytecode scanning instead of reflection.
+     *
+     * This method will scan for OpenCvPipelines, OpModes, VisionProcessors and TunableFields
+     * @param jarFile the jar file to scan, if null, the classpath will be scanned
+     * @param classLoader the classloader to use, if null, the system classloader will be used
+     * @param addProcessorsAsPipelines if true, VisionProcessors will be wrapped as pipelines
+     */
     @Suppress("UNCHECKED_CAST")
     fun scan(jarFile: String? = null, classLoader: ClassLoader? = null, addProcessorsAsPipelines: Boolean = true): ScanResult {
         val timer = ElapsedTime()
@@ -185,6 +198,10 @@ class ClasspathScan {
         return this.scanResult
     }
 
+    /**
+     * Asynchronously perform the classpath scan
+     * and store the result in [scanResult]
+     */
     @OptIn(DelicateCoroutinesApi::class)
     fun asyncScan() {
         scanResultJob = GlobalScope.launch(Dispatchers.IO) {
@@ -192,12 +209,22 @@ class ClasspathScan {
         }
     }
 
+    /**
+     * Join the async scan coroutine
+     * @see asyncScan
+     */
     fun join() = runBlocking {
         scanResultJob.join()
     }
 
 }
 
+/**
+ * Result of the classpath scan
+ * @param pipelineClasses the found OpenCvPipelines
+ * @param tunableFieldClasses the found TunableFields
+ * @param tunableFieldAcceptorClasses the found TunableFieldAcceptors
+ */
 data class ScanResult(
     val pipelineClasses: Array<Class<*>>,
     val tunableFieldClasses: Array<Class<out TunableField<*>>>,

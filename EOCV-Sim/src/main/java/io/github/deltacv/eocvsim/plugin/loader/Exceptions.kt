@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Sebastian Erives
+ * Copyright (c) 2024 Sebastian Erives
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,39 +21,10 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.util.event
+package io.github.deltacv.eocvsim.plugin.loader
 
-/**
- * Functional interface to be used as an event listener
- */
-fun interface EventListener {
-    /**
-     * Function to be called when the event is emitted
-     * @param remover the remover object to remove the listener
-     */
-    fun run(remover: EventListenerRemover)
-}
+import kotlin.RuntimeException
 
-/**
- * Class to remove an event listener
- * @param handler the event handler
- * @param listener the event listener
- * @param isOnceListener whether the listener is a once listener
- */
-class EventListenerRemover(
-    val handler: EventHandler,
-    val listener: EventListener,
-    val isOnceListener: Boolean
-) {
+class InvalidPluginException(message: String) : RuntimeException(message)
 
-    /**
-     * Removes the listener from the event handler
-     */
-    fun removeThis() {
-        if(isOnceListener)
-            handler.removeOnceListener(listener)
-        else
-            handler.removePersistentListener(listener)
-    }
-
-}
+class UnsupportedPluginException(message: String) : RuntimeException(message)
