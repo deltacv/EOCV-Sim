@@ -62,6 +62,14 @@ import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
 import kotlin.system.exitProcess
 
+/**
+ * Main class of the EasyOpenCV Simulator
+ * This class is the entry point of the program
+ * and is responsible for initializing all the
+ * components of the simulator.
+ * @param params the parameters to initialize the simulator with
+ * @see Parameters
+ */
 class EOCVSim(val params: Parameters = Parameters()) {
 
     companion object {
@@ -87,6 +95,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         private var isNativeLibLoaded = false
 
+        /**
+         * Load the OpenCV native library
+         * @param alternativeNative the alternative native library file to load instead of the packaged one
+         */
         fun loadOpenCvLib(alternativeNative: File? = null) {
             if (isNativeLibLoaded) return
 
@@ -124,37 +136,95 @@ class EOCVSim(val params: Parameters = Parameters()) {
         }
     }
 
-    @JvmField
-    val onMainUpdate = EventHandler("OnMainUpdate")
+    /**
+     * Event handler for the main update loop
+     * This event handler is called every frame
+     * and is used to run all the pending runnables
+     * posted by the different components of the simulator
+     * @see EventHandler
+     */
+    @JvmField val onMainUpdate = EventHandler("OnMainUpdate")
 
-    @JvmField
-    val visualizer = Visualizer(this)
+    /**
+     * The visualizer instance in charge of managing the GUI
+     * and the viewport where the pipeline output is shown
+     * @see Visualizer
+     */
+    @JvmField val visualizer = Visualizer(this)
 
-    @JvmField
-    val configManager = ConfigManager()
+    /**
+     * The configuration manager instance in charge of managing
+     * the configuration of the simulator from the config json file
+     */
+    @JvmField val configManager = ConfigManager()
 
-    @JvmField
-    val inputSourceManager = InputSourceManager(this)
+    /**
+     * The input source manager instance in charge of managing input sources
+     * and their loading, as well as the current input source.
+     * Input Sources are the sources of the frames that the pipeline processes
+     * they can be from a webcam, a video or image file, etc.
+     * @see InputSourceManager
+     */
+    @JvmField val inputSourceManager = InputSourceManager(this)
 
-    @JvmField
-    val pipelineStatisticsCalculator = PipelineStatisticsCalculator()
+    /**
+     * The pipeline statistics calculator instance in charge of
+     * calculating the average FPS, pipeline time and overhead time
+     * of the current pipeline
+     * @see PipelineStatisticsCalculator
+     */
+    @JvmField val pipelineStatisticsCalculator = PipelineStatisticsCalculator()
 
-    @JvmField
-    val pipelineManager = PipelineManager(this, pipelineStatisticsCalculator)
+    /**
+     * The pipeline manager instance in charge of managing pipelines
+     * and their execution, as well as making sure the pipeline
+     * does not take too long to process a frame
+     */
+    @JvmField val pipelineManager = PipelineManager(this, pipelineStatisticsCalculator)
 
-    @JvmField
-    val tunerManager = TunerManager(this)
+    /**
+     * The tuner manager instance in charge of managing pipeline and processor
+     * tunable variables and their values that can be changed in runtime
+     */
+    @JvmField val tunerManager = TunerManager(this)
 
-    @JvmField
-    val workspaceManager = WorkspaceManager(this)
+    /**
+     * The workspace manager instance in charge of managing user workspaces
+     */
+    @JvmField val workspaceManager = WorkspaceManager(this)
 
+    /**
+     * The current configuration of the simulator
+     * Loaded from the config json file
+     * @see Config
+     */
     val config: Config get() = configManager.config
 
+    /**
+     * The classpath scanner instance containing all the scanned classes
+     * From OpenCvPipeline, VisionProcessor, TunableField and OpMode classes
+     * @see ClasspathScan
+     */
     val classpathScan get() = Companion.classpathScan
 
+    /**
+     * The current recording session of the simulator
+     * This allows the user to record the output of the pipeline
+     * and save it to a file
+     * @see VideoRecordingSession
+     */
     var currentRecordingSession: VideoRecordingSession? = null
+
+    /**
+     * Utility in charge of limiting the FPS of the simulator
+     * @see FpsLimiter
+     */
     val fpsLimiter = FpsLimiter(30.0)
 
+    /**
+     * Manager in charge of loading and managing plugins
+     * @see PluginManager
+     */
     val pluginManager = PluginManager(this)
 
     lateinit var eocvSimThread: Thread
@@ -165,10 +235,22 @@ class EOCVSim(val params: Parameters = Parameters()) {
     private var isRestarting = false
     private var destroying = false
 
+    /**
+     * The reason why the simulator was destroyed
+     * to handle different actions when flushing
+     * the simulator away.
+     * @see destroy
+     */
     enum class DestroyReason {
         USER_REQUESTED, RESTART, CRASH
     }
 
+    /**
+     * Initializes the simulator
+     * This method is called to initialize all the components
+     * of the simulator and start the main loop
+     * @see start
+     */
     fun init() {
         eocvSimThread = Thread.currentThread()
 
@@ -197,10 +279,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
             hasScanned = true
         }
 
+        configManager.init()
+
         pluginManager.init() // woah
         pluginManager.loadPlugins()
-
-        configManager.init() //load config
 
         workspaceManager.init()
 
@@ -279,6 +361,17 @@ class EOCVSim(val params: Parameters = Parameters()) {
         start()
     }
 
+    /**
+     * Starts the main loop of the simulator
+     * This method is called after all the components
+     * of the simulator have been initialized
+     * and is responsible for running the main loop
+     * of the simulator where the static components
+     * such as the GUI, the pipelines, the input sources,
+     * and the different manages declared at the top level
+     * are explicitly updated within this method
+     * @see init
+     */
     private fun start() {
         if(Thread.currentThread() != eocvSimThread) {
             throw IllegalStateException("start() must be called from the EOCVSim thread")
@@ -351,6 +444,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
         }
     }
 
+    /**
+     * Destroys the simulator
+     * @param reason the reason why the simulator is being destroyed, it mainly allows to restart the simulator if requested
+     */
     fun destroy(reason: DestroyReason) {
         logger.warn("-- Destroying current EOCVSim ($hexCode) due to $reason, it is normal to see InterruptedExceptions and other kinds of stack traces below --")
 
@@ -373,10 +470,17 @@ class EOCVSim(val params: Parameters = Parameters()) {
         if (reason == DestroyReason.USER_REQUESTED || reason == DestroyReason.CRASH) jvmMainThread.interrupt()
     }
 
+    /**
+     * Destroys the simulator with the reason being USER_REQUESTED
+     */
     fun destroy() {
         destroy(DestroyReason.USER_REQUESTED)
     }
 
+    /**
+     * Destroys the current simulator with the reason being RESTART.
+     * This method is used to restart the simulator.
+     */
     fun restart() {
         logger.info("Restarting...")
 
@@ -386,6 +490,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
         destroy(DestroyReason.RESTART)
     }
 
+    /**
+     * Starts a recording session to record the output of the pipeline
+     * to a video file in real-time which will be prompted to the user
+     * to save it to a file after stopping the recording session.
+     */
     fun startRecordingSession() {
         if (currentRecordingSession == null) {
             currentRecordingSession = VideoRecordingSession(
@@ -400,7 +509,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
         }
     }
 
-    //stopping recording session and saving file
+    /**
+     * Stops the current recording session and prompts the user to save the recorded video
+     */
     fun stopRecordingSession() {
         currentRecordingSession?.let { itVideo ->
 
@@ -450,8 +561,18 @@ class EOCVSim(val params: Parameters = Parameters()) {
         }
     }
 
+    /**
+     * Checks if the simulator is currently recording
+     * @return true if the simulator is currently recording, false otherwise
+     */
     fun isCurrentlyRecording() = currentRecordingSession?.isRecording ?: false
 
+    /**
+     * Updates the visualizer title message
+     * with different information such as the current pipeline
+     * the workspace file, if the pipeline is paused, if the pipeline
+     * is currently building, and if the simulator is currently recording
+     */
     private fun updateVisualizerTitle() {
         val isBuildRunning = if (pipelineManager.compiledPipelineManager.isBuildRunning) "(Building)" else ""
 
@@ -469,12 +590,31 @@ class EOCVSim(val params: Parameters = Parameters()) {
         }
     }
 
+    /**
+     * Parameters class to initialize the simulator with
+     * @see EOCVSim
+     */
     class Parameters {
+        /**
+         * The initial user workspace file to load
+         * Overrides the workspace file in the config file
+         */
         var initialWorkspace: File? = null
 
+        /**
+         * The initial pipeline name to load
+         * specified by class name
+         */
         var initialPipelineName: String? = null
+
+        /**
+         * Whether the specified pipeline must be searched in the CLASSPATH or from the workspace
+         */
         var initialPipelineSource: PipelineSource? = null
 
+        /**
+         * An alternative path for the OpenCV native library to be loaded at runtime
+         */
         var opencvNativeLibrary: File? = null
     }
 

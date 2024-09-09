@@ -25,17 +25,22 @@ package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
-import io.github.deltacv.eocvsim.plugin.pluginPackageBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.nio.file.FileSystem
 import java.nio.file.FileSystems
-import java.security.MessageDigest
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
+/**
+ * ClassLoader for loading classes from a plugin jar file
+ * @param pluginJar the jar file of the plugin
+ * @param pluginContext the plugin context
+ */
 class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginContext) : ClassLoader() {
 
     private val zipFile = ZipFile(pluginJar)
@@ -53,6 +58,9 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
                 SysUtil.copyStream(inStream, outStream)
                 val bytes = outStream.toByteArray()
 
+                if(!pluginContext.hasSuperAccess)
+                    MethodCallByteCodeChecker(bytes, dynamicLoadingMethodBlacklist)
+
                 val clazz = defineClass(name, bytes, 0, bytes.size)
                 loadedClasses[name] = clazz
 
@@ -63,10 +71,18 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
 
     override fun findClass(name: String) = loadedClasses[name] ?: loadClass(name, false)
 
+    /**
+     * Load a class from the plugin jar file
+     * @param name the name of the class to load
+     * @return the loaded class
+     * @throws IllegalAccessError if the class is blacklisted
+     */
     fun loadClassStrict(name: String): Class<*> {
-        for(blacklistedPackage in pluginPackageBlacklist) {
-            if(name.contains(blacklistedPackage)) {
-                throw IllegalAccessError("Plugins are not authorized to use $name")
+        if(!pluginContext.hasSuperAccess) {
+            for (blacklistedPackage in dynamicLoadingPackageBlacklist) {
+                if (name.contains(blacklistedPackage)) {
+                    throw IllegalAccessError("Plugins are not authorized to use $name")
+                }
             }
         }
 

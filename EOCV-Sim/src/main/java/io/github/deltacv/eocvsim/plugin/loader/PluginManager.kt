@@ -24,26 +24,45 @@
 package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequestMain
 import java.io.File
 
+/**
+ * Manages the loading, enabling and disabling of plugins
+ * @param eocvSim the EOCV-Sim instance
+ */
 class PluginManager(val eocvSim: EOCVSim) {
 
     companion object {
         val PLUGIN_FOLDER = (EOCVSimFolder + File.separator + "plugins").apply { mkdir() }
         val FILESYSTEMS_FOLDER = (PLUGIN_FOLDER + File.separator + "filesystems").apply { mkdir() }
+
+        const val GENERIC_SUPERACCESS_WARN = "Plugins run in a restricted environment by default. <b>SuperAccess will grant full system access. Ensure you trust the authors before accepting.</b>"
+        const val GENERIC_LAWYER_YEET = "<br><br>By accepting, you acknowledge that deltacv is not responsible for damages caused by third-party plugins."
     }
 
     val logger by loggerForThis()
 
     private val _pluginFiles = mutableListOf<File>()
+
+    /**
+     * List of plugin files in the plugins folder
+     */
     val pluginFiles get() = _pluginFiles.toList()
 
     private val loaders = mutableMapOf<File, PluginLoader>()
 
+    /**
+     * Initializes the plugin manager
+     * Loads all plugin files in the plugins folder
+     * Creates a PluginLoader for each plugin file
+     * and stores them in the loaders map
+     * @see PluginLoader
+     */
     fun init() {
         val filesInPluginFolder = PLUGIN_FOLDER.listFiles() ?: arrayOf()
 
@@ -61,6 +80,10 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
     }
 
+    /**
+     * Loads all plugins
+     * @see PluginLoader.load
+     */
     fun loadPlugins() {
         for ((file, loader) in loaders) {
             try {
@@ -68,33 +91,68 @@ class PluginManager(val eocvSim: EOCVSim) {
             } catch (e: Throwable) {
                 logger.error("Failure loading ${file.name}", e)
                 loaders.remove(file)
-
-                EventHandler.banClassLoader(loader.pluginClassLoader)
+                loader.kill()
             }
         }
     }
 
+    /**
+     * Enables all plugins
+     * @see PluginLoader.enable
+     */
     fun enablePlugins() {
         for (loader in loaders.values) {
             try {
                 loader.enable()
             } catch (e: Throwable) {
                 logger.error("Failure enabling ${loader.pluginName} v${loader.pluginVersion}", e)
-
-                EventHandler.banClassLoader(loader.pluginClassLoader)
+                loader.kill()
             }
         }
     }
 
-
+    /**
+     * Disables all plugins
+     * @see PluginLoader.disable
+     */
     fun disablePlugins() {
         for (loader in loaders.values) {
             try {
                 loader.disable()
-                EventHandler.banClassLoader(loader.pluginClassLoader)
             } catch (e: Throwable) {
                 logger.error("Failure disabling ${loader.pluginName} v${loader.pluginVersion}", e)
+                loader.kill()
             }
         }
+    }
+
+    /**
+     * Requests super access for a plugin loader
+     *
+     * @param loader the plugin loader to request super access for
+     * @param reason the reason for requesting super access
+     * @return true if super access was granted, false otherwise
+     */
+    fun requestSuperAccessFor(loader: PluginLoader, reason: String): Boolean {
+        if(loader.hasSuperAccess) return true
+
+        var warning = "<html>$GENERIC_SUPERACCESS_WARN"
+        if(reason.trim().isNotBlank()) {
+            warning += "<br><br>$reason"
+        }
+
+        warning += GENERIC_LAWYER_YEET
+
+        warning += "</html>"
+
+        val name = "${loader.pluginName} by ${loader.pluginAuthor}".replace(" ", "-")
+
+        if(JavaProcess.exec(SuperAccessRequestMain::class.java, name, warning) == 171) {
+            eocvSim.config.superAccessPluginHashes.add(loader.pluginHash)
+            eocvSim.configManager.saveToFile()
+            return true
+        }
+
+        return false
     }
 }

@@ -21,20 +21,19 @@
  *
  */
 
-package io.github.deltacv.eocvsim.plugin
+package io.github.deltacv.eocvsim.sandbox.restrictions
 
-val pluginPackageBlacklist = setOf(
+val dynamicLoadingPackageBlacklist  = setOf(
     // System and Runtime Classes
     "java.lang.Runtime",
     "java.lang.ProcessBuilder",
     "java.lang.reflect",
 
     // File and I/O Operations
-    "java.io.File",
     "java.io.RandomAccessFile",
-    "java.nio.files.Paths",
-    "java.nio.files.Files",
-    "java.nio.files.FileSystems",
+    "java.nio.file.Paths",
+    "java.nio.file.Files",
+    "java.nio.file.FileSystems",
 
     // Security and Encryption
     "javax.crypto.Cipher",
@@ -52,12 +51,36 @@ val pluginPackageBlacklist = setOf(
     // Dynamic Code Execution
     "javax.script.ScriptEngineManager",
     "javax.script.ScriptEngine",
+    "sun.misc",
 
     // EOCV-Sim dangerous utils
     "com.github.serivesmejia.eocvsim.util.SysUtil",
-    "com.github.serivesmejia.eocvsim.util.ReflectUtil",
+    "com.github.serivesmejia.eocvsim.util.io",
     "com.github.serivesmejia.eocvsim.util.ClasspathScan",
+    "com.github.serivesmejia.eocvsim.util.JavaProcess",
+    "com.github.serivesmejia.eocvsim.util.ReflectUtil",
+    "com.github.serivesmejia.eocvsim.util.FileExtKt",
+    "com.github.serivesmejia.eocvsim.util.compiler",
+    "com.github.serivesmejia.eocvsim.config",
 
     "io.github.deltacv.eocvsim.plugin.sandbox.nio.JimfsWatcher",
     "io.github.deltacv.eocvsim.plugin.sandbox.nio.ZipToJimfs"
+)
+
+val dynamicLoadingMethodBlacklist = setOf(
+    "java.lang.System#load",
+    "java.lang.System#loadLibrary",
+    "java.lang.System#setSecurityManager",
+    "java.lang.System#getSecurityManager",
+    "java.lang.System#setProperty",
+    "java.lang.System#clearProperty",
+    "java.lang.System#setenv",
+
+    "java.lang.Class#newInstance",
+    "java.lang.Class#forName",
+
+    "java.io.File#delete",
+    "java.io.File#createNewFile",
+    "java.io.File#mkdirs",
+    "java.io.File#renameTo"
 )

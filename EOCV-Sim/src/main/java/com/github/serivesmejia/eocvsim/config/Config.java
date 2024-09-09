@@ -33,7 +33,9 @@ import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import org.opencv.core.Size;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Config {
     public volatile Theme simTheme = Theme.Light;
@@ -60,6 +62,8 @@ public class Config {
             );
 
     public volatile HashMap<String, TunableFieldPanelConfig.Config> specificTunableFieldConfig = new HashMap<>();
+
+    public volatile List<String> superAccessPluginHashes = new ArrayList<>();
 
     public Config() {
         if(SysUtil.ARCH != SysUtil.SystemArchitecture.X86_64) {

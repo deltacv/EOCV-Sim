@@ -32,12 +32,20 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * A utility class for string operations.
+ */
 public final class StrUtil {
 
     public static final Pattern URL_PATTERN = Pattern.compile(
             "((https?|ftp|gopher|telnet|file):((//)|(\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)",
             Pattern.CASE_INSENSITIVE);
 
+    /**
+     * Finds URLs in a string using a regex pattern.
+     * @param str the string to find URLs in
+     * @return an array of URLs found in the string
+     */
     public static String[] findUrlsInString(String str) {
 
         Matcher urlMatcher = URL_PATTERN.matcher(str);
@@ -54,6 +62,10 @@ public final class StrUtil {
 
     }
 
+    /**
+     * Strips the file extension of a file name.
+     * @param fileName the file name
+     */
     public static String getFileBaseName(String fileName) {
         int index = fileName.lastIndexOf('.');
         if(index == -1)
@@ -62,24 +74,23 @@ public final class StrUtil {
             return fileName.substring(0, index);
     }
 
+    /**
+     * Generates a random string from a UUID.
+     * @return the random string
+     */
     public static String random() {
         return UUID.randomUUID().toString().replace("-", "");
     }
 
+    /**
+     * Converts an exception to a string.
+     * @param ex the exception
+     * @return the exception as a string
+     */
     public static String fromException(Throwable ex) {
         StringWriter writer = new StringWriter(256);
         ex.printStackTrace(new PrintWriter(writer));
         return writer.toString().trim();
-    }
-
-    public static String cutStringBy(String str, String by, int amount) {
-        int truncateIndex = str.length();
-
-        for(int i = 0 ; i < amount ; i++) {
-            truncateIndex = str.lastIndexOf(by, truncateIndex - 1);
-        }
-
-        return str.substring(0, truncateIndex);
     }
 
     /**

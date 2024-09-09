@@ -26,6 +26,9 @@ package com.github.serivesmejia.eocvsim.pipeline.compiler
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
+import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
 import org.openftc.easyopencv.OpenCvPipeline
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -56,6 +59,8 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
                 SysUtil.copyStream(inStream, outStream)
                 val bytes = outStream.toByteArray()
 
+                MethodCallByteCodeChecker(bytes, dynamicLoadingMethodBlacklist)
+
                 val clazz = defineClass(name, bytes, 0, bytes.size)
                 loadedClasses[name] = clazz
 
@@ -70,6 +75,12 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
         var clazz = loadedClasses[name]
 
         if(clazz == null) {
+            for(blacklistedPackage in dynamicLoadingPackageBlacklist) {
+                if (name.contains(blacklistedPackage)) {
+                    throw IllegalAccessError("Dynamically loaded pipelines are not authorized to use $name")
+                }
+            }
+
             try {
                 clazz = loadClass(zipFile.getEntry(name.replace('.', '/') + ".class"))
                 if(resolve) resolveClass(clazz)

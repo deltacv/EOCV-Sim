@@ -112,7 +112,7 @@ public class Visualizer {
         try {
             theme.install();
         } catch (Exception e) {
-            logger.error("Failed to install theme " + theme.name(), e);
+            logger.error("Failed to install theme {}", theme.name(), e);
         }
 
         Icons.INSTANCE.setDark(FlatLaf.isLafDark());
@@ -126,8 +126,6 @@ public class Visualizer {
 
         String fpsMeterDescriptor = "deltacv EOCV-Sim v" + Build.standardVersionString;
         if(Build.isDev) fpsMeterDescriptor += "-dev";
-
-        onPluginGuiAttachment.run();
 
         viewport = new SwingOpenCvViewport(new Size(1080, 720), fpsMeterDescriptor);
         viewport.setDark(FlatLaf.isLafDark());
@@ -185,6 +183,8 @@ public class Visualizer {
         telemetryWithInsets.add(telemetryPanel);
 
         rightContainer.add(telemetryWithInsets);
+
+        onPluginGuiAttachment.run();
 
         //global
         frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));

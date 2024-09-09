@@ -21,7 +21,7 @@
  *
  */
 
-package io.github.deltacv.eocvsim.plugin.sandbox.nio
+package io.github.deltacv.eocvsim.sandbox.nio
 
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.google.common.jimfs.Configuration
