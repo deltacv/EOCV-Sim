@@ -29,6 +29,7 @@ import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
 import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageWhitelist
 import org.openftc.easyopencv.OpenCvPipeline
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -77,7 +78,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
         if(clazz == null) {
             for(blacklistedPackage in dynamicLoadingPackageBlacklist) {
                 if (name.contains(blacklistedPackage)) {
-                    throw IllegalAccessError("Dynamically loaded pipelines are not authorized to use $name")
+                    throw IllegalAccessError("Dynamically loaded pipelines are blacklisted to use $name")
                 }
             }
 
@@ -85,6 +86,19 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
                 clazz = loadClass(zipFile.getEntry(name.replace('.', '/') + ".class"))
                 if(resolve) resolveClass(clazz)
             } catch(e: Exception) {
+                var inWhitelist = false
+
+                for(whiteListedPackage in dynamicLoadingPackageWhitelist) {
+                    if(name.contains(whiteListedPackage)) {
+                        inWhitelist = true
+                        break
+                    }
+                }
+
+                if(!inWhitelist) {
+                    throw IllegalAccessError("Dynamically loaded pipelines are not whitelisted to use $name")
+                }
+
                 clazz = Class.forName(name) // fallback to the system classloader
             }
         }

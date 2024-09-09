@@ -23,6 +23,33 @@
 
 package io.github.deltacv.eocvsim.sandbox.restrictions
 
+val dynamicLoadingPackageWhitelist = setOf(
+    "java.lang",
+    "java.util",
+    "java.awt",
+    "javax.swing",
+    "java.nio",
+    "java.io.File",
+
+    "kotlin",
+
+    "com.github.serivesmejia.eocvsim",
+    "io.github.deltacv.eocvsim",
+    "org.firstinspires.ftc",
+    "com.qualcomm",
+    "org.opencv",
+    "org.openftc",
+    "android",
+
+    "com.moandjiezana.toml",
+    "net.lingala.zip4j",
+    "com.google.gson",
+    "com.google.jimfs",
+    "org.slf4j",
+    "com.apache.logging",
+    "com.formdev.flatlaf"
+)
+
 val dynamicLoadingPackageBlacklist  = setOf(
     // System and Runtime Classes
     "java.lang.Runtime",
@@ -35,23 +62,8 @@ val dynamicLoadingPackageBlacklist  = setOf(
     "java.nio.file.Files",
     "java.nio.file.FileSystems",
 
-    // Security and Encryption
-    "javax.crypto.Cipher",
-    "javax.crypto.KeyGenerator",
-    "javax.crypto.SecretKey",
-
-    // Security Management
-    "java.security.AccessController",
-    "java.security.KeyStore",
-    "java.security.PrivilegedAction",
-
     // Thread and Process Management
     "java.lang.Process",
-
-    // Dynamic Code Execution
-    "javax.script.ScriptEngineManager",
-    "javax.script.ScriptEngine",
-    "sun.misc",
 
     // EOCV-Sim dangerous utils
     "com.github.serivesmejia.eocvsim.util.SysUtil",
@@ -63,8 +75,7 @@ val dynamicLoadingPackageBlacklist  = setOf(
     "com.github.serivesmejia.eocvsim.util.compiler",
     "com.github.serivesmejia.eocvsim.config",
 
-    "io.github.deltacv.eocvsim.plugin.sandbox.nio.JimfsWatcher",
-    "io.github.deltacv.eocvsim.plugin.sandbox.nio.ZipToJimfs"
+    "io.github.deltacv.eocvsim.plugin.sandbox.nio.JimfsWatcher"
 )
 
 val dynamicLoadingMethodBlacklist = setOf(
@@ -82,5 +93,14 @@ val dynamicLoadingMethodBlacklist = setOf(
     "java.io.File#delete",
     "java.io.File#createNewFile",
     "java.io.File#mkdirs",
-    "java.io.File#renameTo"
+    "java.io.File#renameTo",
+    "java.io.File#setExecutable",
+    "java.io.File#setReadable",
+    "java.io.File#setWritable",
+    "java.io.File#setLastModified",
+    "java.io.File#deleteOnExit",
+    "java.io.File#setReadOnly",
+    "java.io.File#setWritable",
+    "java.io.File#setReadable",
+    "java.io.File#setExecutable",
 )

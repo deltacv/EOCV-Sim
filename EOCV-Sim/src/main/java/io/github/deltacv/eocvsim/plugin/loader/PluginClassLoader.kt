@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
 import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageWhitelist
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -81,7 +82,7 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
         if(!pluginContext.hasSuperAccess) {
             for (blacklistedPackage in dynamicLoadingPackageBlacklist) {
                 if (name.contains(blacklistedPackage)) {
-                    throw IllegalAccessError("Plugins are not authorized to use $name")
+                    throw IllegalAccessError("Plugins are blacklisted to use $name")
                 }
             }
         }
@@ -97,6 +98,19 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
                 clazz = loadClassStrict(name)
                 if(resolve) resolveClass(clazz)
             } catch(e: Exception) {
+                var inWhitelist = false
+
+                for(whiteListedPackage in dynamicLoadingPackageWhitelist) {
+                    if(name.contains(whiteListedPackage)) {
+                        inWhitelist = true
+                        break
+                    }
+                }
+
+                if(!inWhitelist && !pluginContext.hasSuperAccess) {
+                    throw IllegalAccessError("Plugins are not whitelisted to use $name")
+                }
+
                 // fallback to the system classloader
                 clazz = Class.forName(name)
             }

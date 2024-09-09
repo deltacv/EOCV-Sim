@@ -41,12 +41,6 @@ class CreateSourcePanel(eocvSim: EOCVSim) : JPanel(GridLayout(2, 1)) {
             { it.coolName }, { SourceType.fromCoolName(it) }
     )
 
-    private val cameraDriverComboBox = EnumComboBox(
-            "Camera driver: ", WebcamDriver::class.java, WebcamDriver.values(),
-            { it.name.replace("_", " ") }, { WebcamDriver.valueOf(it.replace(" ", "_")) }
-
-    )
-
     private val sourceSelectPanel    = JPanel(FlowLayout(FlowLayout.CENTER))
 
     private val nextButton = JButton("Next")
