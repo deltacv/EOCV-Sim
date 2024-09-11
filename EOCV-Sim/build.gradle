@@ -6,6 +6,8 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'com.github.johnrengelman.shadow'
     id 'maven-publish'
+
+    id 'edu.sc.seis.launch4j' version '3.0.6'
 }
 
 apply from: '../build.common.gradle'
@@ -31,6 +33,17 @@ test {
 }
 
 apply from: '../test-logging.gradle'
+
+launch4j {
+    mainClassName = 'com.github.serivesmejia.eocvsim.Main'
+    icon = "${projectDir}/src/main/resources/images/icon/ico_eocvsim.ico"
+
+    outfile = "${project.name}-${standardVersion}.exe"
+
+    copyConfigurable = [] // Prevents copying dependencies
+    jarTask = shadowJar
+
+}
 
 dependencies {
     api project(':Common')

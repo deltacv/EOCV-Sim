@@ -360,9 +360,9 @@ class PipelineManager(
                     )
 
                     eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = previousPipelineIndex
-                    changePipeline(currentPipelineIndex)
+                    changePipeline(previousPipelineIndex)
 
-                    logger.error("Error while initializing requested pipeline, $currentPipelineName", ex)
+                    logger.error("Error while initializing requested pipeline, $currentPipelineName. Falling back to previous one.", ex)
                 } else {
                     updateExceptionTracker(ex)
                 }
@@ -463,10 +463,14 @@ class PipelineManager(
     }
 
     fun addInstantiator(instantiatorFor: Class<*>, instantiator: PipelineInstantiator) {
-        pipelineInstantiators.put(instantiatorFor, instantiator)
+        pipelineInstantiators[instantiatorFor] = instantiator
     }
 
     fun getInstantiatorFor(clazz: Class<*>): PipelineInstantiator? {
+        if(pipelineInstantiators.containsKey(clazz)) {
+            return pipelineInstantiators[clazz]
+        }
+
         for((instantiatorFor, instantiator) in pipelineInstantiators) {
             if(ReflectUtil.hasSuperclass(clazz, instantiatorFor)) {
                 return instantiator

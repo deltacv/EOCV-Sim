@@ -33,6 +33,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
+import java.net.URL
 import java.nio.file.FileSystems
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -94,26 +95,26 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
         var clazz = loadedClasses[name]
 
         if(clazz == null) {
-            try {
-                clazz = loadClassStrict(name)
-                if(resolve) resolveClass(clazz)
-            } catch(e: Exception) {
-                var inWhitelist = false
+            var inWhitelist = false
 
-                for(whiteListedPackage in dynamicLoadingPackageWhitelist) {
-                    if(name.contains(whiteListedPackage)) {
-                        inWhitelist = true
-                        break
-                    }
+            for(whiteListedPackage in dynamicLoadingPackageWhitelist) {
+                if(name.contains(whiteListedPackage)) {
+                    inWhitelist = true
+                    break
                 }
-
-                if(!inWhitelist && !pluginContext.hasSuperAccess) {
-                    throw IllegalAccessError("Plugins are not whitelisted to use $name")
-                }
-
-                // fallback to the system classloader
-                clazz = Class.forName(name)
             }
+
+            if(!inWhitelist && !pluginContext.hasSuperAccess) {
+                throw IllegalAccessError("Plugins are not whitelisted to use $name")
+            }
+
+            clazz = try {
+                Class.forName(name)
+            } catch (e: ClassNotFoundException) {
+                loadClassStrict(name)
+            }
+
+            if(resolve) resolveClass(clazz)
         }
 
         return clazz!!
@@ -129,6 +130,23 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
         }
 
         return super.getResourceAsStream(name)
+    }
+
+    override fun getResource(name: String): URL? {
+        // Try to find the resource inside the plugin JAR
+        val entry = zipFile.getEntry(name)
+
+        if (entry != null) {
+            try {
+                // Construct a URL for the resource inside the plugin JAR
+                return URL("jar:file:${pluginJar.absolutePath}!/$name")
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+        // Fallback to the parent classloader if not found in the plugin JAR
+        return super.getResource(name)
     }
 
     override fun toString() = "PluginClassLoader@\"${pluginJar.name}\""
