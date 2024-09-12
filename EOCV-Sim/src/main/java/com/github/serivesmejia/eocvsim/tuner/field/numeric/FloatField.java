@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.tuner.field.numeric;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.tuner.field.NumericField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
@@ -33,33 +34,31 @@ import java.lang.reflect.Field;
 @RegisterTunableField
 public class FloatField extends NumericField<Float> {
 
-    protected float beforeValue;
-
-    public FloatField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-        super(target, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
+    public FloatField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+        super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
         value = (float) initialFieldValue;
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
-
+    public void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException {
         try {
             value = Float.parseFloat(newValue);
         } catch (NumberFormatException ex) {
             throw new IllegalArgumentException("Parameter should be a valid numeric String");
         }
 
-        setPipelineFieldValue(value);
-
+        setFieldValue(index, value);
         beforeValue = value;
-
     }
 
     @Override
-    public boolean hasChanged() {
-        boolean hasChanged = value != beforeValue;
-        beforeValue = value;
-        return hasChanged;
+    public void setFieldValue(int index, Object value) throws IllegalAccessException {
+        if(value instanceof Number) {
+            this.value = ((Number) value).floatValue();
+        } else {
+            this.value = (float)value;
+        }
+        setPipelineFieldValue(this.value);
     }
 
 }

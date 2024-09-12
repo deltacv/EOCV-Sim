@@ -151,7 +151,7 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
                 if(i < colorScalar.`val`.size) {
                     val colorVal = colorScalar.`val`[i]
                     fieldPanel.setFieldValue(i, colorVal)
-                    fieldPanel.tunableField.setGuiFieldValue(i, colorVal.toString())
+                    fieldPanel.tunableField.setFieldValueFromGui(i, colorVal.toString())
                 } else { break } //keep looping until we write the entire scalar value
             }
             colorPickButton.isSelected = false

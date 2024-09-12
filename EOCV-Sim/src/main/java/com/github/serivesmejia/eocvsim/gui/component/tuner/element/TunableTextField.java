@@ -123,7 +123,7 @@ public class TunableTextField extends JTextField {
             Runnable changeFieldValue = () -> {
                 if ((!hasValidText || !tunableField.isOnlyNumbers() || !getText().trim().equals(""))) {
                     try {
-                        tunableField.setGuiFieldValue(index, getText());
+                        tunableField.setFieldValueFromGui(index, getText());
                     } catch (Exception e) {
                         setRedBorder();
                     }

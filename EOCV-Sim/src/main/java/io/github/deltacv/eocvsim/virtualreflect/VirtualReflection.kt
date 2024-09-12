@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Sebastian Erives
+ * Copyright (c) 2022 Sebastian Erives
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,12 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.pipeline.instantiator
+package io.github.deltacv.eocvsim.virtualreflect
 
-import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext
-import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
-import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.openftc.easyopencv.OpenCvPipeline
+interface VirtualReflection {
 
-object DefaultPipelineInstantiator : PipelineInstantiator {
+    fun contextOf(c: Class<*>): VirtualReflectContext?
 
-    override fun instantiate(clazz: Class<*>, telemetry: Telemetry) = try {
-        //instantiate pipeline if it has a constructor of a telemetry parameter
-        val constructor = clazz.getConstructor(Telemetry::class.java)
-        constructor.newInstance(telemetry) as OpenCvPipeline
-    } catch (ex: NoSuchMethodException) {
-        //instantiating with a constructor of no params
-        val constructor = clazz.getConstructor()
-        constructor.newInstance() as OpenCvPipeline
-    }
-
-    override fun virtualReflectOf(pipeline: OpenCvPipeline) = JvmVirtualReflection
-
-    override fun variableTunerTarget(pipeline: OpenCvPipeline) = pipeline
+    fun contextOf(value: Any): VirtualReflectContext?
 
 }

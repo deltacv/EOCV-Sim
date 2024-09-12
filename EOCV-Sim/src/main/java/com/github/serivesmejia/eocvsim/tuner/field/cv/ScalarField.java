@@ -27,10 +27,10 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.opencv.core.Scalar;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 
 @RegisterTunableField
@@ -39,34 +39,33 @@ public class ScalarField extends TunableField<Scalar> {
     int scalarSize;
     Scalar scalar;
 
-    double[] lastVal = {};
+    double[] lastVal = {0, 0, 0, 0};
 
     volatile boolean hasChanged = false;
 
-    public ScalarField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-        super(target, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
+    public ScalarField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+        super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
 
         if(initialFieldValue == null) {
             scalar = new Scalar(0, 0, 0);
         } else {
-            scalar = (Scalar) initialFieldValue;
+            scalar = ((Scalar) initialFieldValue).clone();
         }
+
         scalarSize = scalar.val.length;
 
-        setGuiFieldAmount(scalarSize);
+        setGuiFieldAmount(4);
         setRecommendedPanelMode(TunableFieldPanel.Mode.SLIDERS);
     }
 
     @Override
-    public void init() { }
+    public void init() {
+        reflectionField.set(scalar);
+    }
 
     @Override
     public void update() {
-        try {
-            scalar = (Scalar) reflectionField.get(target);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        scalar = (Scalar) reflectionField.get();
 
         hasChanged = !Arrays.equals(scalar.val, lastVal);
 
@@ -74,7 +73,10 @@ public class ScalarField extends TunableField<Scalar> {
             updateGuiFieldValues();
         }
 
-        lastVal = scalar.val.clone();
+        lastVal[0] = scalar.val[0];
+        lastVal[1] = scalar.val[1];
+        lastVal[2] = scalar.val[2];
+        lastVal[3] = scalar.val[3];
     }
 
     @Override
@@ -85,16 +87,28 @@ public class ScalarField extends TunableField<Scalar> {
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
+    public void setFieldValue(int index, Object newValue) throws IllegalAccessException {
         try {
-            scalar.val[index] = Double.parseDouble(newValue);
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Parameter should be a valid numeric String");
+            if(newValue instanceof String) {
+                scalar.val[index] = Double.parseDouble((String) newValue);
+            } else {
+                scalar.val[index] = (double)newValue;
+            }
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Parameter should be a valid number", ex);
         }
 
         setPipelineFieldValue(scalar);
 
-        lastVal = scalar.val.clone();
+        lastVal[0] = scalar.val[0];
+        lastVal[1] = scalar.val[1];
+        lastVal[2] = scalar.val[2];
+        lastVal[3] = scalar.val[3];
+    }
+
+    @Override
+    public void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException {
+        setFieldValue(index, newValue);
     }
 
     @Override

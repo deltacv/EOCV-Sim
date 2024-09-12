@@ -45,7 +45,7 @@ class TunableSlider(val index: Int,
 
     private val changeFieldValue = EventListener {
         if(inControl) {
-            tunableField.setGuiFieldValue(index, scaledValue.toString())
+            tunableField.setFieldValueFromGui(index, scaledValue.toString())
 
             if (eocvSim.pipelineManager.paused)
                 eocvSim.pipelineManager.setPaused(false)

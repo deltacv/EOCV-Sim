@@ -27,13 +27,14 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanelConfig;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
 
 public abstract class TunableField<T> {
 
-    protected Field reflectionField;
+    protected VirtualField reflectionField;
     protected TunableFieldPanel fieldPanel;
 
     protected Object target;
@@ -49,16 +50,16 @@ public abstract class TunableField<T> {
 
     private TunableFieldPanel.Mode recommendedMode = null;
 
-    public TunableField(Object target, Field reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
+    public TunableField(Object target, VirtualField reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
         this.reflectionField = reflectionField;
         this.target = target;
         this.allowMode = allowMode;
         this.eocvSim = eocvSim;
 
-        initialFieldValue = reflectionField.get(target);
+        initialFieldValue = reflectionField.get();
     }
 
-    public TunableField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public TunableField(Object target, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         this(target, reflectionField, eocvSim, AllowMode.TEXT);
     }
 
@@ -70,14 +71,15 @@ public abstract class TunableField<T> {
 
     public void setPipelineFieldValue(T newValue) throws IllegalAccessException {
         if (hasChanged()) { //execute if value is not the same to save resources
-            reflectionField.set(target, newValue);
+            reflectionField.set(newValue);
             onValueChange.run();
         }
     }
 
-    public abstract void setGuiFieldValue(int index, String newValue) throws IllegalAccessException;
+    public abstract void setFieldValue(int index, Object newValue) throws IllegalAccessException;
+    public abstract void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException;
 
-    public void setGuiComboBoxValue(int index, String newValue) throws IllegalAccessException { }
+    public void setComboBoxValueFromGui(int index, String newValue) throws IllegalAccessException { }
 
     public final void setTunableFieldPanel(TunableFieldPanel fieldPanel) {
         this.fieldPanel = fieldPanel;

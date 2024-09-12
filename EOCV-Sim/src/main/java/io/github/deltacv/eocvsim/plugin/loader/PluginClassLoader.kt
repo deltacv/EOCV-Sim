@@ -45,7 +45,12 @@ import java.util.zip.ZipFile
  */
 class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginContext) : ClassLoader() {
 
-    private val zipFile = ZipFile(pluginJar)
+    private val zipFile = try {
+        ZipFile(pluginJar)
+    } catch(e: Exception) {
+        throw IOException("Failed to open plugin JAR file", e)
+    }
+
     private val loadedClasses = mutableMapOf<String, Class<*>>()
 
     init {
@@ -88,7 +93,7 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
             }
         }
 
-        return loadClass(zipFile.getEntry(name.replace('.', '/') + ".class"))
+        return loadClass(zipFile.getEntry(name.replace('.', '/') + ".class") ?: throw ClassNotFoundException(name))
     }
 
     override fun loadClass(name: String, resolve: Boolean): Class<*> {

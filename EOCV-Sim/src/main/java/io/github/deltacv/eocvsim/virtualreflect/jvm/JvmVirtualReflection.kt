@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Sebastian Erives
+ * Copyright (c) 2022 Sebastian Erives
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,27 +21,27 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.pipeline.instantiator
+package io.github.deltacv.eocvsim.virtualreflect.jvm
 
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext
-import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
-import org.firstinspires.ftc.robotcore.external.Telemetry
-import org.openftc.easyopencv.OpenCvPipeline
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
+import java.lang.ref.WeakReference
+import java.util.*
 
-object DefaultPipelineInstantiator : PipelineInstantiator {
+object JvmVirtualReflection : VirtualReflection {
 
-    override fun instantiate(clazz: Class<*>, telemetry: Telemetry) = try {
-        //instantiate pipeline if it has a constructor of a telemetry parameter
-        val constructor = clazz.getConstructor(Telemetry::class.java)
-        constructor.newInstance(telemetry) as OpenCvPipeline
-    } catch (ex: NoSuchMethodException) {
-        //instantiating with a constructor of no params
-        val constructor = clazz.getConstructor()
-        constructor.newInstance() as OpenCvPipeline
+    private val cache = WeakHashMap<Any, WeakReference<JvmVirtualReflectContext>>()
+
+    override fun contextOf(c: Class<*>) = cacheContextOf(null, c)
+
+    override fun contextOf(value: Any) = cacheContextOf(value, value::class.java)
+
+    private fun cacheContextOf(value: Any?, clazz: Class<*>): VirtualReflectContext {
+        if(!cache.containsKey(value) || cache[value]?.get() == null) {
+            cache[value] = WeakReference(JvmVirtualReflectContext(value, clazz))
+        }
+
+        return cache[value]!!.get()!!
     }
-
-    override fun virtualReflectOf(pipeline: OpenCvPipeline) = JvmVirtualReflection
-
-    override fun variableTunerTarget(pipeline: OpenCvPipeline) = pipeline
 
 }

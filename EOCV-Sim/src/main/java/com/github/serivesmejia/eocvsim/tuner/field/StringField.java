@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
@@ -40,8 +41,8 @@ public class StringField extends TunableField<String> {
 
     volatile boolean hasChanged = false;
 
-    public StringField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-        super(target, reflectionField, eocvSim, AllowMode.TEXT);
+    public StringField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+        super(instance, reflectionField, eocvSim, AllowMode.TEXT);
 
         if(initialFieldValue != null) {
             value = (String) initialFieldValue;
@@ -72,14 +73,16 @@ public class StringField extends TunableField<String> {
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
+    public void setFieldValue(int index, Object newValue) throws IllegalAccessException {
+        setPipelineFieldValue((String)newValue);
+    }
 
+    @Override
+    public void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException {
         value = newValue;
-
-        setPipelineFieldValue(value);
+        setFieldValue(index, value);
 
         lastVal = value;
-
     }
 
     @Override
