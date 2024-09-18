@@ -269,6 +269,12 @@ class PipelineManager(
         val telemetry = currentTelemetry
         onUpdate.run()
 
+        for(activeContext in activePipelineContexts.toTypedArray()) {
+            if(!activeContext.isActive) {
+                activePipelineContexts.remove(activeContext)
+            }
+        }
+
         if(activePipelineContexts.size > MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS) {
             throw MaxActiveContextsException("Current amount of active pipeline coroutine contexts (${activePipelineContexts.size}) is more than the maximum allowed. This generally means that there are multiple pipelines stuck in processFrame() running in the background, check for any lengthy operations in your pipelines.")
         }
@@ -358,10 +364,6 @@ class PipelineManager(
                     }
                 }
 
-                if(!isActive) {
-                    activePipelineContexts.remove(this.coroutineContext)
-                }
-
                 updateExceptionTracker()
             } catch (ex: Exception) { //handling exceptions from pipelines
                 if(!hasInitCurrentPipeline) {
@@ -397,8 +399,6 @@ class PipelineManager(
                 withTimeout(timeout) {
                     pipelineJob.join()
                 }
-
-                activePipelineContexts.remove(currentPipelineContext)
             } catch (ex: TimeoutCancellationException) {
                 //oops, pipeline ran out of time! we'll fall back
                 //to default pipeline to avoid further issues.

@@ -43,12 +43,11 @@ public final class JavaProcess {
      * @throws InterruptedException if the process is interrupted
      * @throws IOException if an I/O error occurs
      */
-    public static int exec(Class klass, String... args) throws InterruptedException, IOException {
+    public static int execClasspath(Class klass, String classpath, String... args) throws InterruptedException, IOException {
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome +
                 File.separator + "bin" +
                 File.separator + "java";
-        String classpath = System.getProperty("java.class.path");
         String className = klass.getName();
 
         List<String> command = new LinkedList<>();
@@ -65,6 +64,11 @@ public final class JavaProcess {
         Process process = builder.inheritIO().start();
         process.waitFor();
         return process.exitValue();
+    }
+
+
+    public static int exec(Class klass, String... args) throws InterruptedException, IOException {
+        return execClasspath(klass, System.getProperty("java.class.path"), args);
     }
 
 }
