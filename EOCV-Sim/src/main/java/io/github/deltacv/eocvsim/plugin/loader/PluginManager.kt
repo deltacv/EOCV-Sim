@@ -81,10 +81,6 @@ class PluginManager(val eocvSim: EOCVSim) {
             loaders[pluginFile] = PluginLoader(pluginFile, eocvSim)
         }
 
-        Runtime.getRuntime().addShutdownHook(Thread {
-            disablePlugins()
-        })
-
         isEnabled = true
     }
 
@@ -151,7 +147,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         var warning = "<html>$GENERIC_SUPERACCESS_WARN"
         if(reason.trim().isNotBlank()) {
-            warning += "<br><br>$reason"
+            warning += "<br><br><i>$reason</i>"
         }
 
         warning += GENERIC_LAWYER_YEET

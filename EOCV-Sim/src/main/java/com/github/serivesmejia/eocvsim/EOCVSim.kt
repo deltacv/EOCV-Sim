@@ -242,7 +242,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
      * @see destroy
      */
     enum class DestroyReason {
-        USER_REQUESTED, RESTART, CRASH
+        USER_REQUESTED, THREAD_EXIT, RESTART, CRASH
     }
 
     /**
@@ -437,9 +437,12 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         logger.warn("Main thread interrupted ($hexCode)")
 
+        if(!destroying) {
+            destroy(DestroyReason.THREAD_EXIT)
+        }
+
         if (isRestarting) {
             Thread.interrupted() //clear interrupted flag
-
             EOCVSim(params).init()
         }
     }
@@ -464,8 +467,13 @@ class EOCVSim(val params: Parameters = Parameters()) {
         configManager.saveToFile()
         visualizer.close()
 
-        eocvSimThread.interrupt()
         destroying = true
+
+        if(reason == DestroyReason.THREAD_EXIT) {
+            exitProcess(0)
+        } else {
+            eocvSimThread.interrupt()
+        }
 
         if (reason == DestroyReason.USER_REQUESTED || reason == DestroyReason.CRASH) jvmMainThread.interrupt()
     }

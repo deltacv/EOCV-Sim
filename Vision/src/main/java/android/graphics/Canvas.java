@@ -60,6 +60,9 @@ public class Canvas {
         return this;
     }
 
+    public void drawPoint(float x, float y, Paint paint) {
+        theCanvas.drawPoint(x, y, paint.thePaint);
+    }
 
     public void drawRoundRect(float l, float t, float r, float b, float xRad, float yRad, Paint rectPaint) {
         theCanvas.drawRRect(RRect.makeLTRB(l, t, r, b, xRad, yRad), rectPaint.thePaint);
