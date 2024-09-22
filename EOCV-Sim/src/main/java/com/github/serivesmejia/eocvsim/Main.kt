@@ -17,6 +17,8 @@ var currentMainThread: Thread = jvmMainThread
  * @see CommandLine
  */
 fun main(args: Array<String>) {
+    System.setProperty("sun.java2d.d3d", "false")
+
     val result = CommandLine(
         EOCVSimCommandInterface()
     ).setCaseInsensitiveEnumValuesAllowed(true).execute(*args)

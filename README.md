@@ -88,6 +88,19 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+
+### [v3.7.0 - FTC SDK 10.1 & Refined Plugin System](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.4)
+- This is the 23nd release for EOCV-Sim
+    - Changelog
+        - Addresses the changes made in the FTC SDK 10.1 for the 2024-2025 season:
+            - Adds new OpenCV-based VisionProcessors (which may be attached to a VisionPortal in either Java or Blocks) to help teams implement color processing via computer vision in the INTO THE DEEP game
+        - Internal changes:
+            - Fixes virtual filesystem by scrapping jimfs and using a zip filesystem.
+            - Implements virtualreflect api for variable tuner to abstract away the reflection api and allow for future diverse implementations.
+            - Implements StreamableOpenCvPipeline to allow for diverse implementations of streaming different Mat stages of a pipeline to a target.
+    - Bugfixes:
+        - Fixes exception loop when an exception is thrown from pipeline init
+
 ### [v3.6.0 - Plugin System & Into the Deep AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.4)
 - This is the 22nd release for EOCV-Sim
     - Changelog

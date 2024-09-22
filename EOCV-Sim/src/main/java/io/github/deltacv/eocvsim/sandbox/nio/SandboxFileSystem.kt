@@ -24,74 +24,29 @@
 package io.github.deltacv.eocvsim.sandbox.nio
 
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import com.google.common.jimfs.Configuration
-import com.google.common.jimfs.Feature
-import com.google.common.jimfs.Jimfs
-import com.google.common.jimfs.PathType
 import io.github.deltacv.eocvsim.plugin.loader.PluginLoader
-import java.io.FileNotFoundException
 import java.nio.file.*
 import java.nio.file.attribute.FileAttribute
-import java.util.zip.ZipFile
 
 class SandboxFileSystem(loader: PluginLoader) : FileSystem() {
 
-    val parent = Jimfs.newFileSystem(
-        Configuration.builder(PathType.unix())
-            .setRoots("/")
-            .setWorkingDirectory("/")
-            .setAttributeViews("basic")
-            .setSupportedFeatures(Feature.SECURE_DIRECTORY_STREAM, Feature.FILE_CHANNEL)
-            .build()
-    )
-    private val jimfsWatcher = JimfsWatcher(parent, loader.fileSystemZipPath)
-
-    private val zipFile = ZipFile(loader.fileSystemZipPath.toFile())
+    val parent = FileSystems.newFileSystem(loader.fileSystemZipPath, null)
 
     val logger by loggerForThis()
 
     init {
         logger.info("Loading filesystem ${loader.hash()}")
+        Runtime.getRuntime().addShutdownHook(Thread {
+            if(isOpen) {
+                logger.info("Unloading filesystem ${loader.hash()} on shutdown")
+                close()
+            }
+        })
     }
 
-    private fun checkForPath(path: Path): Boolean {
-        return if (Files.exists(path)) {
-            true
-        } else {
-            // Attempt to load the file if it doesn't exist
-            try {
-                loadFileToJimfs(path)
-            } catch(_: FileNotFoundException) {}
-
-            true
-        }
-    }
-
-    private fun loadFileToJimfs(path: Path) {
-        // Convert the path to a string relative to the root
-        val zipEntryPath = convertPathToZipEntryPath(path)
-        val zipEntry = zipFile.getEntry(zipEntryPath) ?: throw FileNotFoundException("File not found in ZIP: $zipEntryPath")
-
-        // Ensure the parent directories exist in Jimfs before writing the file
-        val parentDir = path.parent
-        if (parentDir != null && !Files.exists(parentDir)) {
-            Files.createDirectories(parentDir)
-        }
-
-        zipFile.getInputStream(zipEntry).use { inputStream ->
-            Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING)
-        }
-    }
-
-    private fun convertPathToZipEntryPath(path: Path): String {
-        // Ensure the path is normalized and create a relative path for ZIP entries
-        val normalizedPath = path.normalize()
-        // Convert the path to a string with a leading directory (e.g., "work/")
-        return normalizedPath.toString().replace("\\", "/")
-    }
+    private fun checkForPath(path: Path) = Files.exists(path)
 
     override fun close() {
-        jimfsWatcher.stop()
         parent.close()
     }
 
@@ -125,7 +80,7 @@ class SandboxFileSystem(loader: PluginLoader) : FileSystem() {
     }
 
     fun exists(path: Path, vararg options: LinkOption): Boolean {
-        checkForPath(path)
+        checkIfPathIsSandboxed(path)
         return Files.exists(path, *options)
     }
 
@@ -159,6 +114,16 @@ class SandboxFileSystem(loader: PluginLoader) : FileSystem() {
     fun write(path: Path, bytes: ByteArray, vararg options: OpenOption): Path {
         checkIfPathIsSandboxed(path)
         return Files.write(path, bytes, *options)
+    }
+
+    fun createDirectory(dir: Path, vararg attrs: FileAttribute<*>) {
+        checkIfPathIsSandboxed(dir)
+        Files.createDirectory(dir, *attrs)
+    }
+
+    fun createDirectories(dir: Path, vararg attrs: FileAttribute<*>) {
+        checkIfPathIsSandboxed(dir)
+        Files.createDirectories(dir, *attrs)
     }
 
 }

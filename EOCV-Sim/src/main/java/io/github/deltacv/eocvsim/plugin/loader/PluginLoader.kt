@@ -42,7 +42,7 @@ import java.security.MessageDigest
  * @param pluginFile the jar file of the plugin
  * @param eocvSim the EOCV-Sim instance
  */
-class PluginLoader(private val pluginFile: File, val eocvSim: EOCVSim) {
+class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
 
     val logger by loggerForThis()
 

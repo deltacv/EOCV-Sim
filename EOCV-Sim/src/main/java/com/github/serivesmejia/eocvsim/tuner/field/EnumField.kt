@@ -4,12 +4,13 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
-import java.lang.reflect.Field
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField
+import org.openftc.easyopencv.OpenCvPipeline
 
 @RegisterTunableField
-class EnumField(target: Any,
-                reflectionField: Field,
-                eocvSim: EOCVSim) : TunableField<Enum<*>>(target, reflectionField, eocvSim, AllowMode.TEXT) {
+class EnumField(private val instance: OpenCvPipeline,
+                reflectionField: VirtualField,
+                eocvSim: EOCVSim) : TunableField<Enum<*>>(instance, reflectionField, eocvSim, AllowMode.TEXT) {
 
     val values = reflectionField.type.enumConstants
 
@@ -39,11 +40,15 @@ class EnumField(target: Any,
         fieldPanel.setComboBoxSelection(0, currentValue)
     }
 
-    override fun setGuiComboBoxValue(index: Int, newValue: String) = setGuiFieldValue(index, newValue)
+    override fun setFieldValue(index: Int, newValue: Any) {
+        reflectionField.set(newValue)
+    }
 
-    override fun setGuiFieldValue(index: Int, newValue: String) {
+    override fun setComboBoxValueFromGui(index: Int, newValue: String) = setFieldValueFromGui(index, newValue)
+
+    override fun setFieldValueFromGui(index: Int, newValue: String) {
         currentValue = java.lang.Enum.valueOf(initialValue::class.java, newValue)
-        reflectionField.set(target, currentValue)
+        setFieldValue(index, currentValue)
     }
 
     override fun getValue() = currentValue
@@ -54,7 +59,7 @@ class EnumField(target: Any,
         return values
     }
 
-    override fun hasChanged() = reflectionField.get(target) != beforeValue
+    override fun hasChanged() = reflectionField.get() != beforeValue
 
     class EnumFieldAcceptor : TunableFieldAcceptor {
         override fun accept(clazz: Class<*>) = clazz.isEnum

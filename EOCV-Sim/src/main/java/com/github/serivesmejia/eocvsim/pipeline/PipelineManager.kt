@@ -40,6 +40,10 @@ import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.common.image.MatPoster
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
+import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryImpl
@@ -89,13 +93,20 @@ class PipelineManager(
         private set
     @Volatile var currentPipelineData: PipelineData? = null
         private set
-    var currentTunerTarget: Any? = null
-        private set
     var currentPipelineName = ""
         private set
     var currentPipelineIndex = -1
         private set
     var previousPipelineIndex = 0
+
+    var virtualReflect: VirtualReflection = JvmVirtualReflection
+        set(value) {
+            eocvSim.tunerManager.setVirtualReflection(value)
+            field = value
+        }
+
+    var reflectTarget: Any? = null
+        private set
 
     @Volatile var previousPipeline: OpenCvPipeline? = null
         private set
@@ -130,7 +141,7 @@ class PipelineManager(
 
     var applyLatestSnapshotOnChange = false
 
-    val snapshotFieldFilter: (Field) -> Boolean = {
+    val snapshotFieldFilter: (VirtualField) -> Boolean = {
         // only snapshot fields managed by the variable tuner
         // when getTunableFieldOf returns null, it means that
         // it wasn't able to find a suitable TunableField for
@@ -258,6 +269,12 @@ class PipelineManager(
         val telemetry = currentTelemetry
         onUpdate.run()
 
+        for(activeContext in activePipelineContexts.toTypedArray()) {
+            if(!activeContext.isActive) {
+                activePipelineContexts.remove(activeContext)
+            }
+        }
+
         if(activePipelineContexts.size > MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS) {
             throw MaxActiveContextsException("Current amount of active pipeline coroutine contexts (${activePipelineContexts.size}) is more than the maximum allowed. This generally means that there are multiple pipelines stuck in processFrame() running in the background, check for any lengthy operations in your pipelines.")
         }
@@ -347,22 +364,18 @@ class PipelineManager(
                     }
                 }
 
-                if(!isActive) {
-                    activePipelineContexts.remove(this.coroutineContext)
-                }
-
                 updateExceptionTracker()
             } catch (ex: Exception) { //handling exceptions from pipelines
                 if(!hasInitCurrentPipeline) {
-                    pipelineExceptionTracker.addMessage("Error while initializing requested pipeline, \"$currentPipelineName\". Falling back to previous one.")
+                    pipelineExceptionTracker.addMessage("Error while initializing requested pipeline, \"$currentPipelineName\". Falling back to default.")
                     pipelineExceptionTracker.addMessage(
                         StrUtil.fromException(ex).trim()
                     )
 
-                    eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = previousPipelineIndex
-                    changePipeline(currentPipelineIndex)
+                    eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = 0
+                    changePipeline(0)
 
-                    logger.error("Error while initializing requested pipeline, $currentPipelineName", ex)
+                    logger.error("Error while initializing requested pipeline, $currentPipelineName. Falling back to default.", ex)
                 } else {
                     updateExceptionTracker(ex)
                 }
@@ -386,8 +399,6 @@ class PipelineManager(
                 withTimeout(timeout) {
                     pipelineJob.join()
                 }
-
-                activePipelineContexts.remove(currentPipelineContext)
             } catch (ex: TimeoutCancellationException) {
                 //oops, pipeline ran out of time! we'll fall back
                 //to default pipeline to avoid further issues.
@@ -463,10 +474,14 @@ class PipelineManager(
     }
 
     fun addInstantiator(instantiatorFor: Class<*>, instantiator: PipelineInstantiator) {
-        pipelineInstantiators.put(instantiatorFor, instantiator)
+        pipelineInstantiators[instantiatorFor] = instantiator
     }
 
     fun getInstantiatorFor(clazz: Class<*>): PipelineInstantiator? {
+        if(pipelineInstantiators.containsKey(clazz)) {
+            return pipelineInstantiators[clazz]
+        }
+
         for((instantiatorFor, instantiator) in pipelineInstantiators) {
             if(ReflectUtil.hasSuperclass(clazz, instantiatorFor)) {
                 return instantiator
@@ -601,16 +616,18 @@ class PipelineManager(
         previousPipelineIndex = currentPipelineIndex
         previousPipeline = currentPipeline
 
-        currentPipeline      = nextPipeline
-        currentPipelineData  = pipelines[index]
-        currentTelemetry     = nextTelemetry
-        currentPipelineIndex = index
-        currentPipelineName  = currentPipeline!!.javaClass.simpleName
-        currentTunerTarget   = instantiator.variableTunerTargetObject(currentPipeline!!)
+        currentPipeline       = nextPipeline
+        currentPipelineData   = pipelines[index]
+        currentTelemetry      = nextTelemetry
+        currentPipelineIndex  = index
+        currentPipelineName   = currentPipeline!!.javaClass.simpleName
+
+        virtualReflect        = instantiator.virtualReflectOf(currentPipeline!!)
+        reflectTarget         = instantiator.variableTunerTarget(currentPipeline!!)
 
         currentTelemetry?.update() // clear telemetry
 
-        val snap = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
+        val snap = PipelineSnapshot(virtualReflect.contextOf(reflectTarget!!)!!, snapshotFieldFilter)
 
         lastInitialSnapshot = if(applyLatestSnapshot) {
             applyLatestSnapshot()
@@ -668,13 +685,13 @@ class PipelineManager(
 
     fun captureSnapshot() {
         if(currentPipeline != null) {
-            latestSnapshot = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
+            latestSnapshot = PipelineSnapshot(virtualReflect.contextOf(reflectTarget!!)!!, snapshotFieldFilter)
         }
     }
 
     fun captureStaticSnapshot() {
         if(currentPipeline != null) {
-            staticSnapshot = PipelineSnapshot(currentPipeline!!, snapshotFieldFilter)
+            staticSnapshot = PipelineSnapshot(virtualReflect.contextOf(reflectTarget!!)!!, snapshotFieldFilter)
         }
     }
 
@@ -698,7 +715,7 @@ class PipelineManager(
     fun getIndexOf(pipeline: OpenCvPipeline, source: PipelineSource = PipelineSource.CLASSPATH) =
         getIndexOf(pipeline::class.java, source)
 
-    fun getIndexOf(pipelineClass: Class<out OpenCvPipeline>, source: PipelineSource = PipelineSource.CLASSPATH): Int? {
+    fun getIndexOf(pipelineClass: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH): Int? {
         for((i, pipelineData) in pipelines.withIndex()) {
             if(pipelineData.clazz.name == pipelineClass.name && pipelineData.source == source) {
                 return i

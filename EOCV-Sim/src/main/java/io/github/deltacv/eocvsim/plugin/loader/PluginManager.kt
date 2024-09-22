@@ -56,6 +56,8 @@ class PluginManager(val eocvSim: EOCVSim) {
 
     private val loaders = mutableMapOf<File, PluginLoader>()
 
+    private var isEnabled = false
+
     /**
      * Initializes the plugin manager
      * Loads all plugin files in the plugins folder
@@ -78,6 +80,8 @@ class PluginManager(val eocvSim: EOCVSim) {
         for (pluginFile in pluginFiles) {
             loaders[pluginFile] = PluginLoader(pluginFile, eocvSim)
         }
+
+        isEnabled = true
     }
 
     /**
@@ -115,7 +119,10 @@ class PluginManager(val eocvSim: EOCVSim) {
      * Disables all plugins
      * @see PluginLoader.disable
      */
+    @Synchronized
     fun disablePlugins() {
+        if(!isEnabled) return
+
         for (loader in loaders.values) {
             try {
                 loader.disable()
@@ -124,6 +131,8 @@ class PluginManager(val eocvSim: EOCVSim) {
                 loader.kill()
             }
         }
+
+        isEnabled = false
     }
 
     /**
@@ -138,7 +147,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         var warning = "<html>$GENERIC_SUPERACCESS_WARN"
         if(reason.trim().isNotBlank()) {
-            warning += "<br><br>$reason"
+            warning += "<br><br><i>$reason</i>"
         }
 
         warning += GENERIC_LAWYER_YEET

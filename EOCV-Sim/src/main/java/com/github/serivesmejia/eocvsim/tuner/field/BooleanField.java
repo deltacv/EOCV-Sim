@@ -26,9 +26,8 @@ package com.github.serivesmejia.eocvsim.tuner.field;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
-
-import java.lang.reflect.Field;
 
 @RegisterTunableField
 public class BooleanField extends TunableField<Boolean> {
@@ -38,8 +37,8 @@ public class BooleanField extends TunableField<Boolean> {
     boolean lastVal;
     volatile boolean hasChanged = false;
 
-    public BooleanField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-        super(target, reflectionField, eocvSim, AllowMode.TEXT);
+    public BooleanField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+        super(instance, reflectionField, eocvSim, AllowMode.TEXT);
 
         setGuiFieldAmount(0);
         setGuiComboBoxAmount(1);
@@ -52,7 +51,6 @@ public class BooleanField extends TunableField<Boolean> {
 
     @Override
     public void update() {
-
         hasChanged = value != lastVal;
 
         if (hasChanged) { //update values in GUI if they changed since last check
@@ -60,7 +58,6 @@ public class BooleanField extends TunableField<Boolean> {
         }
 
         lastVal = value;
-
     }
 
     @Override
@@ -69,14 +66,20 @@ public class BooleanField extends TunableField<Boolean> {
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
-        setGuiComboBoxValue(index, newValue);
+    public void setFieldValue(int index, Object newValue) throws IllegalAccessException {
+        value = (boolean) newValue;
+        setPipelineFieldValue((boolean)newValue);
     }
 
     @Override
-    public void setGuiComboBoxValue(int index, String newValue) throws IllegalAccessException {
+    public void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException {
+        setComboBoxValueFromGui(index, newValue);
+    }
+
+    @Override
+    public void setComboBoxValueFromGui(int index, String newValue) throws IllegalAccessException {
         value = Boolean.parseBoolean(newValue);
-        setPipelineFieldValue(value);
+        setFieldValue(index, value);
         lastVal = value;
     }
 

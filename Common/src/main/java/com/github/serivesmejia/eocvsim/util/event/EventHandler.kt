@@ -114,6 +114,7 @@ class EventHandler(val name: String) : Runnable {
                     throw ex
                 } else {
                     logger.error("Error while running \"once\" ${listener.javaClass.name}", ex)
+                    removeOnceListener(listener)
                 }
             }
 

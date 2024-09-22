@@ -24,6 +24,8 @@
 package com.github.serivesmejia.eocvsim.pipeline.instantiator
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext
+import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.openftc.easyopencv.OpenCvPipeline
 
@@ -31,6 +33,7 @@ interface PipelineInstantiator {
 
     fun instantiate(clazz: Class<*>, telemetry: Telemetry): OpenCvPipeline
 
-    fun variableTunerTargetObject(pipeline: OpenCvPipeline): Any
+    fun virtualReflectOf(pipeline: OpenCvPipeline): VirtualReflection
+    fun variableTunerTarget(pipeline: OpenCvPipeline): Any?
 
 }

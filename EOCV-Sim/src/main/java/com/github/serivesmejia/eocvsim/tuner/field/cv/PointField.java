@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.tuner.field.cv;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.opencv.core.Point;
 import org.openftc.easyopencv.OpenCvPipeline;
 
@@ -36,12 +37,13 @@ public class PointField extends TunableField<Point> {
 
     Point point;
 
-    double[] lastXY = {0, 0};
+    double lastX = 0;
+    double lastY = 0;
 
     volatile boolean hasChanged = false;
 
-    public PointField(Object target, Field reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
-        super(target, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
+    public PointField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+        super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
 
         if(initialFieldValue != null) {
             Point p = (Point) initialFieldValue;
@@ -51,23 +53,23 @@ public class PointField extends TunableField<Point> {
         }
 
         setGuiFieldAmount(2);
-
     }
 
     @Override
-    public void init() { }
+    public void init() {
+        reflectionField.set(point);
+    }
 
     @Override
     public void update() {
-
-        hasChanged = point.x != lastXY[0] || point.y != lastXY[1];
+        hasChanged = point.x != lastX || point.y != lastY;
 
         if (hasChanged) { //update values in GUI if they changed since last check
             updateGuiFieldValues();
         }
 
-        lastXY = new double[]{point.x, point.y};
-
+        lastX = point.x;
+        lastY = point.y;
     }
 
     @Override
@@ -77,23 +79,33 @@ public class PointField extends TunableField<Point> {
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
-
+    public void setFieldValue(int index, Object newValue) throws IllegalAccessException {
         try {
-            double value = Double.parseDouble(newValue);
+            double value = 0;
+            if(newValue instanceof String) {
+                value = Double.parseDouble((String)newValue);
+            } else {
+                value = (double)newValue;
+            }
+
             if (index == 0) {
                 point.x = value;
             } else {
                 point.y = value;
             }
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException("Parameter should be a valid numeric String");
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Parameter should be a valid number", ex);
         }
 
         setPipelineFieldValue(point);
 
-        lastXY = new double[]{point.x, point.y};
+        lastX = point.x;
+        lastY = point.y;
+    }
 
+    @Override
+    public void setFieldValueFromGui(int index, String newValue) throws IllegalAccessException {
+        setFieldValue(index, point);
     }
 
     @Override
@@ -108,7 +120,7 @@ public class PointField extends TunableField<Point> {
 
     @Override
     public boolean hasChanged() {
-        hasChanged = point.x != lastXY[0] || point.y != lastXY[1];
+        hasChanged = point.x != lastX || point.y != lastY;
         return hasChanged;
     }
 

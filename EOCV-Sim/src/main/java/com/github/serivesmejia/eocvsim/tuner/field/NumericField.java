@@ -26,18 +26,20 @@ package com.github.serivesmejia.eocvsim.tuner.field;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.lang.reflect.Field;
 
-public class NumericField<T extends Number> extends TunableField<T> {
+abstract public class NumericField<T extends Number> extends TunableField<T> {
 
     protected T value;
+    protected T beforeValue;
 
     protected volatile boolean hasChanged = false;
 
-    public NumericField(Object target, Field reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
-        super(target, reflectionField, eocvSim, allowMode);
+    public NumericField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
+        super(instance, reflectionField, eocvSim, allowMode);
     }
 
     @Override
@@ -46,14 +48,10 @@ public class NumericField<T extends Number> extends TunableField<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void update() {
         if (value == null) return;
-
-        try {
-            value = (T) reflectionField.get(target);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        value = (T) reflectionField.get();
 
         hasChanged = hasChanged();
 
@@ -68,10 +66,6 @@ public class NumericField<T extends Number> extends TunableField<T> {
     }
 
     @Override
-    public void setGuiFieldValue(int index, String newValue) throws IllegalAccessException {
-    }
-
-    @Override
     public T getValue() {
         return value;
     }
@@ -83,7 +77,10 @@ public class NumericField<T extends Number> extends TunableField<T> {
 
     @Override
     public boolean hasChanged() {
-        return false;
+        boolean hasChanged = value != beforeValue;
+        beforeValue = value;
+        return hasChanged;
     }
+
 
 }
