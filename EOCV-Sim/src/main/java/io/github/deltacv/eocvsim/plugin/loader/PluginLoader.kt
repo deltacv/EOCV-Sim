@@ -78,8 +78,8 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
     lateinit var fileSystem: SandboxFileSystem
         private set
 
-    val fileSystemZip = PluginManager.FILESYSTEMS_FOLDER + File.separator + "${hash()}-fs"
-    val fileSystemZipPath = fileSystemZip.toPath()
+    val fileSystemZip by lazy { PluginManager.FILESYSTEMS_FOLDER + File.separator + "${hash()}-fs" }
+    val fileSystemZipPath by lazy { fileSystemZip.toPath() }
 
     /**
      * Whether the plugin has super access (full system access)
@@ -87,8 +87,9 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
     val hasSuperAccess get() = eocvSim.config.superAccessPluginHashes.contains(pluginHash)
 
     init {
-        setupFs()
-        pluginClassLoader = PluginClassLoader(pluginFile, PluginContext(eocvSim, fileSystem, this))
+        pluginClassLoader = PluginClassLoader(pluginFile) {
+            PluginContext(eocvSim, fileSystem, this)
+        }
     }
 
     /**
@@ -110,6 +111,8 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
         pluginAuthorEmail = pluginToml.getString("author-email", "")
 
         logger.info("Loading plugin $pluginName v$pluginVersion by $pluginAuthor")
+
+        setupFs()
 
         if(pluginToml.contains("api-version")) {
             val parsedVersion = ParsedVersion(pluginToml.getString("api-version"))
@@ -190,12 +193,12 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
     }
 
     /**
-     * Get the hash of the plugin file based off the absolute path
+     * Get the hash of the plugin file based off the plugin name and author
      * @return the hash
      */
     fun hash(): String {
         val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update(pluginFile.absolutePath.encodeToByteArray())
+        messageDigest.update("${pluginName} by ${pluginAuthor}".toByteArray())
         return SysUtil.byteArray2Hex(messageDigest.digest())
     }
 

@@ -31,7 +31,7 @@ class PluginContext(
     val eocvSim: EOCVSim, val fileSystem: SandboxFileSystem, val loader: PluginLoader
 ) {
     companion object {
-        @JvmStatic fun current(plugin: EOCVSimPlugin) = (plugin.javaClass.classLoader as PluginClassLoader).pluginContext
+        @JvmStatic fun current(plugin: EOCVSimPlugin) = (plugin.javaClass.classLoader as PluginClassLoader).pluginContextProvider()
     }
 
     val plugin get() = loader.plugin

@@ -43,7 +43,7 @@ import java.util.zip.ZipFile
  * @param pluginJar the jar file of the plugin
  * @param pluginContext the plugin context
  */
-class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginContext) : ClassLoader() {
+class PluginClassLoader(private val pluginJar: File, val pluginContextProvider: () -> PluginContext) : ClassLoader() {
 
     private val zipFile = try {
         ZipFile(pluginJar)
@@ -65,7 +65,7 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
                 SysUtil.copyStream(inStream, outStream)
                 val bytes = outStream.toByteArray()
 
-                if(!pluginContext.hasSuperAccess)
+                if(!pluginContextProvider().hasSuperAccess)
                     MethodCallByteCodeChecker(bytes, dynamicLoadingMethodBlacklist)
 
                 val clazz = defineClass(name, bytes, 0, bytes.size)
@@ -85,7 +85,7 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
      * @throws IllegalAccessError if the class is blacklisted
      */
     fun loadClassStrict(name: String): Class<*> {
-        if(!pluginContext.hasSuperAccess) {
+        if(!pluginContextProvider().hasSuperAccess) {
             for (blacklistedPackage in dynamicLoadingPackageBlacklist) {
                 if (name.contains(blacklistedPackage)) {
                     throw IllegalAccessError("Plugins are blacklisted to use $name")
@@ -109,7 +109,7 @@ class PluginClassLoader(private val pluginJar: File, val pluginContext: PluginCo
                 }
             }
 
-            if(!inWhitelist && !pluginContext.hasSuperAccess) {
+            if(!inWhitelist && !pluginContextProvider().hasSuperAccess) {
                 throw IllegalAccessError("Plugins are not whitelisted to use $name")
             }
 
