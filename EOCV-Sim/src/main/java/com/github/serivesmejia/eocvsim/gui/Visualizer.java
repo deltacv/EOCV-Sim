@@ -266,7 +266,7 @@ public class Visualizer {
 
     public void joinInit() {
         while (!hasFinishedInitializing) {
-            Thread.yield();
+            Thread.onSpinWait();
         }
     }
 

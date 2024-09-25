@@ -43,7 +43,7 @@ public final class JavaProcess {
      * @throws InterruptedException if the process is interrupted
      * @throws IOException if an I/O error occurs
      */
-    public static int execClasspath(Class klass, String classpath, String... args) throws InterruptedException, IOException {
+    public static int execClasspath(Class klass, String classpath, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome +
                 File.separator + "bin" +
@@ -52,11 +52,14 @@ public final class JavaProcess {
 
         List<String> command = new LinkedList<>();
         command.add(javaBin);
+        if(jvmArgs != null) {
+            command.addAll(jvmArgs);
+        }
         command.add("-cp");
         command.add(classpath);
         command.add(className);
         if (args != null) {
-            command.addAll(List.of(args));
+            command.addAll(args);
         }
 
         ProcessBuilder builder = new ProcessBuilder(command);
@@ -67,8 +70,8 @@ public final class JavaProcess {
     }
 
 
-    public static int exec(Class klass, String... args) throws InterruptedException, IOException {
-        return execClasspath(klass, System.getProperty("java.class.path"), args);
+    public static int exec(Class klass, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
+        return execClasspath(klass, System.getProperty("java.class.path"), jvmArgs, args);
     }
 
 }

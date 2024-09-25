@@ -30,6 +30,7 @@ import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequestMain
 import java.io.File
+import java.util.*
 
 /**
  * Manages the loading, enabling and disabling of plugins
@@ -145,6 +146,8 @@ class PluginManager(val eocvSim: EOCVSim) {
     fun requestSuperAccessFor(loader: PluginLoader, reason: String): Boolean {
         if(loader.hasSuperAccess) return true
 
+        logger.info("Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
+
         var warning = "<html>$GENERIC_SUPERACCESS_WARN"
         if(reason.trim().isNotBlank()) {
             warning += "<br><br><i>$reason</i>"
@@ -156,7 +159,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         val name = "${loader.pluginName} by ${loader.pluginAuthor}".replace(" ", "-")
 
-        if(JavaProcess.exec(SuperAccessRequestMain::class.java, name, warning) == 171) {
+        if(JavaProcess.exec(SuperAccessRequestMain::class.java, null, Arrays.asList(name, warning)) == 171) {
             eocvSim.config.superAccessPluginHashes.add(loader.pluginHash)
             eocvSim.configManager.saveToFile()
             return true

@@ -46,8 +46,6 @@ import java.util.function.IntConsumer;
 
 public class DialogFactory {
 
-    private static Executor executor = Executors.newFixedThreadPool(4);
-
     private DialogFactory() { }
 
     public static void createYesOrNo(Component parent, String message, String submessage, IntConsumer result) {
@@ -165,7 +163,7 @@ public class DialogFactory {
     }
 
     private static void invokeLater(Runnable runn) {
-        executor.execute(runn);
+        SwingUtilities.invokeLater(runn);
     }
 
     public static class FileChooser {

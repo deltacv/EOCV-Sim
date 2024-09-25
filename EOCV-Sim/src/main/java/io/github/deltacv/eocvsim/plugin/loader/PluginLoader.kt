@@ -121,7 +121,7 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
                 throw UnsupportedPluginException("Plugin request api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
         }
 
-        if(pluginToml.contains("super-access") && pluginToml.getBoolean("super-access", false)) {
+        if(pluginToml.getBoolean("super-access", false)) {
             requestSuperAccess(pluginToml.getString("super-access-reason", ""))
         }
 
