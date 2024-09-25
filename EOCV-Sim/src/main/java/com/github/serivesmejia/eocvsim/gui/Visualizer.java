@@ -341,7 +341,7 @@ public class Visualizer {
             menuBar.workspCompile.setEnabled(false);
             pipelineSelectorPanel.getButtonsPanel().getPipelineCompileBtt().setEnabled(false);
 
-            eocvSim.pipelineManager.compiledPipelineManager.asyncCompile(true, (result) -> {
+            eocvSim.pipelineManager.compiledPipelineManager.asyncCompile((result) -> {
                 menuBar.workspCompile.setEnabled(true);
                 pipelineSelectorPanel.getButtonsPanel().getPipelineCompileBtt().setEnabled(true);
 
