@@ -25,25 +25,34 @@ package com.github.serivesmejia.eocvsim.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A utility class for executing a Java process with a class within this project.
+ * A utility class for executing a Java process to run a main class within this project.
  */
 public final class JavaProcess {
+
+    public interface ProcessIOReceiver {
+        void receive(InputStream in, InputStream err);
+    }
 
     private JavaProcess() {}
 
     /**
      * Executes a Java process with the given class and arguments.
      * @param klass the class to execute
+     * @param ioReceiver the receiver for the process' input and error streams (will use inheritIO if null)
+     * @param classpath the classpath to use
+     *                  (use System.getProperty("java.class.path") for the default classpath)
+     * @param jvmArgs the JVM arguments to pass to the process
      * @param args the arguments to pass to the class
      * @return the exit value of the process
      * @throws InterruptedException if the process is interrupted
      * @throws IOException if an I/O error occurs
      */
-    public static int execClasspath(Class klass, String classpath, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
+    public static int execClasspath(Class klass, ProcessIOReceiver ioReceiver, String classpath, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome +
                 File.separator + "bin" +
@@ -52,7 +61,7 @@ public final class JavaProcess {
 
         List<String> command = new LinkedList<>();
         command.add(javaBin);
-        if(jvmArgs != null) {
+        if (jvmArgs != null) {
             command.addAll(jvmArgs);
         }
         command.add("-cp");
@@ -64,14 +73,38 @@ public final class JavaProcess {
 
         ProcessBuilder builder = new ProcessBuilder(command);
 
-        Process process = builder.inheritIO().start();
-        process.waitFor();
-        return process.exitValue();
+        if (ioReceiver != null) {
+            Process process = builder.start();
+            ioReceiver.receive(process.getInputStream(), process.getErrorStream());
+            killOnExit(process);
+
+            process.waitFor();
+            return process.exitValue();
+        } else {
+            builder.inheritIO();
+            Process process = builder.start();
+            killOnExit(process);
+
+            process.waitFor();
+            return process.exitValue();
+        }
     }
 
+    private static void killOnExit(Process process) {
+        Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
+    }
 
+    /**
+     * Executes a Java process with the given class and arguments.
+     * @param klass the class to execute
+     * @param jvmArgs the JVM arguments to pass to the process
+     * @param args the arguments to pass to the class
+     * @return the exit value of the process
+     * @throws InterruptedException if the process is interrupted
+     * @throws IOException if an I/O error occurs
+     */
     public static int exec(Class klass, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
-        return execClasspath(klass, System.getProperty("java.class.path"), jvmArgs, args);
+        return execClasspath(klass, null, System.getProperty("java.class.path"), jvmArgs, args);
     }
 
 }
