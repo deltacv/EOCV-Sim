@@ -27,11 +27,14 @@ import org.jetbrains.skia.Font;
 
 import java.util.HashMap;
 
+/**
+ * A cache for fonts to avoid creating the same font multiple times.
+ */
 class FontCache {
 
     private static HashMap<Typeface, HashMap<Integer, Font>> cache = new HashMap<>();
 
-    public static Font makeFont(Typeface theTypeface, float textSize) {
+    static Font makeFont(Typeface theTypeface, float textSize) {
         if(!cache.containsKey(theTypeface)) {
             cache.put(theTypeface, new HashMap<>());
         }

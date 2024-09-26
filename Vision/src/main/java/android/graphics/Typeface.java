@@ -32,6 +32,10 @@ public class Typeface {
     public static Typeface DEFAULT_BOLD = new Typeface(FontMgr.Companion.getDefault().matchFamilyStyle(null, FontStyle.Companion.getBOLD()));
     public static Typeface DEFAULT_ITALIC = new Typeface(FontMgr.Companion.getDefault().matchFamilyStyle(null, FontStyle.Companion.getITALIC()));
 
+    /**
+     * Internal: theTypeface represents the underlying skiko Typeface
+     * This field is not present in native android.graphics
+     */
     public org.jetbrains.skia.Typeface theTypeface;
 
     public Typeface(long ptr) {

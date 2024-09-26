@@ -45,8 +45,7 @@ class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private 
         ThreadSourceHander.register(VisionInputSourceHander(pipeline?.notifier ?: return, viewport))
 
         pipeline?.telemetry = telemetry
-        pipeline?.hardwareMap = HardwareMap();
-    }
+        pipeline?.hardwareMap = HardwareMap()    }
 
     override fun init() { }
 

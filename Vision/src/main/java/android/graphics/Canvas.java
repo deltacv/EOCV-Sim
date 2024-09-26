@@ -28,6 +28,10 @@ import org.jetbrains.skia.*;
 
 public class Canvas {
 
+    /**
+     * Internal: theCanvas represents the underlying skiko Canvas
+     * This field is not present in native android.graphics
+     */
     public final org.jetbrains.skia.Canvas theCanvas;
 
     private Bitmap backingBitmap = null;

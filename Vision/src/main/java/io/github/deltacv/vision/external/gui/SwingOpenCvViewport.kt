@@ -27,9 +27,9 @@ import android.graphics.Canvas
 import io.github.deltacv.common.image.MatPoster
 import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue
 import org.jetbrains.skia.Color
-import org.jetbrains.skiko.GenericSkikoView
 import org.jetbrains.skiko.SkiaLayer
-import org.jetbrains.skiko.SkikoView
+import org.jetbrains.skiko.SkiaLayerRenderDelegate
+import org.jetbrains.skiko.SkikoRenderDelegate
 import org.opencv.android.Utils
 import org.opencv.core.Mat
 import org.opencv.core.Size
@@ -44,7 +44,6 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import javax.swing.JComponent
 import javax.swing.SwingUtilities
-import kotlin.jvm.Throws
 
 class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Vision") : OpenCvViewport, MatPoster {
 
@@ -94,7 +93,7 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
             framebufferRecycler!!.returnMat(value)
         }
 
-        skiaLayer.skikoView = GenericSkikoView(skiaLayer, object: SkikoView {
+        skiaLayer.renderDelegate = SkiaLayerRenderDelegate(skiaLayer, object: SkikoRenderDelegate {
             override fun onRender(canvas: org.jetbrains.skia.Canvas, width: Int, height: Int, nanoTime: Long) {
                 renderCanvas(Canvas(canvas, width, height))
 
