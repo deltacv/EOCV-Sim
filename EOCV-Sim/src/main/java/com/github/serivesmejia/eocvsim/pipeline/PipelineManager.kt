@@ -275,10 +275,6 @@ class PipelineManager(
             }
         }
 
-        if(activePipelineContexts.size > MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS) {
-            throw MaxActiveContextsException("Current amount of active pipeline coroutine contexts (${activePipelineContexts.size}) is more than the maximum allowed. This generally means that there are multiple pipelines stuck in processFrame() running in the background, check for any lengthy operations in your pipelines.")
-        }
-
         if(telemetry is TelemetryImpl) {
             if (compiledPipelineManager.isBuildRunning) {
                 telemetry.infoItem.caption = "[>]"
