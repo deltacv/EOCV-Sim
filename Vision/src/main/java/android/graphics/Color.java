@@ -1383,9 +1383,77 @@ public class Color {
         }
         return nativeHSVToColor(alpha, hsv);
     }
-    private static native void nativeRGBToHSV(int red, int greed, int blue, float hsv[]);
-    private static native int nativeHSVToColor(int alpha, float hsv[]);
+    private static void nativeRGBToHSV(int red, int green, int blue, float hsv[]) {
+        int min = Math.min(red, Math.min(green, blue));
+        int max = Math.max(red, Math.max(green, blue));
+        int delta = max - min;
+
+        float v = (float) max / 255;
+        if (v < 0 || v > 1.0f)
+            throw new RuntimeException("RGB max is out of range");
+
+        if (delta == 0) { // we're a shade of gray
+            hsv[0] = 0;
+            hsv[1] = 0;
+            hsv[2] = v;
+            return;
+        }
+
+        float s = (float) delta / max;
+        if (s < 0 || s > 1.0f)
+            throw new RuntimeException("RGB delta is out of range");
+
+        float h;
+        if (red == max)
+            h = (float) (green - blue) / delta;
+        else if (green == max)
+            h = 2.0f + (float) (blue - red) / delta;
+        else // blue == max
+            h = 4.0f + (float) (red - green) / delta;
+
+        h *= 60;
+        if (h < 0)
+            h += 360.0f;
+
+        if (h < 0 || h >= 360.0f)
+            throw new RuntimeException("h is out of range");
+
+        hsv[0] = h;
+        hsv[1] = s;
+        hsv[2] = v;
+    }
+
+    private static int nativeHSVToColor(int alpha, float hsv[]) {
+        int s = hsv[1] < 0 ? 0 : hsv[1] >= 1.0f ? 255 : ((int) (hsv[1] * (1 << 16))) >> 8;
+        int v = hsv[2] < 0 ? 0 : hsv[2] >= 1.0f ? 255 : ((int) (hsv[2] * (1 << 16))) >> 8;
+
+        if (s == 0) // shade of gray
+            return (alpha << 24) | (v << 16) | (v << 8) | v;
+        int hx = (hsv[0] < 0 || hsv[0] >= 360.0f) ? 0 : ((int) (hsv[0]/60 * (1 << 16)));
+        int f = hx & 0xFFFF;
+
+        int v_scale = v+1;
+        int p = ((255 - s) * v_scale) >> 8;
+        int q = ((255 - (s * f >> 16)) * v_scale) >> 8;
+        int t = ((255 - (s * (1 << 16 - f) >> 16)) * v_scale) >> 8;
+
+        int r, g, b;
+
+        if (hx >> 16 >= 6)
+            throw new RuntimeException("hx is out of range");
+        switch (hx >> 16) {
+            case 0: r = v; g = t; b = p; break;
+            case 1: r = q; g = v; b = p; break;
+            case 2: r = p; g = v; b = t; break;
+            case 3: r = p; g = q; b = v; break;
+            case 4: r = t;  g = p; b = v; break;
+            default: r = v; g = p; b = q; break;
+        }
+        return (alpha << 24) | (r << 16) | (g << 8) | b;
+    }
+
     private static final HashMap<String, Integer> sColorNameMap;
+
     static {
         sColorNameMap = new HashMap<>();
         sColorNameMap.put("black", BLACK);

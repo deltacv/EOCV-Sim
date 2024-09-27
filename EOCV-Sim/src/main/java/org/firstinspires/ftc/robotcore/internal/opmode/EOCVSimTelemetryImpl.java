@@ -1,18 +1,23 @@
 /*
 Copyright (c) 2016 Robert Atkinson
+
 All rights reserved.
-Adapted for EOCV-Sim (c) 2021 Sebastian Erives
+
 Redistribution and use in source and binary forms, with or without modification,
 are permitted (subject to the limitations in the disclaimer below) provided that
 the following conditions are met:
+
 Redistributions of source code must retain the above copyright notice, this list
 of conditions and the following disclaimer.
+
 Redistributions in binary form must reproduce the above copyright notice, this
 list of conditions and the following disclaimer in the documentation and/or
 other materials provided with the distribution.
+
 Neither the name of Robert Atkinson nor the names of his contributors may be used to
 endorse or promote products derived from this software without specific prior
 written permission.
+
 NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
 LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
@@ -27,24 +32,29 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.robotcore.internal.opmode;
 
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Func;
 import org.firstinspires.ftc.robotcore.external.Predicate;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.robocol.TelemetryMessage;
 
-import javax.swing.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
- * {@link TelemetryImpl} is the system-provided implementation of the {@link Telemetry} interface.
+ * {@link EOCVSimTelemetryImpl} is the system-provided implementation of the {@link Telemetry} interface.
  */
-public class TelemetryImpl implements Telemetry, TelemetryInternal
+public class EOCVSimTelemetryImpl implements Telemetry, TelemetryInternal
 {
+
     //----------------------------------------------------------------------------------------------
     // Types
     //----------------------------------------------------------------------------------------------
@@ -78,9 +88,12 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
             this.valueProducer = valueProducer;
         }
 
-        Value(Object value)
-        {
-            this.value = value;
+        Value(Object value) {
+            if ((value instanceof Double) || (value instanceof Float)) {
+                this.value = decimalFormat.format(value);
+            } else {
+                this.value = value;
+            }
         }
 
         Value(Func<T> valueProducer)
@@ -97,7 +110,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
             return this.valueProducer != null;
         }
 
-        String getComposed(boolean recompose)
+        @NonNull String getComposed(boolean recompose)
         {
             if (recompose || composed==null)
             {
@@ -142,13 +155,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
 
             // Using the max # of data items that can be actually transmitted, ever, seems like
             // a practical choice as an upper bound.
-
-            // 255 was inlined from the original calculations in robocol's TelemetryMessage.cCountMax:
-            //
-            // static final int cbCountLen = 1;
-            // ...
-            // public final static int cCountMax  = (1 << (cbCountLen*8)) - 1;
-            if (list.size() < 255)
+            if (list.size() < TelemetryMessage.cCountMax)
             {
                 list.add(index, data);
             }
@@ -270,6 +277,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         String  caption  = null;
         Value   value    = null;
         Boolean retained = null;
+
         boolean showIfEmpty = true;
 
         //------------------------------------------------------------------------------------------
@@ -294,7 +302,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
             {
                 String composed = this.value.getComposed(recompose);
 
-                if(!showIfEmpty && this.caption.trim().equals("") && composed.trim().equals("")) {
+                if(!showIfEmpty && this.caption.trim().isEmpty() && composed.trim().isEmpty()) {
                     return "";
                 }
 
@@ -323,7 +331,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
             }
         }
 
-        @Override public Item setRetained(Boolean retained)
+        @Override public Item setRetained(@Nullable Boolean retained)
         {
             synchronized (theLock)
             {
@@ -418,14 +426,14 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         // Operations
         //------------------------------------------------------------------------------------------
 
-        public String getComposed(boolean recompose, boolean appendSeparator)
+        @Override public String getComposed(boolean recompose)
         {
             StringBuilder result = new StringBuilder();
             result.append(this.lineCaption);
             boolean firstTime = true;
             for (Lineable lineable : lineables)
             {
-                if (!firstTime && appendSeparator)
+                if (!firstTime)
                 {
                     result.append(getItemSeparator());
                 }
@@ -433,11 +441,6 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
                 firstTime = false;
             }
             return result.toString();
-        }
-
-        @Override
-        public String getComposed(boolean recompose) {
-            return getComposed(recompose, true);
         }
 
         @Override public Item addData(String caption, String format, Object... args)
@@ -458,10 +461,6 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         @Override public <T> Item addData(String caption, String format, Func<T> valueProducer)
         {
             return lineables.addItemAfter(null, caption, new Value<T>(format, valueProducer));
-        }
-
-        public boolean isEmpty() {
-            return getComposed(false, false).trim().equals("");
         }
     }
 
@@ -510,7 +509,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         // Use the outer class to mindlessly avoid any potential deadlocks
         Object getLock()
         {
-            return TelemetryImpl.this;
+            return EOCVSimTelemetryImpl.this;
         }
 
         int size()
@@ -614,12 +613,16 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
     protected ElapsedTime         transmissionTimer;
     protected boolean             isDirty;
     protected boolean             clearOnAdd;
+    protected OpMode              opMode;
     protected boolean             isAutoClear;
     protected int                 msTransmissionInterval;
     protected String              captionValueSeparator;
     protected String              itemSeparator;
-    protected StringBuilder       currentSb;
+    protected DecimalFormat       decimalFormat = new DecimalFormat("0.####");
 
+    /*
+    * EOCV-Sim
+     */
     protected ArrayList<TelemetryTransmissionReceiver> transmissionReceivers = new ArrayList<>();
 
     public Item errItem;
@@ -629,7 +632,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
     // Construction
     //----------------------------------------------------------------------------------------------
 
-    public TelemetryImpl()
+    public EOCVSimTelemetryImpl()
     {
         this.log = new LogImpl();
         resetTelemetryForOpMode();
@@ -649,8 +652,7 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         this.msTransmissionInterval = 250;
         this.captionValueSeparator  = " : ";
         this.itemSeparator          = " | ";
-        this.currentSb = new StringBuilder();
-        this.transmissionReceivers = new ArrayList<>();
+
 
         errItem = addData("", "").setRetained(true);
         ((ItemImpl)errItem).showIfEmpty = false;
@@ -676,6 +678,11 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
     boolean isDirty()
     {
         return this.isDirty;
+    }
+
+    public void setNumDecimalPlaces(int minDecimalPlaces, int maxDecimalPlaces){
+        decimalFormat.setMinimumFractionDigits(minDecimalPlaces);
+        decimalFormat.setMaximumFractionDigits(maxDecimalPlaces);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -753,11 +760,14 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
 
             return result;
         }
+
+
     }
+
 
     protected void saveToTransmitter(boolean recompose)
     {
-        currentSb = new StringBuilder();
+        StringBuilder currentSb = new StringBuilder();
 
         // When we recompose, we save the composed lines. Thus, they will stick around
         // even after we might get clear()'d. In that way, they'll still be there to
@@ -868,6 +878,11 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         {
             this.captionValueSeparator = captionValueSeparator;
         }
+    }
+
+    @Override public void setDisplayFormat(DisplayFormat displayFormat)
+    {
+        // no-op in eocv-sim
     }
 
     //----------------------------------------------------------------------------------------------
@@ -984,9 +999,17 @@ public class TelemetryImpl implements Telemetry, TelemetryInternal
         }
     }
 
-    @Override
-    public String toString() {
-        return currentSb.toString();
+    //----------------------------------------------------------------------------------------------
+    // Text to Speech
+    //----------------------------------------------------------------------------------------------
+
+    @Override public void speak(String text)
+    {
+        speak(text, null, null);
     }
 
+    @Override public void speak(String text, String languageCode, String countryCode)
+    {
+        // no-op
+    }
 }

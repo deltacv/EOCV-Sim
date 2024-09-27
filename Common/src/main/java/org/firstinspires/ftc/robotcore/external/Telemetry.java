@@ -1,17 +1,23 @@
 /*
 Copyright (c) 2016 Robert Atkinson
+
 All rights reserved.
+
 Redistribution and use in source and binary forms, with or without modification,
 are permitted (subject to the limitations in the disclaimer below) provided that
 the following conditions are met:
+
 Redistributions of source code must retain the above copyright notice, this list
 of conditions and the following disclaimer.
+
 Redistributions in binary form must reproduce the above copyright notice, this
 list of conditions and the following disclaimer in the documentation and/or
 other materials provided with the distribution.
+
 Neither the name of Robert Atkinson nor the names of his contributors may be used to
 endorse or promote products derived from this software without specific prior
 written permission.
+
 NO EXPRESS OR IMPLIED LICENSES TO ANY PARTY'S PATENT RIGHTS ARE GRANTED BY THIS
 LICENSE. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
@@ -26,6 +32,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 package org.firstinspires.ftc.robotcore.external;
 
+import androidx.annotation.Nullable;
 
 import java.util.Locale;
 
@@ -43,12 +50,18 @@ import java.util.Locale;
  *     telemetry.update();
  * </pre>
  *
+ * <p>In the 2015/16 season, the call to {@link #update()} was not required; now, however,
+ * in a LinearOpMode, unless {@link #update()} is called, nothing will appear on the
+ * driver station screen. In other, loop-based OpModes, {@link #update()} continues to be called
+ * automatically at the end of OpMode#loop() and OpMode#init_loop(); no call to
+ * {@link #update()} is required in loop-based OpModes.</p>
  *
  * <pre>
- *     // loop-based opmode
+ *     // loop-based OpMode
  *     telemetry.addData("count", currentCount);
  *     telemetry.addData("elapsedTime", "%.3f", elapsedSeconds);
  * </pre>
+
  * <p>By default (but see {@link #setAutoClear(boolean) setAutoClear()}), data is cleared from the
  * telemetry after each call to {@link #update()}; thus, you need to issue {@link #addData(String,
  * Object) addData()} for the entire contents of the telemetry screen on each update cycle.
@@ -69,6 +82,7 @@ import java.util.Locale;
  *         telemetry.update();
  *         ...
  *     }
+
  *     void anotherPartOfYourCode() {
  *         ...
  *         elapsedItem.setValue("%.3f", elapsedSeconds);
@@ -269,6 +283,30 @@ public interface Telemetry
     boolean removeAction(Object token);
 
     //----------------------------------------------------------------------------------------------
+    // Text to Speech
+    //----------------------------------------------------------------------------------------------
+
+    /**
+     * Directs the Driver Station device to speak the given text using TextToSpeech functionality,
+     * with the same language and country codes that were previously used, or the default language
+     * and country.
+     *
+     * @param text the text to be spoken
+     */
+    void speak(String text);
+
+    /**
+     * Directs the Driver Station device to speak the given text using TextToSpeech functionality,
+     * with the given language and country codes.
+     *
+     * @param text          the text to be spoken
+     * @param languageCode  an ISO 639 alpha-2 or alpha-3 language code, or a language subtag up to
+     *                      8 characters in length
+     * @param countryCode   an ISO 3166 alpha-2 country code, or a UN M.49 numeric-3 area code
+     */
+    void speak(String text, String languageCode, String countryCode);
+
+    //----------------------------------------------------------------------------------------------
     // Transmission
     //----------------------------------------------------------------------------------------------
 
@@ -339,7 +377,7 @@ public interface Telemetry
     /**
      * Instances of {@link Item} represent an item of data on the drive station telemetry display.
      *
-     * @see {@link #addData(String, Object)}
+     * @see #addData(String, Object)
      */
     interface Item
     {
@@ -404,7 +442,7 @@ public interface Telemetry
          * @see #clear()
          * @see #isRetained()
          */
-        Item setRetained(Boolean retained);
+        Item setRetained(@Nullable Boolean retained);
 
         /**
          * Returns whether the item is to be retained in a clear() operation.
@@ -498,6 +536,30 @@ public interface Telemetry
      */
     void setCaptionValueSeparator(String captionValueSeparator);
 
+    enum DisplayFormat
+    {
+        CLASSIC,   // What you've all come to know and love (or not) since 2015
+        MONOSPACE, // Same as classic, except uses a monospaced font so you can column align data
+        HTML;      // Allows use of a subset of HTML tags, enabling "rich text" display (e.g. color & size)
+    }
+
+    /**
+     * Sets the telemetry display format on the Driver Station. See the comments on {@link DisplayFormat}.
+     *
+     * @param displayFormat the telemetry display format the Driver Station should use
+     */
+    void setDisplayFormat(DisplayFormat displayFormat);
+
+    /**
+     * Sets the number of decimal places for Double and Float
+     *
+     * @param minDecimalPlaces - the minimum number of places to show when Double or Float is passed in without a Format
+     * @param maxDecimalPlaces - the maximum number of places to show when Double or Float is passed in without a Format
+     */
+    default void setNumDecimalPlaces(int minDecimalPlaces, int maxDecimalPlaces){
+        // does nothing just so we don't break existing Telemetry
+    }
+
     //----------------------------------------------------------------------------------------------
     // Properties
     //----------------------------------------------------------------------------------------------
@@ -516,9 +578,9 @@ public interface Telemetry
         enum DisplayOrder { NEWEST_FIRST, OLDEST_FIRST }
 
         /**
-         * Returns the maximum number of lines which will be retained in a {@link #log()()} and
+         * Returns the maximum number of lines which will be retained in a {@link #log()} and
          * shown on the driver station display.
-         * @return the maximum number of lines which will be retained in a {@link #log()()}
+         * @return the maximum number of lines which will be retained in a {@link #log()}
          * @see #setCapacity(int)
          */
         int getCapacity();
