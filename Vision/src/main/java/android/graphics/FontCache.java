@@ -34,15 +34,15 @@ class FontCache {
 
     private static HashMap<Typeface, HashMap<Integer, Font>> cache = new HashMap<>();
 
-    static Font makeFont(Typeface theTypeface, float textSize) {
-        if(!cache.containsKey(theTypeface)) {
-            cache.put(theTypeface, new HashMap<>());
+    static Font makeFont(Typeface typeface, float textSize) {
+        if(!cache.containsKey(typeface)) {
+            cache.put(typeface, new HashMap<>());
         }
 
-        HashMap<Integer, Font> sizeCache = cache.get(theTypeface);
+        HashMap<Integer, Font> sizeCache = cache.get(typeface);
 
         if(!sizeCache.containsKey((int) (textSize * 1000))) {
-            sizeCache.put((int) (textSize * 1000), new Font(theTypeface.theTypeface, textSize));
+            sizeCache.put((int) (textSize * 1000), new Font(typeface.theTypeface, textSize));
         }
 
         return sizeCache.get((int) (textSize * 1000));

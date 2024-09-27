@@ -36,8 +36,8 @@ package org.firstinspires.ftc.vision.apriltag;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-
 import android.graphics.Typeface;
+
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
@@ -117,9 +117,9 @@ public class AprilTagCanvasAnnotator
         // The origin of the coordinate space is assumed to be in the center of the detection.
         MatOfPoint3f axis = new MatOfPoint3f(
                 new Point3(0,0,0),
-                new Point3(-axisLength,0,0),
-                new Point3(0,-axisLength,0),
-                new Point3(0,0,-axisLength)
+                new Point3(axisLength,0,0),
+                new Point3(0,axisLength,0),
+                new Point3(0,0,axisLength)
         );
 
         // Project those points onto the image
@@ -267,7 +267,11 @@ public class AprilTagCanvasAnnotator
     {
         float cornerRound = 5 * canvasDensityScale;
 
-        float tag_id_width = 120*canvasDensityScale;
+        String text = String.format("ID %d", detection.id);
+
+        // Implementing measureText is a bit of a pain, so we'll just leave it out for now ...
+        // (EOCV-Sim doesn't support measureText)
+        float tag_id_width = /*textPaint.measureText(text) +*/ (text.length() * textPaint.getTextSize() * 0.5f)+ 20*canvasDensityScale;
         float tag_id_height = 50*canvasDensityScale;
 
         float id_x = (float) detection.center.x * bmpPxToCanvasPx - tag_id_width/2;
@@ -283,7 +287,7 @@ public class AprilTagCanvasAnnotator
         canvas.rotate((float) Math.toDegrees(Math.atan2(lowerRight.y - lowerLeft.y, lowerRight.x-lowerLeft.x)), (float) detection.center.x*bmpPxToCanvasPx, (float) detection.center.y*bmpPxToCanvasPx);
 
         canvas.drawRoundRect(id_x, id_y, id_x+tag_id_width, id_y+tag_id_height, cornerRound, cornerRound, rectPaint);
-        canvas.drawText(String.format("ID %02d", detection.id), tag_id_text_x, tag_id_text_y, textPaint);
+        canvas.drawText(text, tag_id_text_x, tag_id_text_y, textPaint);
 
         canvas.restore();
     }

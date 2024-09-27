@@ -40,7 +40,7 @@ object DefaultWorkspaceTemplate : WorkspaceTemplate() {
         if(!folder.isDirectory) return false
 
         val templateZipFile = SysUtil.copyFileIsTemp(
-            templateZipResource, "default_workspace.zip", false
+            templateZipResource, "default_workspace.zip", true
         ).file
 
         return try {

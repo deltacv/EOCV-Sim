@@ -50,6 +50,7 @@ class ClasspathScan {
             "io.github.classgraph",
             "io.github.deltacv",
             "com.github.serivesmejia.eocvsim.pipeline",
+            "org.firstinspires.ftc.vision",
             "org.lwjgl",
             "org.apache",
             "org.codehaus",
