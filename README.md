@@ -47,7 +47,9 @@ Since OpenCV in Java uses a native library, which is platform specific, the simu
 
 Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downloading-eocv-sim) to download the sim. The rest of the documentation can also be found [there](https://deltacv.gitbook.io/eocv-sim/).
 
-## Adding EOCV-Sim as a dependency
+## Adding EOCV-Sim as a dependency for plugin development
+
+### NOT FOR FTC SDK USAGE, please follow the documentation above if you're a normal user not aiming to develop for EOCV-Sim
 
    ### Gradle
    ```groovy
@@ -56,7 +58,7 @@ Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downl
    }
    
    dependencies {
-      implementation 'com.github.deltacv:EOCV-Sim:3.3.2' //add the EOCV-Sim dependency
+      implementation 'com.github.deltacv:EOCV-Sim:3.3.2' // add the EOCV-Sim dependency, make sure to replace for the latest version
    }
    ```
    
@@ -83,6 +85,8 @@ Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downl
 
 # Contact
 For bug reporting or feature requesting, use the [issues tab](https://github.com/deltacv/EOCV-Sim/issues) in this repository.
+
+Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 # Change logs
 
