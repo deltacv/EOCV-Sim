@@ -75,7 +75,7 @@ public class OpenCvViewRenderer
         metricsScale = 1.0f;
 
         fpsMeterTextSize = 26.2f * metricsScale;
-        statBoxW = (int) (450 * metricsScale);
+        statBoxW = (int) (430 * metricsScale);
         statBoxH = (int) (120 * metricsScale);
         statBoxTextLineSpacing = (int) (35 * metricsScale);
         statBoxLTxtMargin = (int) (5 * metricsScale);

@@ -358,7 +358,7 @@ public class Paint {
 
     public Typeface getTypeface() {
         if(typeface == null) {
-            typeface = Typeface.DEFAULT;
+            return Typeface.DEFAULT;
         }
 
         return typeface;
