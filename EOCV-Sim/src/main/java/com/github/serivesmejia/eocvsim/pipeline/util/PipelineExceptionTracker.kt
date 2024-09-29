@@ -32,7 +32,6 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
 
     companion object {
         const val millisExceptionExpire = 35000L
-        const val cutStacktraceLines = 9
     }
 
     val logger by loggerForThis()

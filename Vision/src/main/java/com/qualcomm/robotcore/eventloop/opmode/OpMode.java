@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.robotcore.eventloop.opmode;
 
+import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import io.github.deltacv.vision.external.util.FrameQueue;
 import io.github.deltacv.vision.internal.opmode.OpModeNotification;
@@ -52,6 +53,10 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
 
     volatile boolean isStarted = false;
     volatile boolean stopRequested = false;
+
+    // Stubs!
+    public Gamepad gamepad1 = new Gamepad();
+    public Gamepad gamepad2 = new Gamepad();
 
     protected FrameQueue inputQueue;
 

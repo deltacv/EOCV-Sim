@@ -43,7 +43,7 @@ object GradleWorkspaceTemplate : WorkspaceTemplate() {
         if(!folder.isDirectory) return false
 
         val templateZipFile = SysUtil.copyFileIsTemp(
-            templateZipResource, "gradle_workspace.zip", false
+            templateZipResource, "gradle_workspace.zip", true
         ).file
 
         return try {

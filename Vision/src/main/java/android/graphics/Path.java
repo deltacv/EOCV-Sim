@@ -60,6 +60,10 @@ public class Path {
         final int nativeInt;
     }
 
+    /**
+     * Internal: thePath represents the underlying skiko Path
+     * This field is not present in native android.graphics
+     */
     public org.jetbrains.skia.Path thePath;
 
     public Path() {

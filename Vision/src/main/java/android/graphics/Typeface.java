@@ -23,15 +23,23 @@
 
 package android.graphics;
 
+import org.jetbrains.skia.Data;
 import org.jetbrains.skia.FontMgr;
 import org.jetbrains.skia.FontStyle;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 public class Typeface {
 
-    public static Typeface DEFAULT = new Typeface(FontMgr.Companion.getDefault().matchFamilyStyle(null, FontStyle.Companion.getNORMAL()));
-    public static Typeface DEFAULT_BOLD = new Typeface(FontMgr.Companion.getDefault().matchFamilyStyle(null, FontStyle.Companion.getBOLD()));
-    public static Typeface DEFAULT_ITALIC = new Typeface(FontMgr.Companion.getDefault().matchFamilyStyle(null, FontStyle.Companion.getITALIC()));
+    public static Typeface DEFAULT = new Typeface(FontMgr.Companion.getDefault().makeFromData(loadDataFromResource("/fonts/Roboto-Regular.ttf"), 0));
+    public static Typeface DEFAULT_BOLD = new Typeface(FontMgr.Companion.getDefault().makeFromData(loadDataFromResource("/fonts/Roboto-Bold.ttf"), 0));
+    public static Typeface DEFAULT_ITALIC = new Typeface(FontMgr.Companion.getDefault().makeFromData(loadDataFromResource("/fonts/Roboto-Italic.ttf"), 0));
 
+    /**
+     * Internal: theTypeface represents the underlying skiko Typeface
+     * This field is not present in native android.graphics
+     */
     public org.jetbrains.skia.Typeface theTypeface;
 
     public Typeface(long ptr) {
@@ -49,6 +57,19 @@ public class Typeface {
                 (int) theTypeface.getBounds().getRight(),
                 (int) theTypeface.getBounds().getBottom()
         );
+    }
+
+    private static Data loadDataFromResource(String resource) {
+        try {
+            byte[] bytes = Typeface.class.getResourceAsStream(resource).readAllBytes();
+
+            return Data.Companion.makeFromBytes(
+                    bytes,
+                    0, bytes.length
+            );
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Failed to load from resource: " + resource, e);
+        }
     }
 
 }

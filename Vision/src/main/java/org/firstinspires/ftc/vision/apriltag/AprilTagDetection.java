@@ -33,6 +33,7 @@
 
 package org.firstinspires.ftc.vision.apriltag;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.opencv.core.Point;
 
 public class AprilTagDetection
@@ -79,12 +80,17 @@ public class AprilTagDetection
     public final AprilTagPoseRaw rawPose;
 
     /*
+     * Robot pose data returned by the pose solver
+     */
+    public final Pose3D robotPose;
+
+    /*
      * Timestamp of when the image in which this detection was found was acquired
      */
     public final long frameAcquisitionNanoTime;
 
     public AprilTagDetection(int id, int hamming, float decisionMargin, Point center, Point[] corners,
-                             AprilTagMetadata metadata, AprilTagPoseFtc ftcPose, AprilTagPoseRaw rawPose, long frameAcquisitionNanoTime)
+                             AprilTagMetadata metadata, AprilTagPoseFtc ftcPose, AprilTagPoseRaw rawPose, Pose3D robotPose, long frameAcquisitionNanoTime)
     {
         this.id = id;
         this.hamming = hamming;
@@ -94,6 +100,7 @@ public class AprilTagDetection
         this.metadata = metadata;
         this.ftcPose = ftcPose;
         this.rawPose = rawPose;
+        this.robotPose = robotPose;
         this.frameAcquisitionNanoTime = frameAcquisitionNanoTime;
     }
 }

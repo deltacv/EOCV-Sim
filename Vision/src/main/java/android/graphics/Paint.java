@@ -176,6 +176,10 @@ public class Paint {
         public float   leading;
     }
 
+    /**
+     * Internal: thePaint represents the underlying skiko paint
+     * This field is not present in native android.graphics
+     */
     public org.jetbrains.skia.Paint thePaint;
 
     private Typeface typeface;
@@ -354,7 +358,7 @@ public class Paint {
 
     public Typeface getTypeface() {
         if(typeface == null) {
-            typeface = Typeface.DEFAULT;
+            return Typeface.DEFAULT;
         }
 
         return typeface;

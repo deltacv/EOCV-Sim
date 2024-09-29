@@ -75,7 +75,7 @@ public class DefaultPipeline extends OpenCvPipeline {
 
     @Override
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
-        canvas.drawRect(new Rect(0, 0, 385, 45), boxPaint);
+        canvas.drawRect(new Rect(0, 0, 345, 45), boxPaint);
         canvas.drawText("Default pipeline selected", 5, 33, textPaint);
     }
 

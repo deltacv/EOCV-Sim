@@ -88,7 +88,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
     fun init() {
         logger.info("Initializing...")
-        asyncCompile(false)
+        asyncCompile()
 
         workspaceManager.onWorkspaceChange {
             asyncCompile()
@@ -189,7 +189,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         return result
     }
 
-    fun compile(fixSelectedPipeline: Boolean = true) = try {
+    fun compile() = try {
         runBlocking { uncheckedCompile() }
     } catch(e: Throwable) {
         isBuildRunning = false
@@ -200,7 +200,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             |Unexpected exception thrown while the build was running
             |
             |$stacktrace
-            |
+            |   
             |If this seems like a bug, please open an issue in the EOCV-Sim github repo
         """.trimMargin()
 
@@ -217,10 +217,9 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     @JvmOverloads
     @OptIn(DelicateCoroutinesApi::class)
     fun asyncCompile(
-        fixSelectedPipeline: Boolean = true,
         endCallback: (PipelineCompileResult) -> Unit = {}
     ) = GlobalScope.launch(Dispatchers.IO) {
-        endCallback(compile(fixSelectedPipeline))
+        endCallback(compile())
     }
 
     private fun deleteJarFile() {

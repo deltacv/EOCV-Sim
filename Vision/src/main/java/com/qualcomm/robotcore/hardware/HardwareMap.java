@@ -21,7 +21,7 @@ public class HardwareMap {
             return (T) new SourcedCameraNameImpl(ThreadSourceHander.hand(deviceName));
         }
 
-        return null;
+        throw new IllegalArgumentException("Unknown device type " + classType.getName());
     }
 
 }

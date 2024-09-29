@@ -211,6 +211,10 @@ public class Bitmap implements AutoCloseable {
         return bm;
     }
 
+    /**
+     * Internal: theBitmap represents the underlying skiko Bitmap
+     * This field is not present in native android.graphics
+     */
     public final org.jetbrains.skia.Bitmap theBitmap;
 
     public Bitmap() {

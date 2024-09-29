@@ -10,7 +10,7 @@ buildscript {
         log4j_version = "2.17.1"
         opencv_version = "4.7.0-0"
         apriltag_plugin_version = "2.0.0-C"
-        skiko_version = "0.7.75"
+        skiko_version = "0.8.15"
 
         classgraph_version = "4.8.108"
         opencsv_version = "5.5.2"
@@ -37,7 +37,7 @@ plugins {
 
 allprojects {
     group 'com.github.deltacv'
-    version '3.7.0'
+    version '3.7.1'
 
     apply plugin: 'java'
 

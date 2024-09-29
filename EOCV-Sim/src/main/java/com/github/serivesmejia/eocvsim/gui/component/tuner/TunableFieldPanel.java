@@ -33,7 +33,7 @@ import javax.swing.*;
 import javax.swing.border.SoftBevelBorder;
 import java.awt.*;
 
-@SuppressWarnings("Unchecked")
+@SuppressWarnings("unchecked")
 public class TunableFieldPanel extends JPanel {
 
     public final TunableField tunableField;

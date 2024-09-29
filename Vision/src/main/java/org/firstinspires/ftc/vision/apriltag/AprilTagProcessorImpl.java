@@ -35,16 +35,20 @@ package org.firstinspires.ftc.vision.apriltag;
 
 import android.graphics.Canvas;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.MovingStatistics;
 import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.matrices.GeneralMatrixF;
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
@@ -57,16 +61,16 @@ import org.opencv.core.Point3;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.apriltag.AprilTagDetectorJNI;
 import org.openftc.apriltag.ApriltagDetectionJNI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.logging.Logger;
 
-@Disabled
 public class AprilTagProcessorImpl extends AprilTagProcessor
 {
     public static final String TAG = "AprilTagProcessorImpl";
 
-    private Logger logger = Logger.getLogger(TAG);
+    Logger logger = LoggerFactory.getLogger(TAG);
 
     private long nativeApriltagPtr;
     private Mat grey = new Mat();
@@ -85,6 +89,7 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
     private double fy;
     private double cx;
     private double cy;
+    private final boolean suppressCalibrationWarnings;
 
     private final AprilTagLibrary tagLibrary;
 
@@ -97,10 +102,15 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
     private final DistanceUnit outputUnitsLength;
     private final AngleUnit outputUnitsAngle;
 
-    private volatile PoseSolver poseSolver = PoseSolver.OPENCV_ITERATIVE;
+    private volatile PoseSolver poseSolver = PoseSolver.APRILTAG_BUILTIN;
 
-    public AprilTagProcessorImpl(double fx, double fy, double cx, double cy, DistanceUnit outputUnitsLength, AngleUnit outputUnitsAngle, AprilTagLibrary tagLibrary, boolean drawAxes, boolean drawCube, boolean drawOutline, boolean drawTagID, TagFamily tagFamily, int threads)
+    private OpenGLMatrix robotInCameraFrame;
+
+    public AprilTagProcessorImpl(OpenGLMatrix robotInCameraFrame, double fx, double fy, double cx, double cy, DistanceUnit outputUnitsLength, AngleUnit outputUnitsAngle, AprilTagLibrary tagLibrary,
+                                 boolean drawAxes, boolean drawCube, boolean drawOutline, boolean drawTagID, TagFamily tagFamily, int threads, boolean suppressCalibrationWarnings)
     {
+        this.robotInCameraFrame = robotInCameraFrame;
+
         this.fx = fx;
         this.fy = fy;
         this.cx = cx;
@@ -109,6 +119,7 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
         this.tagLibrary = tagLibrary;
         this.outputUnitsLength = outputUnitsLength;
         this.outputUnitsAngle = outputUnitsAngle;
+        this.suppressCalibrationWarnings = suppressCalibrationWarnings;
         this.drawAxes = drawAxes;
         this.drawCube = drawCube;
         this.drawOutline = drawOutline;
@@ -137,39 +148,84 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
     @Override
     public void init(int width, int height, CameraCalibration calibration)
     {
-        // If the user didn't give us a calibration, but we have one built in,
-        // then go ahead and use it!!
-        if (calibration != null && fx == 0 && fy == 0 && cx == 0 && cy == 0
-                && !(calibration.focalLengthX == 0 && calibration.focalLengthY == 0 && calibration.principalPointX == 0 && calibration.principalPointY == 0)) // needed because we may get an all zero calibration to indicate none, instead of null
+        // ATTEMPT 1 - If the user provided their own calibration, use that
+        if (fx != 0 && fy != 0 && cx != 0 && cy != 0)
+        {
+            logger.debug(String.format("User provided their own camera calibration fx=%7.3f fy=%7.3f cx=%7.3f cy=%7.3f",
+                    fx, fy, cx, cy));
+        }
+
+        // ATTEMPT 2 - If we have valid calibration we can use, use it
+        else if (calibration != null && !calibration.isDegenerate()) // needed because we may get an all zero calibration to indicate none, instead of null
         {
             fx = calibration.focalLengthX;
             fy = calibration.focalLengthY;
             cx = calibration.principalPointX;
             cy = calibration.principalPointY;
 
-            logger.info(String.format("User did not provide a camera calibration; but we DO have a built in calibration we can use.\n [%dx%d] (may be scaled) %s\nfx=%7.3f fy=%7.3f cx=%7.3f cy=%7.3f",
-                    calibration.getSize().getWidth(), calibration.getSize().getHeight(), calibration.getIdentity().toString(), fx, fy, cx, cy));
+            // Note that this might have been a scaled calibration - inform the user if so
+            if (calibration.resolutionScaledFrom != null)
+            {
+                String msg = String.format("Camera has not been calibrated for [%dx%d]; applying a scaled calibration from [%dx%d].", width, height, calibration.resolutionScaledFrom.getWidth(), calibration.resolutionScaledFrom.getHeight());
+
+                if (!suppressCalibrationWarnings)
+                {
+                    logger.warn(msg);
+                }
+            }
+            // Nope, it was a full up proper calibration - no need to pester the user about anything
+            else
+            {
+                logger.debug(String.format("User did not provide a camera calibration; but we DO have a built in calibration we can use.\n [%dx%d] (NOT scaled) %s\nfx=%7.3f fy=%7.3f cx=%7.3f cy=%7.3f",
+                        calibration.getSize().getWidth(), calibration.getSize().getHeight(), calibration.getIdentity().toString(), fx, fy, cx, cy));
+            }
         }
-        else if (fx == 0 && fy == 0 && cx == 0 && cy == 0)
+
+        // Okay, we aren't going to have any calibration data we can use, but there are 2 cases to check
+        else
         {
-            // set it to *something* so we don't crash the native code
+            // NO-OP, we cannot implement this for EOCV-Sim in the same way as the FTC SDK
 
-            String warning = "User did not provide a camera calibration, nor was a built-in calibration found for this camera; 6DOF pose data will likely be inaccurate.";
-            logger.warning(warning);
+            /*
+            // If we have a calibration on file, but with a wrong aspect ratio,
+            // we can't use it, but hey at least we can let the user know about it.
+            if (calibration instanceof PlaceholderCalibratedAspectRatioMismatch)
+            {
+                StringBuilder supportedResBuilder = new StringBuilder();
 
+                for (CameraCalibration cal : CameraCalibrationHelper.getInstance().getCalibrations(calibration.getIdentity()))
+                {
+                    supportedResBuilder.append(String.format("[%dx%d],", cal.getSize().getWidth(), cal.getSize().getHeight()));
+                }
+
+                String msg = String.format("Camera has not been calibrated for [%dx%d]. Pose estimates will likely be inaccurate. However, there are built in calibrations for resolutions: %s",
+                        width, height, supportedResBuilder.toString());
+
+                if (!suppressCalibrationWarnings)
+                {
+                    logger.warn(msg);
+                }
+
+
+            // Nah, we got absolutely nothing
+            else*/
+            {
+                String warning = "User did not provide a camera calibration, nor was a built-in calibration found for this camera. Pose estimates will likely be inaccurate.";
+
+                if (!suppressCalibrationWarnings)
+                {
+                    logger.warn(warning);
+                }
+            }
+
+            // IN EITHER CASE, set it to *something* so we don't crash the native code
             fx = 578.272;
             fy = 578.272;
             cx = width/2;
             cy = height/2;
         }
-        else
-        {
-            logger.info(String.format("User provided their own camera calibration fx=%7.3f fy=%7.3f cx=%7.3f cy=%7.3f",
-                    fx, fy, cx, cy));
-        }
 
         constructMatrix();
-
         canvasAnnotator = new AprilTagCanvasAnnotator(cameraMatrix);
     }
 
@@ -225,6 +281,7 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
 
                 AprilTagPoseRaw rawPose;
                 AprilTagPoseFtc ftcPose;
+                Pose3D robotPose;
 
                 if (metadata != null)
                 {
@@ -294,10 +351,13 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
                             Math.hypot(rawPose.x, rawPose.z), // range
                             outputUnitsAngle.fromUnit(AngleUnit.RADIANS, Math.atan2(-rawPose.x, rawPose.z)), // bearing
                             outputUnitsAngle.fromUnit(AngleUnit.RADIANS, Math.atan2(-rawPose.y, rawPose.z))); // elevation
+
+                    robotPose = computeRobotPose(rawPose, metadata, captureTimeNanos);
                 }
                 else
                 {
                     ftcPose = null;
+                    robotPose = null;
                 }
 
                 double[] center = ApriltagDetectionJNI.getCenterpoint(ptrDetection);
@@ -306,7 +366,7 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
                         ApriltagDetectionJNI.getId(ptrDetection),
                         ApriltagDetectionJNI.getHamming(ptrDetection),
                         ApriltagDetectionJNI.getDecisionMargin(ptrDetection),
-                        new Point(center[0], center[1]), cornerPts, metadata, ftcPose, rawPose, captureTimeNanos));
+                        new Point(center[0], center[1]), cornerPts, metadata, ftcPose, rawPose, robotPose, captureTimeNanos));
             }
 
             ApriltagDetectionJNI.freeDetectionList(ptrDetectionArray);
@@ -314,6 +374,53 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
         }
 
         return new ArrayList<>();
+    }
+
+    private Pose3D computeRobotPose(AprilTagPoseRaw rawPose, AprilTagMetadata metadata, long acquisitionTime)
+    {
+        // Compute transformation matrix of tag pose in field reference frame
+        float tagInFieldX = metadata.fieldPosition.get(0);
+        float tagInFieldY = metadata.fieldPosition.get(1);
+        float tagInFieldZ = metadata.fieldPosition.get(2);
+        OpenGLMatrix tagInFieldR = new OpenGLMatrix(metadata.fieldOrientation.toMatrix());
+        OpenGLMatrix tagInFieldFrame = OpenGLMatrix.identityMatrix()
+                .translated(tagInFieldX, tagInFieldY, tagInFieldZ)
+                .multiplied(tagInFieldR);
+
+        // Compute transformation matrix of camera pose in tag reference frame
+        float tagInCameraX = (float) DistanceUnit.INCH.fromUnit(outputUnitsLength, rawPose.x);
+        float tagInCameraY = (float) DistanceUnit.INCH.fromUnit(outputUnitsLength, rawPose.y);
+        float tagInCameraZ = (float) DistanceUnit.INCH.fromUnit(outputUnitsLength, rawPose.z);
+        OpenGLMatrix tagInCameraR = new OpenGLMatrix((rawPose.R));
+        OpenGLMatrix cameraInTagFrame = OpenGLMatrix.identityMatrix()
+                .translated(tagInCameraX, tagInCameraY, tagInCameraZ)
+                .multiplied(tagInCameraR)
+                .inverted();
+
+        // Compute transformation matrix of robot pose in field frame
+        OpenGLMatrix robotInFieldFrame =
+                tagInFieldFrame
+                        .multiplied(cameraInTagFrame)
+                        .multiplied(robotInCameraFrame);
+
+        // Extract robot location
+        VectorF robotInFieldTranslation = robotInFieldFrame.getTranslation();
+        Position robotPosition = new Position(DistanceUnit.INCH,
+                robotInFieldTranslation.get(0),
+                robotInFieldTranslation.get(1),
+                robotInFieldTranslation.get(2),
+                acquisitionTime).toUnit(outputUnitsLength);
+
+        // Extract robot orientation
+        Orientation robotInFieldOrientation = Orientation.getOrientation(robotInFieldFrame,
+                AxesReference.INTRINSIC, AxesOrder.ZXY, outputUnitsAngle);
+        YawPitchRollAngles robotOrientation = new YawPitchRollAngles(outputUnitsAngle,
+                robotInFieldOrientation.firstAngle,
+                robotInFieldOrientation.secondAngle,
+                robotInFieldOrientation.thirdAngle,
+                acquisitionTime);
+
+        return new Pose3D(robotPosition, robotOrientation);
     }
 
     private final Object drawSync = new Object();

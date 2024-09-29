@@ -39,6 +39,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.IntConsumer;
 
 public class DialogFactory {
@@ -57,7 +60,7 @@ public class DialogFactory {
             panel.setLayout(new GridLayout(2, 1));
         }
 
-        SwingUtilities.invokeLater(() -> result.accept(
+        invokeLater(() -> result.accept(
                 JOptionPane.showConfirmDialog(parent, panel, "Confirm",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.PLAIN_MESSAGE

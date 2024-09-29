@@ -33,8 +33,14 @@
 
 package org.firstinspires.ftc.vision.apriltag;
 
+import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.calib3d.Calib3d;
 import org.openftc.apriltag.AprilTagDetectorJNI;
@@ -67,17 +73,34 @@ public abstract class AprilTagProcessor implements VisionProcessor
 
     public static class Builder
     {
+        private Position cameraPosition = new Position();
+        private YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, 0, 0, 0);
         private double fx, fy, cx, cy;
         private TagFamily tagFamily = TagFamily.TAG_36h11;
         private AprilTagLibrary tagLibrary = AprilTagGameDatabase.getCurrentGameTagLibrary();
         private DistanceUnit outputUnitsLength = DistanceUnit.INCH;
         private AngleUnit outputUnitsAngle = AngleUnit.DEGREES;
         private int threads = THREADS_DEFAULT;
+        private boolean suppressCalibrationWarnings;
 
         private boolean drawAxes = false;
         private boolean drawCube = false;
         private boolean drawOutline = true;
         private boolean drawTagId = true;
+
+        /**
+         * Set the camera pose relative to the robot origin.
+         * @param position Position of camera relative to the robot origin
+         * @param orientation Orientation of camera relative to the robot origin
+         * @return the {@link Builder} object, to allow for method chaining
+         */
+        public Builder setCameraPose(Position position, YawPitchRollAngles orientation)
+        {
+            cameraPosition = position;
+            cameraOrientation = orientation;
+
+            return this;
+        }
 
         /**
          * Set the camera calibration parameters (needed for accurate 6DOF pose unless the
@@ -94,6 +117,17 @@ public abstract class AprilTagProcessor implements VisionProcessor
             this.fy = fy;
             this.cx = cx;
             this.cy = cy;
+            return this;
+        }
+
+        /**
+         * Set whether any warnings about camera calibration should be suppressed
+         * @param suppressCalibrationWarnings whether to suppress calibration warnings
+         * @return the {@link Builder} object, to allow for method chaining
+         */
+        public Builder setSuppressCalibrationWarnings(boolean suppressCalibrationWarnings)
+        {
+            this.suppressCalibrationWarnings = suppressCalibrationWarnings;
             return this;
         }
 
@@ -193,8 +227,8 @@ public abstract class AprilTagProcessor implements VisionProcessor
 
         /**
          * Create a {@link VisionProcessor} object which may be attached to
-         * a {link org.firstinspires.ftc.vision.VisionPortal} using
-         * {link org.firstinspires.ftc.vision.VisionPortal.Builder#addProcessor(VisionProcessor)}
+         * a {@link org.firstinspires.ftc.vision.VisionPortal} using
+         * {@link org.firstinspires.ftc.vision.VisionPortal.Builder#addProcessor(VisionProcessor)}
          * @return a {@link VisionProcessor} object
          */
         public AprilTagProcessor build()
@@ -209,11 +243,27 @@ public abstract class AprilTagProcessor implements VisionProcessor
                 throw new RuntimeException("Cannot create AprilTagProcessor without setting tag family!");
             }
 
+            OpenGLMatrix cameraRotationMatrix = new Orientation(
+                    AxesReference.INTRINSIC, AxesOrder.ZXZ, AngleUnit.DEGREES,
+                    (float) cameraOrientation.getYaw(AngleUnit.DEGREES),
+                    (float) cameraOrientation.getPitch(AngleUnit.DEGREES),
+                    (float) cameraOrientation.getRoll(AngleUnit.DEGREES),
+                    cameraOrientation.getAcquisitionTime())
+                    .getRotationMatrix();
+
+            OpenGLMatrix robotInCameraFrame = OpenGLMatrix.identityMatrix()
+                    .translated(
+                            (float) cameraPosition.toUnit(DistanceUnit.INCH).x,
+                            (float) cameraPosition.toUnit(DistanceUnit.INCH).y,
+                            (float) cameraPosition.toUnit(DistanceUnit.INCH).z)
+                    .multiplied(cameraRotationMatrix)
+                    .inverted();
+
             return new AprilTagProcessorImpl(
-                    fx, fy, cx, cy,
+                    robotInCameraFrame, fx, fy, cx, cy,
                     outputUnitsLength, outputUnitsAngle, tagLibrary,
                     drawAxes, drawCube, drawOutline, drawTagId,
-                    tagFamily, threads
+                    tagFamily, threads, suppressCalibrationWarnings
             );
         }
     }

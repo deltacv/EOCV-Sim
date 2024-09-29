@@ -47,7 +47,9 @@ Since OpenCV in Java uses a native library, which is platform specific, the simu
 
 Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downloading-eocv-sim) to download the sim. The rest of the documentation can also be found [there](https://deltacv.gitbook.io/eocv-sim/).
 
-## Adding EOCV-Sim as a dependency
+## Adding EOCV-Sim as a dependency for plugin development
+
+### NOT FOR FTC SDK USAGE, please follow the documentation above if you're a normal user not aiming to develop for EOCV-Sim
 
    ### Gradle
    ```groovy
@@ -56,7 +58,7 @@ Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downl
    }
    
    dependencies {
-      implementation 'com.github.deltacv:EOCV-Sim:3.3.2' //add the EOCV-Sim dependency
+      implementation 'com.github.deltacv:EOCV-Sim:3.3.2' // add the EOCV-Sim dependency, make sure to replace for the latest version
    }
    ```
    
@@ -84,12 +86,29 @@ Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downl
 # Contact
 For bug reporting or feature requesting, use the [issues tab](https://github.com/deltacv/EOCV-Sim/issues) in this repository.
 
+Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
+
 # Change logs
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v3.7.1 - Better FTC VisionPortal support & Plugin System Fixes](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.7.1)
+- This is the 24th release for EOCV-Sim
+    - Changelog
+        - Update skiko to 0.8.15
+        - Fixes Typeface.DEFAULT_BOLD and Typeface.DEFAULT_ITALIC to actually work
+        - Adds a stub no-op implementation for the FTC SDK Gamepad class into OpMode
+        - Adds android.opengl.Matrix implementation and matrices from the FTC SDK
+        - Adds navigation classes from the FTC SDK (AngleUnit, AxesOrder, AxesReference, etc)
+        - Adds the ConceptAprilTagLocalization, ConceptVisionColorLocator and ConceptVisionColorSensor samples
+        - Reimplements Telemetry to EOCVSimTelemetryImpl with stubs for Telemetry#talk
+        - Internal changes:
+            - Plugin virtual filesystems now use the name and author in the TOML to generate the fs name
+            - Allows to specify JVM args in JavaExec
+            - Rename some internal classes
+            - Better handling of Pipeline/OpMode tab switching
 
-### [v3.7.0 - FTC SDK 10.1 & Refined Plugin System](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.4)
+### [v3.7.0 - FTC SDK 10.1 & Refined Plugin System](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.7.0)
 - This is the 23nd release for EOCV-Sim
     - Changelog
         - Addresses the changes made in the FTC SDK 10.1 for the 2024-2025 season:
@@ -101,7 +120,7 @@ For bug reporting or feature requesting, use the [issues tab](https://github.com
     - Bugfixes:
         - Fixes exception loop when an exception is thrown from pipeline init
 
-### [v3.6.0 - Plugin System & Into the Deep AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.5.4)
+### [v3.6.0 - Plugin System & Into the Deep AprilTags](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.6.0)
 - This is the 22nd release for EOCV-Sim
     - Changelog
         - Addresses the changes made in the FTC SDK 10.0 for the 2024-2025 season:

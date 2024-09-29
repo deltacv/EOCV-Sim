@@ -388,43 +388,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
             inputSourceManager.update(pipelineManager.paused)
             tunerManager.update()
 
-            try {
-                pipelineManager.update(
-                    if (inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
-                        inputSourceManager.lastMatFromSource
-                    } else null
-                )
-            } catch (ex: MaxActiveContextsException) { //handles when a lot of pipelines are stuck in the background
-                visualizer.asyncPleaseWaitDialog(
-                    "There are many pipelines stuck in processFrame running in the background",
-                    "To avoid further issues, EOCV-Sim will exit now.",
-                    "Ok",
-                    Dimension(450, 150),
-                    true,
-                    true
-                ).onCancel {
-                    destroy(DestroyReason.CRASH) //destroy eocv sim when pressing "exit"
-                }
-
-                //print exception
-                logger.error(
-                    "Please note that the following exception is likely to be caused by one or more of the user pipelines",
-                    ex
-                )
-
-                //block the current thread until the user closes the dialog
-                try {
-                    //using sleep for avoiding burning cpu cycles
-                    Thread.sleep(Long.MAX_VALUE)
-                } catch (ignored: InterruptedException) {
-                    //reinterrupt once user closes the dialog
-                    Thread.currentThread().interrupt()
-                }
-
-                break //bye bye
-            } catch (ex: InterruptedException) {
-                break // bye bye
-            }
+            pipelineManager.update(
+                if (inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
+                    inputSourceManager.lastMatFromSource
+                } else null
+            )
 
             //limit FPG
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()

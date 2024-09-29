@@ -55,6 +55,7 @@ public class CameraCalibration extends CameraIntrinsics implements Cloneable
     protected Size size;
     protected boolean remove;
     protected final boolean isFake;
+    public Size resolutionScaledFrom;
 
     @Override public String toString()
     {
@@ -148,6 +149,7 @@ public class CameraCalibration extends CameraIntrinsics implements Cloneable
         result.focalLengthY *= factor;
         result.principalPointX *= factor;
         result.principalPointY *= factor;
+        result.resolutionScaledFrom = size;
         return result;
     }
 

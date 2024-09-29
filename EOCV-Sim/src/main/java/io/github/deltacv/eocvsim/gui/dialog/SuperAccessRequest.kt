@@ -103,7 +103,7 @@ class SuperAccessRequest(sourceName: String, reason: String) {
         // Setup the frame
         frame.contentPane = panel
         frame.isAlwaysOnTop = true
-        frame.defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE
+        frame.defaultCloseOperation = JDialog.HIDE_ON_CLOSE
         frame.isResizable = false
 
         frame.addWindowListener(object: WindowListener {
