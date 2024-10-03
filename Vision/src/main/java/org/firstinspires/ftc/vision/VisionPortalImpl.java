@@ -219,7 +219,14 @@ public class VisionPortalImpl extends VisionPortal
     {
         if (cameraState == CameraState.STREAMING)
         {
-            throw new UnsupportedOperationException("Getting controls is not yet supported in EOCV-Sim");
+            if (camera instanceof OpenCvWebcam)
+            {
+                return ((OpenCvWebcam) camera).getControl(controlType);
+            }
+            else
+            {
+                throw new UnsupportedOperationException("Getting controls is only supported for webcams");
+            }
         }
         else
         {

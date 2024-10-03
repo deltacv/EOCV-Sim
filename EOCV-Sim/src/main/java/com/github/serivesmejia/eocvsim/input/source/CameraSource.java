@@ -24,14 +24,18 @@
 package com.github.serivesmejia.eocvsim.input.source;
 
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
+import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import com.google.gson.annotations.Expose;
 import io.github.deltacv.steve.Webcam;
+import io.github.deltacv.steve.WebcamPropertyControl;
 import io.github.deltacv.steve.WebcamRotation;
 import io.github.deltacv.steve.opencv.OpenCvWebcam;
 import io.github.deltacv.steve.opencv.OpenCvWebcamBackend;
 import io.github.deltacv.steve.openimaj.OpenIMAJWebcamBackend;
+import io.github.deltacv.steve.openpnp.OpenPnpBackend;
+import io.github.deltacv.steve.openpnp.OpenPnpWebcam;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -100,6 +104,11 @@ public class CameraSource extends InputSource {
         isLegacyByIndex = true;
     }
 
+    public WebcamPropertyControl getWebcamPropertyControl() {
+        if(camera == null) return null;
+        return camera.getPropertyControl();
+    }
+
     @Override
     public void setSize(Size size) {
         this.size = size;
@@ -113,7 +122,11 @@ public class CameraSource extends InputSource {
         if(rotation == null) rotation = WebcamRotation.UPRIGHT;
 
         if(webcamName != null) {
-            Webcam.Companion.setBackend(OpenIMAJWebcamBackend.INSTANCE);
+            if(eocvSim.getConfig().preferredWebcamDriver == WebcamDriver.OpenPnp) {
+                Webcam.Companion.setBackend(OpenPnpBackend.INSTANCE);
+            } else {
+                Webcam.Companion.setBackend(OpenIMAJWebcamBackend.INSTANCE);
+            }
 
             List<Webcam> webcams = Webcam.Companion.getAvailableWebcams();
 
@@ -143,10 +156,16 @@ public class CameraSource extends InputSource {
 
         camera.setResolution(size);
         camera.setRotation(rotation);
-        camera.open();
+
+        try {
+            camera.open();
+        } catch (Exception ex) {
+            logger.error("Error while opening camera " + webcamIndex, ex);
+            return false;
+        }
 
         if (!camera.isOpen()) {
-            logger.error("Unable to open camera " + webcamIndex);
+            logger.error("Unable to open camera " + webcamIndex + ", isOpen() returned false.");
             return false;
         }
 
@@ -220,9 +239,12 @@ public class CameraSource extends InputSource {
 
         if (size == null) size = lastFrame.size();
 
-        // not needed. cameras return RGB now
-        // Imgproc.cvtColor(newFrame, lastFrame, Imgproc.COLOR_BGR2RGB);
-        newFrame.copyTo(lastFrame);
+
+        if(camera instanceof OpenPnpWebcam)
+            // we will look like the smurfs if we don't do this...
+            // (OpenPnpWebcam returns BGR instead of RGB, ugh, i should fix that)
+            Imgproc.cvtColor(newFrame, lastFrame, Imgproc.COLOR_BGR2RGB);
+        else newFrame.copyTo(lastFrame);
 
         newFrame.release();
         newFrame.returnMat();

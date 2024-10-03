@@ -1,7 +1,10 @@
 package io.github.deltacv.eocvsim.input
 
 import com.github.serivesmejia.eocvsim.input.InputSource
+import com.github.serivesmejia.eocvsim.input.source.CameraSource
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.eocvsim.input.control.CameraSourceControlMap
+import io.github.deltacv.vision.external.source.CameraControlMap
 import io.github.deltacv.vision.external.source.VisionSourceBase
 import io.github.deltacv.vision.external.util.ThrowableHandler
 import io.github.deltacv.vision.external.util.Timestamped
@@ -18,6 +21,10 @@ class VisionInputSource(
     override fun init(): Int {
         return 0
     }
+
+    override fun getControlMap() = if(inputSource is CameraSource) {
+        CameraSourceControlMap(inputSource)
+    } else throw IllegalStateException("Controls are not available for source ${inputSource.name}")
 
     override fun close(): Boolean {
         inputSource.close()

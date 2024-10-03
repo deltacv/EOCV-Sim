@@ -60,7 +60,7 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-core:$log4j_version"
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version"
 
-    implementation "com.github.deltacv:steve:1.0.0"
+    implementation "com.github.deltacv:steve:1.1.1"
     implementation "com.github.deltacv.AprilTagDesktop:AprilTagDesktop:$apriltag_plugin_version"
 
     implementation 'info.picocli:picocli:4.6.1'

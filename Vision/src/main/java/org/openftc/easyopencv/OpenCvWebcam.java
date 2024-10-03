@@ -21,11 +21,22 @@
 
 package org.openftc.easyopencv;
 
-public interface OpenCvWebcam extends OpenCvCamera {
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.CameraControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.FocusControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.PtzControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.WhiteBalanceControl;
+import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibrationIdentity;
 
-    default void startStreaming(int width, int height, OpenCvCameraRotation cameraRotation, StreamFormat eocvStreamFormat) {
-        startStreaming(width, height, cameraRotation);
-    }
+public interface OpenCvWebcam extends OpenCvCamera
+{
+    /**
+     * Set how long to wait for permission to open the
+     * camera before giving up
+     * @param ms milliseconds to wait for
+     */
+    void setMillisecondsPermissionTimeout(int ms);
 
     enum StreamFormat
     {
@@ -41,4 +52,73 @@ public interface OpenCvWebcam extends OpenCvCamera {
         MJPEG;
     }
 
+    /**
+     * Same as {@link #startStreaming(int, int, OpenCvCameraRotation)} except for
+     * @param streamFormat indicates the desired stream format.
+     */
+    void startStreaming(int width, int height, OpenCvCameraRotation rotation, StreamFormat streamFormat);
+
+    /***
+     * Gets the {@link ExposureControl} for this webcam.
+     * Please see that interface's javadoc for how to use
+     * it. It is an interface provided directly by the SDK
+     * UVC driver, not EasyOpenCV.
+     *
+     * @return the ExposureControl for this webcam
+     */
+    ExposureControl getExposureControl();
+
+    /***
+     * Gets the {@link FocusControl} for this webcam.
+     * Please see that interface's javadoc for how to use
+     * it. It is an interface provided directly by the SDK
+     * UVC driver, not EasyOpenCV.
+     *
+     * @return the FocusControl for this webcam
+     */
+    FocusControl getFocusControl();
+
+    /***
+     * Gets the {@link PtzControl} for this webcam.
+     * Please see that interface's javadoc for how to use
+     * it. It is an interface provided directly by the SDK
+     * UVC driver, not EasyOpenCV.
+     *
+     * @return the PtzControl for this webcam
+     */
+    PtzControl getPtzControl();
+
+    /***
+     * Gets the {@link GainControl} for this webcam.
+     * Please see that interface's javadoc for how to use
+     * it. It is an interface provided directly by the SDK
+     * UVC driver, not EasyOpenCV.
+     *
+     * @return the GainControl for this webcam
+     */
+    GainControl getGainControl();
+
+    /***
+     * Gets the {@link WhiteBalanceControl} for this webcam.
+     * Please see that interface's javadoc for how to use
+     * it. It is an interface provided directly by the SDK
+     * UVC driver, not EasyOpenCV.
+     *
+     * @return the WhiteBalanceControl for this webcam
+     */
+    WhiteBalanceControl getWhiteBalanceControl();
+
+    /**
+     * Gets a control for this webcam
+     * @param controlType the class of the control to get
+     * @return the requested control
+     */
+    <T extends CameraControl> T getControl(Class<T> controlType);
+
+    /**
+     * Gets the {@link CameraCalibrationIdentity} for this webcam.
+     * Note: the camera must be opened before calling this!
+     * @return the CameraCalibrationIdentity for this webcam
+     */
+    CameraCalibrationIdentity getCalibrationIdentity();
 }

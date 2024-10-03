@@ -29,6 +29,8 @@ public interface VisionSource {
 
     int init();
 
+    CameraControlMap getControlMap();
+
     boolean start(Size requestedSize);
 
     boolean attach(FrameReceiver sourced);
