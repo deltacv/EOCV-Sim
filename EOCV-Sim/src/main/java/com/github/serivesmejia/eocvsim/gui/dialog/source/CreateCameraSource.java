@@ -98,7 +98,11 @@ public class CreateCameraSource {
 
         if(preferredDriver == WebcamDriver.OpenPnp) {
             Webcam.Companion.setBackend(OpenPnpBackend.INSTANCE);
-            webcams = Webcam.Companion.getAvailableWebcams();
+            try {
+                webcams = Webcam.Companion.getAvailableWebcams();
+            } catch (Throwable e) {
+                logger.error("OpenPnp failed to discover cameras with error", e);
+            }
         } else if(preferredDriver == WebcamDriver.OpenIMAJ) {
             try {
                 Webcam.Companion.setBackend(OpenIMAJWebcamBackend.INSTANCE);

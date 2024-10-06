@@ -134,6 +134,8 @@ public class InputSourceManager {
 
         if (sources.containsKey(name)) return;
 
+        inputSource.eocvSim = eocvSim;
+
         if(eocvSim.visualizer.sourceSelectorPanel != null) {
             eocvSim.visualizer.sourceSelectorPanel.setAllowSourceSwitching(false);
         }
@@ -214,7 +216,6 @@ public class InputSourceManager {
 
         if (src != null) {
             src.reset();
-            src.eocvSim = eocvSim;
         }
 
         //check if source type is a camera, and if so, create a please wait dialog

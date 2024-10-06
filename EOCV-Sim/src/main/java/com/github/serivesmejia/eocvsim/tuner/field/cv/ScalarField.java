@@ -43,7 +43,7 @@ public class ScalarField extends TunableField<Scalar> {
 
     volatile boolean hasChanged = false;
 
-    public ScalarField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public ScalarField(Object instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
 
         if(initialFieldValue == null) {

@@ -27,7 +27,10 @@ enum class OpModeType { AUTONOMOUS, TELEOP }
  * @param viewport the viewport to set in the OpMode
  * @see SpecificPipelineHandler
  */
-class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private val viewport: OpenCvViewport) : SpecificPipelineHandler<OpMode>(
+class OpModePipelineHandler(
+    val inputSourceManager: InputSourceManager,
+    private val viewport: OpenCvViewport
+) : SpecificPipelineHandler<OpMode>(
         { it is OpMode }
 ) {
 
@@ -42,7 +45,7 @@ class OpModePipelineHandler(val inputSourceManager: InputSourceManager, private 
         if(pipeline == null) return
 
         inputSourceManager.setInputSource(null)
-        ThreadSourceHander.register(VisionInputSourceHander(pipeline?.notifier ?: return, viewport))
+        ThreadSourceHander.register(VisionInputSourceHander(pipeline?.notifier ?: return, viewport, inputSourceManager))
 
         pipeline?.telemetry = telemetry
         pipeline?.hardwareMap = HardwareMap()    }

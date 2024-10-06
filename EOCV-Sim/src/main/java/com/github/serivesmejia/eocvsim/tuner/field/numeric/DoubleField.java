@@ -34,7 +34,7 @@ import java.lang.reflect.Field;
 @RegisterTunableField
 public class DoubleField extends NumericField<Double> {
 
-    public DoubleField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public DoubleField(Object instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
         value = (double) initialFieldValue;
     }
