@@ -28,6 +28,7 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath 'gradle.plugin.com.github.johnrengelman:shadow:7.1.1'
+        classpath 'io.github.fvarrui:javapackager:1.7.6'
     }
 }
 

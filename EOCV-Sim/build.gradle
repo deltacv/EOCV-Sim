@@ -6,8 +6,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'com.github.johnrengelman.shadow'
     id 'maven-publish'
-
-    id 'edu.sc.seis.launch4j' version '3.0.6'
+    id 'io.github.fvarrui.javapackager.plugin'
 }
 
 apply from: '../build.common.gradle'
@@ -34,15 +33,29 @@ test {
 
 apply from: '../test-logging.gradle'
 
-launch4j {
-    mainClassName = 'com.github.serivesmejia.eocvsim.Main'
-    icon = "${projectDir}/src/main/resources/images/icon/ico_eocvsim.ico"
+tasks.register('pack', io.github.fvarrui.javapackager.gradle.PackageTask) {
+    dependsOn build
+    // mandatory
+    mainClass = 'com.github.serivesmejia.eocvsim.Main'
+    // optional
+    bundleJre = true
+    customizedJre = false
+    generateInstaller = true
+    platform = "auto"
 
-    outfile = "${project.name}-${standardVersion}.exe"
+    winConfig {
+        icoFile = file('src/main/resources/images/icon/ico_eocvsim.ico')
+        originalFilename = "${name}-Installer.exe"
 
-    copyConfigurable = [] // Prevents copying dependencies
-    jarTask = shadowJar
+        generateMsi = false
+        disableDirPage = false
+        disableProgramGroupPage = false
+        disableFinishedPage = false
+    }
 
+    linuxConfig {
+        pngFile = file('src/main/resources/images/icon/ico_eocvsim.png')
+    }
 }
 
 dependencies {

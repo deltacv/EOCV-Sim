@@ -289,7 +289,19 @@ public class SysUtil {
         ArrayList<File> files = new ArrayList<>();
 
         for(String path : classpaths) {
-            files.add(new File(path));
+            File absoluteFile = new File(path);
+
+            if(absoluteFile.exists()) {
+                files.add(absoluteFile);
+            } else {
+                File relativeFile = new File(System.getProperty("user.dir") + File.separator + path);
+                logger.trace("Checking relative file {}", relativeFile.getAbsolutePath());
+
+                if(relativeFile.exists()) {
+                    files.add(relativeFile);
+                    logger.trace("Relative file OK");
+                }
+            }
         }
 
         return files;

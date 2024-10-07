@@ -36,6 +36,7 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
+import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
@@ -411,7 +412,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         if (isRestarting) {
             Thread.interrupted() //clear interrupted flag
-            EOCVSim(params).init()
+            JavaProcess.exec(Main::class.java, null, null)
         }
     }
 
