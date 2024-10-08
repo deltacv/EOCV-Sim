@@ -45,7 +45,6 @@ tasks.register('pack', io.github.fvarrui.javapackager.gradle.PackageTask) {
 
     winConfig {
         icoFile = file('src/main/resources/images/icon/ico_eocvsim.ico')
-        originalFilename = "${name}-Installer.exe"
 
         generateMsi = false
         disableDirPage = false
@@ -74,7 +73,9 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version"
 
     implementation "com.github.deltacv:steve:1.1.1"
-    implementation "com.github.deltacv.AprilTagDesktop:AprilTagDesktop:$apriltag_plugin_version"
+    api(apriltag_plugin_dependency) {
+        exclude group: 'com.github.deltacv.EOCVSim', module: 'Common'
+    }
 
     implementation 'info.picocli:picocli:4.6.1'
     implementation 'com.google.code.gson:gson:2.8.9'

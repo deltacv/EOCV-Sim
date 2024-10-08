@@ -30,6 +30,7 @@ val dynamicLoadingPackageWhitelist = setOf(
     "javax.swing",
     "java.nio",
     "java.io.File",
+    "java.io.PrintStream",
 
     "kotlin",
 

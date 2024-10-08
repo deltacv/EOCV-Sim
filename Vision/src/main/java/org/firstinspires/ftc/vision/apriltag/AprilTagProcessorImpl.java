@@ -141,7 +141,7 @@ public class AprilTagProcessorImpl extends AprilTagProcessor
         }
         else
         {
-            System.out.println("AprilTagDetectionPipeline.finalize(): nativeApriltagPtr was NULL");
+            logger.debug("AprilTagDetectionPipeline.finalize(): nativeApriltagPtr was NULL");
         }
     }
 

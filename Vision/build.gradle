@@ -28,7 +28,9 @@ configurations.all {
 dependencies {
     implementation project(':Common')
 
-    implementation "com.github.deltacv.AprilTagDesktop:AprilTagDesktop:$apriltag_plugin_version"
+    implementation(apriltag_plugin_dependency) {
+        exclude group: 'com.github.deltacv.EOCVSim', module: 'Common'
+    }
 
     api "org.openpnp:opencv:$opencv_version"
 
