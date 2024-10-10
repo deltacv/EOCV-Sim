@@ -1,3 +1,5 @@
+import io.github.fvarrui.javapackager.gradle.PackageTask
+
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -33,7 +35,7 @@ test {
 
 apply from: '../test-logging.gradle'
 
-tasks.register('pack', io.github.fvarrui.javapackager.gradle.PackageTask) {
+tasks.register('pack', PackageTask) {
     dependsOn build
     // mandatory
     mainClass = 'com.github.serivesmejia.eocvsim.Main'
@@ -73,7 +75,7 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version"
 
     implementation "com.github.deltacv:steve:1.1.1"
-    api(apriltag_plugin_dependency) {
+    api("com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version") {
         exclude group: 'com.github.deltacv.EOCVSim', module: 'Common'
     }
 

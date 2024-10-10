@@ -92,15 +92,8 @@ public class AprilTagDetectionPipeline extends OpenCvPipeline
     @Override
     public void init(Mat frame)
     {
-        // Allocate a native context object. See the corresponding deletion in the finalizer
+        // Allocate a native context object.
         nativeApriltagPtr = AprilTagDetectorJNI.createApriltagDetector(AprilTagDetectorJNI.TagFamily.TAG_36h11.string, 3, 3);
-    }
-
-    @Override
-    public void finalize()
-    {
-        // Delete the native context we created in the init() function
-        AprilTagDetectorJNI.releaseApriltagDetector(nativeApriltagPtr);
     }
 
     @Override

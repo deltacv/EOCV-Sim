@@ -412,6 +412,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         if (isRestarting) {
             Thread.interrupted() //clear interrupted flag
+            EOCVSimFolder.lock?.lock?.close()
             JavaProcess.exec(Main::class.java, null, null)
         }
     }

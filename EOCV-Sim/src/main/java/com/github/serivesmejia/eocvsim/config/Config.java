@@ -65,4 +65,14 @@ public class Config {
 
     public volatile List<String> superAccessPluginHashes = new ArrayList<>();
 
+    public volatile HashMap<String, Boolean> flags = new HashMap<>();
+
+    public boolean hasFlag(String flagName) {
+        return flags.get(flagName) != null;
+    }
+
+    public boolean getFlag(String flagName) {
+        return flags.get(flagName) != null && flags.get(flagName);
+    }
+
 }
