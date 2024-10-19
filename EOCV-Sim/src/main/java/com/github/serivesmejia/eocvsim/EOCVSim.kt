@@ -543,7 +543,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
      * Checks if the simulator is currently recording
      * @return true if the simulator is currently recording, false otherwise
      */
-    fun isCurrentlyRecording() = currentRecordingSession?.isRecording ?: false
+    fun isCurrentlyRecording() = currentRecordingSession?.isRecording == true
 
     /**
      * Updates the visualizer title message

@@ -39,7 +39,7 @@ plugins {
 
 allprojects {
     group 'com.github.deltacv'
-    version '3.7.1'
+    version '4.0.0'
 
     apply plugin: 'java'
 

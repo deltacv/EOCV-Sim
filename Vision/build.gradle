@@ -42,6 +42,7 @@ dependencies {
 
     implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-arm64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:$skiko_version")
 }
