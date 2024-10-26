@@ -89,7 +89,13 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
 
         for (pluginFile in pluginFiles) {
-            loaders[pluginFile] = PluginLoader(pluginFile, repositoryManager.classpath(), eocvSim)
+            loaders[pluginFile] = PluginLoader(
+                pluginFile,
+                repositoryManager.classpath(),
+                if(pluginFile in repositoryManager.resolvedFiles)
+                    PluginSource.REPOSITORY else PluginSource.FILE,
+                eocvSim
+            )
         }
 
         isEnabled = true

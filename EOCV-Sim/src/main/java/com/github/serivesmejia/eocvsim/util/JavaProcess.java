@@ -71,6 +71,8 @@ public final class JavaProcess {
             command.addAll(args);
         }
 
+        System.out.println("Executing command: " + command);
+
         ProcessBuilder builder = new ProcessBuilder(command);
 
         if (ioReceiver != null) {

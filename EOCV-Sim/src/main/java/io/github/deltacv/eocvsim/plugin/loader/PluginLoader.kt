@@ -37,6 +37,11 @@ import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.security.MessageDigest
 
+enum class PluginSource {
+    REPOSITORY,
+    FILE
+}
+
 /**
  * Loads a plugin from a jar file
  * @param pluginFile the jar file of the plugin
@@ -45,6 +50,7 @@ import java.security.MessageDigest
 class PluginLoader(
     val pluginFile: File,
     val classpath: List<File>,
+    val pluginSource: PluginSource,
     val eocvSim: EOCVSim
 ) {
 
