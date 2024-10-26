@@ -1,0 +1,6 @@
+[repositories]
+central = "https://repo.maven.apache.org/maven2/"
+jitpack = "https://jitpack.io/"
+
+[plugins]
+PaperVision = "com.github.deltacv:PaperVision:1.0.0"

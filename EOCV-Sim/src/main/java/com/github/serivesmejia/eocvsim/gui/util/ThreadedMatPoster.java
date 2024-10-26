@@ -153,7 +153,9 @@ public class ThreadedMatPoster implements MatPoster {
         if (m instanceof MatRecycler.RecyclableMat) {
             ((MatRecycler.RecyclableMat) m).returnMat();
         }
-        m.release();
+        if(m != null) {
+            m.release();
+        }
     }
 
     public void setPaused(boolean paused) {
@@ -188,7 +190,7 @@ public class ThreadedMatPoster implements MatPoster {
                     Thread.yield();
                 }
 
-                if (postQueue.size() == 0 || postables.size() == 0) continue; //skip if we have no queued frames
+                if (postQueue.isEmpty() || postables.isEmpty()) continue; //skip if we have no queued frames
 
                 synchronized(lock) {
                     fpsCounter.update();
@@ -207,14 +209,14 @@ public class ThreadedMatPoster implements MatPoster {
                             ((MatRecycler.RecyclableMat) takenMat).returnMat();
                         }
                     } catch (InterruptedException e) {
-                        e.printStackTrace();
+                        logger.warn("Thread interrupted ({})", Integer.toHexString(hashCode()));
                         break;
                     } catch (Exception ex) { }
                 }
 
             }
 
-            logger.warn("Thread interrupted (" + Integer.toHexString(hashCode()) + ")");
+            logger.warn("Thread interrupted ({})", Integer.toHexString(hashCode()));
         }
     }
 

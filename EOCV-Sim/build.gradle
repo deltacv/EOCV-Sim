@@ -96,6 +96,8 @@ dependencies {
 
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'org.ow2.asm:asm:9.7'
+
+    implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain:3.3.2'
 }
 
 task(writeBuildClassJava) {

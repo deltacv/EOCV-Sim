@@ -11,3 +11,5 @@ fun String.removeFromEnd(rem: String): String {
     }
     return trim()
 }
+
+val Any.hexString get() = Integer.toHexString(hashCode())!!

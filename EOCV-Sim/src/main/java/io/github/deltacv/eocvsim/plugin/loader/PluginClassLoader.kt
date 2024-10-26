@@ -43,7 +43,7 @@ import java.util.zip.ZipFile
  * @param pluginJar the jar file of the plugin
  * @param pluginContext the plugin context
  */
-class PluginClassLoader(private val pluginJar: File, val pluginContextProvider: () -> PluginContext) : ClassLoader() {
+class PluginClassLoader(private val pluginJar: File, val classpath: List<File>, val pluginContextProvider: () -> PluginContext) : ClassLoader() {
 
     private val zipFile = try {
         ZipFile(pluginJar)
@@ -57,7 +57,7 @@ class PluginClassLoader(private val pluginJar: File, val pluginContextProvider: 
         FileSystems.getDefault()
     }
 
-    private fun loadClass(entry: ZipEntry): Class<*> {
+    private fun loadClass(entry: ZipEntry, zipFile: ZipFile = this.zipFile): Class<*> {
         val name = entry.name.removeFromEnd(".class").replace('/', '.')
 
         zipFile.getInputStream(entry).use { inStream ->
@@ -115,7 +115,13 @@ class PluginClassLoader(private val pluginJar: File, val pluginContextProvider: 
 
             clazz = try {
                 Class.forName(name)
-            } catch (e: ClassNotFoundException) {
+            } catch (_: ClassNotFoundException) {
+                val classpathClass = classFromClasspath(name)
+
+                if(classpathClass != null) {
+                    return classpathClass
+                }
+
                 loadClassStrict(name)
             }
 
@@ -126,6 +132,9 @@ class PluginClassLoader(private val pluginJar: File, val pluginContextProvider: 
     }
 
     override fun getResourceAsStream(name: String): InputStream? {
+        // Try to find the resource inside the classpath
+        resourceAsStreamFromClasspath(name)?.let { return it }
+
         val entry = zipFile.getEntry(name)
 
         if(entry != null) {
@@ -138,6 +147,8 @@ class PluginClassLoader(private val pluginJar: File, val pluginContextProvider: 
     }
 
     override fun getResource(name: String): URL? {
+        resourceFromClasspath(name)?.let { return it }
+
         // Try to find the resource inside the plugin JAR
         val entry = zipFile.getEntry(name)
 
@@ -146,12 +157,82 @@ class PluginClassLoader(private val pluginJar: File, val pluginContextProvider: 
                 // Construct a URL for the resource inside the plugin JAR
                 return URL("jar:file:${pluginJar.absolutePath}!/$name")
             } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
 
         // Fallback to the parent classloader if not found in the plugin JAR
         return super.getResource(name)
+    }
+
+    /**
+     * Get a resource from the classpath specified in the constructor
+     */
+    fun resourceAsStreamFromClasspath(name: String): InputStream? {
+        for (file in classpath) {
+            if(file == pluginJar) continue
+
+            val zipFile = ZipFile(file)
+
+            val entry = zipFile.getEntry(name)
+
+            if (entry != null) {
+                try {
+                    return zipFile.getInputStream(entry)
+                } catch (e: Exception) {
+                }
+            }
+        }
+
+        return null
+    }
+
+    /**
+     * Get a resource from the classpath specified in the constructor
+     */
+    fun resourceFromClasspath(name: String): URL? {
+        for (file in classpath) {
+            if(file == pluginJar) continue
+
+            val zipFile = ZipFile(file)
+
+            try {
+                val entry = zipFile.getEntry(name)
+
+                if (entry != null) {
+                    try {
+                        return URL("jar:file:${file.absolutePath}!/$name")
+                    } catch (e: Exception) {
+                    }
+                }
+            } finally {
+                zipFile.close()
+            }
+        }
+
+        return null
+    }
+
+    /**
+     * Load a class from the classpath specified in the constructor
+     */
+    fun classFromClasspath(className: String): Class<*>? {
+        for (file in classpath) {
+            if(file == pluginJar) continue
+
+            val zipFile = ZipFile(file)
+
+            try {
+                val entry = zipFile.getEntry(className.replace('.', '/') + ".class")
+
+                if (entry != null) {
+                    return loadClass(entry, zipFile = zipFile)
+                }
+            } finally {
+                zipFile.close()
+            }
+        }
+
+        return null
     }
 
     override fun toString() = "PluginClassLoader@\"${pluginJar.name}\""

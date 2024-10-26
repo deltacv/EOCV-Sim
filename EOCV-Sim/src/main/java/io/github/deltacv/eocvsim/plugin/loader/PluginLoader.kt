@@ -42,7 +42,11 @@ import java.security.MessageDigest
  * @param pluginFile the jar file of the plugin
  * @param eocvSim the EOCV-Sim instance
  */
-class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
+class PluginLoader(
+    val pluginFile: File,
+    val classpath: List<File>,
+    val eocvSim: EOCVSim
+) {
 
     val logger by loggerForThis()
 
@@ -87,7 +91,7 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
     val hasSuperAccess get() = eocvSim.config.superAccessPluginHashes.contains(pluginHash)
 
     init {
-        pluginClassLoader = PluginClassLoader(pluginFile) {
+        pluginClassLoader = PluginClassLoader(pluginFile, classpath) {
             PluginContext(eocvSim, fileSystem, this)
         }
     }

@@ -35,6 +35,7 @@ class PluginContext(
     }
 
     val plugin get() = loader.plugin
+    val classpath get() = loader.classpath
 
     val hasSuperAccess get() = loader.hasSuperAccess
     fun requestSuperAccess(reason: String) = loader.requestSuperAccess(reason)

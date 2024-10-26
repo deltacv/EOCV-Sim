@@ -29,6 +29,7 @@ import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequestMain
+import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
 import java.io.File
 import java.util.*
 
@@ -47,6 +48,8 @@ class PluginManager(val eocvSim: EOCVSim) {
     }
 
     val logger by loggerForThis()
+
+    val repositoryManager = PluginRepositoryManager()
 
     private val _pluginFiles = mutableListOf<File>()
 
@@ -67,9 +70,16 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @see PluginLoader
      */
     fun init() {
-        val filesInPluginFolder = PLUGIN_FOLDER.listFiles() ?: arrayOf()
+        repositoryManager.init()
 
-        for (file in filesInPluginFolder) {
+        val pluginFiles = mutableListOf<File>()
+        pluginFiles.addAll(repositoryManager.resolveAll())
+
+        PLUGIN_FOLDER.listFiles()?.let {
+            pluginFiles.addAll(it.filter { it.extension == "jar" })
+        }
+
+        for (file in pluginFiles) {
             if (file.extension == "jar") _pluginFiles.add(file)
         }
 
@@ -79,7 +89,7 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
 
         for (pluginFile in pluginFiles) {
-            loaders[pluginFile] = PluginLoader(pluginFile, eocvSim)
+            loaders[pluginFile] = PluginLoader(pluginFile, repositoryManager.classpath(), eocvSim)
         }
 
         isEnabled = true

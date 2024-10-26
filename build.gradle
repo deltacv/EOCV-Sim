@@ -9,14 +9,19 @@ buildscript {
         slf4j_version = "1.7.32"
         log4j_version = "2.17.1"
         opencv_version = "4.7.0-0"
-        apriltag_plugin_version = "main-SNAPSHOT"
+        apriltag_plugin_version = "2.1.0-B"
 
         skiko_version = "0.8.15"
 
         classgraph_version = "4.8.112"
         opencsv_version = "5.5.2"
 
-        env = findProperty('env') == 'release' ? 'release' : 'dev'
+        Penv = findProperty('env')
+        if(Penv != null && (Penv != 'dev' && Penv != 'release')) {
+            throw new GradleException("Invalid env property, must be 'dev' or 'release'")
+        }
+
+        env = Penv == 'release' ? 'release' : 'dev'
 
         println("Current build is: $env")
     }
