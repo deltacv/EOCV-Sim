@@ -23,11 +23,15 @@
 
 package com.github.serivesmejia.eocvsim.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * A utility class for executing a Java process to run a main class within this project.
@@ -35,10 +39,42 @@ import java.util.List;
 public final class JavaProcess {
 
     public interface ProcessIOReceiver {
-        void receive(InputStream in, InputStream err);
+        void receive(InputStream in, InputStream err, int pid);
     }
 
+    public static class SLF4JIOReceiver implements JavaProcess.ProcessIOReceiver {
+
+        private final Logger logger;
+
+        public SLF4JIOReceiver(Logger logger) {
+            this.logger = logger;
+        }
+
+        @Override
+        public void receive(InputStream out, InputStream err, int pid) {
+            new Thread(() -> {
+                Scanner sc = new Scanner(out);
+                while (sc.hasNextLine()) {
+                    logger.info(sc.nextLine());
+                }
+            }, "SLFJ4IOReceiver-out-" + pid).start();
+
+            new Thread(() -> {
+                Scanner sc = new Scanner(err);
+                while (sc.hasNextLine()) {
+                    logger.error(sc.nextLine());
+                }
+            }, "SLF4JIOReceiver-err-" + pid).start();
+        }
+
+    }
+
+
     private JavaProcess() {}
+
+    private static int count;
+
+    private static final Logger logger = LoggerFactory.getLogger(JavaProcess.class);
 
     /**
      * Executes a Java process with the given class and arguments.
@@ -71,13 +107,19 @@ public final class JavaProcess {
             command.addAll(args);
         }
 
-        System.out.println("Executing command: " + command);
+        int processCount = count;
+
+        logger.info("Executing Java process #{} at \"{}\", main class \"{}\", JVM args \"{}\" and args \"{}\"", processCount, javaBin, className, jvmArgs, args);
+
+        count++;
 
         ProcessBuilder builder = new ProcessBuilder(command);
 
         if (ioReceiver != null) {
             Process process = builder.start();
-            ioReceiver.receive(process.getInputStream(), process.getErrorStream());
+            logger.info("Started #{} with PID {}, inheriting IO to {}", processCount, process.pid(), ioReceiver.getClass().getSimpleName());
+
+            ioReceiver.receive(process.getInputStream(), process.getErrorStream(), (int) process.pid());
             killOnExit(process);
 
             process.waitFor();
@@ -85,6 +127,8 @@ public final class JavaProcess {
         } else {
             builder.inheritIO();
             Process process = builder.start();
+            logger.info("Started ${} with PID {}, IO will be inherited to System.out and System.err", processCount, process.pid());
+
             killOnExit(process);
 
             process.waitFor();

@@ -94,7 +94,7 @@ class PluginLoader(
     /**
      * Whether the plugin has super access (full system access)
      */
-    val hasSuperAccess get() = eocvSim.config.superAccessPluginHashes.contains(pluginHash)
+    val hasSuperAccess get() = eocvSim.config.superAccessPluginHashes.contains(pluginFileHash)
 
     init {
         pluginClassLoader = PluginClassLoader(pluginFile, classpath) {
@@ -103,12 +103,11 @@ class PluginLoader(
     }
 
     /**
-     * Load the plugin from the jar file
-     * @throws InvalidPluginException if the plugin.toml file is not found
-     * @throws UnsupportedPluginException if the plugin requests an api version higher than the current one
+     * Fetch the plugin info from the plugin.toml file
+     * Fills the pluginName, pluginVersion, pluginAuthor and pluginAuthorEmail fields
      */
-    fun load() {
-        if(loaded) return
+    fun fetchInfoFromToml() {
+        if(::pluginToml.isInitialized) return
 
         pluginToml = Toml().read(pluginClassLoader.getResourceAsStream("plugin.toml")
             ?: throw InvalidPluginException("No plugin.toml in the jar file")
@@ -119,8 +118,19 @@ class PluginLoader(
 
         pluginAuthor = pluginToml.getString("author") ?: throw InvalidPluginException("No author in plugin.toml")
         pluginAuthorEmail = pluginToml.getString("author-email", "")
+    }
 
-        logger.info("Loading plugin $pluginName v$pluginVersion by $pluginAuthor")
+    /**
+     * Load the plugin from the jar file
+     * @throws InvalidPluginException if the plugin.toml file is not found
+     * @throws UnsupportedPluginException if the plugin requests an api version higher than the current one
+     */
+    fun load() {
+        if(loaded) return
+
+        fetchInfoFromToml()
+
+        logger.info("Loading plugin $pluginName v$pluginVersion by $pluginAuthor from ${pluginSource.name}")
 
         setupFs()
 
@@ -216,7 +226,7 @@ class PluginLoader(
      * Get the hash of the plugin file based off the file contents
      * @return the hash
      */
-    val pluginHash by lazy {
+    val pluginFileHash by lazy {
         val messageDigest = MessageDigest.getInstance("SHA-256")
         messageDigest.update(pluginFile.readBytes())
         SysUtil.byteArray2Hex(messageDigest.digest())

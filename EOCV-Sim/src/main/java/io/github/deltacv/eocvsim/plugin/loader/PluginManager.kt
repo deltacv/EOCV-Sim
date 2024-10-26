@@ -49,6 +49,9 @@ class PluginManager(val eocvSim: EOCVSim) {
 
     val logger by loggerForThis()
 
+    private val _loadedPluginHashes = mutableListOf<String>()
+    val loadedPluginHashes get() = _loadedPluginHashes.toList()
+
     val repositoryManager = PluginRepositoryManager()
 
     private val _pluginFiles = mutableListOf<File>()
@@ -91,7 +94,7 @@ class PluginManager(val eocvSim: EOCVSim) {
         for (pluginFile in pluginFiles) {
             loaders[pluginFile] = PluginLoader(
                 pluginFile,
-                repositoryManager.classpath(),
+                repositoryManager.resolvedFiles,
                 if(pluginFile in repositoryManager.resolvedFiles)
                     PluginSource.REPOSITORY else PluginSource.FILE,
                 eocvSim
@@ -108,7 +111,16 @@ class PluginManager(val eocvSim: EOCVSim) {
     fun loadPlugins() {
         for ((file, loader) in loaders) {
             try {
+                loader.fetchInfoFromToml()
+
+                val hash = loader.hash()
+
+                if(hash in _loadedPluginHashes) {
+                    throw IllegalStateException("Plugin ${loader.pluginName} by ${loader.pluginAuthor} is already loaded. Please delete the duplicate from the plugins folder or from repository.toml !")
+                }
+
                 loader.load()
+                _loadedPluginHashes.add(hash)
             } catch (e: Throwable) {
                 logger.error("Failure loading ${file.name}", e)
                 loaders.remove(file)
@@ -176,7 +188,7 @@ class PluginManager(val eocvSim: EOCVSim) {
         val name = "${loader.pluginName} by ${loader.pluginAuthor}".replace(" ", "-")
 
         if(JavaProcess.exec(SuperAccessRequestMain::class.java, null, Arrays.asList(name, warning)) == 171) {
-            eocvSim.config.superAccessPluginHashes.add(loader.pluginHash)
+            eocvSim.config.superAccessPluginHashes.add(loader.pluginFileHash)
             eocvSim.configManager.saveToFile()
             return true
         }

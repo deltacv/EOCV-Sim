@@ -39,8 +39,6 @@ class PluginRepositoryManager {
         val REPOSITORY_FILE = PluginManager.PLUGIN_FOLDER + File.separator + "repository.toml"
         val CACHE_FILE = PluginManager.PLUGIN_FOLDER + File.separator + "cache.toml"
 
-        val MAVEN_FOLDER = PluginManager.PLUGIN_FOLDER + File.separator + "maven"
-
         val REPOSITORY_TOML_RES = PluginRepositoryManager::class.java.getResourceAsStream("/repository.toml")
         val CACHE_TOML_RES = PluginRepositoryManager::class.java.getResourceAsStream("/cache.toml")
 
@@ -65,8 +63,6 @@ class PluginRepositoryManager {
 
         SysUtil.copyFileIs(CACHE_TOML_RES, CACHE_FILE, false)
         cacheToml = Toml().read(CACHE_FILE)
-
-        MAVEN_FOLDER.mkdir()
 
         SysUtil.copyFileIs(REPOSITORY_TOML_RES, REPOSITORY_FILE, false)
         pluginsToml = Toml().read(REPOSITORY_FILE)
@@ -130,14 +126,10 @@ class PluginRepositoryManager {
                         if(pluginJar == null) {
                             // the first file is the plugin jar
                             pluginJar = file
+                            newCache[pluginDep.hexString] = pluginJar!!.absolutePath
                         }
 
-                        val destFile = File(MAVEN_FOLDER, file.name)
-                        file.copyTo(destFile, true)
-
-                        _resolvedFiles += destFile
-
-                        newCache[pluginDep.hexString] = pluginJar!!.absolutePath
+                        _resolvedFiles += file
                     }
 
                 files += pluginJar!!
@@ -153,18 +145,6 @@ class PluginRepositoryManager {
         }
 
         SysUtil.saveFileStr(CACHE_FILE, cacheBuilder.toString())
-
-        return files
-    }
-
-    fun classpath(): List<File> {
-        val files = mutableListOf<File>()
-
-        for(jar in MAVEN_FOLDER.listFiles() ?: arrayOf()) {
-            if(jar.extension == "jar") {
-                files += jar
-            }
-        }
 
         return files
     }
