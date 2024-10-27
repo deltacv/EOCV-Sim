@@ -31,10 +31,13 @@ import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import com.github.serivesmejia.eocvsim.util.loggerOf
 import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequestMain
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
 import java.io.File
 import java.util.*
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Manages the loading, enabling and disabling of plugins
@@ -55,14 +58,17 @@ class PluginManager(val eocvSim: EOCVSim) {
     private val _loadedPluginHashes = mutableListOf<String>()
     val loadedPluginHashes get() = _loadedPluginHashes.toList()
 
-    private val haltLock = Object()
+    private val haltLock = ReentrantLock()
+    private val haltCondition = haltLock.newCondition()
 
     val appender by lazy {
         val appender = DialogFactory.createMavenOutput {
-            synchronized(haltLock) {
-                haltLock.notify()
+            haltLock.withLock {
+                haltCondition.signalAll()
             }
         }
+
+        val logger by loggerOf("PluginOutput")
 
         appender.subscribe {
             if(!it.isBlank()) {
@@ -78,9 +84,7 @@ class PluginManager(val eocvSim: EOCVSim) {
     }
 
     val repositoryManager by lazy {
-        PluginRepositoryManager(
-            appender, haltLock
-        )
+        PluginRepositoryManager(appender, haltLock, haltCondition)
     }
 
     private val _pluginFiles = mutableListOf<File>()
@@ -130,7 +134,8 @@ class PluginManager(val eocvSim: EOCVSim) {
                 repositoryManager.resolvedFiles,
                 if(pluginFile in repositoryManager.resolvedFiles)
                     PluginSource.REPOSITORY else PluginSource.FILE,
-                eocvSim
+                eocvSim,
+                appender
             )
         }
 

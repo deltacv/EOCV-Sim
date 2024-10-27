@@ -28,7 +28,9 @@ import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 
 class PluginContext(
-    val eocvSim: EOCVSim, val fileSystem: SandboxFileSystem, val loader: PluginLoader
+    val eocvSim: EOCVSim,
+    val fileSystem: SandboxFileSystem,
+    val loader: PluginLoader
 ) {
     companion object {
         @JvmStatic fun current(plugin: EOCVSimPlugin) = (plugin.javaClass.classLoader as PluginClassLoader).pluginContextProvider()

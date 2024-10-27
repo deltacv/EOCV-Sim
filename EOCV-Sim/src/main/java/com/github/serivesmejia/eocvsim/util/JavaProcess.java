@@ -53,6 +53,8 @@ public final class JavaProcess {
         @Override
         public void receive(InputStream out, InputStream err, int pid) {
             new Thread(() -> {
+                Thread.currentThread().setContextClassLoader(SLF4JIOReceiver.class.getClassLoader());
+
                 Scanner sc = new Scanner(out);
                 while (sc.hasNextLine()) {
                     logger.info(sc.nextLine());
@@ -60,11 +62,15 @@ public final class JavaProcess {
             }, "SLFJ4IOReceiver-out-" + pid).start();
 
             new Thread(() -> {
+                Thread.currentThread().setContextClassLoader(SLF4JIOReceiver.class.getClassLoader());
+
                 Scanner sc = new Scanner(err);
                 while (sc.hasNextLine()) {
                     logger.error(sc.nextLine());
                 }
             }, "SLF4JIOReceiver-err-" + pid).start();
+
+            logger.debug("SLF4JIOReceiver started for PID: {}", pid); // Debug log to check if the logger is working
         }
 
     }

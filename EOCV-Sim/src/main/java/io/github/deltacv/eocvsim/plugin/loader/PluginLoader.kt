@@ -25,15 +25,19 @@ package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.config.ConfigLoader
+import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
+import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
+import org.apache.logging.log4j.LogManager
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import net.lingala.zip4j.ZipFile
+import org.apache.logging.log4j.core.LoggerContext
 import java.io.File
 import java.security.MessageDigest
 
@@ -51,7 +55,8 @@ class PluginLoader(
     val pluginFile: File,
     val classpath: List<File>,
     val pluginSource: PluginSource,
-    val eocvSim: EOCVSim
+    val eocvSim: EOCVSim,
+    val appender: AppendDelegate
 ) {
 
     val logger by loggerForThis()
@@ -97,7 +102,10 @@ class PluginLoader(
     val hasSuperAccess get() = eocvSim.config.superAccessPluginHashes.contains(pluginFileHash)
 
     init {
-        pluginClassLoader = PluginClassLoader(pluginFile, classpath) {
+        pluginClassLoader = PluginClassLoader(
+            pluginFile,
+            classpath
+        ) {
             PluginContext(eocvSim, fileSystem, this)
         }
     }
@@ -130,7 +138,7 @@ class PluginLoader(
 
         fetchInfoFromToml()
 
-        logger.info("Loading plugin $pluginName v$pluginVersion by $pluginAuthor from ${pluginSource.name}")
+        appender.appendln("${PluginOutput.SPECIAL_SILENT}Loading plugin $pluginName v$pluginVersion by $pluginAuthor from ${pluginSource.name}")
 
         setupFs()
 

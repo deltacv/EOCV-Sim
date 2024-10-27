@@ -29,6 +29,7 @@ import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageWhitelist
+import org.apache.logging.log4j.core.LoggerContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -43,7 +44,11 @@ import java.util.zip.ZipFile
  * @param pluginJar the jar file of the plugin
  * @param pluginContext the plugin context
  */
-class PluginClassLoader(private val pluginJar: File, val classpath: List<File>, val pluginContextProvider: () -> PluginContext) : ClassLoader() {
+class PluginClassLoader(
+    private val pluginJar: File,
+    val classpath: List<File>,
+    val pluginContextProvider: () -> PluginContext
+) : ClassLoader() {
 
     private val zipFile = try {
         ZipFile(pluginJar)

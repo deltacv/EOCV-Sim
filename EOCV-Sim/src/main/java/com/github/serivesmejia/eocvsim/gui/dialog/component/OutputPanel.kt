@@ -28,7 +28,10 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.awt.Font
+import java.io.InputStream
 import javax.swing.*
+
 
 class OutputPanel(
     bottomButtonsPanel: BottomButtonsPanel
@@ -36,10 +39,22 @@ class OutputPanel(
 
     val outputArea = JTextArea("")
 
+    companion object {
+        val monoFont: Font by lazy {
+            Font.createFont(
+                Font.TRUETYPE_FONT,
+                this::class.java.getResourceAsStream("/fonts/JetBrainsMono-Medium.ttf")
+            )
+        }
+    }
+
     init {
         if(bottomButtonsPanel is DefaultBottomButtonsPanel) {
             bottomButtonsPanel.outputTextSupplier = { outputArea.text }
         }
+
+        // JTextArea will use /fonts/JetBrainsMono-Medium.ttf as font
+        outputArea.font = monoFont.deriveFont(13f)
 
         outputArea.isEditable    = false
         outputArea.highlighter   = null
