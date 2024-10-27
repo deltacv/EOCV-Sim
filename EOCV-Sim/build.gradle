@@ -85,6 +85,7 @@ dependencies {
 
     implementation 'com.formdev:flatlaf:3.5.1'
     implementation 'com.formdev:flatlaf-intellij-themes:3.5.1'
+    implementation 'com.miglayout:miglayout-swing:11.4.2'
 
     implementation 'net.lingala.zip4j:zip4j:2.11.3'
 
