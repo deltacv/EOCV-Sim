@@ -49,6 +49,11 @@ public class ConfigManager {
             logger.info("Creating config file...");
             configLoader.saveToFile(config);
         }
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("SHUTDOWN - Saving config to file...");
+            saveToFile();
+        }));
     }
 
     public void saveToFile() {

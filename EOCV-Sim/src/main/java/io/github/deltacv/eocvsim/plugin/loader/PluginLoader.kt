@@ -198,7 +198,7 @@ class PluginLoader(
     fun enable() {
         if(enabled || !loaded) return
 
-        logger.info("Enabling plugin $pluginName v$pluginVersion")
+        appender.appendln("${PluginOutput.SPECIAL_SILENT}Enabling plugin $pluginName v$pluginVersion")
 
         plugin.enabled = true
         plugin.onEnable()
@@ -212,7 +212,7 @@ class PluginLoader(
     fun disable() {
         if(!enabled || !loaded) return
 
-        logger.info("Disabling plugin $pluginName v$pluginVersion")
+        appender.appendln("${PluginOutput.SPECIAL_SILENT}Disabling plugin $pluginName v$pluginVersion")
 
         plugin.enabled = false
         plugin.onDisable()

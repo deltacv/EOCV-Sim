@@ -98,6 +98,7 @@ class PluginOutput(
     }
 
     private val output = JDialog()
+    private val tabbedPane: JTabbedPane
 
     private val mavenBottomButtonsPanel: MavenOutputBottomButtonsPanel = MavenOutputBottomButtonsPanel(::close) {
         mavenOutputPanel.outputArea.text
@@ -108,9 +109,16 @@ class PluginOutput(
     init {
         output.isModal = true
         output.isAlwaysOnTop = true
-        output.title = "Plugin Output"
+        output.title = "Plugin Manager"
 
-        output.add(JTabbedPane().apply {
+        tabbedPane = JTabbedPane()
+
+        output.add(tabbedPane.apply {
+            addTab("Plugins", JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.PAGE_AXIS)
+
+                add(JLabel("Plugins output will be shown here"))
+            })
             addTab("Output", mavenOutputPanel)
         })
 
@@ -156,6 +164,9 @@ class PluginOutput(
 
         if(!text.startsWith(SPECIAL_SILENT) && text != SPECIAL_CLOSE && text != SPECIAL_FREE) {
             SwingUtilities.invokeLater {
+                SwingUtilities.invokeLater {
+                    tabbedPane.selectedIndex = tabbedPane.indexOfTab("Output") // focus on output tab
+                }
                 output.isVisible = true
             }
         }

@@ -163,7 +163,8 @@ class PluginManager(val eocvSim: EOCVSim) {
                 loader.load()
                 _loadedPluginHashes.add(hash)
             } catch (e: Throwable) {
-                appender.appendln("Failure loading ${loader.pluginName} v${loader.pluginVersion}: ${e.message}")
+                appender.appendln("Failure loading ${loader.pluginName} v${loader.pluginVersion}:")
+                appender.appendln(e.message ?: "Unknown error")
                 logger.error("Failure loading ${loader.pluginName} v${loader.pluginVersion}", e)
 
                 loaders.remove(file)
