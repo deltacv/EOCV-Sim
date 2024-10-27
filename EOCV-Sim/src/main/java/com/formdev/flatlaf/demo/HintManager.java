@@ -46,7 +46,7 @@ public class HintManager
     }
 
     public static void hideAllHints() {
-        HintPanel[] hintPanels2 = hintPanels.toArray( new HintPanel[hintPanels.size()] );
+        HintPanel[] hintPanels2 = hintPanels.toArray(new HintPanel[0]);
         for( HintPanel hintPanel : hintPanels2 )
             hintPanel.hideHint();
     }
@@ -58,14 +58,12 @@ public class HintManager
         private final String message;
         private final Component owner;
         private final int position;
-        private final String prefsKey;
         private final Hint nextHint;
 
-        public Hint( String message, Component owner, int position, String prefsKey, Hint nextHint ) {
+        public Hint( String message, Component owner, int position, Hint nextHint ) {
             this.message = message;
             this.owner = owner;
             this.position = position;
-            this.prefsKey = prefsKey;
             this.nextHint = nextHint;
         }
     }
@@ -234,12 +232,12 @@ public class HintManager
     public static class BalloonBorder
             extends FlatEmptyBorder
     {
-        private static int ARC = 8;
-        private static int ARROW_XY = 16;
-        private static int ARROW_SIZE = 8;
-        private static int SHADOW_SIZE = 6;
-        private static int SHADOW_TOP_SIZE = 3;
-        private static int SHADOW_SIZE2 = SHADOW_SIZE + 2;
+        private static final int ARC = 8;
+        private static final int ARROW_XY = 16;
+        private static final int ARROW_SIZE = 8;
+        private static final int SHADOW_SIZE = 6;
+        private static final int SHADOW_TOP_SIZE = 3;
+        private static final int SHADOW_SIZE2 = SHADOW_SIZE + 2;
 
         private final int direction;
         private final Color borderColor;
