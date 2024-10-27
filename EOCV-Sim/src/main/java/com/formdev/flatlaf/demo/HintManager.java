@@ -34,7 +34,7 @@ import net.miginfocom.swing.*;
 /**
  * @author Karl Tauber
  */
-class HintManager
+public class HintManager
 {
     private static final List<HintPanel> hintPanels = new ArrayList<>();
 
