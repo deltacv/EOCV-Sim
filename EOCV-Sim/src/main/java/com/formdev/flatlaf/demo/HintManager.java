@@ -38,14 +38,14 @@ public class HintManager
 {
     private static final List<HintPanel> hintPanels = new ArrayList<>();
 
-    static void showHint( Hint hint ) {
+    public static void showHint( Hint hint ) {
         HintPanel hintPanel = new HintPanel( hint );
         hintPanel.showHint();
 
         hintPanels.add( hintPanel );
     }
 
-    static void hideAllHints() {
+    public static void hideAllHints() {
         HintPanel[] hintPanels2 = hintPanels.toArray( new HintPanel[hintPanels.size()] );
         for( HintPanel hintPanel : hintPanels2 )
             hintPanel.hideHint();
@@ -53,7 +53,7 @@ public class HintManager
 
     //---- class HintPanel ----------------------------------------------------
 
-    static class Hint
+    public static class Hint
     {
         private final String message;
         private final Component owner;
@@ -61,7 +61,7 @@ public class HintManager
         private final String prefsKey;
         private final Hint nextHint;
 
-        Hint( String message, Component owner, int position, String prefsKey, Hint nextHint ) {
+        public Hint( String message, Component owner, int position, String prefsKey, Hint nextHint ) {
             this.message = message;
             this.owner = owner;
             this.position = position;
@@ -231,7 +231,7 @@ public class HintManager
 
     //---- class BalloonBorder ------------------------------------------------
 
-    private static class BalloonBorder
+    public static class BalloonBorder
             extends FlatEmptyBorder
     {
         private static int ARC = 8;
