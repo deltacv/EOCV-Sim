@@ -24,6 +24,8 @@
 package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
+import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
@@ -52,7 +54,29 @@ class PluginManager(val eocvSim: EOCVSim) {
     private val _loadedPluginHashes = mutableListOf<String>()
     val loadedPluginHashes get() = _loadedPluginHashes.toList()
 
-    val repositoryManager = PluginRepositoryManager()
+    private val haltLock = Object()
+
+    val appender by lazy {
+        val appender = DialogFactory.createMavenOutput {
+            synchronized(haltLock) {
+                haltLock.notify()
+            }
+        }
+
+        appender.subscribe {
+            if(!it.isBlank()) {
+                logger.info(it)
+            }
+        }
+
+        appender
+    }
+
+    val repositoryManager by lazy {
+        PluginRepositoryManager(
+            appender, haltLock
+        )
+    }
 
     private val _pluginFiles = mutableListOf<File>()
 
@@ -87,7 +111,7 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
 
         if(pluginFiles.isEmpty()) {
-            logger.info("No plugins to load")
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "No plugins to load")
             return
         }
 
@@ -116,13 +140,18 @@ class PluginManager(val eocvSim: EOCVSim) {
                 val hash = loader.hash()
 
                 if(hash in _loadedPluginHashes) {
-                    throw IllegalStateException("Plugin ${loader.pluginName} by ${loader.pluginAuthor} is already loaded. Please delete the duplicate from the plugins folder or from repository.toml !")
+                    val source = if(loader.pluginSource == PluginSource.REPOSITORY) "repository.toml file" else "plugins folder"
+
+                    appender.appendln("Plugin ${loader.pluginName} by ${loader.pluginAuthor} is already loaded. Please delete the duplicate from the $source !")
+                    return
                 }
 
                 loader.load()
                 _loadedPluginHashes.add(hash)
             } catch (e: Throwable) {
-                logger.error("Failure loading ${file.name}", e)
+                appender.appendln("Failure loading ${loader.pluginName} v${loader.pluginVersion}: ${e.message}")
+                logger.error("Failure loading ${loader.pluginName} v${loader.pluginVersion}", e)
+
                 loaders.remove(file)
                 loader.kill()
             }
@@ -138,6 +167,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             try {
                 loader.enable()
             } catch (e: Throwable) {
+                appender.appendln("Failure enabling ${loader.pluginName} v${loader.pluginVersion}: ${e.message}")
                 logger.error("Failure enabling ${loader.pluginName} v${loader.pluginVersion}", e)
                 loader.kill()
             }
@@ -156,6 +186,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             try {
                 loader.disable()
             } catch (e: Throwable) {
+                appender.appendln("Failure disabling ${loader.pluginName} v${loader.pluginVersion}: ${e.message}")
                 logger.error("Failure disabling ${loader.pluginName} v${loader.pluginVersion}", e)
                 loader.kill()
             }
@@ -174,6 +205,7 @@ class PluginManager(val eocvSim: EOCVSim) {
     fun requestSuperAccessFor(loader: PluginLoader, reason: String): Boolean {
         if(loader.hasSuperAccess) return true
 
+        appender.appendln(PluginOutput.SPECIAL_SILENT + "Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
         logger.info("Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
 
         var warning = "<html>$GENERIC_SUPERACCESS_WARN"

@@ -127,7 +127,7 @@ public final class JavaProcess {
         } else {
             builder.inheritIO();
             Process process = builder.start();
-            logger.info("Started ${} with PID {}, IO will be inherited to System.out and System.err", processCount, process.pid());
+            logger.info("Started #{} with PID {}, IO will be inherited to System.out and System.err", processCount, process.pid());
 
             killOnExit(process);
 

@@ -31,12 +31,10 @@ import java.awt.datatransfer.StringSelection
 import javax.swing.*
 
 class OutputPanel(
-    private val bottomButtonsPanel: BottomButtonsPanel
+    bottomButtonsPanel: BottomButtonsPanel
 ) : JPanel(GridBagLayout()) {
 
     val outputArea = JTextArea("")
-
-    constructor(closeCallback: () -> Unit) : this(DefaultBottomButtonsPanel(closeCallback))
 
     init {
         if(bottomButtonsPanel is DefaultBottomButtonsPanel) {
@@ -45,8 +43,9 @@ class OutputPanel(
 
         outputArea.isEditable    = false
         outputArea.highlighter   = null
-        outputArea.lineWrap      = true
-        outputArea.wrapStyleWord = true
+
+        // set the background color to a darker tone
+        outputArea.background = outputArea.background.darker()
 
         val outputScroll = JScrollPane(outputArea)
         outputScroll.verticalScrollBarPolicy   = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS

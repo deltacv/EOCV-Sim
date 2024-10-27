@@ -23,6 +23,9 @@
 
 package io.github.deltacv.eocvsim.plugin.repository
 
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
+import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
+import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.hexString
 import com.github.serivesmejia.eocvsim.util.extension.plus
@@ -33,7 +36,10 @@ import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem
 import org.jboss.shrinkwrap.resolver.api.maven.Maven
 import java.io.File
 
-class PluginRepositoryManager {
+class PluginRepositoryManager(
+    val appender: AppendDelegate,
+    val haltLock: Object
+) {
 
     companion object {
         val REPOSITORY_FILE = PluginManager.PLUGIN_FOLDER + File.separator + "repository.toml"
@@ -60,6 +66,8 @@ class PluginRepositoryManager {
 
     fun init() {
         logger.info("Initializing plugin repository manager")
+
+        appender // init appender
 
         SysUtil.copyFileIs(CACHE_TOML_RES, CACHE_FILE, false)
         cacheToml = Toml().read(CACHE_FILE)
@@ -90,33 +98,43 @@ class PluginRepositoryManager {
 
         val newCache = mutableMapOf<String, String>()
 
-        for(cache in cacheToml.toMap()) {
-            newCache[cache.key] = cache.value as String
-        }
+        var shouldHalt = false
 
         for(plugin in plugins.toMap()) {
             if(plugin.value !is String)
                 throw InvalidFileException("Invalid plugin dependency in repository.toml. $UNSURE_USER_HELP")
-
-            logger.info("Resolving plugin dependency ${plugin.key} with ${plugin.value}")
 
             val pluginDep = plugin.value as String
 
             var pluginJar: File? = null
 
             try {
+                var foundCache = false
+
                 for(cached in cacheToml.toMap()) {
                     if(cached.key == pluginDep.hexString) {
                         val cachedFile = File(cached.value as String)
+
                         if(cachedFile.exists()) {
-                            logger.info("Found cached plugin dependency $pluginDep (${pluginDep.hexString})")
-                            files += cachedFile
+                            appender.appendln(
+                                PluginOutput.SPECIAL_SILENT +
+                                        "Found cached plugin dependency $pluginDep (${pluginDep.hexString})"
+                            )
+
+                            pluginJar = cachedFile
                             _resolvedFiles += cachedFile
-                            continue
+                            foundCache = true
+                            break
                         } else {
                             newCache.remove(cached.key)
                         }
                     }
+                }
+
+                if(foundCache) {
+                    appender.appendln(PluginOutput.SPECIAL_SILENT + "Resolving plugin ${plugin.key} at ${plugin.value}")
+                } else {
+                    appender.appendln("Resolving plugin ${plugin.key} at ${plugin.value}")
                 }
 
                 resolver.resolve(pluginDep)
@@ -135,6 +153,8 @@ class PluginRepositoryManager {
                 files += pluginJar!!
             } catch(ex: Exception) {
                 logger.warn("Failed to resolve plugin dependency $pluginDep", ex)
+                appender.appendln("Failed to resolve plugin ${plugin.key}: ${ex.message}")
+                shouldHalt = true
             }
         }
 
@@ -145,6 +165,15 @@ class PluginRepositoryManager {
         }
 
         SysUtil.saveFileStr(CACHE_FILE, cacheBuilder.toString())
+
+        if(shouldHalt) {
+            appender.append(PluginOutput.SPECIAL_CONTINUE)
+            synchronized(haltLock) {
+                haltLock.wait(10000) // wait for user to read the error
+            }
+        } else {
+            appender.append(PluginOutput.SPECIAL_CLOSE)
+        }
 
         return files
     }

@@ -282,6 +282,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         configManager.init()
 
+        configManager.config.simTheme.install()
+
         pluginManager.init() // woah
         pluginManager.loadPlugins()
 
