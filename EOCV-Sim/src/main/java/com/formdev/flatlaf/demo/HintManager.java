@@ -192,9 +192,6 @@ class HintManager
             // hide hint
             hideHint();
 
-            // remember that user closed the hint
-            DemoPrefs.getState().putBoolean( hint.prefsKey, true );
-
             // show next hint (if any)
             if( hint.nextHint != null )
                 HintManager.showHint( hint.nextHint );
