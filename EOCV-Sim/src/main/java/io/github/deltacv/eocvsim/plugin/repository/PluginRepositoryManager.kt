@@ -100,9 +100,14 @@ class PluginRepositoryManager(
             if(repo.value !is String)
                 throw InvalidFileException("Invalid repository URL in repository.toml. $UNSURE_USER_HELP")
 
-            resolver.withRemoteRepo(repo.key, repo.value as String, "default")
+            var repoUrl = repo.value as String
+            if(!repoUrl.endsWith("/")) {
+                repoUrl += "/"
+            }
 
-            logger.info("Added repository ${repo.key} with URL ${repo.value}")
+            resolver.withRemoteRepo(repo.key, repoUrl, "default")
+
+            logger.info("Added repository ${repo.key} with URL ${repoUrl}")
         }
     }
 
