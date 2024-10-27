@@ -79,9 +79,22 @@ class PluginOutput(
 ) : Appendable {
 
     companion object {
-        const val SPECIAL_CLOSE = "[CLOSE]"
-        const val SPECIAL_CONTINUE = "[CONTINUE]"
-        const val SPECIAL_SILENT = "[SILENT]"
+        private const val SPECIAL = "13mck"
+
+        const val SPECIAL_OPEN = "$SPECIAL[OPEN]"
+        const val SPECIAL_CLOSE = "$SPECIAL[CLOSE]"
+        const val SPECIAL_CONTINUE = "$SPECIAL[CONTINUE]"
+        const val SPECIAL_FREE = "$SPECIAL[FREE]"
+        const val SPECIAL_SILENT = "$SPECIAL[SILENT]"
+
+        fun String.trimSpecials(): String {
+            return this
+                .replace(SPECIAL_OPEN, "")
+                .replace(SPECIAL_CLOSE, "")
+                .replace(SPECIAL_CONTINUE, "")
+                .replace(SPECIAL_SILENT, "")
+                .replace(SPECIAL_FREE, "")
+        }
     }
 
     private val output = JDialog()
@@ -130,6 +143,10 @@ class PluginOutput(
 
     private fun handleSpecials(text: String): Boolean {
         when(text) {
+            SPECIAL_FREE -> {
+                mavenBottomButtonsPanel.continueButton.isEnabled = false
+                mavenBottomButtonsPanel.closeButton.isEnabled = true
+            }
             SPECIAL_CLOSE -> close()
             SPECIAL_CONTINUE -> {
                 mavenBottomButtonsPanel.continueButton.isEnabled = true
@@ -137,19 +154,13 @@ class PluginOutput(
             }
         }
 
-        if(!text.startsWith(SPECIAL_SILENT) && text != SPECIAL_CLOSE) {
+        if(!text.startsWith(SPECIAL_SILENT) && text != SPECIAL_CLOSE && text != SPECIAL_FREE) {
             SwingUtilities.invokeLater {
                 output.isVisible = true
             }
         }
 
-        return text == SPECIAL_CLOSE || text == SPECIAL_CONTINUE
-    }
-
-    private fun String.trimSpecials(): String {
-        return this.replace(SPECIAL_CLOSE, "")
-            .replace(SPECIAL_CONTINUE, "")
-            .replace(SPECIAL_SILENT, "")
+        return text == SPECIAL_OPEN || text == SPECIAL_CLOSE || text == SPECIAL_CONTINUE || text == SPECIAL_FREE
     }
 
     override fun append(csq: CharSequence?): java.lang.Appendable? {
@@ -201,6 +212,8 @@ class PluginOutput(
         override fun create(panel: OutputPanel) {
             layout = BoxLayout(this, BoxLayout.LINE_AXIS)
 
+            add(Box.createRigidArea(Dimension(4, 0)))
+
             copyButton.addActionListener {
                 Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(outputTextSupplier()), null)
             }
@@ -221,6 +234,8 @@ class PluginOutput(
 
             add(closeButton)
             closeButton.addActionListener { closeCallback() }
+
+            add(Box.createRigidArea(Dimension(4, 0)))
         }
     }
 }

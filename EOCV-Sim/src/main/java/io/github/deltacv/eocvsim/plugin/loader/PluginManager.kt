@@ -26,6 +26,7 @@ package io.github.deltacv.eocvsim.plugin.loader
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
+import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput.Companion.trimSpecials
 import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
@@ -65,7 +66,11 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         appender.subscribe {
             if(!it.isBlank()) {
-                logger.info(it)
+                val message = it.trimSpecials()
+
+                if(message.isNotBlank()) {
+                    logger.info(message)
+                }
             }
         }
 
@@ -97,6 +102,10 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @see PluginLoader
      */
     fun init() {
+        eocvSim.visualizer.onInitFinished {
+            appender.append(PluginOutput.SPECIAL_FREE)
+        }
+
         repositoryManager.init()
 
         val pluginFiles = mutableListOf<File>()

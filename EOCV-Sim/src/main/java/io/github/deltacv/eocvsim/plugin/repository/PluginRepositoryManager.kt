@@ -35,6 +35,7 @@ import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem
 import org.jboss.shrinkwrap.resolver.api.maven.Maven
 import java.io.File
+import kotlin.collections.iterator
 
 class PluginRepositoryManager(
     val appender: AppendDelegate,
@@ -56,6 +57,8 @@ class PluginRepositoryManager(
     private lateinit var plugins: Toml
 
     private lateinit var cacheToml: Toml
+    private lateinit var cachePluginsToml: Toml
+    private lateinit var cacheTransitiveToml: Toml
 
     private lateinit var resolver: ConfigurableMavenResolverSystem
 
@@ -65,12 +68,18 @@ class PluginRepositoryManager(
     val logger by loggerForThis()
 
     fun init() {
-        logger.info("Initializing plugin repository manager")
+        logger.info("Initializing...")
 
         appender // init appender
 
         SysUtil.copyFileIs(CACHE_TOML_RES, CACHE_FILE, false)
         cacheToml = Toml().read(CACHE_FILE)
+
+        cachePluginsToml = cacheToml.getTable("plugins")
+            ?: Toml()
+
+        cacheTransitiveToml = cacheToml.getTable("transitive")
+            ?: Toml()
 
         SysUtil.copyFileIs(REPOSITORY_TOML_RES, REPOSITORY_FILE, false)
         pluginsToml = Toml().read(REPOSITORY_FILE)
@@ -97,6 +106,7 @@ class PluginRepositoryManager(
         val files = mutableListOf<File>()
 
         val newCache = mutableMapOf<String, String>()
+        val newTransitiveCache = mutableMapOf<String, MutableList<String>>()
 
         var shouldHalt = false
 
@@ -109,62 +119,83 @@ class PluginRepositoryManager(
             var pluginJar: File? = null
 
             try {
-                var foundCache = false
+                var isCached = false
 
-                for(cached in cacheToml.toMap()) {
+                mainCacheLoop@
+                for(cached in cachePluginsToml.toMap()) {
                     if(cached.key == pluginDep.hexString) {
                         val cachedFile = File(cached.value as String)
 
                         if(cachedFile.exists()) {
+                            for(transitive in cacheTransitiveToml.getList<String>(pluginDep.hexString) ?: emptyList()) {
+                                val transitiveFile = File(transitive as String)
+
+                                if (!transitiveFile.exists()) {
+                                    appender.appendln(PluginOutput.SPECIAL_SILENT + "Transitive dependency $transitive for plugin $pluginDep does not exist. Resolving...")
+                                    break@mainCacheLoop
+                                }
+
+                                _resolvedFiles += transitiveFile // add transitive dependency to resolved files
+
+                                newTransitiveCache[pluginDep.hexString] = newTransitiveCache.getOrDefault(
+                                    pluginDep.hexString,
+                                    mutableListOf()
+                                ).apply {
+                                    add(transitiveFile.absolutePath)
+                                }
+                            }
+
                             appender.appendln(
                                 PluginOutput.SPECIAL_SILENT +
-                                        "Found cached plugin dependency $pluginDep (${pluginDep.hexString})"
+                                        "Found cached plugin \"$pluginDep\" (${pluginDep.hexString}). All transitive dependencies OK."
                             )
 
                             pluginJar = cachedFile
                             _resolvedFiles += cachedFile
-                            foundCache = true
-                            break
-                        } else {
-                            newCache.remove(cached.key)
+
+                            newCache[pluginDep.hexString] = cachedFile.absolutePath // add plugin to revalidated cache
+
+                            isCached = true // skip to next plugin, this one is already resolved by cache
                         }
+
+                        break@mainCacheLoop
                     }
                 }
 
-                if(foundCache) {
-                    appender.appendln(PluginOutput.SPECIAL_SILENT + "Resolving plugin ${plugin.key} at ${plugin.value}")
-                } else {
-                    appender.appendln("Resolving plugin ${plugin.key} at ${plugin.value}")
-                }
+                if(!isCached) {
+                    // if we reach this point, the plugin was not found in cache
+                    appender.appendln("Resolving plugin ${plugin.key} at \"${plugin.value}\"...")
 
-                resolver.resolve(pluginDep)
-                    .withTransitivity()
-                    .asFile()
-                    .forEach { file ->
-                        if(pluginJar == null) {
-                            // the first file is the plugin jar
-                            pluginJar = file
-                            newCache[pluginDep.hexString] = pluginJar!!.absolutePath
+                    resolver.resolve(pluginDep)
+                        .withTransitivity()
+                        .asFile()
+                        .forEach { file ->
+                            if (pluginJar == null) {
+                                // the first file returned by maven is the plugin jar we want
+                                pluginJar = file
+                                newCache[pluginDep.hexString] = pluginJar!!.absolutePath
+                            } else {
+                                newTransitiveCache[pluginDep.hexString] = newTransitiveCache.getOrDefault(
+                                    pluginDep.hexString,
+                                    mutableListOf()
+                                ).apply {
+                                    add(file.absolutePath)
+                                } // add transitive dependency to cache
+                            }
+
+                            _resolvedFiles += file // add file to resolved files to later build a classpath
                         }
-
-                        _resolvedFiles += file
-                    }
+                }
 
                 files += pluginJar!!
             } catch(ex: Exception) {
-                logger.warn("Failed to resolve plugin dependency $pluginDep", ex)
+                logger.warn("Failed to resolve plugin dependency \"$pluginDep\"", ex)
                 appender.appendln("Failed to resolve plugin ${plugin.key}: ${ex.message}")
                 shouldHalt = true
             }
         }
 
-        val cacheBuilder = StringBuilder()
-        cacheBuilder.append("# Do not edit this file, it is generated by the application.\n")
-        for(cached in newCache) {
-            cacheBuilder.append("${cached.key} = \"${cached.value.replace("\\", "/")}\"\n")
-        }
-
-        SysUtil.saveFileStr(CACHE_FILE, cacheBuilder.toString())
+        writeCacheFile(newCache, newTransitiveCache)
 
         if(shouldHalt) {
             appender.append(PluginOutput.SPECIAL_CONTINUE)
@@ -176,6 +207,38 @@ class PluginRepositoryManager(
         }
 
         return files
+    }
+
+    private fun writeCacheFile(
+        cache: Map<String, String>,
+        transitiveCache: Map<String, List<String>>
+    ) {
+        val cacheBuilder = StringBuilder()
+
+        cacheBuilder.appendLine("# Do not edit this file, it is generated by the application.")
+
+        cacheBuilder.appendLine("[plugins]") // add plugins table
+
+        for(cached in cache) {
+            cacheBuilder.appendLine("${cached.key} = \"${cached.value.replace("\\", "/")}\"")
+        }
+
+        cacheBuilder.appendLine("[transitive]") // add transitive dependencies table
+
+        for((plugin, deps) in transitiveCache) {
+            cacheBuilder.appendLine("$plugin = [") // add plugin hash as key
+
+            for((i, dep) in deps.withIndex()) {
+                cacheBuilder.append("\t\"${dep.replace("\\", "/")}\"") // add dependency path
+                if(i < deps.size - 1) cacheBuilder.append(",") // add comma if not last
+
+                cacheBuilder.appendLine()
+            }
+
+            cacheBuilder.appendLine("]")
+        }
+
+        SysUtil.saveFileStr(CACHE_FILE, cacheBuilder.toString().trim())
     }
 }
 

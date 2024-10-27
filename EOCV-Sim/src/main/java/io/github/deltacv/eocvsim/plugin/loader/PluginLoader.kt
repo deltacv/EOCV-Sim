@@ -134,11 +134,13 @@ class PluginLoader(
 
         setupFs()
 
-        if(pluginToml.contains("min-api-version")) {
-            val parsedVersion = ParsedVersion(pluginToml.getString("min-api-version"))
+        if(pluginToml.contains("api-version")) {
+            val parsedVersion = ParsedVersion(pluginToml.getString("api-version"))
 
             if(parsedVersion > EOCVSim.PARSED_VERSION)
                 throw UnsupportedPluginException("Plugin requires a minimum api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
+
+            logger.info("Plugin $pluginName requests min api version of v${parsedVersion}")
         }
 
         if(pluginToml.contains("max-api-version")) {
@@ -146,13 +148,17 @@ class PluginLoader(
 
             if(parsedVersion < EOCVSim.PARSED_VERSION)
                 throw UnsupportedPluginException("Plugin requires a maximum api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
+
+            logger.info("Plugin $pluginName requests max api version of v${parsedVersion}")
         }
 
-        if(pluginToml.contains("api-version")) {
-            val parsedVersion = ParsedVersion(pluginToml.getString("api-version"))
+        if(pluginToml.contains("exact-api-version")) {
+            val parsedVersion = ParsedVersion(pluginToml.getString("exact-api-version"))
 
-            if(parsedVersion == EOCVSim.PARSED_VERSION)
-                throw UnsupportedPluginException("Plugin request api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
+            if(parsedVersion != EOCVSim.PARSED_VERSION)
+                throw UnsupportedPluginException("Plugin requires an exact api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
+
+            logger.info("Plugin $pluginName requests exact api version of v${parsedVersion}")
         }
 
         if(pluginToml.getBoolean("super-access", false)) {

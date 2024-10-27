@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
+import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.util.FileFilters
@@ -102,7 +103,9 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         mFileMenu.add(editSettings)
 
         val filePlugins = JMenuItem("Plugins")
-        filePlugins.addActionListener { DialogFactory.createPluginsDialog(eocvSim) }
+        filePlugins.addActionListener { eocvSim.pluginManager.appender.append(PluginOutput.SPECIAL_OPEN)}
+
+        mFileMenu.add(filePlugins)
 
         mFileMenu.addSeparator()
 

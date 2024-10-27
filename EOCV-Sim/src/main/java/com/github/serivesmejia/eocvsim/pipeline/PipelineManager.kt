@@ -34,6 +34,7 @@ import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.StrUtil
+import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import com.github.serivesmejia.eocvsim.util.loggerForThis
@@ -572,7 +573,7 @@ class PipelineManager(
 
         logger.info("Changing to pipeline ${pipelineClass.name}")
 
-        debugLogCalled("forceChangePipeline")
+        SysUtil.debugLogCalled("forceChangePipeline")
 
         val instantiator = getInstantiatorFor(pipelineClass)
 
@@ -664,7 +665,7 @@ class PipelineManager(
     }
 
     fun requestForceChangePipeline(index: Int) {
-        debugLogCalled("requestForceChangePipeline")
+        SysUtil.debugLogCalled("requestForceChangePipeline")
 
         onUpdate.doOnce { forceChangePipeline(index) }
     }
@@ -767,15 +768,6 @@ class PipelineManager(
         }
 
         forceChangePipeline(0) // default pipeline
-    }
-
-    private fun debugLogCalled(name: String) {
-        val builder = StringBuilder()
-        for (s in Thread.currentThread().stackTrace) {
-            builder.appendLine(s.toString())
-        }
-
-        logger.debug("$name called in: {}", builder.toString().trim())
     }
 
 }

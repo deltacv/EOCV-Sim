@@ -339,6 +339,16 @@ public class SysUtil {
         return result;
     }
 
+
+    public static void debugLogCalled(String name) {
+        StringBuilder builder = new StringBuilder();
+        for (StackTraceElement s : Thread.currentThread().getStackTrace()) {
+            builder.append(s.toString()).append("\n");
+        }
+
+        logger.debug("{} called in: {}", name, builder.toString().trim());
+    }
+
     public enum OperatingSystem {
         WINDOWS,
         LINUX,

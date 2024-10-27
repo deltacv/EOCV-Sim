@@ -13,6 +13,7 @@ import kotlinx.coroutines.swing.Swing
 import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import java.awt.event.MouseAdapter
 import javax.swing.*
 
 class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
@@ -81,6 +82,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
         sourceSelectorButtonsContainer.add(sourceSelectorCreateBtt)
         sourceSelectorButtonsContainer.add(sourceSelectorDeleteBtt)
+        sourceSelectorDeleteBtt.isEnabled = false
 
         add(sourceSelectorButtonsContainer, GridBagConstraints().apply {
             gridy = 1
@@ -92,41 +94,46 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
     private fun registerListeners() {
         //listener for changing input sources
-        sourceSelector.addListSelectionListener { evt ->
-            if(allowSourceSwitching && !evt.valueIsAdjusting) {
-                try {
-                    if (sourceSelector.selectedIndex != -1) {
-                        val model = sourceSelector.model
-                        val source = model.getElementAt(sourceSelector.selectedIndex)
+        sourceSelector.addMouseListener(object: MouseAdapter() {
+            override fun mouseClicked(e: java.awt.event.MouseEvent) {
+                val index = (e.source as JList<*>).locationToIndex(e.point)
 
-                        //enable or disable source delete button depending if source is default or not
-                        eocvSim.visualizer.sourceSelectorPanel.sourceSelectorDeleteBtt
-                            .isEnabled = !(eocvSim.inputSourceManager.sources[source]?.isDefault ?: true)
+                if (index != -1) {
+                    if(allowSourceSwitching) {
+                        try {
+                            if (sourceSelector.selectedIndex != -1) {
+                                val model = sourceSelector.model
+                                val source = model.getElementAt(sourceSelector.selectedIndex)
 
-                        if (!evt.valueIsAdjusting && source != beforeSelectedSource) {
-                            if (!eocvSim.pipelineManager.paused) {
-                                eocvSim.inputSourceManager.requestSetInputSource(source)
-                                beforeSelectedSource = source
-                                beforeSelectedSourceIndex = sourceSelector.selectedIndex
-                            } else {
-                                //check if the user requested the pause or if it was due to one shoot analysis when selecting images
-                                if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
-                                    sourceSelector.setSelectedIndex(beforeSelectedSourceIndex)
-                                } else { //handling pausing
-                                    eocvSim.pipelineManager.requestSetPaused(false)
-                                    eocvSim.inputSourceManager.requestSetInputSource(source)
-                                    beforeSelectedSource = source
-                                    beforeSelectedSourceIndex = sourceSelector.selectedIndex
+                                //enable or disable source delete button depending if source is default or not
+                                sourceSelectorDeleteBtt.isEnabled = eocvSim.inputSourceManager.sources[source]?.isDefault == false
+
+                                if (source != beforeSelectedSource) {
+                                    if (!eocvSim.pipelineManager.paused) {
+                                        eocvSim.inputSourceManager.requestSetInputSource(source)
+                                        beforeSelectedSource = source
+                                        beforeSelectedSourceIndex = sourceSelector.selectedIndex
+                                    } else {
+                                        //check if the user requested the pause or if it was due to one shoot analysis when selecting images
+                                        if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
+                                            sourceSelector.setSelectedIndex(beforeSelectedSourceIndex)
+                                        } else { //handling pausing
+                                            eocvSim.pipelineManager.requestSetPaused(false)
+                                            eocvSim.inputSourceManager.requestSetInputSource(source)
+                                            beforeSelectedSource = source
+                                            beforeSelectedSourceIndex = sourceSelector.selectedIndex
+                                        }
+                                    }
                                 }
+                            } else {
+                                sourceSelector.setSelectedIndex(1)
                             }
+                        } catch (ignored: ArrayIndexOutOfBoundsException) {
                         }
-                    } else {
-                        sourceSelector.setSelectedIndex(1)
                     }
-                } catch (ignored: ArrayIndexOutOfBoundsException) {
                 }
             }
-        }
+        })
 
         // delete selected input source
         sourceSelectorDeleteBtt.addActionListener {

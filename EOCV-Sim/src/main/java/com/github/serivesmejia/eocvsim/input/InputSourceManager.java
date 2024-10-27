@@ -208,6 +208,8 @@ public class InputSourceManager {
     public boolean setInputSource(String sourceName) {
         InputSource src = null;
 
+        SysUtil.debugLogCalled("setInputSource");
+
         if(sourceName == null) {
             src = new NullSource();
         } else {
@@ -298,6 +300,8 @@ public class InputSourceManager {
     }
 
     public void requestSetInputSource(String name) {
+        SysUtil.debugLogCalled("requestSetInputSource");
+
         eocvSim.onMainUpdate.doOnce(() -> setInputSource(name));
     }
 
