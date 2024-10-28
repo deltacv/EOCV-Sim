@@ -27,17 +27,18 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput.Companion.trimSpecials
-import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.github.serivesmejia.eocvsim.util.loggerOf
-import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequestMain
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
+import io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemon
+import io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemonClient
+import io.github.deltacv.eocvsim.plugin.security.toMutable
 import java.io.File
-import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.properties.Delegates
 
 /**
  * Manages the loading, enabling and disabling of plugins
@@ -54,6 +55,8 @@ class PluginManager(val eocvSim: EOCVSim) {
     }
 
     val logger by loggerForThis()
+
+    val superAccessDaemonClient = SuperAccessDaemonClient()
 
     private val _loadedPluginHashes = mutableListOf<String>()
     val loadedPluginHashes get() = _loadedPluginHashes.toList()
@@ -97,6 +100,7 @@ class PluginManager(val eocvSim: EOCVSim) {
     private val _loaders = mutableMapOf<File, PluginLoader>()
     val loaders get() = _loaders.toMap()
 
+    private var enableTimestamp by Delegates.notNull<Long>()
     private var isEnabled = false
 
     /**
@@ -110,6 +114,8 @@ class PluginManager(val eocvSim: EOCVSim) {
         eocvSim.visualizer.onInitFinished {
             appender.append(PluginOutput.SPECIAL_FREE)
         }
+
+        superAccessDaemonClient.init()
 
         repositoryManager.init()
 
@@ -140,6 +146,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             )
         }
 
+        enableTimestamp = System.currentTimeMillis()
         isEnabled = true
     }
 
@@ -219,28 +226,35 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @return true if super access was granted, false otherwise
      */
     fun requestSuperAccessFor(loader: PluginLoader, reason: String): Boolean {
-        if(loader.hasSuperAccess) return true
-
-        appender.appendln(PluginOutput.SPECIAL_SILENT + "Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
-        logger.info("Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
-
-        var warning = "<html>$GENERIC_SUPERACCESS_WARN"
-        if(reason.trim().isNotBlank()) {
-            warning += "<br><br><i>$reason</i>"
-        }
-
-        warning += GENERIC_LAWYER_YEET
-
-        warning += "</html>"
-
-        val name = "${loader.pluginName} by ${loader.pluginAuthor}".replace(" ", "-")
-
-        if(JavaProcess.exec(SuperAccessRequestMain::class.java, null, Arrays.asList(name, warning)) == 171) {
-            eocvSim.config.superAccessPluginHashes.add(loader.pluginFileHash)
-            eocvSim.configManager.saveToFile()
+        if(loader.hasSuperAccess) {
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "Plugin ${loader.pluginName} v${loader.pluginVersion} already has super access")
             return true
         }
 
-        return false
+        val signature = loader.signature
+
+        appender.appendln(PluginOutput.SPECIAL_SILENT + "Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
+
+        var access = false
+
+        superAccessDaemonClient.sendRequest(SuperAccessDaemon.SuperAccessMessage.Request(
+            loader.pluginFile.absolutePath,
+            signature.toMutable(),
+            reason
+        )) {
+            if(it) {
+                access = true
+            }
+
+            haltLock.withLock {
+                haltCondition.signalAll()
+            }
+        }
+
+        haltLock.withLock {
+            haltCondition.await()
+        }
+
+        return access
     }
 }

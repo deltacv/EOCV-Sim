@@ -39,7 +39,6 @@ import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
@@ -50,6 +49,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.common.util.ParsedVersion
+import io.github.deltacv.eocvsim.plugin.security.AuthorityFetcher
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.vision.external.PipelineRenderHook
 import nu.pattern.OpenCV

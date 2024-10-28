@@ -90,7 +90,7 @@ class PluginOutput(
 ) : Appendable {
 
     companion object {
-        private const val SPECIAL = "[13mck]"
+        const val SPECIAL = "[13mck]"
 
         const val SPECIAL_OPEN = "$SPECIAL[OPEN]"
         const val SPECIAL_OPEN_MGR = "$SPECIAL[OPEN_MGR]"

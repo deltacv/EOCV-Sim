@@ -159,4 +159,19 @@ public final class JavaProcess {
         return execClasspath(klass, null, System.getProperty("java.class.path"), jvmArgs, args);
     }
 
+    /**
+     * Executes a Java process with the given class and arguments.
+     * @param klass the class to execute
+     * @param ioReceiver the receiver for the process' input and error streams (will use inheritIO if null)
+     * @param jvmArgs the JVM arguments to pass to the process
+     * @param args the arguments to pass to the class
+     * @return the exit value of the process
+     * @throws InterruptedException if the process is interrupted
+     * @throws IOException if an I/O error occurs
+     */
+    public static int exec(Class klass, ProcessIOReceiver ioReceiver, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
+        return execClasspath(klass, ioReceiver, System.getProperty("java.class.path"), jvmArgs, args);
+    }
+
+
 }

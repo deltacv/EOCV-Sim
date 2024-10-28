@@ -209,8 +209,7 @@ class EventHandler(val name: String) : Runnable {
     }
 
     /**
-     * Add a listener to this event handler to only be run once
-     * with kotlin operator overloading
+     * Add a listener to this event handler
      * @param listener the listener to add
      */
     operator fun invoke(listener: EventListener) = doPersistent(listener)

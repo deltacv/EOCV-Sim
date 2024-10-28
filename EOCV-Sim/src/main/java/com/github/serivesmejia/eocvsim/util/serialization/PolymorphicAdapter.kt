@@ -21,12 +21,30 @@
  *
  */
 
-package io.github.deltacv.eocvsim.gui.dialog;
+package com.github.serivesmejia.eocvsim.util.serialization
 
-import javax.swing.*;
+import com.google.gson.*
+import java.lang.reflect.Type
 
-public class SuperAccessRequestMain {
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new SuperAccessRequest(args[0].replace("-", " "), args[1].replace("-", " ")));
+private val gson = Gson()
+
+open class PolymorphicAdapter<T>(val name: String) : JsonSerializer<T>, JsonDeserializer<T> {
+
+    override fun serialize(src: T, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+        val obj = JsonObject()
+
+        obj.addProperty("${name}Class", src!!::class.java.name)
+        obj.add(name, gson.toJsonTree(src))
+
+        return obj
     }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): T {
+        val className = json.asJsonObject.get("${name}Class").asString
+        val clazz = Class.forName(className)
+
+        return gson.fromJson(json.asJsonObject.get(name), clazz) as T
+    }
+
 }

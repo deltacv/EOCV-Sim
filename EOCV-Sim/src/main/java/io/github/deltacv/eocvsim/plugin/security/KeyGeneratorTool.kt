@@ -21,12 +21,39 @@
  *
  */
 
-package io.github.deltacv.eocvsim.gui.dialog;
+package io.github.deltacv.eocvsim.plugin.security
 
-import javax.swing.*;
+import java.io.File
+import java.io.FileWriter
+import java.security.KeyPair
+import java.security.KeyPairGenerator
+import java.security.PrivateKey
+import java.util.Base64
 
-public class SuperAccessRequestMain {
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new SuperAccessRequest(args[0].replace("-", " "), args[1].replace("-", " ")));
+fun main() {
+    // Generate RSA key pair
+    val keyPair: KeyPair = generateKeyPair()
+
+    // Save keys to files
+    saveKeyToFile("private_key.pem", keyPair.private)
+    saveKeyToFile("public_key.pem", keyPair.public)
+
+    println("Keys generated and saved to files.")
+}
+
+fun generateKeyPair(): KeyPair {
+    val keyPairGenerator = KeyPairGenerator.getInstance("RSA")
+    keyPairGenerator.initialize(2048) // Use 2048 bits for key size
+    return keyPairGenerator.generateKeyPair()
+}
+
+fun saveKeyToFile(filename: String, key: java.security.Key) {
+    val encodedKey = Base64.getEncoder().encodeToString(key.encoded)
+    val keyType = if (key is PrivateKey) "PRIVATE" else "PUBLIC"
+
+    val pemFormat = "-----BEGIN ${keyType} KEY-----\n$encodedKey\n-----END ${keyType} KEY-----"
+
+    FileWriter(File(filename)).use { writer ->
+        writer.write(pemFormat)
     }
 }

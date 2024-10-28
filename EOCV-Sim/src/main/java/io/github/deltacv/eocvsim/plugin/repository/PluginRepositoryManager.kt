@@ -26,7 +26,7 @@ package io.github.deltacv.eocvsim.plugin.repository
 import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import com.github.serivesmejia.eocvsim.util.extension.hexString
+import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
@@ -107,7 +107,7 @@ class PluginRepositoryManager(
 
             resolver.withRemoteRepo(repo.key, repoUrl, "default")
 
-            logger.info("Added repository ${repo.key} with URL ${repoUrl}")
+            logger.info("Added repository ${repo.key} with URL $repoUrl")
         }
     }
 
@@ -128,7 +128,7 @@ class PluginRepositoryManager(
             try {
                 // Attempt to resolve from cache
                 pluginJar = if (resolveFromCache(pluginDep, newCache, newTransitiveCache)) {
-                    File(newCache[pluginDep.hexString]!!)
+                    File(newCache[pluginDep.hashString]!!)
                 } else {
                     // Resolve from the resolver if not found in cache
                     resolveFromResolver(pluginDep, newCache, newTransitiveCache)
@@ -155,14 +155,14 @@ class PluginRepositoryManager(
         newTransitiveCache: MutableMap<String, MutableList<String>>
     ): Boolean {
         for (cached in cachePluginsToml.toMap()) {
-            if (cached.key == pluginDep.hexString) {
+            if (cached.key == pluginDep.hashString) {
                 val cachedFile = File(cached.value as String)
 
                 if (cachedFile.exists() && areAllTransitivesCached(pluginDep)) {
                     addToResolvedFiles(cachedFile, pluginDep, newCache, newTransitiveCache)
                     appender.appendln(
                         PluginOutput.SPECIAL_SILENT +
-                                "Found cached plugin \"$pluginDep\" (${pluginDep.hexString}). All transitive dependencies OK."
+                                "Found cached plugin \"$pluginDep\" (${pluginDep.hashString}). All transitive dependencies OK."
                     )
                     return true
                 } else {
@@ -178,8 +178,29 @@ class PluginRepositoryManager(
 
     // Function to check if all transitive dependencies are cached
     private fun areAllTransitivesCached(pluginDep: String): Boolean {
-        return cacheTransitiveToml
-            .getList<String>(pluginDep.hexString).all {
+        val deps = cacheTransitiveToml.getList<String>(pluginDep.hashString)
+
+        val depsHash = depsToHash(deps)
+        val tomlHash = cacheTransitiveToml.getString("${pluginDep.hashString}_hash", "")
+
+        val matchesDepsHash = depsHash == tomlHash
+
+        if(!matchesDepsHash) {
+            appender.appendln(
+                PluginOutput.SPECIAL_SILENT +
+                        "Mismatch, $depsHash != $tomlHash"
+            )
+
+            appender.appendln(
+                PluginOutput.SPECIAL_SILENT +
+                        "Transitive dependencies hash mismatch for plugin $pluginDep. Resolving..."
+            )
+        }
+
+        return matchesDepsHash &&
+            deps != null &&
+            deps.isNotEmpty() &&
+            deps.all {
                 val exists = File(it).exists()
 
                 if(!exists) {
@@ -208,9 +229,9 @@ class PluginRepositoryManager(
             .forEach { file ->
                 if (pluginJar == null) {
                     pluginJar = file
-                    newCache[pluginDep.hexString] = file.absolutePath
+                    newCache[pluginDep.hashString] = file.absolutePath
                 } else {
-                    newTransitiveCache.getOrPut(pluginDep.hexString) { mutableListOf() }
+                    newTransitiveCache.getOrPut(pluginDep.hashString) { mutableListOf() }
                         .add(file.absolutePath)
                 }
 
@@ -228,11 +249,11 @@ class PluginRepositoryManager(
         newTransitiveCache: MutableMap<String, MutableList<String>>
     ) {
         _resolvedFiles += cachedFile
-        newCache[pluginDep.hexString] = cachedFile.absolutePath
+        newCache[pluginDep.hashString] = cachedFile.absolutePath
 
-        cacheTransitiveToml.getList<String>(pluginDep.hexString)?.forEach { transitive ->
+        cacheTransitiveToml.getList<String>(pluginDep.hashString)?.forEach { transitive ->
             _resolvedFiles += File(transitive)
-            newTransitiveCache.getOrPut(pluginDep.hexString) { mutableListOf() }
+            newTransitiveCache.getOrPut(pluginDep.hashString) { mutableListOf() }
                 .add(transitive)
         }
     }
@@ -282,10 +303,15 @@ class PluginRepositoryManager(
             }
 
             cacheBuilder.appendLine("]")
+
+            cacheBuilder.appendLine("${plugin}_hash=\"${depsToHash(deps)}\"")
         }
 
         SysUtil.saveFileStr(CACHE_FILE, cacheBuilder.toString().trim())
     }
+
+    private fun depsToHash(deps: List<String>) =
+        deps.joinToString(File.pathSeparator).replace("\\", "/").trimEnd(File.pathSeparatorChar).hashString
 }
 
 

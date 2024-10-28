@@ -29,11 +29,14 @@ import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.security.PluginSignature
+import io.github.deltacv.eocvsim.plugin.security.PluginSignatureVerifier
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import net.lingala.zip4j.ZipFile
 import java.io.File
@@ -42,6 +45,24 @@ import java.security.MessageDigest
 enum class PluginSource {
     REPOSITORY,
     FILE
+}
+
+class PluginParser(pluginToml: Toml) {
+    val pluginName = pluginToml.getString("name") ?: throw InvalidPluginException("No name in plugin.toml")
+    val pluginVersion = pluginToml.getString("version") ?: throw InvalidPluginException("No version in plugin.toml")
+
+    val pluginAuthor = pluginToml.getString("author") ?: throw InvalidPluginException("No author in plugin.toml")
+    val pluginAuthorEmail = pluginToml.getString("author-email", "")
+
+    val pluginMain = pluginToml.getString("main") ?: throw InvalidPluginException("No main in plugin.toml")
+
+    val pluginDescription = pluginToml.getString("description", "")
+
+    /**
+     * Get the hash of the plugin based off the plugin name and author
+     * @return the hash
+     */
+    fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
 }
 
 /**
@@ -103,13 +124,18 @@ class PluginLoader(
     lateinit var fileSystem: SandboxFileSystem
         private set
 
+    /**
+     * The signature of the plugin, issued by a verified authority
+     */
+    val signature by lazy { PluginSignatureVerifier.verify(pluginFile) }
+
     val fileSystemZip by lazy { PluginManager.FILESYSTEMS_FOLDER + File.separator + "${hash()}-fs" }
     val fileSystemZipPath by lazy { fileSystemZip.toPath() }
 
     /**
      * Whether the plugin has super access (full system access)
      */
-    val hasSuperAccess get() = eocvSim.config.superAccessPluginHashes.contains(pluginFileHash)
+    val hasSuperAccess get() = eocvSim.pluginManager.superAccessDaemonClient.checkAccess(pluginFile)
 
     init {
         pluginClassLoader = PluginClassLoader(
@@ -131,13 +157,13 @@ class PluginLoader(
             ?: throw InvalidPluginException("No plugin.toml in the jar file")
         )
 
-        pluginName = pluginToml.getString("name") ?: throw InvalidPluginException("No name in plugin.toml")
-        pluginVersion = pluginToml.getString("version") ?: throw InvalidPluginException("No version in plugin.toml")
+        val parser = PluginParser(pluginToml)
 
-        pluginDescription = pluginToml.getString("description", "")
-
-        pluginAuthor = pluginToml.getString("author") ?: throw InvalidPluginException("No author in plugin.toml")
-        pluginAuthorEmail = pluginToml.getString("author-email", "")
+        pluginName = parser.pluginName
+        pluginVersion = parser.pluginVersion
+        pluginAuthor = parser.pluginAuthor
+        pluginAuthorEmail = parser.pluginAuthorEmail
+        pluginDescription = parser.pluginDescription
     }
 
     /**
@@ -258,19 +284,14 @@ class PluginLoader(
      * @param reason the reason for requesting super access
      */
     fun requestSuperAccess(reason: String): Boolean {
-        if(hasSuperAccess) return true
         return eocvSim.pluginManager.requestSuperAccessFor(this, reason)
     }
 
     /**
-     * Get the hash of the plugin file based off the plugin name and author
+     * Get the hash of the plugin based off the plugin name and author
      * @return the hash
      */
-    fun hash(): String {
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update("${pluginName} by ${pluginAuthor}".toByteArray())
-        return SysUtil.byteArray2Hex(messageDigest.digest())
-    }
+    fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
 
     /**
      * Get the hash of the plugin file based off the file contents

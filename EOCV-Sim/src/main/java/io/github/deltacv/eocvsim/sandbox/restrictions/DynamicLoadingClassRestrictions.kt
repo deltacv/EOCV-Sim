@@ -94,6 +94,7 @@ val dynamicLoadingMethodBlacklist = setOf(
     "java.lang.Class#newInstance",
     "java.lang.Class#forName",
 
+    // Additional java.io.File methods to blacklist
     "java.io.File#delete",
     "java.io.File#createNewFile",
     "java.io.File#mkdirs",
@@ -107,4 +108,22 @@ val dynamicLoadingMethodBlacklist = setOf(
     "java.io.File#setWritable",
     "java.io.File#setReadable",
     "java.io.File#setExecutable",
+    "java.io.File#list",
+    "java.io.File#listFiles",
+    "java.io.File#listRoots",
+    "java.io.File#canRead",
+    "java.io.File#canWrite",
+    "java.io.File#canExecute",
+    "java.io.File#length",
+    "java.io.File#getTotalSpace",
+    "java.io.File#getFreeSpace",
+    "java.io.File#getUsableSpace",
+    "java.io.File#getAbsolutePath",
+    "java.io.File#getCanonicalPath",
+    "java.io.File#getParentFile",
+    "java.io.File#exists",
+    "java.io.File#isDirectory",
+    "java.io.File#isFile",
+    "java.io.File#isHidden",
+    "java.io.File#lastModified"
 )
