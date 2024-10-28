@@ -36,9 +36,8 @@ import java.awt.Font
 import java.awt.event.WindowEvent
 import java.awt.event.WindowListener
 import javax.swing.*
-import kotlin.system.exitProcess
 
-class SuperAccessRequest(sourceName: String, reason: String) {
+class SuperAccessRequest(sourceName: String, reason: String, val callback: (Boolean) -> Unit) {
 
     init {
         FlatArcDarkIJTheme.setup()
@@ -77,14 +76,20 @@ class SuperAccessRequest(sourceName: String, reason: String) {
             val acceptButton = JButton("Accept").apply {
                 preferredSize = Dimension(100, 30)
                 addActionListener {
-                    exitProcess(171)
+                    callback(true)
+
+                    frame.isVisible = false
+                    frame.dispose()
                 }
             }
 
             val rejectButton = JButton("Reject").apply {
                 preferredSize = Dimension(100, 30)
                 addActionListener {
-                    exitProcess(-172)
+                    callback(false)
+
+                    frame.isVisible = false
+                    frame.dispose()
                 }
             }
 
@@ -115,7 +120,6 @@ class SuperAccessRequest(sourceName: String, reason: String) {
             override fun windowDeactivated(e: WindowEvent?) {}
 
             override fun windowClosed(e: WindowEvent?) {
-                exitProcess(-129)
             }
         })
 

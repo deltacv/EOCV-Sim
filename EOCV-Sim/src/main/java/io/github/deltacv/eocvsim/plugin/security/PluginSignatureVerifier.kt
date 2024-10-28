@@ -26,6 +26,7 @@ package io.github.deltacv.eocvsim.plugin.security
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
+import io.github.deltacv.eocvsim.plugin.loader.InvalidPluginException
 import java.io.File
 import java.security.PublicKey
 import java.security.Signature
@@ -124,8 +125,8 @@ object PluginSignatureVerifier {
 
             val signatureStatus = mutableMapOf<String, Boolean>()
 
-            for(signature in signatures) {
-                signatureStatus[signature.key] = false
+            for(sign in signatures) {
+                signatureStatus[sign.key] = false
             }
 
             for (classEntry in classEntries) {
@@ -139,8 +140,7 @@ object PluginSignatureVerifier {
 
                 // Verify the signature of the class
                 if (!verifySignature(classData, signatures[classHash]!!, publicKey)) {
-                    logger.warn("Signature verification failed for class $className")
-                    return emptyResult
+                    throw InvalidPluginException("Signature verification failed for class $className. Please try to re-download the plugin or discard it immediately.")
                 } else {
                     signatureStatus[classHash] = true
                 }

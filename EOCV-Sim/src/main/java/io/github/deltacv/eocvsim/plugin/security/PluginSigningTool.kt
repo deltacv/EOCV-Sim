@@ -198,19 +198,22 @@ class PluginSigningTool : Runnable {
     }
 }
 
-// Use System.in
-fun main() {
-    val scanner = Scanner(System.`in`)
+fun main(args: Array<String>) {
+    if(args.isEmpty()) {
+        val scanner = Scanner(System.`in`)
 
-    val tool = PluginSigningTool()
-    println("Enter the plugin JAR file path:")
-    tool.pluginFile = scanner.next()
+        val tool = PluginSigningTool()
+        println("Enter the plugin JAR file path:")
+        tool.pluginFile = scanner.next()
 
-    println("Enter the authority to sign the plugin with:")
-    tool.authority = scanner.next()
+        println("Enter the authority to sign the plugin with:")
+        tool.authority = scanner.next()
 
-    println("Enter the private key file path:")
-    tool.privateKeyFile = scanner.next()
+        println("Enter the private key file path:")
+        tool.privateKeyFile = scanner.next()
 
-    tool.run()
+        tool.run()
+    } else {
+        CommandLine(PluginSigningTool()).execute(*args)
+    }
 }

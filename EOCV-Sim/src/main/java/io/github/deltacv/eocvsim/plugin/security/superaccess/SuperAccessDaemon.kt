@@ -24,25 +24,30 @@
 package io.github.deltacv.eocvsim.plugin.security.superaccess
 
 import com.github.serivesmejia.eocvsim.util.JavaProcess
+import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.serialization.PolymorphicAdapter
 import com.google.gson.GsonBuilder
 import com.moandjiezana.toml.Toml
-import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequestMain
+import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequest
+import javax.swing.SwingUtilities
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager.Companion.GENERIC_LAWYER_YEET
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager.Companion.GENERIC_SUPERACCESS_WARN
 import io.github.deltacv.eocvsim.plugin.loader.PluginParser
 import io.github.deltacv.eocvsim.plugin.security.Authority
 import io.github.deltacv.eocvsim.plugin.security.AuthorityFetcher
 import io.github.deltacv.eocvsim.plugin.security.MutablePluginSignature
+import kotlinx.coroutines.newFixedThreadPoolContext
 import org.java_websocket.client.WebSocketClient
 import java.net.URI
 import org.java_websocket.handshake.ServerHandshake
 import java.util.zip.ZipFile
 import java.io.File
 import java.lang.Exception
+import java.security.MessageDigest
+import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 
 object SuperAccessDaemon {
@@ -88,6 +93,8 @@ object SuperAccessDaemon {
 
     class WsClient(port: Int) : WebSocketClient(URI("ws://localhost:$port")) {
 
+        private val executor = Executors.newFixedThreadPool(6)
+
         override fun onOpen(p0: ServerHandshake?) {
             logger.info("SuperAccessDaemon connection opened")
         }
@@ -95,21 +102,37 @@ object SuperAccessDaemon {
         override fun onMessage(msg: String) {
             val message = gson.fromJson(msg, SuperAccessMessage::class.java)
 
-            when(message) {
-                is SuperAccessMessage.Request -> {
-                    handleRequest(message)
-                }
+            executor.submit {
+                when (message) {
+                    is SuperAccessMessage.Request -> {
+                        handleRequest(message)
+                    }
 
-                is SuperAccessMessage.Check -> {
-                    handleCheck(message)
+                    is SuperAccessMessage.Check -> {
+                        handleCheck(message)
+                    }
                 }
             }
         }
 
         private fun handleRequest(message: SuperAccessMessage.Request) {
+            val pluginFile = File(message.pluginPath)
+
+            val parser = parsePlugin(pluginFile) ?: run {
+                logger.error("Failed to parse plugin at ${message.pluginPath}")
+                (gson.toJson(SuperAccessResponse.Failure(message.id)))
+                return@handleRequest
+            }
+
+            if(SUPERACCESS_FILE.exists() && SUPERACCESS_FILE.readLines().contains(pluginFile.fileHash())) {
+                accessGranted(message.id, message.pluginPath)
+                return
+            }
+
             logger.info("Requesting SuperAccess for ${message.pluginPath}")
 
             var validAuthority: Authority? = null
+            var untrusted = false
 
             if(message.signature.authority != null) {
                 val declaredAuthority = message.signature.authority!!
@@ -125,19 +148,17 @@ object SuperAccessDaemon {
                         validAuthority = Authority(authorityName, fetchedAuthorityKey)
                     } else {
                         logger.warn("Authority key does not match the fetched key for $authorityName")
+                        untrusted = true
                     }
                 }
-            }
-
-            val parser = parsePlugin(File(message.pluginPath)) ?: run {
-                logger.error("Failed to parse plugin at ${message.pluginPath}")
-                (gson.toJson(SuperAccessResponse.Failure(message.id)))
-                return@handleRequest
+            } else {
+                val fetch = AuthorityFetcher.fetchAuthority(parser.pluginAuthor)
+                untrusted = fetch != null // the plugin is claiming to be made by the authority but it's not signed by them
             }
 
             val reason = message.reason
 
-            val name = "${parser.pluginName} v${parser.pluginVersion} by ${parser.pluginAuthor}".replace(" ", "-")
+            val name = "${parser.pluginName} v${parser.pluginVersion} by ${parser.pluginAuthor}"
 
             var warning = "<html>$GENERIC_SUPERACCESS_WARN"
             if(reason.trim().isNotBlank()) {
@@ -145,22 +166,24 @@ object SuperAccessDaemon {
             }
 
             warning += if(validAuthority != null) {
-                "<br><br>This plugin is signed by the trusted authority <b>${validAuthority.name}</b>."
+                "<br><br>This plugin has been digitally signed by <b>${validAuthority.name}</b>, ensuring its integrity and authenticity.<br><b>${validAuthority.name}</b> is a trusted authority in the EOCV-Sim ecosystem."
+            } else if(untrusted) {
+                "<br><br>This plugin claims to be made by trusted authority <b>${parser.pluginAuthor}</b>, but it has not been digitally signed by them.<br><h2>Beware of potential security risks.</h2>"
             } else {
                 GENERIC_LAWYER_YEET
             }
 
             warning += "</html>"
 
-            if(JavaProcess.exec(SuperAccessRequestMain::class.java, null, listOf(name, warning)) == 171) {
-                logger.info("SuperAccess granted to ${message.pluginPath}")
-                send(gson.toJson(SuperAccessResponse.Success(message.id)))
-
-                SUPERACCESS_FILE.appendText("${parser.hash()}\n")
-                access[message.pluginPath] = true
-            } else {
-                logger.info("SuperAccess denied to ${message.pluginPath}")
-                send(gson.toJson(SuperAccessResponse.Failure(message.id)))
+            SwingUtilities.invokeLater {
+                SuperAccessRequest(name, warning) { granted ->
+                    if(granted) {
+                        SUPERACCESS_FILE.appendText(pluginFile.fileHash() + "\n")
+                        accessGranted(message.id, message.pluginPath)
+                    } else {
+                        accessDenied(message.id, message.pluginPath)
+                    }
+                }
             }
         }
 
@@ -175,17 +198,25 @@ object SuperAccessDaemon {
                 }
             }
 
-            val parser = parsePlugin(File(message.pluginPath)) ?: run {
+            val pluginFile = File(message.pluginPath)
+
+            val parser = parsePlugin(pluginFile) ?: run {
                 logger.error("Failed to parse plugin at ${message.pluginPath}")
                 send(gson.toJson(SuperAccessResponse.Failure(message.id)))
                 return
             }
 
-            if(SUPERACCESS_FILE.readLines().contains(parser.hash())) {
+            if(SUPERACCESS_FILE.exists() && SUPERACCESS_FILE.readLines().contains(pluginFile.fileHash())) {
                 accessGranted(message.id, message.pluginPath)
             } else {
                 accessDenied(message.id, message.pluginPath)
             }
+        }
+
+        private fun File.fileHash(): String {
+            val messageDigest = MessageDigest.getInstance("SHA-256")
+            messageDigest.update(readBytes())
+            return SysUtil.byteArray2Hex(messageDigest.digest())
         }
 
         private fun accessGranted(id: Int, pluginPath: String) {

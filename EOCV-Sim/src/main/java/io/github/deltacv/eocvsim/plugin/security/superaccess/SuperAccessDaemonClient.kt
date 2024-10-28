@@ -24,20 +24,16 @@
 package io.github.deltacv.eocvsim.plugin.security.superaccess
 
 import com.github.serivesmejia.eocvsim.util.JavaProcess
-import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.EventListenerRemover
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import org.firstinspires.ftc.robotcore.internal.collections.EvictingBlockingQueue
-import java.util.concurrent.ArrayBlockingQueue
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
-import java.lang.Exception
 import java.io.File
+import java.lang.Exception
 import java.net.InetSocketAddress
 import java.util.concurrent.Executors
-import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 typealias ResponseReceiver = (SuperAccessDaemon.SuperAccessResponse) -> Unit
