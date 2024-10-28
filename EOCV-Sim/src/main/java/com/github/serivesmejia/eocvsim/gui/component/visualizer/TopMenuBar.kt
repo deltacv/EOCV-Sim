@@ -102,8 +102,8 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         mFileMenu.add(editSettings)
 
-        val filePlugins = JMenuItem("Plugins")
-        filePlugins.addActionListener { eocvSim.pluginManager.appender.append(PluginOutput.SPECIAL_OPEN)}
+        val filePlugins = JMenuItem("Manage Plugins")
+        filePlugins.addActionListener { eocvSim.pluginManager.appender.append(PluginOutput.SPECIAL_OPEN_MGR)}
 
         mFileMenu.add(filePlugins)
 

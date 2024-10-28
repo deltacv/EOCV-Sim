@@ -23,8 +23,11 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog
 
+import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
+import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import io.github.deltacv.eocvsim.plugin.loader.PluginSource
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -34,6 +37,12 @@ import java.awt.Dimension
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import javax.swing.*
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import javax.swing.event.ChangeEvent
+import javax.swing.event.ChangeListener
 
 class AppendDelegate {
     private val appendables = mutableListOf<Appendable>()
@@ -75,13 +84,16 @@ class AppendDelegate {
 
 class PluginOutput(
     appendDelegate: AppendDelegate,
+    val pluginManager: PluginManager,
+    val eocvSim: EOCVSim? = null,
     val onContinue: Runnable
 ) : Appendable {
 
     companion object {
-        private const val SPECIAL = "13mck"
+        private const val SPECIAL = "[13mck]"
 
         const val SPECIAL_OPEN = "$SPECIAL[OPEN]"
+        const val SPECIAL_OPEN_MGR = "$SPECIAL[OPEN_MGR]"
         const val SPECIAL_CLOSE = "$SPECIAL[CLOSE]"
         const val SPECIAL_CONTINUE = "$SPECIAL[CONTINUE]"
         const val SPECIAL_FREE = "$SPECIAL[FREE]"
@@ -90,6 +102,7 @@ class PluginOutput(
         fun String.trimSpecials(): String {
             return this
                 .replace(SPECIAL_OPEN, "")
+                .replace(SPECIAL_OPEN_MGR, "")
                 .replace(SPECIAL_CLOSE, "")
                 .replace(SPECIAL_CONTINUE, "")
                 .replace(SPECIAL_SILENT, "")
@@ -99,6 +112,8 @@ class PluginOutput(
 
     private val output = JDialog()
     private val tabbedPane: JTabbedPane
+
+    private var shouldAskForRestart = false
 
     private val mavenBottomButtonsPanel: MavenOutputBottomButtonsPanel = MavenOutputBottomButtonsPanel(::close) {
         mavenOutputPanel.outputArea.text
@@ -114,11 +129,7 @@ class PluginOutput(
         tabbedPane = JTabbedPane()
 
         output.add(tabbedPane.apply {
-            addTab("Plugins", JPanel().apply {
-                layout = BoxLayout(this, BoxLayout.PAGE_AXIS)
-
-                add(JLabel("Plugins output will be shown here"))
-            })
+            addTab("Plugins", makePluginManagerPanel())
             addTab("Output", mavenOutputPanel)
         })
 
@@ -135,14 +146,201 @@ class PluginOutput(
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun registerListeners() = GlobalScope.launch(Dispatchers.Swing) {
+        output.addWindowListener(object : java.awt.event.WindowAdapter() {
+            override fun windowClosing(e: java.awt.event.WindowEvent?) {
+                if(mavenBottomButtonsPanel.continueButton.isEnabled) {
+                    mavenBottomButtonsPanel.continueButton.doClick()
+                }
+
+                checkShouldAskForRestart()
+            }
+        })
+
         mavenBottomButtonsPanel.continueButton.addActionListener {
             close()
             onContinue.run()
-
-            output.defaultCloseOperation = WindowConstants.HIDE_ON_CLOSE
             mavenBottomButtonsPanel.continueButton.isEnabled = false
             mavenBottomButtonsPanel.closeButton.isEnabled = true
         }
+
+        tabbedPane.addChangeListener(object: ChangeListener {
+            override fun stateChanged(e: ChangeEvent?) {
+                // remake plugin manager panel
+                if(tabbedPane.selectedIndex == tabbedPane.indexOfTab("Plugins")) {
+                    tabbedPane.setComponentAt(0, makePluginManagerPanel())
+                }
+            }
+        })
+    }
+
+    private fun checkShouldAskForRestart() {
+        if(shouldAskForRestart && eocvSim != null) {
+            val dialogResult = JOptionPane.showConfirmDialog(
+                output,
+                "You need to restart the application to apply the changes. Do you want to restart now?",
+                "Restart required",
+                JOptionPane.YES_NO_OPTION
+            )
+
+            if(dialogResult == JOptionPane.YES_OPTION) {
+                eocvSim.restart()
+            }
+
+            shouldAskForRestart = false
+        }
+    }
+
+    private fun makePluginManagerPanel(): JPanel {
+        val panel = JPanel()
+        panel.layout = GridBagLayout()
+
+        if(pluginManager.loaders.isEmpty()) {
+            // center vertically and horizontally
+            val noPluginsLabel = JLabel("<html><h1>Nothing to see here...</h1><html>")
+            noPluginsLabel.horizontalAlignment = SwingConstants.CENTER
+            noPluginsLabel.verticalAlignment = SwingConstants.CENTER
+
+            // Use GridBagConstraints to center the label
+            val constraints = GridBagConstraints().apply {
+                gridx = 0 // Center horizontally
+                gridy = 0 // Center vertically
+                weightx = 1.0 // Take up the entire horizontal space
+                weighty = 1.0 // Take up the entire vertical space
+                anchor = GridBagConstraints.CENTER // Center alignment
+            }
+
+            // Add the label to the panel with the constraints
+            panel.add(noPluginsLabel, constraints)
+        } else {
+            val tabbedPane = JTabbedPane(JTabbedPane.LEFT)
+
+            for((_, loader) in pluginManager.loaders) {
+                val pluginPanel = JPanel()
+                pluginPanel.layout = GridBagLayout()
+
+                val pluginNameLabel = JLabel(
+                    "<html><h1>${loader.pluginName} v${loader.pluginVersion} by ${loader.pluginAuthor}</h1></html>",
+                    SwingConstants.CENTER
+                )
+
+                pluginPanel.add(pluginNameLabel, GridBagConstraints().apply {
+                    gridx = 0
+                    gridy = 0
+                    weightx = 1.0
+                    fill = GridBagConstraints.HORIZONTAL
+                    anchor = GridBagConstraints.CENTER
+                })
+
+                val authorEmail = if(loader.pluginAuthorEmail.isBlank())
+                    "The author did not provide contact information."
+                else "Contact the author at ${loader.pluginAuthorEmail}"
+
+                val description = if(loader.pluginDescription.isBlank())
+                    "No description available."
+                else loader.pluginDescription
+
+                val source = if(loader.pluginSource == PluginSource.REPOSITORY)
+                    "Maven repository"
+                else "local file"
+
+                val superAccess = if(loader.hasSuperAccess)
+                    "This plugin has super access."
+                else "This plugin does not have super access."
+
+                val wantsSuperAccess = if(loader.pluginToml.getBoolean("super-access", false))
+                    "It requests super access in its manifest."
+                else "It does not request super access in its manifest."
+
+                val font = pluginNameLabel.font.deriveFont(13.0f)
+
+                // add a text area for the plugin description
+                val pluginDescriptionArea = JTextArea("""
+                    $authorEmail
+                    
+                    ${if(loader.shouldEnable) "This plugin was loaded from a $source." else "This plugin is disabled, it comes from a $source."} 
+                    $superAccess $wantsSuperAccess
+                    
+                    $description
+                """.trimIndent())
+
+                pluginDescriptionArea.font = font
+                pluginDescriptionArea.isEditable = false
+                pluginDescriptionArea.lineWrap = true
+                pluginDescriptionArea.wrapStyleWord = true
+                pluginDescriptionArea.background = pluginPanel.background
+
+                pluginPanel.add(JScrollPane(pluginDescriptionArea), GridBagConstraints().apply {
+                    gridx = 0
+                    gridy = 1
+                    weightx = 1.0
+                    weighty = 1.0
+                    fill = GridBagConstraints.BOTH
+                })
+
+                val restartWarnLabel = JLabel("Restart to apply changes.")
+                restartWarnLabel.isVisible = false
+
+                val disableButton = JButton("Disable")
+                val enableButton = JButton("Enable")
+
+                fun refreshButtons() {
+                    disableButton.isEnabled = loader.shouldEnable
+                    enableButton.isEnabled = !loader.shouldEnable
+
+                }
+
+                refreshButtons()
+
+                enableButton.addActionListener {
+                    loader.shouldEnable = true
+                    restartWarnLabel.isVisible = true
+                    shouldAskForRestart = true
+
+                    refreshButtons()
+                }
+                disableButton.addActionListener {
+                    loader.shouldEnable = false
+                    restartWarnLabel.isVisible = true
+                    shouldAskForRestart = true
+
+                    refreshButtons()
+                }
+
+                // center buttons
+                val buttonsPanel = JPanel()
+                buttonsPanel.border = BorderFactory.createEmptyBorder(10, 0, 0, 0)
+
+                buttonsPanel.layout = BoxLayout(buttonsPanel, BoxLayout.LINE_AXIS)
+
+                buttonsPanel.add(restartWarnLabel)
+                buttonsPanel.add(Box.createHorizontalGlue())
+                buttonsPanel.add(disableButton)
+                buttonsPanel.add(Box.createRigidArea(Dimension(5, 0)))
+                buttonsPanel.add(enableButton)
+
+                pluginPanel.add(buttonsPanel, GridBagConstraints().apply {
+                    gridx = 0
+                    gridy = 2
+                    weightx = 1.0
+                    fill = GridBagConstraints.HORIZONTAL
+                    anchor = GridBagConstraints.CENTER
+                })
+
+                pluginPanel.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
+
+                tabbedPane.addTab(loader.pluginName, pluginPanel)
+            }
+
+            panel.add(tabbedPane, GridBagConstraints().apply {
+                gridx = 0
+                gridy = 0
+                weightx = 1.0
+                weighty = 1.0
+                fill = GridBagConstraints.BOTH
+            })
+        }
+
+        return panel
     }
 
     fun close() {
@@ -165,8 +363,14 @@ class PluginOutput(
         if(!text.startsWith(SPECIAL_SILENT) && text != SPECIAL_CLOSE && text != SPECIAL_FREE) {
             SwingUtilities.invokeLater {
                 SwingUtilities.invokeLater {
-                    tabbedPane.selectedIndex = tabbedPane.indexOfTab("Output") // focus on output tab
+                    if(text == SPECIAL_OPEN_MGR) {
+                        tabbedPane.selectedIndex = tabbedPane.indexOfTab("Plugins") // focus on plugins tab
+                    } else {
+                        tabbedPane.selectedIndex = tabbedPane.indexOfTab("Output") // focus on output tab
+                    }
                 }
+
+                tabbedPane.setComponentAt(0, makePluginManagerPanel())
                 output.isVisible = true
             }
         }

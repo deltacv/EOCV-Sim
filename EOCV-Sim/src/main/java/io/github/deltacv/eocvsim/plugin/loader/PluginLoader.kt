@@ -32,12 +32,10 @@ import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
-import org.apache.logging.log4j.LogManager
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import net.lingala.zip4j.ZipFile
-import org.apache.logging.log4j.core.LoggerContext
 import java.io.File
 import java.security.MessageDigest
 
@@ -69,12 +67,24 @@ class PluginLoader(
 
     val pluginClassLoader: PluginClassLoader
 
+    var shouldEnable: Boolean
+        get() {
+            return eocvSim.config.flags.getOrDefault(hash(), true)
+        }
+        set(value) {
+            eocvSim.config.flags[hash()] = value
+            eocvSim.configManager.saveToFile()
+        }
+
     lateinit var pluginToml: Toml
         private set
 
     lateinit var pluginName: String
         private set
     lateinit var pluginVersion: String
+        private set
+
+    lateinit var pluginDescription: String
         private set
 
     lateinit var pluginAuthor: String
@@ -124,6 +134,8 @@ class PluginLoader(
         pluginName = pluginToml.getString("name") ?: throw InvalidPluginException("No name in plugin.toml")
         pluginVersion = pluginToml.getString("version") ?: throw InvalidPluginException("No version in plugin.toml")
 
+        pluginDescription = pluginToml.getString("description", "")
+
         pluginAuthor = pluginToml.getString("author") ?: throw InvalidPluginException("No author in plugin.toml")
         pluginAuthorEmail = pluginToml.getString("author-email", "")
     }
@@ -138,12 +150,19 @@ class PluginLoader(
 
         fetchInfoFromToml()
 
+        if(!shouldEnable) {
+            appender.appendln("${PluginOutput.SPECIAL_SILENT}Plugin $pluginName v$pluginVersion is disabled")
+            return
+        }
+
         appender.appendln("${PluginOutput.SPECIAL_SILENT}Loading plugin $pluginName v$pluginVersion by $pluginAuthor from ${pluginSource.name}")
 
         setupFs()
 
-        if(pluginToml.contains("api-version")) {
-            val parsedVersion = ParsedVersion(pluginToml.getString("api-version"))
+        if(pluginToml.contains("api-version") || pluginToml.contains("min-api-version")) {
+            // default to api-version if min-api-version is not present
+            val apiVersionKey = if(pluginToml.contains("api-version")) "api-version" else "min-api-version"
+            val parsedVersion = ParsedVersion(pluginToml.getString(apiVersionKey))
 
             if(parsedVersion > EOCVSim.PARSED_VERSION)
                 throw UnsupportedPluginException("Plugin requires a minimum api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
@@ -155,7 +174,7 @@ class PluginLoader(
             val parsedVersion = ParsedVersion(pluginToml.getString("max-api-version"))
 
             if(parsedVersion < EOCVSim.PARSED_VERSION)
-                throw UnsupportedPluginException("Plugin requires a maximum api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
+                throw UnsupportedPluginException("Plugin requires a max api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
 
             logger.info("Plugin $pluginName requests max api version of v${parsedVersion}")
         }
@@ -198,6 +217,8 @@ class PluginLoader(
     fun enable() {
         if(enabled || !loaded) return
 
+        if(!shouldEnable) return
+
         appender.appendln("${PluginOutput.SPECIAL_SILENT}Enabling plugin $pluginName v$pluginVersion")
 
         plugin.enabled = true
@@ -226,6 +247,7 @@ class PluginLoader(
      * @see EventHandler.banClassLoader
      */
     fun kill() {
+        if(!loaded) return
         fileSystem.close()
         enabled = false
         EventHandler.banClassLoader(pluginClassLoader)
@@ -236,6 +258,7 @@ class PluginLoader(
      * @param reason the reason for requesting super access
      */
     fun requestSuperAccess(reason: String): Boolean {
+        if(!loaded) return false
         if(hasSuperAccess) return true
         return eocvSim.pluginManager.requestSuperAccessFor(this, reason)
     }

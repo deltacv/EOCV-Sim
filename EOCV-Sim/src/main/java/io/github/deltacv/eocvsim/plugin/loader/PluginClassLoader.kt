@@ -26,6 +26,7 @@ package io.github.deltacv.eocvsim.plugin.loader
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
 import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingExactMatchBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageWhitelist
@@ -92,7 +93,18 @@ class PluginClassLoader(
     fun loadClassStrict(name: String): Class<*> {
         if(!pluginContextProvider().hasSuperAccess) {
             for (blacklistedPackage in dynamicLoadingPackageBlacklist) {
+                for(whiteListedPackage in dynamicLoadingPackageWhitelist) {
+                    // If the class is whitelisted, skip the blacklist check
+                    if(name.contains(whiteListedPackage)) continue
+                }
+
                 if (name.contains(blacklistedPackage)) {
+                    throw IllegalAccessError("Plugins are blacklisted to use $name")
+                }
+            }
+
+            for(blacklistedClass in dynamicLoadingExactMatchBlacklist) {
+                if(name == blacklistedClass) {
                     throw IllegalAccessError("Plugins are blacklisted to use $name")
                 }
             }
@@ -105,29 +117,30 @@ class PluginClassLoader(
         var clazz = loadedClasses[name]
 
         if(clazz == null) {
-            var inWhitelist = false
-
-            for(whiteListedPackage in dynamicLoadingPackageWhitelist) {
-                if(name.contains(whiteListedPackage)) {
-                    inWhitelist = true
-                    break
-                }
-            }
-
-            if(!inWhitelist && !pluginContextProvider().hasSuperAccess) {
-                throw IllegalAccessError("Plugins are not whitelisted to use $name")
-            }
-
-            clazz = try {
-                Class.forName(name)
-            } catch (_: ClassNotFoundException) {
+            try {
+                clazz = loadClassStrict(name)
+            } catch(_: Exception) {
                 val classpathClass = classFromClasspath(name)
-
                 if(classpathClass != null) {
-                    return classpathClass
+                    clazz = classpathClass
+                }
+            }
+
+            if(clazz == null) {
+                var inWhitelist = false
+
+                for (whiteListedPackage in dynamicLoadingPackageWhitelist) {
+                    if (name.contains(whiteListedPackage)) {
+                        inWhitelist = true
+                        break
+                    }
                 }
 
-                loadClassStrict(name)
+                if (!inWhitelist && !pluginContextProvider().hasSuperAccess) {
+                    throw IllegalAccessError("Plugins are not whitelisted to use $name")
+                }
+
+                clazz = Class.forName(name)
             }
 
             if(resolve) resolveClass(clazz)

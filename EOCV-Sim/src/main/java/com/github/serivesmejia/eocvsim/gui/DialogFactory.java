@@ -32,6 +32,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateSource;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateVideoSource;
 import com.github.serivesmejia.eocvsim.input.SourceType;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
+import io.github.deltacv.eocvsim.plugin.loader.PluginManager;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -147,10 +148,10 @@ public class DialogFactory {
         });
     }
 
-    public static AppendDelegate createMavenOutput(Runnable onContinue) {
+    public static AppendDelegate createMavenOutput(PluginManager manager, Runnable onContinue) {
         AppendDelegate delegate = new AppendDelegate();
 
-        invokeLater(() -> new PluginOutput(delegate, onContinue));
+        invokeLater(() -> new PluginOutput(delegate, manager, manager.getEocvSim(), onContinue));
 
         return delegate;
     }

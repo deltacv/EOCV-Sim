@@ -62,7 +62,7 @@ class PluginManager(val eocvSim: EOCVSim) {
     private val haltCondition = haltLock.newCondition()
 
     val appender by lazy {
-        val appender = DialogFactory.createMavenOutput {
+        val appender = DialogFactory.createMavenOutput(this) {
             haltLock.withLock {
                 haltCondition.signalAll()
             }
@@ -94,7 +94,8 @@ class PluginManager(val eocvSim: EOCVSim) {
      */
     val pluginFiles get() = _pluginFiles.toList()
 
-    private val loaders = mutableMapOf<File, PluginLoader>()
+    private val _loaders = mutableMapOf<File, PluginLoader>()
+    val loaders get() = _loaders.toMap()
 
     private var isEnabled = false
 
@@ -129,7 +130,7 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
 
         for (pluginFile in pluginFiles) {
-            loaders[pluginFile] = PluginLoader(
+            _loaders[pluginFile] = PluginLoader(
                 pluginFile,
                 repositoryManager.resolvedFiles,
                 if(pluginFile in repositoryManager.resolvedFiles)
@@ -147,7 +148,7 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @see PluginLoader.load
      */
     fun loadPlugins() {
-        for ((file, loader) in loaders) {
+        for ((file, loader) in _loaders) {
             try {
                 loader.fetchInfoFromToml()
 
@@ -167,7 +168,7 @@ class PluginManager(val eocvSim: EOCVSim) {
                 appender.appendln(e.message ?: "Unknown error")
                 logger.error("Failure loading ${loader.pluginName} v${loader.pluginVersion}", e)
 
-                loaders.remove(file)
+                _loaders.remove(file)
                 loader.kill()
             }
         }
@@ -178,7 +179,7 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @see PluginLoader.enable
      */
     fun enablePlugins() {
-        for (loader in loaders.values) {
+        for (loader in _loaders.values) {
             try {
                 loader.enable()
             } catch (e: Throwable) {
@@ -197,7 +198,7 @@ class PluginManager(val eocvSim: EOCVSim) {
     fun disablePlugins() {
         if(!isEnabled) return
 
-        for (loader in loaders.values) {
+        for (loader in _loaders.values) {
             try {
                 loader.disable()
             } catch (e: Throwable) {

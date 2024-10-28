@@ -25,10 +25,12 @@ package io.github.deltacv.eocvsim.sandbox.restrictions
 
 val dynamicLoadingPackageWhitelist = setOf(
     "java.lang",
+    "java.lang.RuntimeException",
     "java.util",
     "java.awt",
     "javax.swing",
     "java.nio",
+    "java.io.IOException",
     "java.io.File",
     "java.io.PrintStream",
 
@@ -51,9 +53,12 @@ val dynamicLoadingPackageWhitelist = setOf(
     "com.formdev.flatlaf"
 )
 
+val dynamicLoadingExactMatchBlacklist = setOf(
+    "java.lang.Runtime"
+)
+
 val dynamicLoadingPackageBlacklist  = setOf(
     // System and Runtime Classes
-    "java.lang.Runtime",
     "java.lang.ProcessBuilder",
     "java.lang.reflect",
 
