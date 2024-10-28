@@ -80,8 +80,6 @@ val dynamicLoadingPackageBlacklist  = setOf(
     "com.github.serivesmejia.eocvsim.util.FileExtKt",
     "com.github.serivesmejia.eocvsim.util.compiler",
     "com.github.serivesmejia.eocvsim.config",
-
-    "io.github.deltacv.eocvsim.plugin.sandbox.nio.JimfsWatcher"
 )
 
 val dynamicLoadingMethodBlacklist = setOf(

@@ -258,7 +258,6 @@ class PluginLoader(
      * @param reason the reason for requesting super access
      */
     fun requestSuperAccess(reason: String): Boolean {
-        if(!loaded) return false
         if(hasSuperAccess) return true
         return eocvSim.pluginManager.requestSuperAccessFor(this, reason)
     }

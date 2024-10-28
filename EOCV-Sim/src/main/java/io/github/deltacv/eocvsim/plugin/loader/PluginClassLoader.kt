@@ -30,19 +30,18 @@ import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingExactMatchBl
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageWhitelist
-import org.apache.logging.log4j.core.LoggerContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.net.URL
-import java.nio.file.FileSystems
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 /**
  * ClassLoader for loading classes from a plugin jar file
  * @param pluginJar the jar file of the plugin
+ * @param classpath additional classpath that the plugin may require
  * @param pluginContext the plugin context
  */
 class PluginClassLoader(
@@ -53,15 +52,11 @@ class PluginClassLoader(
 
     private val zipFile = try {
         ZipFile(pluginJar)
-    } catch(e: Exception) {
+    } catch (e: Exception) {
         throw IOException("Failed to open plugin JAR file", e)
     }
 
     private val loadedClasses = mutableMapOf<String, Class<*>>()
-
-    init {
-        FileSystems.getDefault()
-    }
 
     private fun loadClass(entry: ZipEntry, zipFile: ZipFile = this.zipFile): Class<*> {
         val name = entry.name.removeFromEnd(".class").replace('/', '.')
@@ -71,7 +66,7 @@ class PluginClassLoader(
                 SysUtil.copyStream(inStream, outStream)
                 val bytes = outStream.toByteArray()
 
-                if(!pluginContextProvider().hasSuperAccess)
+                if (!pluginContextProvider().hasSuperAccess)
                     MethodCallByteCodeChecker(bytes, dynamicLoadingMethodBlacklist)
 
                 val clazz = defineClass(name, bytes, 0, bytes.size)
@@ -88,86 +83,91 @@ class PluginClassLoader(
      * Load a class from the plugin jar file
      * @param name the name of the class to load
      * @return the loaded class
-     * @throws IllegalAccessError if the class is blacklisted
      */
     fun loadClassStrict(name: String): Class<*> {
-        if(!pluginContextProvider().hasSuperAccess) {
-            blacklistLoop@
-            for (blacklistedPackage in dynamicLoadingPackageBlacklist) {
-                for(whiteListedPackage in dynamicLoadingPackageWhitelist) {
-                    // If the class is whitelisted, skip the blacklist check
-                    if(name.contains(whiteListedPackage)) continue@blacklistLoop
-                }
-
-                if (name.contains(blacklistedPackage)) {
-                    throw IllegalAccessError("Plugins are blacklisted to use $name")
-                }
-            }
-
-            for(blacklistedClass in dynamicLoadingExactMatchBlacklist) {
-                if(name == blacklistedClass) {
-                    throw IllegalAccessError("Plugins are blacklisted to use $name")
-                }
-            }
-        }
-
         return loadClass(zipFile.getEntry(name.replace('.', '/') + ".class") ?: throw ClassNotFoundException(name))
     }
 
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
         var clazz = loadedClasses[name]
 
-        if(clazz == null) {
-            try {
-                clazz = loadClassStrict(name)
-            } catch(_: Exception) {
-                val classpathClass = classFromClasspath(name)
-                if(classpathClass != null) {
-                    clazz = classpathClass
-                }
-            }
+        try {
+            if (clazz == null) {
+                var canForName = true
 
-            if(clazz == null) {
-                var inWhitelist = false
+                if (!pluginContextProvider().hasSuperAccess) {
+                    var inWhitelist = false
 
-                for (whiteListedPackage in dynamicLoadingPackageWhitelist) {
-                    if (name.contains(whiteListedPackage)) {
-                        inWhitelist = true
-                        break
+                    for (whiteListedPackage in dynamicLoadingPackageWhitelist) {
+                        if (name.contains(whiteListedPackage)) {
+                            inWhitelist = true
+                            break
+                        }
+                    }
+
+                    if (!inWhitelist && !pluginContextProvider().hasSuperAccess) {
+                        canForName = false
+                        throw IllegalAccessError("Plugins are not whitelisted to use $name")
+                    }
+
+                    blacklistLoop@
+                    for (blacklistedPackage in dynamicLoadingPackageBlacklist) {
+                        // If the class is whitelisted, skip the blacklist check
+                        if (inWhitelist) continue@blacklistLoop
+
+                        if (name.contains(blacklistedPackage)) {
+                            canForName = false
+                            throw IllegalAccessError("Plugins are blacklisted to use $name")
+                        }
+                    }
+
+                    for (blacklistedClass in dynamicLoadingExactMatchBlacklist) {
+                        if (name == blacklistedClass) {
+                            canForName = false
+                            throw IllegalAccessError("Plugins are blacklisted to use $name")
+                        }
                     }
                 }
 
-                if (!inWhitelist && !pluginContextProvider().hasSuperAccess) {
-                    throw IllegalAccessError("Plugins are not whitelisted to use $name")
+                if (canForName) {
+                    clazz = Class.forName(name)
                 }
-
-                clazz = Class.forName(name)
             }
+        } catch(e: Throwable) {
+            try {
+                clazz = loadClassStrict(name)
+            } catch(_: Throwable) {
+                val classpathClass = classFromClasspath(name)
 
-            if(resolve) resolveClass(clazz)
+                if(classpathClass != null) {
+                    clazz = classpathClass
+                } else {
+                    throw e
+                }
+            }
         }
 
+        if (resolve) resolveClass(clazz)
         return clazz!!
     }
 
     override fun getResourceAsStream(name: String): InputStream? {
-        // Try to find the resource inside the classpath
-        resourceAsStreamFromClasspath(name)?.let { return it }
-
         val entry = zipFile.getEntry(name)
 
-        if(entry != null) {
+        if (entry != null) {
             try {
                 return zipFile.getInputStream(entry)
-            } catch (e: IOException) { }
+            } catch (_: IOException) {
+            }
+        } else {
+            // Try to find the resource inside the classpath
+            resourceAsStreamFromClasspath(name)?.let { return it }
         }
 
         return super.getResourceAsStream(name)
     }
 
     override fun getResource(name: String): URL? {
-        resourceFromClasspath(name)?.let { return it }
-
         // Try to find the resource inside the plugin JAR
         val entry = zipFile.getEntry(name)
 
@@ -177,6 +177,8 @@ class PluginClassLoader(
                 return URL("jar:file:${pluginJar.absolutePath}!/$name")
             } catch (e: Exception) {
             }
+        } else {
+            resourceFromClasspath(name)?.let { return it }
         }
 
         // Fallback to the parent classloader if not found in the plugin JAR
@@ -188,7 +190,7 @@ class PluginClassLoader(
      */
     fun resourceAsStreamFromClasspath(name: String): InputStream? {
         for (file in classpath) {
-            if(file == pluginJar) continue
+            if (file == pluginJar) continue
 
             val zipFile = ZipFile(file)
 
@@ -210,7 +212,7 @@ class PluginClassLoader(
      */
     fun resourceFromClasspath(name: String): URL? {
         for (file in classpath) {
-            if(file == pluginJar) continue
+            if (file == pluginJar) continue
 
             val zipFile = ZipFile(file)
 
@@ -236,7 +238,7 @@ class PluginClassLoader(
      */
     fun classFromClasspath(className: String): Class<*>? {
         for (file in classpath) {
-            if(file == pluginJar) continue
+            if (file == pluginJar) continue
 
             val zipFile = ZipFile(file)
 
