@@ -92,10 +92,11 @@ class PluginClassLoader(
      */
     fun loadClassStrict(name: String): Class<*> {
         if(!pluginContextProvider().hasSuperAccess) {
+            blacklistLoop@
             for (blacklistedPackage in dynamicLoadingPackageBlacklist) {
                 for(whiteListedPackage in dynamicLoadingPackageWhitelist) {
                     // If the class is whitelisted, skip the blacklist check
-                    if(name.contains(whiteListedPackage)) continue
+                    if(name.contains(whiteListedPackage)) continue@blacklistLoop
                 }
 
                 if (name.contains(blacklistedPackage)) {
