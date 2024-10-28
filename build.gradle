@@ -48,6 +48,11 @@ allprojects {
 
     apply plugin: 'java'
 
+    configurations {
+        // do not pull in EOCV-Sim's Common module from a repository, it's already in the project
+        runtime.exclude group: "com.github.deltacv.EOCV-Sim", module: "Common"
+    }
+
     ext {
         standardVersion = version
     }
