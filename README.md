@@ -96,17 +96,18 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 ## [v3.8.0 - Major Plugin System Rework](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.0)
 - This is the 25th release for EOCV-Sim
     - Changelog
+        - Updates AprilTagDesktop to 2.1.0-C, enabling support for Linux AARCH64.
         - Implements a system that allows for plugins to be downloaded from a maven repository and loaded into the simulator.
         - New repository.toml file that contains the list of repositories to download plugins from and the maven coordinates to download.
         - Adds a new dialog to manage the loaded plugins and check the output of the plugin system.
-        - Rewrites SuperAccess verification to be handled by a separate JVM process, ensuring that the main process is not compromised by malicious code
+        - Rewrites SuperAccess verification to be handled by a separate JVM process, ensuring that the main process is not compromised by malicious code.
         - Implements a plugin signature verification system to allow for authors to sign their plugins and ensure that they are not tampered with.
-        - The signature is stored on a custom format in the plugin jar, the signing authorities are pulled from a public key database
+        - The signature is stored on a custom format in the plugin jar, the signing authorities are pulled from a public key database.
         - When making a SuperAccess request, the user is warned if the plugin is not signed or if the signature is invalid.
         - Adds a KeyGeneratorTool and PluginSigningTool to allow for easy generation of keys and signing of plugins respectively.
         - Internal changes:
-            - Adds a PolymorphicAdapter class to allow for easy serialization while retaining type information
-            - Improvements to the handling of JavaProcess
+            - Adds a PolymorphicAdapter class to allow for easy serialization while retaining type information.
+            - Improvements to the handling of JavaProcess.
 
 ## [v3.7.1 - Better FTC VisionPortal support & Plugin System Fixes](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.7.1)
 - This is the 24th release for EOCV-Sim
