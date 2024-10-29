@@ -119,11 +119,23 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         repositoryManager.init()
 
-        val pluginFiles = mutableListOf<File>()
-        pluginFiles.addAll(repositoryManager.resolveAll())
+        val pluginFilesInFolder = PLUGIN_FOLDER.listFiles()?.let {
+            it.filter { file -> file.extension == "jar" }
+        } ?: emptyList()
 
-        PLUGIN_FOLDER.listFiles()?.let {
-            pluginFiles.addAll(it.filter { it.extension == "jar" })
+        _pluginFiles.addAll(repositoryManager.resolveAll())
+
+        if(eocvSim.config.flags.getOrDefault("startFresh", false)) {
+            logger.warn("startFresh = true, deleting all plugins in the plugins folder")
+
+            for (file in pluginFilesInFolder) {
+                file.delete()
+            }
+
+            eocvSim.config.flags["startFresh"] = false
+            eocvSim.configManager.saveToFile()
+        } else {
+            _pluginFiles.addAll(pluginFilesInFolder)
         }
 
         for (file in pluginFiles) {

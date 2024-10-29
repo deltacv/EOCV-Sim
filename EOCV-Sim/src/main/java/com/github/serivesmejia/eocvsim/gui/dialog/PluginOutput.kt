@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginSource
+import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -36,10 +37,11 @@ import kotlinx.coroutines.swing.Swing
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import java.awt.GridLayout
 import java.awt.Toolkit
+import java.awt.Color
 import java.awt.datatransfer.StringSelection
 import javax.swing.*
+import java.awt.Desktop
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 
@@ -135,7 +137,7 @@ class PluginOutput(
         registerListeners()
 
         output.pack()
-        output.setSize(500, 350)
+        output.setSize(500, 365)
 
         appendDelegate.subscribe(this)
 
@@ -182,6 +184,7 @@ class PluginOutput(
             )
 
             if(dialogResult == JOptionPane.YES_OPTION) {
+                output.isVisible = false
                 eocvSim.restart()
             }
 
@@ -190,8 +193,8 @@ class PluginOutput(
     }
 
     private fun makePluginManagerPanel(): JPanel {
-        val panel = JPanel()
-        panel.layout = GridBagLayout()
+        val pluginsPanel = JPanel()
+        pluginsPanel.layout = GridBagLayout()
 
         if(pluginManager.loaders.isEmpty()) {
             // center vertically and horizontally
@@ -209,7 +212,7 @@ class PluginOutput(
             }
 
             // Add the label to the panel with the constraints
-            panel.add(noPluginsLabel, constraints)
+            pluginsPanel.add(noPluginsLabel, constraints)
         } else {
             val tabbedPane = JTabbedPane(JTabbedPane.LEFT)
 
@@ -291,7 +294,6 @@ class PluginOutput(
                 fun refreshButtons() {
                     disableButton.isEnabled = loader.shouldEnable
                     enableButton.isEnabled = !loader.shouldEnable
-
                 }
 
                 refreshButtons()
@@ -336,7 +338,7 @@ class PluginOutput(
                 tabbedPane.addTab(loader.pluginName, pluginPanel)
             }
 
-            panel.add(tabbedPane, GridBagConstraints().apply {
+            pluginsPanel.add(tabbedPane, GridBagConstraints().apply {
                 gridx = 0
                 gridy = 0
                 weightx = 1.0
@@ -344,6 +346,93 @@ class PluginOutput(
                 fill = GridBagConstraints.BOTH
             })
         }
+
+        val panel = JPanel()
+
+        panel.layout = GridBagLayout()
+        panel.add(pluginsPanel, GridBagConstraints().apply {
+            gridx = 0
+            gridy = 0
+            weightx = 1.0
+            weighty = 1.0
+            fill = GridBagConstraints.BOTH
+        })
+
+        val bottomButtonsPanel = JPanel()
+        bottomButtonsPanel.layout = BoxLayout(bottomButtonsPanel, BoxLayout.PAGE_AXIS)
+
+        val openPluginsFolderButton = JButton("Open plugins folder")
+
+        openPluginsFolderButton.addActionListener {
+            val pluginsFolder = PluginManager.PLUGIN_FOLDER
+
+            if(pluginsFolder.exists() && Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(pluginsFolder)
+            } else {
+                JOptionPane.showMessageDialog(
+                    output,
+                    "Unable to open plugins folder, the folder does not exist or the operation is unsupported.",
+                    "Operation failed",
+                    JOptionPane.ERROR_MESSAGE
+                )
+            }
+        }
+
+        val startFreshButton = JButton("Start fresh")
+
+        startFreshButton.addActionListener {
+            val dialogResult = JOptionPane.showConfirmDialog(
+                output,
+                "Are you sure you want to start fresh? This will remove all plugins from all sources.",
+                "Start fresh",
+                JOptionPane.YES_NO_OPTION
+            )
+
+            if(dialogResult == JOptionPane.YES_OPTION) {
+                eocvSim?.config?.flags?.set("startFresh", true)
+
+                PluginRepositoryManager.REPOSITORY_FILE.delete()
+                PluginRepositoryManager.CACHE_FILE.delete()
+
+                shouldAskForRestart = true
+                checkShouldAskForRestart()
+            }
+        }
+
+        val closeButton = JButton("Close")
+
+        closeButton.addActionListener {
+            close()
+        }
+
+        val buttonsPanel = JPanel()
+        buttonsPanel.layout = BoxLayout(buttonsPanel, BoxLayout.LINE_AXIS)
+        buttonsPanel.border = BorderFactory.createEmptyBorder(5, 0, 5, 0)
+
+        buttonsPanel.add(Box.createHorizontalGlue())
+
+        buttonsPanel.add(openPluginsFolderButton)
+        buttonsPanel.add(Box.createRigidArea(Dimension(5, 0)))
+        buttonsPanel.add(startFreshButton)
+        buttonsPanel.add(Box.createRigidArea(Dimension(5, 0)))
+        buttonsPanel.add(closeButton)
+
+        buttonsPanel.add(Box.createHorizontalGlue())
+
+        bottomButtonsPanel.add(buttonsPanel)
+
+        // Set a thin light gray line border with padding
+        bottomButtonsPanel.border = BorderFactory.createCompoundBorder(
+            BorderFactory.createEmptyBorder(10, 10, 10, 10),       // Padding inside the border
+            JScrollPane().border
+        )
+
+        panel.add(bottomButtonsPanel, GridBagConstraints().apply {
+            gridx = 0
+            gridy = 2
+            weightx = 1.0
+            fill = GridBagConstraints.HORIZONTAL
+        })
 
         return panel
     }

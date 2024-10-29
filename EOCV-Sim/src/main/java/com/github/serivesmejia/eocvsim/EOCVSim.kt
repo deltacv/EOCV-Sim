@@ -58,9 +58,11 @@ import org.opencv.core.Size
 import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.awt.Dimension
 import java.io.File
+import java.lang.Thread.sleep
 import javax.swing.SwingUtilities
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
+import kotlin.jvm.Throws
 import kotlin.system.exitProcess
 
 /**
@@ -361,7 +363,30 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         pluginManager.enablePlugins()
 
-        start()
+        try {
+            start()
+        } catch (e: InterruptedException) {
+            logger.warn("Main thread interrupted ($hexCode)", e)
+        }
+
+        if(!destroying) {
+            destroy(DestroyReason.THREAD_EXIT)
+        }
+
+        if (isRestarting) {
+            Thread.interrupted() //clear interrupted flag
+            EOCVSimFolder.lock?.lock?.close()
+
+            JavaProcess.killSubprocessesOnExit = false
+            Thread {
+                JavaProcess.exec(Main::class.java, null, null)
+            }.start()
+
+            sleep(1000)
+        }
+
+        logger.info("-- End of EasyOpenCV Simulator v$VERSION ($hexCode) --")
+        exitProcess(0)
     }
 
     /**
@@ -375,6 +400,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
      * are explicitly updated within this method
      * @see init
      */
+    @Throws(InterruptedException::class)
     private fun start() {
         if(Thread.currentThread() != eocvSimThread) {
             throw IllegalStateException("start() must be called from the EOCVSim thread")
@@ -397,7 +423,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
                 } else null
             )
 
-            //limit FPG
+            //limit FPS
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
             try {
                 fpsLimiter.sync()
@@ -407,16 +433,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
         }
 
         logger.warn("Main thread interrupted ($hexCode)")
-
-        if(!destroying) {
-            destroy(DestroyReason.THREAD_EXIT)
-        }
-
-        if (isRestarting) {
-            Thread.interrupted() //clear interrupted flag
-            EOCVSimFolder.lock?.lock?.close()
-            JavaProcess.exec(Main::class.java, null, null)
-        }
     }
 
     /**

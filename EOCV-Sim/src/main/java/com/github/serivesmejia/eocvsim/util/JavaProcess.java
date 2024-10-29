@@ -80,6 +80,8 @@ public final class JavaProcess {
 
     private static int count;
 
+    public static boolean killSubprocessesOnExit = true;
+
     private static final Logger logger = LoggerFactory.getLogger(JavaProcess.class);
 
     /**
@@ -143,6 +145,7 @@ public final class JavaProcess {
     }
 
     private static void killOnExit(Process process) {
+        if(!killSubprocessesOnExit) return;
         Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
     }
 

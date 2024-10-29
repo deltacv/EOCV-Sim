@@ -55,6 +55,8 @@ object AuthorityFetcher {
 
     const val AUTHORITY_SERVER_URL = "https://raw.githubusercontent.com/deltacv/Authorities/refs/heads/master"
 
+    fun sectionRegex(name: String) = Regex("\\[\\Q$name\\E](?:\\n[^\\[]+)*")
+
     private val AUTHORITIES_FILE = File(EOCVSimFolder, "authorities.toml")
 
     private val TTL_DURATION_MS = TimeUnit.HOURS.toMillis(8)
@@ -92,6 +94,7 @@ object AuthorityFetcher {
                 }
             } catch (e: Exception) {
                 logger.error("Failed to read authorities file", e)
+                AUTHORITIES_FILE.delete()
             }
         }
 
@@ -123,20 +126,12 @@ object AuthorityFetcher {
             // Load existing authorities if the file exists
             if (AUTHORITIES_FILE.exists()) {
                 val existingToml = AUTHORITIES_FILE.readText()
-                if(existingToml.contains("[$name]")) {
-                    // remove the existing authority. we need to delete the [$name] and the next two lines
-                    val lines = existingToml.lines().toMutableList()
-                    val index = lines.indexOfFirst { it == "[$name]" }
 
-                    if(index != -1) {
-                        lines.removeAt(index)
-                        lines.removeAt(index)
-                        lines.removeAt(index)
-                    }
-                    sb.append(lines.joinToString("\n"))
-                }
-
-                sb.append(existingToml)
+                sb.append(if(existingToml.contains("[$name]")) {
+                    existingToml.replace(sectionRegex(name), "")
+                } else {
+                    existingToml
+                })
             }
 
             // Append new authority information

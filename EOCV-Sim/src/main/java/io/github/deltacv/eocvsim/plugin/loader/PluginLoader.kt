@@ -280,6 +280,8 @@ class PluginLoader(
         fileSystem.close()
         enabled = false
         EventHandler.banClassLoader(pluginClassLoader)
+
+        pluginClassLoader.close()
     }
 
     /**

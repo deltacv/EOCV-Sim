@@ -31,6 +31,7 @@ import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlackl
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageWhitelist
 import java.io.ByteArrayOutputStream
+import java.lang.ref.WeakReference
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -49,6 +50,8 @@ class PluginClassLoader(
     val classpath: List<File>,
     val pluginContextProvider: () -> PluginContext
 ) : ClassLoader() {
+
+    private var additionalZipFiles = mutableListOf<WeakReference<ZipFile>>()
 
     private val zipFile = try {
         ZipFile(pluginJar)
@@ -172,11 +175,8 @@ class PluginClassLoader(
         val entry = zipFile.getEntry(name)
 
         if (entry != null) {
-            try {
-                // Construct a URL for the resource inside the plugin JAR
-                return URL("jar:file:${pluginJar.absolutePath}!/$name")
-            } catch (e: Exception) {
-            }
+            // Construct a URL for the resource inside the plugin JAR
+            return URL("jar:file:${pluginJar.absolutePath}!/$name")
         } else {
             resourceFromClasspath(name)?.let { return it }
         }
@@ -198,9 +198,13 @@ class PluginClassLoader(
 
             if (entry != null) {
                 try {
+                    additionalZipFiles.add(WeakReference(zipFile))
                     return zipFile.getInputStream(entry)
                 } catch (e: Exception) {
+                    zipFile.close()
                 }
+            } else {
+                zipFile.close()
             }
         }
 
@@ -254,6 +258,13 @@ class PluginClassLoader(
         }
 
         return null
+    }
+
+    fun close() {
+        zipFile.close()
+        for(ref in additionalZipFiles) {
+            ref.get()?.close()
+        }
     }
 
     override fun toString() = "PluginClassLoader@\"${pluginJar.name}\""

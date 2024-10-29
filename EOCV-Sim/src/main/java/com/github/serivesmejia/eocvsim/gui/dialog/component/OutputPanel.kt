@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog.component
 
+import com.formdev.flatlaf.FlatLaf
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -31,6 +32,7 @@ import java.awt.datatransfer.StringSelection
 import java.awt.Font
 import java.io.InputStream
 import javax.swing.*
+import kotlin.math.roundToInt
 
 
 class OutputPanel(
@@ -60,7 +62,16 @@ class OutputPanel(
         outputArea.highlighter   = null
 
         // set the background color to a darker tone
-        outputArea.background = outputArea.background.darker()
+        outputArea.background = if(FlatLaf.isLafDark()) {
+            outputArea.background.darker()
+        } else {
+            java.awt.Color(
+                (outputArea.background.red * 0.95).roundToInt(),
+                (outputArea.background.green * 0.95).roundToInt(),
+                (outputArea.background.blue * 0.95).roundToInt(),
+                255
+            )
+        }
 
         val outputScroll = JScrollPane(outputArea)
         outputScroll.verticalScrollBarPolicy   = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
