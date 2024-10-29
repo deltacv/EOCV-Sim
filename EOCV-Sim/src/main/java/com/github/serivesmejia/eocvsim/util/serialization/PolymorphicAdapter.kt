@@ -28,7 +28,10 @@ import java.lang.reflect.Type
 
 private val gson = Gson()
 
-open class PolymorphicAdapter<T>(val name: String) : JsonSerializer<T>, JsonDeserializer<T> {
+open class PolymorphicAdapter<T>(
+    val name: String,
+    val classloader: ClassLoader = PolymorphicAdapter::class.java.classLoader
+) : JsonSerializer<T>, JsonDeserializer<T> {
 
     override fun serialize(src: T, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val obj = JsonObject()
@@ -42,7 +45,7 @@ open class PolymorphicAdapter<T>(val name: String) : JsonSerializer<T>, JsonDese
     @Suppress("UNCHECKED_CAST")
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): T {
         val className = json.asJsonObject.get("${name}Class").asString
-        val clazz = Class.forName(className)
+        val clazz = classloader.loadClass(className)
 
         return gson.fromJson(json.asJsonObject.get(name), clazz) as T
     }

@@ -241,7 +241,7 @@ class PluginOutput(
                     "Maven repository"
                 else "local file"
 
-                val sourceEnabled = if(loader.shouldEnable) "It was loaded from a $source." else "It is disabled, it comes from a $source."
+                val sourceEnabled = if(loader.shouldEnable) "It was LOADED from a $source." else "It is DISABLED, it comes from a $source."
 
                 val superAccess = if(loader.hasSuperAccess)
                     "It has super access."
