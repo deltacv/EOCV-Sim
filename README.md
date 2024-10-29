@@ -14,7 +14,8 @@ transfer it onto your robot!
 
 <img src='doc/images/eocvsim_screenshot_1.png' width='75%' height='75%'>
 
-### Learn how to install and use the simulator in the [documentation here](https://deltacv.gitbook.io/eocv-sim/)
+# Learn how to install and use the simulator in the [documentation here](https://deltacv.gitbook.io/eocv-sim/)
+### (Common users won't need to scroll down any further from here - the gitbook has everything you need)
 
 # [Buy me a coffee](https://buymeacoffee.com/serivesmejia)
 
