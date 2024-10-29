@@ -123,6 +123,19 @@ object AuthorityFetcher {
             // Load existing authorities if the file exists
             if (AUTHORITIES_FILE.exists()) {
                 val existingToml = AUTHORITIES_FILE.readText()
+                if(existingToml.contains("[$name]")) {
+                    // remove the existing authority. we need to delete the [$name] and the next two lines
+                    val lines = existingToml.lines().toMutableList()
+                    val index = lines.indexOfFirst { it == "[$name]" }
+
+                    if(index != -1) {
+                        lines.removeAt(index)
+                        lines.removeAt(index)
+                        lines.removeAt(index)
+                    }
+                    sb.append(lines.joinToString("\n"))
+                }
+
                 sb.append(existingToml)
             }
 

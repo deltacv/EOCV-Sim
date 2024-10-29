@@ -40,6 +40,7 @@ import java.util.List;
 public class Config {
     public volatile Theme simTheme = Theme.Light;
 
+    @Deprecated
     public volatile double zoom = 1;
 
     public volatile PipelineFps pipelineMaxFps = PipelineFps.MEDIUM;
@@ -63,6 +64,7 @@ public class Config {
 
     public volatile HashMap<String, TunableFieldPanelConfig.Config> specificTunableFieldConfig = new HashMap<>();
 
+    @Deprecated
     public volatile List<String> superAccessPluginHashes = new ArrayList<>();
 
     public volatile HashMap<String, Boolean> flags = new HashMap<>();

@@ -34,13 +34,11 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import java.awt.Dimension
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import javax.swing.*
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
-import java.awt.event.ActionEvent
-import java.awt.event.ActionListener
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 
@@ -231,34 +229,40 @@ class PluginOutput(
                     anchor = GridBagConstraints.CENTER
                 })
 
+                val signatureStatus = if(loader.signature.verified)
+                    "This plugin has been verified and was signed by ${loader.signature.authority!!.name}."
+                else "This plugin is not signed."
+
                 val authorEmail = if(loader.pluginAuthorEmail.isBlank())
                     "The author did not provide contact information."
                 else "Contact the author at ${loader.pluginAuthorEmail}"
-
-                val description = if(loader.pluginDescription.isBlank())
-                    "No description available."
-                else loader.pluginDescription
 
                 val source = if(loader.pluginSource == PluginSource.REPOSITORY)
                     "Maven repository"
                 else "local file"
 
+                val sourceEnabled = if(loader.shouldEnable) "It was loaded from a $source." else "It is disabled, it comes from a $source."
+
                 val superAccess = if(loader.hasSuperAccess)
-                    "This plugin has super access."
-                else "This plugin does not have super access."
+                    "It has super access."
+                else "It does not have super access."
 
                 val wantsSuperAccess = if(loader.pluginToml.getBoolean("super-access", false))
                     "It requests super access in its manifest."
                 else "It does not request super access in its manifest."
 
+                val description = if(loader.pluginDescription.isBlank())
+                    "No description available."
+                else loader.pluginDescription
+
                 val font = pluginNameLabel.font.deriveFont(13.0f)
 
                 // add a text area for the plugin description
                 val pluginDescriptionArea = JTextArea("""
+                    $signatureStatus
                     $authorEmail
                     
-                    ${if(loader.shouldEnable) "This plugin was loaded from a $source." else "This plugin is disabled, it comes from a $source."} 
-                    $superAccess $wantsSuperAccess
+                    ** $sourceEnabled $superAccess $wantsSuperAccess **
                     
                     $description
                 """.trimIndent())

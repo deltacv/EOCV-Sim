@@ -29,6 +29,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.extension.fileHash
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
@@ -48,15 +49,15 @@ enum class PluginSource {
 }
 
 class PluginParser(pluginToml: Toml) {
-    val pluginName = pluginToml.getString("name") ?: throw InvalidPluginException("No name in plugin.toml")
-    val pluginVersion = pluginToml.getString("version") ?: throw InvalidPluginException("No version in plugin.toml")
+    val pluginName = pluginToml.getString("name")?.trim() ?: throw InvalidPluginException("No name in plugin.toml")
+    val pluginVersion = pluginToml.getString("version")?.trim() ?: throw InvalidPluginException("No version in plugin.toml")
 
-    val pluginAuthor = pluginToml.getString("author") ?: throw InvalidPluginException("No author in plugin.toml")
-    val pluginAuthorEmail = pluginToml.getString("author-email", "")
+    val pluginAuthor = pluginToml.getString("author")?.trim() ?: throw InvalidPluginException("No author in plugin.toml")
+    val pluginAuthorEmail = pluginToml.getString("author-email", "")?.trim()
 
-    val pluginMain = pluginToml.getString("main") ?: throw InvalidPluginException("No main in plugin.toml")
+    val pluginMain = pluginToml.getString("main")?.trim() ?: throw InvalidPluginException("No main in plugin.toml")
 
-    val pluginDescription = pluginToml.getString("description", "")
+    val pluginDescription = pluginToml.getString("description", "")?.trim()
 
     /**
      * Get the hash of the plugin based off the plugin name and author
@@ -162,8 +163,8 @@ class PluginLoader(
         pluginName = parser.pluginName
         pluginVersion = parser.pluginVersion
         pluginAuthor = parser.pluginAuthor
-        pluginAuthorEmail = parser.pluginAuthorEmail
-        pluginDescription = parser.pluginDescription
+        pluginAuthorEmail = parser.pluginAuthorEmail ?: ""
+        pluginDescription = parser.pluginDescription ?: ""
     }
 
     /**
@@ -182,6 +183,8 @@ class PluginLoader(
         }
 
         appender.appendln("${PluginOutput.SPECIAL_SILENT}Loading plugin $pluginName v$pluginVersion by $pluginAuthor from ${pluginSource.name}")
+
+        signature
 
         setupFs()
 
@@ -292,15 +295,5 @@ class PluginLoader(
      * @return the hash
      */
     fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
-
-    /**
-     * Get the hash of the plugin file based off the file contents
-     * @return the hash
-     */
-    val pluginFileHash by lazy {
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update(pluginFile.readBytes())
-        SysUtil.byteArray2Hex(messageDigest.digest())
-    }
 
 }

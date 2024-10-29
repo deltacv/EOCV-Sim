@@ -147,13 +147,13 @@ object PluginSignatureVerifier {
             }
 
             if(signatureStatus.containsValue(false)) {
-                logger.warn("Not all classes were signed")
-                return emptyResult
+                throw InvalidPluginException("Some classes in the plugin are not signed. Please try to re-download the plugin or discard it immediately.")
             }
 
-            logger.info("Plugin signature of ${pluginFile.absolutePath} verified, signed by $authorityName")
+            logger.info("Plugin ${pluginFile.absolutePath} has been verified, signed by $authorityName")
 
-            return PluginSignature(true, authority, System.currentTimeMillis(), )
+
+            return PluginSignature(true, authority, System.currentTimeMillis())
         }
     }
 

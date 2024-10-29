@@ -92,6 +92,23 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+
+## [v3.8.0 - Better FTC VisionPortal support & Plugin System Fixes](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.0)
+- This is the 25th release for EOCV-Sim
+    - Changelog
+        - Update skiko to 0.8.15
+        - Fixes Typeface.DEFAULT_BOLD and Typeface.DEFAULT_ITALIC to actually work
+        - Adds a stub no-op implementation for the FTC SDK Gamepad class into OpMode
+        - Adds android.opengl.Matrix implementation and matrices from the FTC SDK
+        - Adds navigation classes from the FTC SDK (AngleUnit, AxesOrder, AxesReference, etc)
+        - Adds the ConceptAprilTagLocalization, ConceptVisionColorLocator and ConceptVisionColorSensor samples
+        - Reimplements Telemetry to EOCVSimTelemetryImpl with stubs for Telemetry#talk
+        - Internal changes:
+            - Plugin virtual filesystems now use the name and author in the TOML to generate the fs name
+            - Allows to specify JVM args in JavaExec
+            - Rename some internal classes
+            - Better handling of Pipeline/OpMode tab switching
+
 ## [v3.7.1 - Better FTC VisionPortal support & Plugin System Fixes](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.7.1)
 - This is the 24th release for EOCV-Sim
     - Changelog

@@ -23,31 +23,28 @@
 
 package io.github.deltacv.eocvsim.plugin.security.superaccess
 
-import com.github.serivesmejia.eocvsim.util.JavaProcess
-import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.extension.plus
+import com.github.serivesmejia.eocvsim.util.extension.fileHash
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.serialization.PolymorphicAdapter
 import com.google.gson.GsonBuilder
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequest
-import javax.swing.SwingUtilities
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager.Companion.GENERIC_LAWYER_YEET
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager.Companion.GENERIC_SUPERACCESS_WARN
 import io.github.deltacv.eocvsim.plugin.loader.PluginParser
 import io.github.deltacv.eocvsim.plugin.security.Authority
 import io.github.deltacv.eocvsim.plugin.security.AuthorityFetcher
 import io.github.deltacv.eocvsim.plugin.security.MutablePluginSignature
-import kotlinx.coroutines.newFixedThreadPoolContext
 import org.java_websocket.client.WebSocketClient
-import java.net.URI
 import org.java_websocket.handshake.ServerHandshake
-import java.util.zip.ZipFile
 import java.io.File
 import java.lang.Exception
-import java.security.MessageDigest
+import java.net.URI
 import java.util.concurrent.Executors
+import java.util.zip.ZipFile
+import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
 
 object SuperAccessDaemon {
@@ -88,12 +85,14 @@ object SuperAccessDaemon {
             logger.warn("Ignoring extra arguments.")
         }
 
+        System.setProperty("sun.java2d.d3d", "false")
+
         WsClient(args[0].toIntOrNull() ?: throw IllegalArgumentException("Port is not a valid int")).connect()
     }
 
     class WsClient(port: Int) : WebSocketClient(URI("ws://localhost:$port")) {
 
-        private val executor = Executors.newFixedThreadPool(6)
+        private val executor = Executors.newFixedThreadPool(4)
 
         override fun onOpen(p0: ServerHandshake?) {
             logger.info("SuperAccessDaemon connection opened")
@@ -153,7 +152,7 @@ object SuperAccessDaemon {
                 }
             } else {
                 val fetch = AuthorityFetcher.fetchAuthority(parser.pluginAuthor)
-                untrusted = fetch != null // the plugin is claiming to be made by the authority but it's not signed by them
+                untrusted = fetch != null // the plugin is claiming to be made by the authority, but it's not signed by them
             }
 
             val reason = message.reason
@@ -176,7 +175,7 @@ object SuperAccessDaemon {
             warning += "</html>"
 
             SwingUtilities.invokeLater {
-                SuperAccessRequest(name, warning) { granted ->
+                SuperAccessRequest(name, warning, validAuthority == null || untrusted) { granted ->
                     if(granted) {
                         SUPERACCESS_FILE.appendText(pluginFile.fileHash() + "\n")
                         accessGranted(message.id, message.pluginPath)
@@ -200,23 +199,11 @@ object SuperAccessDaemon {
 
             val pluginFile = File(message.pluginPath)
 
-            val parser = parsePlugin(pluginFile) ?: run {
-                logger.error("Failed to parse plugin at ${message.pluginPath}")
-                send(gson.toJson(SuperAccessResponse.Failure(message.id)))
-                return
-            }
-
             if(SUPERACCESS_FILE.exists() && SUPERACCESS_FILE.readLines().contains(pluginFile.fileHash())) {
                 accessGranted(message.id, message.pluginPath)
             } else {
                 accessDenied(message.id, message.pluginPath)
             }
-        }
-
-        private fun File.fileHash(): String {
-            val messageDigest = MessageDigest.getInstance("SHA-256")
-            messageDigest.update(readBytes())
-            return SysUtil.byteArray2Hex(messageDigest.digest())
         }
 
         private fun accessGranted(id: Int, pluginPath: String) {
