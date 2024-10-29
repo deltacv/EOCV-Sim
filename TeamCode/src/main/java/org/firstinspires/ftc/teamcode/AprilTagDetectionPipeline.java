@@ -25,14 +25,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.*;
 import org.opencv.calib3d.Calib3d;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.MatOfPoint3f;
-import org.opencv.core.Point;
-import org.opencv.core.Point3;
-import org.opencv.core.Scalar;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.apriltag.AprilTagDetectorJNI;
@@ -92,15 +85,8 @@ public class AprilTagDetectionPipeline extends OpenCvPipeline
     @Override
     public void init(Mat frame)
     {
-        // Allocate a native context object. See the corresponding deletion in the finalizer
+        // Allocate a native context object.
         nativeApriltagPtr = AprilTagDetectorJNI.createApriltagDetector(AprilTagDetectorJNI.TagFamily.TAG_36h11.string, 3, 3);
-    }
-
-    @Override
-    public void finalize()
-    {
-        // Delete the native context we created in the init() function
-        AprilTagDetectorJNI.releaseApriltagDetector(nativeApriltagPtr);
     }
 
     @Override

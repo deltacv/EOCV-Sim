@@ -1,0 +1,10 @@
+[repositories]
+# Declare the URL of the Maven repositories to use, with a friendly name.
+# The URL must preferably end with a slash to be handled correctly.
+central = "https://repo.maven.apache.org/maven2/"
+jitpack = "https://jitpack.io/"
+
+[plugins]
+# Declare the plugin ID and the Maven coordinates of the plugin, similar to how you do it in Gradle.
+# (group:artifact:version) which will be used to download the plugin from one of Maven repositories.
+# Any dependency that does not have a plugin.toml in its jar will not be considered after download.

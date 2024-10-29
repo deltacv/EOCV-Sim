@@ -33,6 +33,9 @@ public enum Theme {
     Default(() -> {
         UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
     }),
+    System(() -> {
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    }),
     Light(FlatLightLaf::setup),
     Dark(FlatDarkLaf::setup),
     Darcula(FlatDarculaLaf::setup),

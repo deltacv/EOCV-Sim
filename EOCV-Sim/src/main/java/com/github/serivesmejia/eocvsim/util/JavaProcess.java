@@ -23,11 +23,15 @@
 
 package com.github.serivesmejia.eocvsim.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * A utility class for executing a Java process to run a main class within this project.
@@ -35,10 +39,50 @@ import java.util.List;
 public final class JavaProcess {
 
     public interface ProcessIOReceiver {
-        void receive(InputStream in, InputStream err);
+        void receive(InputStream in, InputStream err, int pid);
     }
 
+    public static class SLF4JIOReceiver implements JavaProcess.ProcessIOReceiver {
+
+        private final Logger logger;
+
+        public SLF4JIOReceiver(Logger logger) {
+            this.logger = logger;
+        }
+
+        @Override
+        public void receive(InputStream out, InputStream err, int pid) {
+            new Thread(() -> {
+                Thread.currentThread().setContextClassLoader(SLF4JIOReceiver.class.getClassLoader());
+
+                Scanner sc = new Scanner(out);
+                while (sc.hasNextLine()) {
+                    logger.info(sc.nextLine());
+                }
+            }, "SLFJ4IOReceiver-out-" + pid).start();
+
+            new Thread(() -> {
+                Thread.currentThread().setContextClassLoader(SLF4JIOReceiver.class.getClassLoader());
+
+                Scanner sc = new Scanner(err);
+                while (sc.hasNextLine()) {
+                    logger.error(sc.nextLine());
+                }
+            }, "SLF4JIOReceiver-err-" + pid).start();
+
+            logger.debug("SLF4JIOReceiver started for PID: {}", pid); // Debug log to check if the logger is working
+        }
+
+    }
+
+
     private JavaProcess() {}
+
+    private static int count;
+
+    public static boolean killSubprocessesOnExit = true;
+
+    private static final Logger logger = LoggerFactory.getLogger(JavaProcess.class);
 
     /**
      * Executes a Java process with the given class and arguments.
@@ -71,11 +115,19 @@ public final class JavaProcess {
             command.addAll(args);
         }
 
+        int processCount = count;
+
+        logger.info("Executing Java process #{} at \"{}\", main class \"{}\", JVM args \"{}\" and args \"{}\"", processCount, javaBin, className, jvmArgs, args);
+
+        count++;
+
         ProcessBuilder builder = new ProcessBuilder(command);
 
         if (ioReceiver != null) {
             Process process = builder.start();
-            ioReceiver.receive(process.getInputStream(), process.getErrorStream());
+            logger.info("Started #{} with PID {}, inheriting IO to {}", processCount, process.pid(), ioReceiver.getClass().getSimpleName());
+
+            ioReceiver.receive(process.getInputStream(), process.getErrorStream(), (int) process.pid());
             killOnExit(process);
 
             process.waitFor();
@@ -83,6 +135,8 @@ public final class JavaProcess {
         } else {
             builder.inheritIO();
             Process process = builder.start();
+            logger.info("Started #{} with PID {}, IO will be inherited to System.out and System.err", processCount, process.pid());
+
             killOnExit(process);
 
             process.waitFor();
@@ -91,6 +145,7 @@ public final class JavaProcess {
     }
 
     private static void killOnExit(Process process) {
+        if(!killSubprocessesOnExit) return;
         Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
     }
 
@@ -106,5 +161,20 @@ public final class JavaProcess {
     public static int exec(Class klass, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
         return execClasspath(klass, null, System.getProperty("java.class.path"), jvmArgs, args);
     }
+
+    /**
+     * Executes a Java process with the given class and arguments.
+     * @param klass the class to execute
+     * @param ioReceiver the receiver for the process' input and error streams (will use inheritIO if null)
+     * @param jvmArgs the JVM arguments to pass to the process
+     * @param args the arguments to pass to the class
+     * @return the exit value of the process
+     * @throws InterruptedException if the process is interrupted
+     * @throws IOException if an I/O error occurs
+     */
+    public static int exec(Class klass, ProcessIOReceiver ioReceiver, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
+        return execClasspath(klass, ioReceiver, System.getProperty("java.class.path"), jvmArgs, args);
+    }
+
 
 }

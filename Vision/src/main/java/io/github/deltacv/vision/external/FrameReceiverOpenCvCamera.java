@@ -25,6 +25,9 @@ package io.github.deltacv.vision.external;
 
 import io.github.deltacv.vision.external.source.VisionSource;
 import io.github.deltacv.vision.external.source.FrameReceiver;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraControls;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.*;
+import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibrationIdentity;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -102,6 +105,7 @@ public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenC
         cleanupForEndStreaming();
     }
 
+
     @Override
     protected OpenCvCameraRotation getDefaultRotation() {
         return OpenCvCameraRotation.UPRIGHT;
@@ -154,6 +158,49 @@ public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenC
         if(!isStreaming()) return;
 
         notifyStartOfFrameProcessing();
+    }
+
+    @Override
+    public void setMillisecondsPermissionTimeout(int ms) { }
+
+    @Override
+    public void startStreaming(int width, int height, OpenCvCameraRotation rotation, StreamFormat streamFormat) {
+        startStreaming(width, height, rotation);
+    }
+
+    @Override
+    public ExposureControl getExposureControl() {
+        return getControl(ExposureControl.class);
+    }
+
+    @Override
+    public FocusControl getFocusControl() {
+        return getControl(FocusControl.class);
+    }
+
+    @Override
+    public PtzControl getPtzControl() {
+        return getControl(PtzControl.class);
+    }
+
+    @Override
+    public GainControl getGainControl() {
+        return getControl(GainControl.class);
+    }
+
+    @Override
+    public WhiteBalanceControl getWhiteBalanceControl() {
+        return getControl(WhiteBalanceControl.class);
+    }
+
+    @Override
+    public <T extends CameraControl> T getControl(Class<T> controlType) {
+        return source.getControlMap().get(controlType);
+    }
+
+    @Override
+    public CameraCalibrationIdentity getCalibrationIdentity() {
+        return null; // TODO
     }
 
     //

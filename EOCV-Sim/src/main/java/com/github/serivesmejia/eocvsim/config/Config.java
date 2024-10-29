@@ -40,6 +40,7 @@ import java.util.List;
 public class Config {
     public volatile Theme simTheme = Theme.Light;
 
+    @Deprecated
     public volatile double zoom = 1;
 
     public volatile PipelineFps pipelineMaxFps = PipelineFps.MEDIUM;
@@ -50,7 +51,7 @@ public class Config {
     public volatile Size videoRecordingSize = new Size(640, 480);
     public volatile PipelineFps videoRecordingFps = PipelineFps.MEDIUM;
 
-    public volatile WebcamDriver preferredWebcamDriver = WebcamDriver.OpenIMAJ;
+    public volatile WebcamDriver preferredWebcamDriver = WebcamDriver.OpenPnp;
     public volatile String workspacePath  = CompiledPipelineManager.Companion.getDEF_WORKSPACE_FOLDER().getAbsolutePath();
 
     public volatile TunableFieldPanelConfig.Config globalTunableFieldsConfig =
@@ -63,12 +64,17 @@ public class Config {
 
     public volatile HashMap<String, TunableFieldPanelConfig.Config> specificTunableFieldConfig = new HashMap<>();
 
+    @Deprecated
     public volatile List<String> superAccessPluginHashes = new ArrayList<>();
 
-    public Config() {
-        if(SysUtil.ARCH != SysUtil.SystemArchitecture.X86_64) {
-            preferredWebcamDriver = WebcamDriver.OpenCV;
-        }
+    public volatile HashMap<String, Boolean> flags = new HashMap<>();
+
+    public boolean hasFlag(String flagName) {
+        return flags.get(flagName) != null;
+    }
+
+    public boolean getFlag(String flagName) {
+        return flags.get(flagName) != null && flags.get(flagName);
     }
 
 }

@@ -36,9 +36,9 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
+import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.exception.MaxActiveContextsException
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
@@ -49,6 +49,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.common.util.ParsedVersion
+import io.github.deltacv.eocvsim.plugin.security.AuthorityFetcher
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.vision.external.PipelineRenderHook
 import nu.pattern.OpenCV
@@ -57,9 +58,11 @@ import org.opencv.core.Size
 import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.awt.Dimension
 import java.io.File
+import java.lang.Thread.sleep
 import javax.swing.SwingUtilities
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
+import kotlin.jvm.Throws
 import kotlin.system.exitProcess
 
 /**
@@ -281,6 +284,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         configManager.init()
 
+        configManager.config.simTheme.install()
+
         pluginManager.init() // woah
         pluginManager.loadPlugins()
 
@@ -358,7 +363,30 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         pluginManager.enablePlugins()
 
-        start()
+        try {
+            start()
+        } catch (e: InterruptedException) {
+            logger.warn("Main thread interrupted ($hexCode)", e)
+        }
+
+        if(!destroying) {
+            destroy(DestroyReason.THREAD_EXIT)
+        }
+
+        if (isRestarting) {
+            Thread.interrupted() //clear interrupted flag
+            EOCVSimFolder.lock?.lock?.close()
+
+            JavaProcess.killSubprocessesOnExit = false
+            Thread {
+                JavaProcess.exec(Main::class.java, null, null)
+            }.start()
+
+            sleep(1000)
+        }
+
+        logger.info("-- End of EasyOpenCV Simulator v$VERSION ($hexCode) --")
+        exitProcess(0)
     }
 
     /**
@@ -372,6 +400,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
      * are explicitly updated within this method
      * @see init
      */
+    @Throws(InterruptedException::class)
     private fun start() {
         if(Thread.currentThread() != eocvSimThread) {
             throw IllegalStateException("start() must be called from the EOCVSim thread")
@@ -394,7 +423,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
                 } else null
             )
 
-            //limit FPG
+            //limit FPS
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
             try {
                 fpsLimiter.sync()
@@ -404,15 +433,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
         }
 
         logger.warn("Main thread interrupted ($hexCode)")
-
-        if(!destroying) {
-            destroy(DestroyReason.THREAD_EXIT)
-        }
-
-        if (isRestarting) {
-            Thread.interrupted() //clear interrupted flag
-            EOCVSim(params).init()
-        }
     }
 
     /**
@@ -541,7 +561,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
      * Checks if the simulator is currently recording
      * @return true if the simulator is currently recording, false otherwise
      */
-    fun isCurrentlyRecording() = currentRecordingSession?.isRecording ?: false
+    fun isCurrentlyRecording() = currentRecordingSession?.isRecording == true
 
     /**
      * Updates the visualizer title message

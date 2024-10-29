@@ -34,7 +34,7 @@ import java.lang.reflect.Field;
 @RegisterTunableField
 public class IntegerField extends NumericField<Integer> {
 
-    public IntegerField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public IntegerField(Object instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS);
         value = (int) initialFieldValue;
     }

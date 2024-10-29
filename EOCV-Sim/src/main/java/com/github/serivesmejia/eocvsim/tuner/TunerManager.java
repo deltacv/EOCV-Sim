@@ -75,7 +75,7 @@ public class TunerManager {
         if(tunableFieldAcceptors == null) {
             tunableFieldAcceptors = new HashMap<>();
             // oh god...
-            eocvSim.getClasspathScan().getScanResult().getTunableFieldAcceptorClasses().forEach(tunableFieldAcceptors::put);
+            tunableFieldAcceptors.putAll(eocvSim.getClasspathScan().getScanResult().getTunableFieldAcceptorClasses());
         }
 
         // for some reason, acceptorManager becomes null after a certain time passes
@@ -89,8 +89,8 @@ public class TunerManager {
             firstInit = false;
         }
 
-        if (eocvSim.pipelineManager.getCurrentPipeline() != null) {
-            addFieldsFrom(eocvSim.pipelineManager.getCurrentPipeline());
+        if (eocvSim.pipelineManager.getReflectTarget() != null) {
+            addFieldsFrom(eocvSim.pipelineManager.getReflectTarget());
             eocvSim.visualizer.updateTunerFields(createTunableFieldPanels());
 
             for(TunableField field : fields.toArray(new TunableField[0])) {
@@ -151,7 +151,7 @@ public class TunerManager {
         return tunableFieldClass;
     }
 
-    public void addFieldsFrom(OpenCvPipeline pipeline) {
+    public void addFieldsFrom(Object pipeline) {
         if (pipeline == null) return;
 
         VirtualReflectContext reflectContext = reflect.contextOf(pipeline);
@@ -165,11 +165,11 @@ public class TunerManager {
             // we can't handle this type
             if(tunableFieldClass == null) continue;
 
-            //yay we have a registered TunableField which handles this
+            //yay we have a registered TunableField which handles this.
             //now, lets do some more reflection to instantiate this TunableField
             //and add it to the list...
             try {
-                Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(OpenCvPipeline.class, VirtualField.class, EOCVSim.class);
+                Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(Object.class, VirtualField.class, EOCVSim.class);
                 this.fields.add(constructor.newInstance(pipeline, field, eocvSim));
             } catch(InvocationTargetException e) {
                 if(e.getCause() instanceof CancelTunableFieldAddingException) {

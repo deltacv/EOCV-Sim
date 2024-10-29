@@ -28,13 +28,17 @@ import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 
 class PluginContext(
-    val eocvSim: EOCVSim, val fileSystem: SandboxFileSystem, val loader: PluginLoader
+    val eocvSim: EOCVSim,
+    val fileSystem: SandboxFileSystem,
+    val loader: PluginLoader
 ) {
     companion object {
         @JvmStatic fun current(plugin: EOCVSimPlugin) = (plugin.javaClass.classLoader as PluginClassLoader).pluginContextProvider()
     }
 
     val plugin get() = loader.plugin
+    val pluginSource get() = loader.pluginSource
+    val classpath get() = loader.classpath
 
     val hasSuperAccess get() = loader.hasSuperAccess
     fun requestSuperAccess(reason: String) = loader.requestSuperAccess(reason)

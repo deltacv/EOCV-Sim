@@ -1,3 +1,5 @@
+import io.github.fvarrui.javapackager.gradle.PackageTask
+
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -6,8 +8,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'com.github.johnrengelman.shadow'
     id 'maven-publish'
-
-    id 'edu.sc.seis.launch4j' version '3.0.6'
+    id 'io.github.fvarrui.javapackager.plugin'
 }
 
 apply from: '../build.common.gradle'
@@ -34,15 +35,28 @@ test {
 
 apply from: '../test-logging.gradle'
 
-launch4j {
-    mainClassName = 'com.github.serivesmejia.eocvsim.Main'
-    icon = "${projectDir}/src/main/resources/images/icon/ico_eocvsim.ico"
+tasks.register('pack', PackageTask) {
+    dependsOn build
+    // mandatory
+    mainClass = 'com.github.serivesmejia.eocvsim.Main'
+    // optional
+    bundleJre = true
+    customizedJre = false
+    generateInstaller = true
+    platform = "auto"
 
-    outfile = "${project.name}-${standardVersion}.exe"
+    winConfig {
+        icoFile = file('src/main/resources/images/icon/ico_eocvsim.ico')
 
-    copyConfigurable = [] // Prevents copying dependencies
-    jarTask = shadowJar
+        generateMsi = false
+        disableDirPage = false
+        disableProgramGroupPage = false
+        disableFinishedPage = false
+    }
 
+    linuxConfig {
+        pngFile = file('src/main/resources/images/icon/ico_eocvsim.png')
+    }
 }
 
 dependencies {
@@ -58,10 +72,9 @@ dependencies {
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
     implementation "org.apache.logging.log4j:log4j-core:$log4j_version"
-    implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4j_version"
+    implementation "org.apache.logging.log4j:log4j-slf4j2-impl:$log4j_version"
 
-    implementation "com.github.deltacv:steve:1.0.0"
-    implementation "com.github.deltacv.AprilTagDesktop:AprilTagDesktop:$apriltag_plugin_version"
+    implementation "com.github.deltacv:steve:1.1.1"
 
     implementation 'info.picocli:picocli:4.6.1'
     implementation 'com.google.code.gson:gson:2.8.9'
@@ -69,6 +82,9 @@ dependencies {
 
     implementation 'com.formdev:flatlaf:3.5.1'
     implementation 'com.formdev:flatlaf-intellij-themes:3.5.1'
+    implementation 'com.miglayout:miglayout-swing:11.4.2'
+
+    implementation("org.java-websocket:Java-WebSocket:1.5.2")
 
     implementation 'net.lingala.zip4j:zip4j:2.11.3'
 
@@ -80,6 +96,8 @@ dependencies {
 
     implementation 'com.moandjiezana.toml:toml4j:0.7.2'
     implementation 'org.ow2.asm:asm:9.7'
+
+    implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain:3.3.2'
 }
 
 task(writeBuildClassJava) {

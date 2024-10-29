@@ -25,24 +25,59 @@ package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.config.ConfigLoader
+import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
+import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.extension.fileHash
+import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.security.PluginSignature
+import io.github.deltacv.eocvsim.plugin.security.PluginSignatureVerifier
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.security.MessageDigest
+
+enum class PluginSource {
+    REPOSITORY,
+    FILE
+}
+
+class PluginParser(pluginToml: Toml) {
+    val pluginName = pluginToml.getString("name")?.trim() ?: throw InvalidPluginException("No name in plugin.toml")
+    val pluginVersion = pluginToml.getString("version")?.trim() ?: throw InvalidPluginException("No version in plugin.toml")
+
+    val pluginAuthor = pluginToml.getString("author")?.trim() ?: throw InvalidPluginException("No author in plugin.toml")
+    val pluginAuthorEmail = pluginToml.getString("author-email", "")?.trim()
+
+    val pluginMain = pluginToml.getString("main")?.trim() ?: throw InvalidPluginException("No main in plugin.toml")
+
+    val pluginDescription = pluginToml.getString("description", "")?.trim()
+
+    /**
+     * Get the hash of the plugin based off the plugin name and author
+     * @return the hash
+     */
+    fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
+}
 
 /**
  * Loads a plugin from a jar file
  * @param pluginFile the jar file of the plugin
  * @param eocvSim the EOCV-Sim instance
  */
-class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
+class PluginLoader(
+    val pluginFile: File,
+    val classpath: List<File>,
+    val pluginSource: PluginSource,
+    val eocvSim: EOCVSim,
+    val appender: AppendDelegate
+) {
 
     val logger by loggerForThis()
 
@@ -54,12 +89,24 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
 
     val pluginClassLoader: PluginClassLoader
 
+    var shouldEnable: Boolean
+        get() {
+            return eocvSim.config.flags.getOrDefault(hash(), true)
+        }
+        set(value) {
+            eocvSim.config.flags[hash()] = value
+            eocvSim.configManager.saveToFile()
+        }
+
     lateinit var pluginToml: Toml
         private set
 
     lateinit var pluginName: String
         private set
     lateinit var pluginVersion: String
+        private set
+
+    lateinit var pluginDescription: String
         private set
 
     lateinit var pluginAuthor: String
@@ -78,18 +125,46 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
     lateinit var fileSystem: SandboxFileSystem
         private set
 
+    /**
+     * The signature of the plugin, issued by a verified authority
+     */
+    val signature by lazy { PluginSignatureVerifier.verify(pluginFile) }
+
     val fileSystemZip by lazy { PluginManager.FILESYSTEMS_FOLDER + File.separator + "${hash()}-fs" }
     val fileSystemZipPath by lazy { fileSystemZip.toPath() }
 
     /**
      * Whether the plugin has super access (full system access)
      */
-    val hasSuperAccess get() = eocvSim.config.superAccessPluginHashes.contains(pluginHash)
+    val hasSuperAccess get() = eocvSim.pluginManager.superAccessDaemonClient.checkAccess(pluginFile)
 
     init {
-        pluginClassLoader = PluginClassLoader(pluginFile) {
+        pluginClassLoader = PluginClassLoader(
+            pluginFile,
+            classpath
+        ) {
             PluginContext(eocvSim, fileSystem, this)
         }
+    }
+
+    /**
+     * Fetch the plugin info from the plugin.toml file
+     * Fills the pluginName, pluginVersion, pluginAuthor and pluginAuthorEmail fields
+     */
+    fun fetchInfoFromToml() {
+        if(::pluginToml.isInitialized) return
+
+        pluginToml = Toml().read(pluginClassLoader.getResourceAsStream("plugin.toml")
+            ?: throw InvalidPluginException("No plugin.toml in the jar file")
+        )
+
+        val parser = PluginParser(pluginToml)
+
+        pluginName = parser.pluginName
+        pluginVersion = parser.pluginVersion
+        pluginAuthor = parser.pluginAuthor
+        pluginAuthorEmail = parser.pluginAuthorEmail ?: ""
+        pluginDescription = parser.pluginDescription ?: ""
     }
 
     /**
@@ -100,25 +175,46 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
     fun load() {
         if(loaded) return
 
-        pluginToml = Toml().read(pluginClassLoader.getResourceAsStream("plugin.toml")
-            ?: throw InvalidPluginException("No plugin.toml in the jar file")
-        )
+        fetchInfoFromToml()
 
-        pluginName = pluginToml.getString("name") ?: throw InvalidPluginException("No name in plugin.toml")
-        pluginVersion = pluginToml.getString("version") ?: throw InvalidPluginException("No version in plugin.toml")
+        if(!shouldEnable) {
+            appender.appendln("${PluginOutput.SPECIAL_SILENT}Plugin $pluginName v$pluginVersion is disabled")
+            return
+        }
 
-        pluginAuthor = pluginToml.getString("author") ?: throw InvalidPluginException("No author in plugin.toml")
-        pluginAuthorEmail = pluginToml.getString("author-email", "")
+        appender.appendln("${PluginOutput.SPECIAL_SILENT}Loading plugin $pluginName v$pluginVersion by $pluginAuthor from ${pluginSource.name}")
 
-        logger.info("Loading plugin $pluginName v$pluginVersion by $pluginAuthor")
+        signature
 
         setupFs()
 
-        if(pluginToml.contains("api-version")) {
-            val parsedVersion = ParsedVersion(pluginToml.getString("api-version"))
+        if(pluginToml.contains("api-version") || pluginToml.contains("min-api-version")) {
+            // default to api-version if min-api-version is not present
+            val apiVersionKey = if(pluginToml.contains("api-version")) "api-version" else "min-api-version"
+            val parsedVersion = ParsedVersion(pluginToml.getString(apiVersionKey))
 
             if(parsedVersion > EOCVSim.PARSED_VERSION)
-                throw UnsupportedPluginException("Plugin request api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
+                throw UnsupportedPluginException("Plugin requires a minimum api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
+
+            logger.info("Plugin $pluginName requests min api version of v${parsedVersion}")
+        }
+
+        if(pluginToml.contains("max-api-version")) {
+            val parsedVersion = ParsedVersion(pluginToml.getString("max-api-version"))
+
+            if(parsedVersion < EOCVSim.PARSED_VERSION)
+                throw UnsupportedPluginException("Plugin requires a max api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
+
+            logger.info("Plugin $pluginName requests max api version of v${parsedVersion}")
+        }
+
+        if(pluginToml.contains("exact-api-version")) {
+            val parsedVersion = ParsedVersion(pluginToml.getString("exact-api-version"))
+
+            if(parsedVersion != EOCVSim.PARSED_VERSION)
+                throw UnsupportedPluginException("Plugin requires an exact api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
+
+            logger.info("Plugin $pluginName requests exact api version of v${parsedVersion}")
         }
 
         if(pluginToml.getBoolean("super-access", false)) {
@@ -150,7 +246,9 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
     fun enable() {
         if(enabled || !loaded) return
 
-        logger.info("Enabling plugin $pluginName v$pluginVersion")
+        if(!shouldEnable) return
+
+        appender.appendln("${PluginOutput.SPECIAL_SILENT}Enabling plugin $pluginName v$pluginVersion")
 
         plugin.enabled = true
         plugin.onEnable()
@@ -164,7 +262,7 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
     fun disable() {
         if(!enabled || !loaded) return
 
-        logger.info("Disabling plugin $pluginName v$pluginVersion")
+        appender.appendln("${PluginOutput.SPECIAL_SILENT}Disabling plugin $pluginName v$pluginVersion")
 
         plugin.enabled = false
         plugin.onDisable()
@@ -178,9 +276,12 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
      * @see EventHandler.banClassLoader
      */
     fun kill() {
+        if(!loaded) return
         fileSystem.close()
         enabled = false
         EventHandler.banClassLoader(pluginClassLoader)
+
+        pluginClassLoader.close()
     }
 
     /**
@@ -188,28 +289,13 @@ class PluginLoader(val pluginFile: File, val eocvSim: EOCVSim) {
      * @param reason the reason for requesting super access
      */
     fun requestSuperAccess(reason: String): Boolean {
-        if(hasSuperAccess) return true
         return eocvSim.pluginManager.requestSuperAccessFor(this, reason)
     }
 
     /**
-     * Get the hash of the plugin file based off the plugin name and author
+     * Get the hash of the plugin based off the plugin name and author
      * @return the hash
      */
-    fun hash(): String {
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update("${pluginName} by ${pluginAuthor}".toByteArray())
-        return SysUtil.byteArray2Hex(messageDigest.digest())
-    }
-
-    /**
-     * Get the hash of the plugin file based off the file contents
-     * @return the hash
-     */
-    val pluginHash by lazy {
-        val messageDigest = MessageDigest.getInstance("SHA-256")
-        messageDigest.update(pluginFile.readBytes())
-        SysUtil.byteArray2Hex(messageDigest.digest())
-    }
+    fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
 
 }

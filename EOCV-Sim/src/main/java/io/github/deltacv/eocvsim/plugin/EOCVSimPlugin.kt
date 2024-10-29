@@ -48,6 +48,21 @@ abstract class EOCVSimPlugin {
      */
     val fileSystem get() = context.fileSystem
 
+    /**
+     * Whether this plugin comes from a maven repository or a file
+     * This affects the classpath resolution and the way the plugin is loaded.
+     * @see io.github.deltacv.eocvsim.plugin.loader.PluginSource
+     */
+    val pluginSource get() = context.pluginSource
+
+    /**
+     * The classpath of the plugin, additional to the JVM classpath
+     * This classpath is used to load classes from the plugin jar file
+     * and other dependencies that come from other jar files.
+     * @see io.github.deltacv.eocvsim.plugin.loader.PluginClassLoader
+     */
+    val classpath get() = context.classpath
+
     var enabled = false
         internal set
 

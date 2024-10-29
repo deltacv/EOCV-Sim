@@ -43,7 +43,7 @@ public class ScalarField extends TunableField<Scalar> {
 
     volatile boolean hasChanged = false;
 
-    public ScalarField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public ScalarField(Object instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
 
         if(initialFieldValue == null) {
@@ -89,12 +89,16 @@ public class ScalarField extends TunableField<Scalar> {
     @Override
     public void setFieldValue(int index, Object newValue) throws IllegalAccessException {
         try {
+            double value;
+
             if(newValue instanceof String) {
-                scalar.val[index] = Double.parseDouble((String) newValue);
+                value = Double.parseDouble((String) newValue);
             } else {
-                scalar.val[index] = (double)newValue;
+                value = (double)newValue;
             }
-        } catch (Exception ex) {
+
+            scalar.val[index] = value;
+        } catch (NumberFormatException ex) {
             throw new IllegalArgumentException("Parameter should be a valid number", ex);
         }
 

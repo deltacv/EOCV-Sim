@@ -42,7 +42,7 @@ public class PointField extends TunableField<Point> {
 
     volatile boolean hasChanged = false;
 
-    public PointField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public PointField(Object instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL);
 
         if(initialFieldValue != null) {

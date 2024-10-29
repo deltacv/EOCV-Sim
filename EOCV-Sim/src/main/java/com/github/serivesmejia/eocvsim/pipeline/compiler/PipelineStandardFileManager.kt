@@ -44,7 +44,13 @@ class PipelineStandardFileManager(delegate: StandardJavaFileManager) : Delegatin
             val classpathList = arrayListOf<File>()
 
             logger.trace("Scanning classpath files...")
-            
+            logger.trace("Classpath: {}", System.getProperty("java.class.path"))
+
+            //add all jars in the libs folder...hardcoded for JavaPackager, ugh
+            classpathList.addAll(
+                SysUtil.filesUnder(File(System.getProperty("user.dir") + File.separator + "libs"), ".jar")
+            )
+
             for(file in SysUtil.getClasspathFiles()) {
                 val files = SysUtil.filesUnder(file, ".jar")
                 files.forEach {

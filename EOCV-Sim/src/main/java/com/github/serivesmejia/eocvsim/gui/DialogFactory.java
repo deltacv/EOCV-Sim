@@ -32,6 +32,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateSource;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateVideoSource;
 import com.github.serivesmejia.eocvsim.input.SourceType;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
+import io.github.deltacv.eocvsim.plugin.loader.PluginManager;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -39,9 +40,6 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.IntConsumer;
 
 public class DialogFactory {
@@ -121,10 +119,6 @@ public class DialogFactory {
         invokeLater(() -> new Configuration(eocvSim.visualizer.frame, eocvSim));
     }
 
-    public static void createPluginsDialog(EOCVSim eocvSim) {
-        invokeLater(() -> new Configuration(eocvSim.visualizer.frame, eocvSim));
-    }
-
     public static void createAboutDialog(EOCVSim eocvSim) {
         invokeLater(() -> new About(eocvSim.visualizer.frame, eocvSim));
     }
@@ -152,6 +146,14 @@ public class DialogFactory {
             if(!Output.Companion.isAlreadyOpened())
                 new Output(eocvSim.visualizer.frame, eocvSim, 0);
         });
+    }
+
+    public static AppendDelegate createMavenOutput(PluginManager manager, Runnable onContinue) {
+        AppendDelegate delegate = new AppendDelegate();
+
+        invokeLater(() -> new PluginOutput(delegate, manager, manager.getEocvSim(), onContinue));
+
+        return delegate;
     }
 
     public static void createSplashScreen(EventHandler closeHandler) {

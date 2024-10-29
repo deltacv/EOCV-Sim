@@ -8,7 +8,7 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import org.openftc.easyopencv.OpenCvPipeline
 
 @RegisterTunableField
-class EnumField(private val instance: OpenCvPipeline,
+class EnumField(instance: Any,
                 reflectionField: VirtualField,
                 eocvSim: EOCVSim) : TunableField<Enum<*>>(instance, reflectionField, eocvSim, AllowMode.TEXT) {
 

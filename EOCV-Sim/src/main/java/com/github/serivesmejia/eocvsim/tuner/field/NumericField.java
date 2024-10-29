@@ -38,7 +38,7 @@ abstract public class NumericField<T extends Number> extends TunableField<T> {
 
     protected volatile boolean hasChanged = false;
 
-    public NumericField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
+    public NumericField(Object instance, VirtualField reflectionField, EOCVSim eocvSim, AllowMode allowMode) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, allowMode);
     }
 

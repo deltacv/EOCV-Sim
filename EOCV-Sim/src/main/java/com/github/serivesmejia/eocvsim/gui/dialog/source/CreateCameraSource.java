@@ -32,6 +32,7 @@ import io.github.deltacv.steve.WebcamRotation;
 import io.github.deltacv.steve.opencv.OpenCvWebcam;
 import io.github.deltacv.steve.opencv.OpenCvWebcamBackend;
 import io.github.deltacv.steve.openimaj.OpenIMAJWebcamBackend;
+import io.github.deltacv.steve.openpnp.OpenPnpBackend;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.slf4j.Logger;
@@ -95,7 +96,14 @@ public class CreateCameraSource {
     public void initCreateImageSource() {
         WebcamDriver preferredDriver = eocvSim.getConfig().preferredWebcamDriver;
 
-        if(preferredDriver == WebcamDriver.OpenIMAJ) {
+        if(preferredDriver == WebcamDriver.OpenPnp) {
+            Webcam.Companion.setBackend(OpenPnpBackend.INSTANCE);
+            try {
+                webcams = Webcam.Companion.getAvailableWebcams();
+            } catch (Throwable e) {
+                logger.error("OpenPnp failed to discover cameras with error", e);
+            }
+        } else if(preferredDriver == WebcamDriver.OpenIMAJ) {
             try {
                 Webcam.Companion.setBackend(OpenIMAJWebcamBackend.INSTANCE);
                 webcams = Webcam.Companion.getAvailableWebcams();

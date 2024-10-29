@@ -41,7 +41,7 @@ public class StringField extends TunableField<String> {
 
     volatile boolean hasChanged = false;
 
-    public StringField(OpenCvPipeline instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
+    public StringField(Object instance, VirtualField reflectionField, EOCVSim eocvSim) throws IllegalAccessException {
         super(instance, reflectionField, eocvSim, AllowMode.TEXT);
 
         if(initialFieldValue != null) {

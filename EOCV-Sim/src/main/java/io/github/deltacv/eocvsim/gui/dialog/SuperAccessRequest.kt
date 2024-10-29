@@ -36,9 +36,8 @@ import java.awt.Font
 import java.awt.event.WindowEvent
 import java.awt.event.WindowListener
 import javax.swing.*
-import kotlin.system.exitProcess
 
-class SuperAccessRequest(sourceName: String, reason: String) {
+class SuperAccessRequest(sourceName: String, reason: String, val untrusted: Boolean, val callback: (Boolean) -> Unit) {
 
     init {
         FlatArcDarkIJTheme.setup()
@@ -77,14 +76,36 @@ class SuperAccessRequest(sourceName: String, reason: String) {
             val acceptButton = JButton("Accept").apply {
                 preferredSize = Dimension(100, 30)
                 addActionListener {
-                    exitProcess(171)
+                    if(untrusted) {
+                        JOptionPane.showConfirmDialog(
+                            frame,
+                            "We were unable to verify the integrity and origin of the plugin. Are you sure you want to accept this request? Do so at your own risk.",
+                            "Confirm",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE
+                        ).let {
+                            if(it == JOptionPane.YES_OPTION) {
+                                callback(true)
+                            } else {
+                                callback(false)
+                            }
+                        }
+                    } else {
+                        callback(true)
+                    }
+
+                    frame.isVisible = false
+                    frame.dispose()
                 }
             }
 
             val rejectButton = JButton("Reject").apply {
                 preferredSize = Dimension(100, 30)
                 addActionListener {
-                    exitProcess(-172)
+                    callback(false)
+
+                    frame.isVisible = false
+                    frame.dispose()
                 }
             }
 
@@ -115,7 +136,6 @@ class SuperAccessRequest(sourceName: String, reason: String) {
             override fun windowDeactivated(e: WindowEvent?) {}
 
             override fun windowClosed(e: WindowEvent?) {
-                exitProcess(-129)
             }
         })
 

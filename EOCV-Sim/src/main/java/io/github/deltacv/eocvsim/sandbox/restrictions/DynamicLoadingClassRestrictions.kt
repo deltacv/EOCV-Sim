@@ -25,11 +25,14 @@ package io.github.deltacv.eocvsim.sandbox.restrictions
 
 val dynamicLoadingPackageWhitelist = setOf(
     "java.lang",
+    "java.lang.RuntimeException",
     "java.util",
     "java.awt",
     "javax.swing",
     "java.nio",
+    "java.io.IOException",
     "java.io.File",
+    "java.io.PrintStream",
 
     "kotlin",
 
@@ -50,9 +53,12 @@ val dynamicLoadingPackageWhitelist = setOf(
     "com.formdev.flatlaf"
 )
 
+val dynamicLoadingExactMatchBlacklist = setOf(
+    "java.lang.Runtime"
+)
+
 val dynamicLoadingPackageBlacklist  = setOf(
     // System and Runtime Classes
-    "java.lang.Runtime",
     "java.lang.ProcessBuilder",
     "java.lang.reflect",
 
@@ -74,8 +80,6 @@ val dynamicLoadingPackageBlacklist  = setOf(
     "com.github.serivesmejia.eocvsim.util.FileExtKt",
     "com.github.serivesmejia.eocvsim.util.compiler",
     "com.github.serivesmejia.eocvsim.config",
-
-    "io.github.deltacv.eocvsim.plugin.sandbox.nio.JimfsWatcher"
 )
 
 val dynamicLoadingMethodBlacklist = setOf(
@@ -90,6 +94,7 @@ val dynamicLoadingMethodBlacklist = setOf(
     "java.lang.Class#newInstance",
     "java.lang.Class#forName",
 
+    // Additional java.io.File methods to blacklist
     "java.io.File#delete",
     "java.io.File#createNewFile",
     "java.io.File#mkdirs",
@@ -103,4 +108,22 @@ val dynamicLoadingMethodBlacklist = setOf(
     "java.io.File#setWritable",
     "java.io.File#setReadable",
     "java.io.File#setExecutable",
+    "java.io.File#list",
+    "java.io.File#listFiles",
+    "java.io.File#listRoots",
+    "java.io.File#canRead",
+    "java.io.File#canWrite",
+    "java.io.File#canExecute",
+    "java.io.File#length",
+    "java.io.File#getTotalSpace",
+    "java.io.File#getFreeSpace",
+    "java.io.File#getUsableSpace",
+    "java.io.File#getAbsolutePath",
+    "java.io.File#getCanonicalPath",
+    "java.io.File#getParentFile",
+    "java.io.File#exists",
+    "java.io.File#isDirectory",
+    "java.io.File#isFile",
+    "java.io.File#isHidden",
+    "java.io.File#lastModified"
 )

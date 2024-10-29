@@ -134,6 +134,8 @@ public class InputSourceManager {
 
         if (sources.containsKey(name)) return;
 
+        inputSource.eocvSim = eocvSim;
+
         if(eocvSim.visualizer.sourceSelectorPanel != null) {
             eocvSim.visualizer.sourceSelectorPanel.setAllowSourceSwitching(false);
         }
@@ -206,6 +208,8 @@ public class InputSourceManager {
     public boolean setInputSource(String sourceName) {
         InputSource src = null;
 
+        SysUtil.debugLogCalled("setInputSource");
+
         if(sourceName == null) {
             src = new NullSource();
         } else {
@@ -214,7 +218,6 @@ public class InputSourceManager {
 
         if (src != null) {
             src.reset();
-            src.eocvSim = eocvSim;
         }
 
         //check if source type is a camera, and if so, create a please wait dialog
@@ -297,6 +300,8 @@ public class InputSourceManager {
     }
 
     public void requestSetInputSource(String name) {
+        SysUtil.debugLogCalled("requestSetInputSource");
+
         eocvSim.onMainUpdate.doOnce(() -> setInputSource(name));
     }
 

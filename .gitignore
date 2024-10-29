@@ -105,6 +105,8 @@ fabric.properties
 
 *.log
 
+*.pem
+
 **/Build.java
 **/build/*
 

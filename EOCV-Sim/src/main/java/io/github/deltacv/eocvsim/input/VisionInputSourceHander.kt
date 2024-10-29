@@ -1,5 +1,6 @@
 package io.github.deltacv.eocvsim.input
 
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.input.source.CameraSource
 import com.github.serivesmejia.eocvsim.input.source.ImageSource
 import com.github.serivesmejia.eocvsim.input.source.VideoSource
@@ -16,7 +17,11 @@ import java.io.File
 import java.io.IOException
 import javax.imageio.ImageIO
 
-class VisionInputSourceHander(val notifier: OpModeNotifier, val viewport: OpenCvViewport) : ViewportAndSourceHander {
+class VisionInputSourceHander(
+    val notifier: OpModeNotifier,
+    val viewport: OpenCvViewport,
+    val inputSourceManager: InputSourceManager
+) : ViewportAndSourceHander {
 
     private fun isImage(path: String) = try {
         ImageIO.read(File(path)) != null
@@ -45,9 +50,11 @@ class VisionInputSourceHander(val notifier: OpModeNotifier, val viewport: OpenCv
         } else {
             val index = name.toIntOrNull()
                     ?: if(name == "default" || name == "Webcam 1") 0
-                    else throw IllegalArgumentException("Unknown source $name")
+                    else null
 
-            CameraSource(index, Size(640.0, 480.0))
+            if(index == null) {
+                inputSourceManager.sources.get(name) ?: throw IllegalArgumentException("Input source $name not found")
+            } else CameraSource(index, Size(640.0, 480.0))
         }, RedirectToOpModeThrowableHandler(notifier))
 
         notifier.onStateChange {

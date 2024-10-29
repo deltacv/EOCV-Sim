@@ -1,5 +1,3 @@
-@file:JvmName("Main")
-
 package com.github.serivesmejia.eocvsim
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
@@ -11,19 +9,23 @@ import kotlin.system.exitProcess
 val jvmMainThread: Thread = Thread.currentThread()
 var currentMainThread: Thread = jvmMainThread
 
-/**
- * Main entry point for the EOCV-Sim CLI
- * @param args the command line arguments
- * @see CommandLine
- */
-fun main(args: Array<String>) {
-    System.setProperty("sun.java2d.d3d", "false")
+object Main {
 
-    val result = CommandLine(
-        EOCVSimCommandInterface()
-    ).setCaseInsensitiveEnumValuesAllowed(true).execute(*args)
+    /**
+     * Main entry point for the EOCV-Sim CLI
+     * @param args the command line arguments
+     * @see CommandLine
+     */
+    @JvmStatic
+    fun main(args: Array<String>) {
+        System.setProperty("sun.java2d.d3d", "false")
 
-    exitProcess(result)
+        val result = CommandLine(
+            EOCVSimCommandInterface()
+        ).setCaseInsensitiveEnumValuesAllowed(true).execute(*args)
+
+        exitProcess(result)
+    }
 }
 
 /**

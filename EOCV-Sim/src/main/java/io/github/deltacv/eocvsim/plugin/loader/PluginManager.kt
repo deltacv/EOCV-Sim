@@ -24,13 +24,21 @@
 package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.util.JavaProcess
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
+import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
+import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput.Companion.trimSpecials
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequestMain
+import com.github.serivesmejia.eocvsim.util.loggerOf
+import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
+import io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemon
+import io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemonClient
+import io.github.deltacv.eocvsim.plugin.security.toMutable
 import java.io.File
-import java.util.*
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import kotlin.properties.Delegates
 
 /**
  * Manages the loading, enabling and disabling of plugins
@@ -48,6 +56,40 @@ class PluginManager(val eocvSim: EOCVSim) {
 
     val logger by loggerForThis()
 
+    val superAccessDaemonClient = SuperAccessDaemonClient()
+
+    private val _loadedPluginHashes = mutableListOf<String>()
+    val loadedPluginHashes get() = _loadedPluginHashes.toList()
+
+    private val haltLock = ReentrantLock()
+    private val haltCondition = haltLock.newCondition()
+
+    val appender by lazy {
+        val appender = DialogFactory.createMavenOutput(this) {
+            haltLock.withLock {
+                haltCondition.signalAll()
+            }
+        }
+
+        val logger by loggerOf("PluginOutput")
+
+        appender.subscribe {
+            if(!it.isBlank()) {
+                val message = it.trimSpecials()
+
+                if(message.isNotBlank()) {
+                    logger.info(message)
+                }
+            }
+        }
+
+        appender
+    }
+
+    val repositoryManager by lazy {
+        PluginRepositoryManager(appender, haltLock, haltCondition)
+    }
+
     private val _pluginFiles = mutableListOf<File>()
 
     /**
@@ -55,8 +97,10 @@ class PluginManager(val eocvSim: EOCVSim) {
      */
     val pluginFiles get() = _pluginFiles.toList()
 
-    private val loaders = mutableMapOf<File, PluginLoader>()
+    private val _loaders = mutableMapOf<File, PluginLoader>()
+    val loaders get() = _loaders.toMap()
 
+    private var enableTimestamp by Delegates.notNull<Long>()
     private var isEnabled = false
 
     /**
@@ -67,21 +111,54 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @see PluginLoader
      */
     fun init() {
-        val filesInPluginFolder = PLUGIN_FOLDER.listFiles() ?: arrayOf()
+        eocvSim.visualizer.onInitFinished {
+            appender.append(PluginOutput.SPECIAL_FREE)
+        }
 
-        for (file in filesInPluginFolder) {
+        superAccessDaemonClient.init()
+
+        repositoryManager.init()
+
+        val pluginFilesInFolder = PLUGIN_FOLDER.listFiles()?.let {
+            it.filter { file -> file.extension == "jar" }
+        } ?: emptyList()
+
+        _pluginFiles.addAll(repositoryManager.resolveAll())
+
+        if(eocvSim.config.flags.getOrDefault("startFresh", false)) {
+            logger.warn("startFresh = true, deleting all plugins in the plugins folder")
+
+            for (file in pluginFilesInFolder) {
+                file.delete()
+            }
+
+            eocvSim.config.flags["startFresh"] = false
+            eocvSim.configManager.saveToFile()
+        } else {
+            _pluginFiles.addAll(pluginFilesInFolder)
+        }
+
+        for (file in pluginFiles) {
             if (file.extension == "jar") _pluginFiles.add(file)
         }
 
         if(pluginFiles.isEmpty()) {
-            logger.info("No plugins to load")
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "No plugins to load")
             return
         }
 
         for (pluginFile in pluginFiles) {
-            loaders[pluginFile] = PluginLoader(pluginFile, eocvSim)
+            _loaders[pluginFile] = PluginLoader(
+                pluginFile,
+                repositoryManager.resolvedFiles,
+                if(pluginFile in repositoryManager.resolvedFiles)
+                    PluginSource.REPOSITORY else PluginSource.FILE,
+                eocvSim,
+                appender
+            )
         }
 
+        enableTimestamp = System.currentTimeMillis()
         isEnabled = true
     }
 
@@ -90,12 +167,27 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @see PluginLoader.load
      */
     fun loadPlugins() {
-        for ((file, loader) in loaders) {
+        for ((file, loader) in _loaders) {
             try {
+                loader.fetchInfoFromToml()
+
+                val hash = loader.hash()
+
+                if(hash in _loadedPluginHashes) {
+                    val source = if(loader.pluginSource == PluginSource.REPOSITORY) "repository.toml file" else "plugins folder"
+
+                    appender.appendln("Plugin ${loader.pluginName} by ${loader.pluginAuthor} is already loaded. Please delete the duplicate from the $source !")
+                    return
+                }
+
                 loader.load()
+                _loadedPluginHashes.add(hash)
             } catch (e: Throwable) {
-                logger.error("Failure loading ${file.name}", e)
-                loaders.remove(file)
+                appender.appendln("Failure loading ${loader.pluginName} v${loader.pluginVersion}:")
+                appender.appendln(e.message ?: "Unknown error")
+                logger.error("Failure loading ${loader.pluginName} v${loader.pluginVersion}", e)
+
+                _loaders.remove(file)
                 loader.kill()
             }
         }
@@ -106,10 +198,11 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @see PluginLoader.enable
      */
     fun enablePlugins() {
-        for (loader in loaders.values) {
+        for (loader in _loaders.values) {
             try {
                 loader.enable()
             } catch (e: Throwable) {
+                appender.appendln("Failure enabling ${loader.pluginName} v${loader.pluginVersion}: ${e.message}")
                 logger.error("Failure enabling ${loader.pluginName} v${loader.pluginVersion}", e)
                 loader.kill()
             }
@@ -124,10 +217,11 @@ class PluginManager(val eocvSim: EOCVSim) {
     fun disablePlugins() {
         if(!isEnabled) return
 
-        for (loader in loaders.values) {
+        for (loader in _loaders.values) {
             try {
                 loader.disable()
             } catch (e: Throwable) {
+                appender.appendln("Failure disabling ${loader.pluginName} v${loader.pluginVersion}: ${e.message}")
                 logger.error("Failure disabling ${loader.pluginName} v${loader.pluginVersion}", e)
                 loader.kill()
             }
@@ -144,27 +238,35 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @return true if super access was granted, false otherwise
      */
     fun requestSuperAccessFor(loader: PluginLoader, reason: String): Boolean {
-        if(loader.hasSuperAccess) return true
-
-        logger.info("Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
-
-        var warning = "<html>$GENERIC_SUPERACCESS_WARN"
-        if(reason.trim().isNotBlank()) {
-            warning += "<br><br><i>$reason</i>"
-        }
-
-        warning += GENERIC_LAWYER_YEET
-
-        warning += "</html>"
-
-        val name = "${loader.pluginName} by ${loader.pluginAuthor}".replace(" ", "-")
-
-        if(JavaProcess.exec(SuperAccessRequestMain::class.java, null, Arrays.asList(name, warning)) == 171) {
-            eocvSim.config.superAccessPluginHashes.add(loader.pluginHash)
-            eocvSim.configManager.saveToFile()
+        if(loader.hasSuperAccess) {
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "Plugin ${loader.pluginName} v${loader.pluginVersion} already has super access")
             return true
         }
 
-        return false
+        val signature = loader.signature
+
+        appender.appendln(PluginOutput.SPECIAL_SILENT + "Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
+
+        var access = false
+
+        superAccessDaemonClient.sendRequest(SuperAccessDaemon.SuperAccessMessage.Request(
+            loader.pluginFile.absolutePath,
+            signature.toMutable(),
+            reason
+        )) {
+            if(it) {
+                access = true
+            }
+
+            haltLock.withLock {
+                haltCondition.signalAll()
+            }
+        }
+
+        haltLock.withLock {
+            haltCondition.await()
+        }
+
+        return access
     }
 }

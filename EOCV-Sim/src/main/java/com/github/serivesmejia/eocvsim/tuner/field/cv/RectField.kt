@@ -32,7 +32,7 @@ import org.openftc.easyopencv.OpenCvPipeline
 import java.lang.reflect.Field
 
 @RegisterTunableField
-class RectField(instance: OpenCvPipeline, reflectionField: VirtualField, eocvSim: EOCVSim) :
+class RectField(instance: Any, reflectionField: VirtualField, eocvSim: EOCVSim) :
     TunableField<Rect>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
 
     private var rect = arrayOf(0.0, 0.0, 0.0, 0.0)

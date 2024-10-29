@@ -1,5 +1,8 @@
 package com.github.serivesmejia.eocvsim.util.extension
 
+import com.github.serivesmejia.eocvsim.util.SysUtil
+import java.security.MessageDigest
+
 /**
  * Remove a string from the end of this string
  * @param rem the string to remove
@@ -10,4 +13,12 @@ fun String.removeFromEnd(rem: String): String {
         return substring(0, length - rem.length).trim()
     }
     return trim()
+}
+
+val Any.hashString get() = Integer.toHexString(hashCode())!!
+
+val String.hashString: String get() {
+    val messageDigest = MessageDigest.getInstance("SHA-256")
+    val hash = messageDigest.digest(toByteArray())
+    return SysUtil.byteArray2Hex(hash)
 }
