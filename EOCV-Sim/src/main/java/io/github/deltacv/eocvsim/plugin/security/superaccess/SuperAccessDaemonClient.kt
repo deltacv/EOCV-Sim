@@ -60,6 +60,11 @@ class SuperAccessDaemonClient {
     }
 
     fun sendRequest(request: SuperAccessDaemon.SuperAccessMessage.Request, onResponse: (Boolean) -> Unit) {
+        if(server.connections.isEmpty()) {
+            onResponse(false)
+            return
+        }
+
         server.broadcast(SuperAccessDaemon.gson.toJson(request))
 
         server.addResponseReceiver(request.id) { response ->
@@ -97,7 +102,7 @@ class SuperAccessDaemonClient {
         }
 
         lock.withLock {
-            condition.await(2, java.util.concurrent.TimeUnit.SECONDS)
+            condition.await(3, java.util.concurrent.TimeUnit.SECONDS)
         }
 
         return hasAccess
@@ -112,9 +117,18 @@ class SuperAccessDaemonClient {
 
         val logger by loggerForThis()
 
-        val responseReceiver = mutableMapOf<ResponseCondition, ResponseReceiver>()
+        private val responseReceiver = mutableMapOf<ResponseCondition, ResponseReceiver>()
 
+        private val pendingRequests = mutableMapOf<Int, ResponseReceiver>()
         private var processRestarts = 0
+
+        // Notify all pending requests if the process dies
+        private fun notifyPendingRequestsOfFailure() {
+            pendingRequests.forEach { key, value ->
+                value(SuperAccessDaemon.SuperAccessResponse.Failure(key))
+            }
+            pendingRequests.clear()
+        }
 
         override fun onOpen(conn: WebSocket, p1: ClientHandshake?) {
             val hostString = conn.localSocketAddress.hostString
@@ -139,6 +153,7 @@ class SuperAccessDaemonClient {
             p3: Boolean
         ) {
             logger.info("SuperAccessDaemon is gone.")
+            notifyPendingRequestsOfFailure() // Notify all waiting clients
         }
 
         override fun onMessage(ws: WebSocket, msg: String) {
@@ -149,6 +164,8 @@ class SuperAccessDaemonClient {
                     receiver(response)
                 }
             }
+
+            pendingRequests.remove(response.id)
         }
 
         override fun onError(p0: WebSocket?, p1: Exception?) {
@@ -182,11 +199,8 @@ class SuperAccessDaemonClient {
         }
 
         fun addResponseReceiver(id: Int, receiver: ResponseReceiver) {
+            pendingRequests[id] = receiver
             responseReceiver[{ it.id == id }] = receiver
-        }
-
-        fun addResponseReceiver(condition: ResponseCondition, receiver: ResponseReceiver) {
-            responseReceiver[condition] = receiver
         }
     }
 
