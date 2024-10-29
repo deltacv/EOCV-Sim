@@ -93,6 +93,11 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v3.8.1 - Shadow jar merge service files hotfix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.1)
+- This is the 26th release for EOCV-Sim
+    - Bugfixes:
+        - Fixes shadow jar, uses mergeServiceFiles to fix failing to pull plugins from a maven repository
+
 ## [v3.8.0 - Major Plugin System Rework](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.0)
 - This is the 25th release for EOCV-Sim
     - Changelog
