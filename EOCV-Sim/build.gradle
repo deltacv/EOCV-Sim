@@ -29,6 +29,10 @@ publishing {
 
 ext.kotest_version = '5.7.2'
 
+shadowJar {
+    mergeServiceFiles()
+}
+
 test {
     useJUnitPlatform()
 }
@@ -98,6 +102,7 @@ dependencies {
     implementation 'org.ow2.asm:asm:9.7'
 
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain:3.3.2'
+    implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:3.3.2'
 }
 
 task(writeBuildClassJava) {
