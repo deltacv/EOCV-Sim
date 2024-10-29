@@ -367,6 +367,7 @@ class PluginOutput(
             val pluginsFolder = PluginManager.PLUGIN_FOLDER
 
             if(pluginsFolder.exists() && Desktop.isDesktopSupported()) {
+                output.isVisible = false
                 Desktop.getDesktop().open(pluginsFolder)
             } else {
                 JOptionPane.showMessageDialog(
