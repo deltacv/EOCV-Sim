@@ -36,6 +36,7 @@ import kotlinx.coroutines.swing.Swing
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
+import java.awt.GridLayout
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import javax.swing.*

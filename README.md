@@ -92,22 +92,20 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
-
-## [v3.8.0 - Better FTC VisionPortal support & Plugin System Fixes](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.0)
+## [v3.8.0 - Major Plugin System Rework](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.0)
 - This is the 25th release for EOCV-Sim
     - Changelog
-        - Update skiko to 0.8.15
-        - Fixes Typeface.DEFAULT_BOLD and Typeface.DEFAULT_ITALIC to actually work
-        - Adds a stub no-op implementation for the FTC SDK Gamepad class into OpMode
-        - Adds android.opengl.Matrix implementation and matrices from the FTC SDK
-        - Adds navigation classes from the FTC SDK (AngleUnit, AxesOrder, AxesReference, etc)
-        - Adds the ConceptAprilTagLocalization, ConceptVisionColorLocator and ConceptVisionColorSensor samples
-        - Reimplements Telemetry to EOCVSimTelemetryImpl with stubs for Telemetry#talk
+        - Implements a system that allows for plugins to be downloaded from a maven repository and loaded into the simulator.
+        - New repository.toml file that contains the list of repositories to download plugins from and the maven coordinates to download.
+        - Adds a new dialog to manage the loaded plugins and check the output of the plugin system.
+        - Rewrites SuperAccess verification to be handled by a separate JVM process, ensuring that the main process is not compromised by malicious code
+        - Implements a plugin signature verification system to allow for authors to sign their plugins and ensure that they are not tampered with.
+        - The signature is stored on a custom format in the plugin jar, the signing authorities are pulled from a public key database
+        - When making a SuperAccess request, the user is warned if the plugin is not signed or if the signature is invalid.
+        - Adds a KeyGeneratorTool and PluginSigningTool to allow for easy generation of keys and signing of plugins respectively.
         - Internal changes:
-            - Plugin virtual filesystems now use the name and author in the TOML to generate the fs name
-            - Allows to specify JVM args in JavaExec
-            - Rename some internal classes
-            - Better handling of Pipeline/OpMode tab switching
+            - Adds a PolymorphicAdapter class to allow for easy serialization while retaining type information
+            - Improvements to the handling of JavaProcess
 
 ## [v3.7.1 - Better FTC VisionPortal support & Plugin System Fixes](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.7.1)
 - This is the 24th release for EOCV-Sim
