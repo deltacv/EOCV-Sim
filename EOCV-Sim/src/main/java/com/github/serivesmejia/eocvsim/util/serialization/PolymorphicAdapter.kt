@@ -45,6 +45,7 @@ open class PolymorphicAdapter<T>(
     @Suppress("UNCHECKED_CAST")
     override fun deserialize(json: JsonElement, typeOfT: Type, context: JsonDeserializationContext): T {
         val className = json.asJsonObject.get("${name}Class").asString
+
         val clazz = classloader.loadClass(className)
 
         return gson.fromJson(json.asJsonObject.get(name), clazz) as T
