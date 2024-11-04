@@ -130,6 +130,10 @@ public class SysUtil {
         return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / MB;
     }
 
+    public static String loadResStr(String path) throws UnsupportedEncodingException {
+        return loadIsStr(SysUtil.class.getResourceAsStream(path), Charset.defaultCharset());
+    }
+
     public static String loadIsStr(InputStream is, Charset charset) throws UnsupportedEncodingException {
         return new BufferedReader(new InputStreamReader(is, String.valueOf(charset)))
                 .lines().collect(Collectors.joining("\n"));

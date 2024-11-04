@@ -12,7 +12,15 @@ import java.nio.channels.FileLock
  */
 class LockFile(pathname: String) : File(pathname) {
 
-    private val raf by lazy { RandomAccessFile(this, "rw") }
+    companion object {
+        val POR_UNA_NOCHE = try {
+            SysUtil.loadResStr("/.lock")
+        } catch(ex: Exception) {
+            "lock"
+        }
+    }
+
+    private var raf = RandomAccessFile(this, "rw")
 
     var lock: FileLock? = null
         private set
@@ -30,12 +38,14 @@ class LockFile(pathname: String) : File(pathname) {
         true
     }
 
+    constructor(file: File) : this(file.absolutePath)
+
     init {
         if(isDirectory)
             throw IllegalArgumentException("Lock file cannot be a directory")
 
         if(!exists())
-            SysUtil.saveFileStr(this, "")
+            SysUtil.saveFileStr(this, POR_UNA_NOCHE)
     }
 
     /**
@@ -44,6 +54,8 @@ class LockFile(pathname: String) : File(pathname) {
      * @return true if the file was locked, false otherwise
      */
     fun tryLock(log: Boolean = true): Boolean {
+        raf = RandomAccessFile(this, "rw")
+
         return try {
             lock = raf.channel.tryLock()
             if(log) logger.trace("Probably locked file $absolutePath")

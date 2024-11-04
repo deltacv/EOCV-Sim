@@ -20,6 +20,20 @@
         </File>
     </Appenders>
     <Loggers>
+        <!-- Exclude org.java_websocket TRACE from the file appender -->
+        <Logger name="org.java_websocket" level="DEBUG" additivity="false">
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="stderr"/>
+            <AppenderRef ref="logfile" level="DEBUG"/>
+        </Logger>
+
+        <!-- Exclude org.eclipse.jetty DEBUG and TRACE from the file appender -->
+        <Logger name="org.eclipse.jetty" level="INFO" additivity="false">
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="stderr"/>
+            <AppenderRef ref="logfile" level="DEBUG"/>
+        </Logger>
+
         <Root level="TRACE">
             <AppenderRef ref="stdout" level="INFO"/>
             <AppenderRef ref="stderr" level="INFO"/>

@@ -116,6 +116,8 @@ class PluginManager(val eocvSim: EOCVSim) {
             appender.append(PluginOutput.SPECIAL_FREE)
         }
 
+        appender.appendln(PluginOutput.SPECIAL_SILENT + "Initializing PluginManager")
+
         superAccessDaemonClient.init()
 
         repositoryManager.init()
