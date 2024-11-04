@@ -10,6 +10,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.WeakHashMap;
 
 public class Utils {
 
@@ -95,7 +96,7 @@ public class Utils {
         }
     }
 
-    private static HashMap<Thread, byte[]> m2bDataMap = new HashMap<>();
+    private static WeakHashMap<Thread, byte[]> m2bDataMap = new WeakHashMap<>();
 
     private static void nMatToBitmap2(Mat src, Bitmap b, boolean premultiplyAlpha) {
         Mat tmp;

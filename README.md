@@ -93,6 +93,14 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v3.8.2 - Synchronization bug fixes](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.2)
+- This is the 27th release for EOCV-Sim
+    - Internal changes:
+        - Opens streamer field access of StreamableOpenCvPipeline
+    - Bugfixes:
+        - Fixes incorrect buffer sharing in org.opencv.android.Utils, which caused funny flickering
+        - Restructures cache files into a single folder to avoid cluttering the plugins folder
+
 ## [v3.8.1 - Shadow jar merge service files hotfix](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.1)
 - This is the 26th release for EOCV-Sim
     - Bugfixes:

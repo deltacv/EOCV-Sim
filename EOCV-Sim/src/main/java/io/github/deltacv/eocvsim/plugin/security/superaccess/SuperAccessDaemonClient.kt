@@ -155,7 +155,7 @@ class SuperAccessDaemonClient(
         }
 
         lock.withLock {
-            condition.await(3, java.util.concurrent.TimeUnit.SECONDS)
+            condition.await(5, java.util.concurrent.TimeUnit.SECONDS)
         }
 
         synchronized(cacheLock) {
