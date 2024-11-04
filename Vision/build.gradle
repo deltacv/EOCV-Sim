@@ -29,7 +29,7 @@ dependencies {
     implementation project(':Common')
 
     api("com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version") {
-        exclude group: 'com.github.deltacv.EOCVSim', module: 'Common'
+        transitive = false
     }
 
     api "org.openpnp:opencv:$opencv_version"
@@ -41,6 +41,7 @@ dependencies {
     // those that are supported by AprilTagDesktop as well
 
     implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-arm64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:$skiko_version")

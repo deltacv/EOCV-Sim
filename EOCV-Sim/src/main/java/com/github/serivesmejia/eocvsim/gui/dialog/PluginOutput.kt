@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.gui.dialog
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginSource
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
@@ -121,6 +122,8 @@ class PluginOutput(
     }
 
     private val mavenOutputPanel = OutputPanel(mavenBottomButtonsPanel)
+
+    private val logger by loggerForThis()
 
     init {
         output.isModal = true
@@ -466,6 +469,8 @@ class PluginOutput(
                 }
 
                 tabbedPane.setComponentAt(0, makePluginManagerPanel())
+                logger.info("Displaying plugin manager dialog")
+
                 output.isVisible = true
             }
         }

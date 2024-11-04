@@ -31,6 +31,7 @@ import com.github.serivesmejia.eocvsim.util.serialization.PolymorphicAdapter
 import com.google.gson.GsonBuilder
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequest
+import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager.Companion.GENERIC_LAWYER_YEET
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager.Companion.GENERIC_SUPERACCESS_WARN
 import io.github.deltacv.eocvsim.plugin.loader.PluginParser
@@ -71,7 +72,7 @@ object SuperAccessDaemon {
         class Failure(id: Int) : SuperAccessResponse(id)
     }
 
-    val SUPERACCESS_FILE = EOCVSimFolder + File.separator + "superaccess.txt"
+    val SUPERACCESS_FILE = PluginManager.PLUGIN_CACHING_FOLDER + File.separator + "superaccess.txt"
 
     private val access = mutableMapOf<String, Boolean>()
 

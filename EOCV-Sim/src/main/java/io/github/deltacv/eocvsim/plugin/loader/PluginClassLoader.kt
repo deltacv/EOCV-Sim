@@ -43,7 +43,7 @@ import java.util.zip.ZipFile
  * ClassLoader for loading classes from a plugin jar file
  * @param pluginJar the jar file of the plugin
  * @param classpath additional classpath that the plugin may require
- * @param pluginContext the plugin context
+ * @param pluginContextProvider a function that provides the PluginContext for the plugin
  */
 class PluginClassLoader(
     private val pluginJar: File,
@@ -96,8 +96,6 @@ class PluginClassLoader(
 
         try {
             if (clazz == null) {
-                var canForName = true
-
                 if (!pluginContextProvider().hasSuperAccess) {
                     var inWhitelist = false
 
@@ -109,7 +107,6 @@ class PluginClassLoader(
                     }
 
                     if (!inWhitelist && !pluginContextProvider().hasSuperAccess) {
-                        canForName = false
                         throw IllegalAccessError("Plugins are not whitelisted to use $name")
                     }
 
@@ -119,31 +116,27 @@ class PluginClassLoader(
                         if (inWhitelist) continue@blacklistLoop
 
                         if (name.contains(blacklistedPackage)) {
-                            canForName = false
                             throw IllegalAccessError("Plugins are blacklisted to use $name")
                         }
                     }
 
                     for (blacklistedClass in dynamicLoadingExactMatchBlacklist) {
                         if (name == blacklistedClass) {
-                            canForName = false
                             throw IllegalAccessError("Plugins are blacklisted to use $name")
                         }
                     }
                 }
 
-                if (canForName) {
-                    clazz = Class.forName(name)
-                }
+                clazz = Class.forName(name)
             }
         } catch(e: Throwable) {
-            try {
-                clazz = loadClassStrict(name)
+            clazz = try {
+                loadClassStrict(name)
             } catch(_: Throwable) {
                 val classpathClass = classFromClasspath(name)
 
                 if(classpathClass != null) {
-                    clazz = classpathClass
+                    classpathClass
                 } else {
                     throw e
                 }
@@ -200,7 +193,7 @@ class PluginClassLoader(
                 try {
                     additionalZipFiles.add(WeakReference(zipFile))
                     return zipFile.getInputStream(entry)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     zipFile.close()
                 }
             } else {
@@ -226,7 +219,7 @@ class PluginClassLoader(
                 if (entry != null) {
                     try {
                         return URL("jar:file:${file.absolutePath}!/$name")
-                    } catch (e: Exception) {
+                    } catch (_: Exception) {
                     }
                 }
             } finally {

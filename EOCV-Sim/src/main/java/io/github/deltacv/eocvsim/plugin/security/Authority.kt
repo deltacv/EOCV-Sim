@@ -23,9 +23,13 @@
 
 package io.github.deltacv.eocvsim.plugin.security
 
-import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
+import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import com.github.serivesmejia.eocvsim.util.extension.plus
+import com.github.serivesmejia.eocvsim.util.io.LockFile
+import com.github.serivesmejia.eocvsim.util.io.lockDirectory
 import com.moandjiezana.toml.Toml
+import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import java.io.File
 import java.net.URL
 import java.security.KeyFactory
@@ -55,9 +59,10 @@ object AuthorityFetcher {
 
     const val AUTHORITY_SERVER_URL = "https://raw.githubusercontent.com/deltacv/Authorities/refs/heads/master"
 
-    fun sectionRegex(name: String) = Regex("\\[\\Q$name\\E](?:\\n[^\\[]+)*")
+    private val AUTHORITIES_FILE = PluginManager.PLUGIN_CACHING_FOLDER + File.separator + "authorities.toml"
+    private val AUTHORITIES_LOCK_FILE = LockFile(PluginManager.PLUGIN_CACHING_FOLDER + File.separator + "authorities.lock")
 
-    private val AUTHORITIES_FILE = File(EOCVSimFolder, "authorities.toml")
+    private val AUTHORITIES_LOCK_FILE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(3)
 
     private val TTL_DURATION_MS = TimeUnit.HOURS.toMillis(8)
 
@@ -65,18 +70,16 @@ object AuthorityFetcher {
     private val cache = mutableMapOf<String, CachedAuthority>()
 
     fun fetchAuthority(name: String): Authority? {
-        // Check if the authority is cached and valid
+        validateCache()
+
+        // Check if the authority is cached and the file is valid
         cache[name]?.let { cachedAuthority ->
-            if (System.currentTimeMillis() - cachedAuthority.fetchedTime < TTL_DURATION_MS) {
-                logger.info("Returning cached authority for $name")
-                return cachedAuthority.authority
-            } else {
-                logger.info("Cached authority for $name has expired")
-            }
+            logger.info("Returning cached authority for $name")
+            return cachedAuthority.authority
         }
 
         // Load authorities from file if it exists
-        if (AUTHORITIES_FILE.exists()) {
+        if (AUTHORITIES_FILE.exists() && tryLockAuthoritiesFile()) {
             try {
                 val authoritiesToml = Toml().read(AUTHORITIES_FILE)
                 val authorityData = authoritiesToml.getTable(name)
@@ -97,6 +100,8 @@ object AuthorityFetcher {
                 AUTHORITIES_FILE.delete()
             }
         }
+
+        AUTHORITIES_LOCK_FILE.unlock()
 
         // Fetch the authority from the server
         val authorityUrl = "${AUTHORITY_SERVER_URL.trim('/')}/$name"
@@ -119,19 +124,41 @@ object AuthorityFetcher {
         }
     }
 
+    private fun validateCache() {
+        if(!tryLockAuthoritiesFile()) {
+            return
+        }
+
+        val currentTime = System.currentTimeMillis()
+
+        if(!AUTHORITIES_FILE.exists()) {
+            SysUtil.saveFileStr(AUTHORITIES_FILE, "timestamp = $currentTime\n")
+        }
+
+        val authoritiesToml = Toml().read(AUTHORITIES_FILE)
+        val timestamp = authoritiesToml.getLong("timestamp")
+
+        if(currentTime - timestamp > TTL_DURATION_MS) {
+            AUTHORITIES_FILE.delete()
+            logger.info("Authorities file has expired, clearing cache")
+            cache.clear()
+        }
+
+        AUTHORITIES_LOCK_FILE.unlock()
+    }
+
     private fun saveAuthorityToFile(name: String, publicKey: String) {
+        if(!tryLockAuthoritiesFile()) {
+            return
+        }
+
         try {
             val sb = StringBuilder()
 
             // Load existing authorities if the file exists
             if (AUTHORITIES_FILE.exists()) {
                 val existingToml = AUTHORITIES_FILE.readText()
-
-                sb.append(if(existingToml.contains("[$name]")) {
-                    existingToml.replace(sectionRegex(name), "")
-                } else {
-                    existingToml
-                })
+                sb.append(existingToml)
             }
 
             // Append new authority information
@@ -140,10 +167,28 @@ object AuthorityFetcher {
             sb.appendLine("timestamp = ${System.currentTimeMillis()}")
 
             // Write the updated content to the file
-            AUTHORITIES_FILE.appendText(sb.toString())
+            SysUtil.saveFileStr(AUTHORITIES_FILE, sb.toString())
         } catch (e: Exception) {
             logger.error("Failed to save authority to file", e)
+        } finally {
+            AUTHORITIES_LOCK_FILE.unlock()
         }
+    }
+
+    private fun tryLockAuthoritiesFile(): Boolean {
+        val time = System.currentTimeMillis()
+
+        logger.info("Trying to lock authorities file")
+
+        while(!AUTHORITIES_LOCK_FILE.tryLock(false) && System.currentTimeMillis() - time < AUTHORITIES_LOCK_FILE_TIMEOUT_MS) {
+            Thread.sleep(100)
+        }
+
+        if(!AUTHORITIES_LOCK_FILE.isLocked) {
+            logger.warn("Failed to lock authorities file")
+        }
+
+        return AUTHORITIES_LOCK_FILE.isLocked
     }
 
     fun parsePem(pem: String) =

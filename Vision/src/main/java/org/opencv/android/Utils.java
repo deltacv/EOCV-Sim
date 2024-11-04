@@ -9,6 +9,8 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.WeakHashMap;
 
 public class Utils {
 
@@ -73,7 +75,7 @@ public class Utils {
     private static void nBitmapToMat2(Bitmap b, Mat mat, boolean unPremultiplyAlpha) {
         mat.create(new Size(b.getWidth(), b.getHeight()), CvType.CV_8UC4);
 
-        int size = b.getWidth() * b.getHeight() * 4;
+        int size = b.getWidth() * b.getHeight() * 3;
 
         long addr = b.theBitmap.peekPixels().getAddr();
         ByteBuffer buffer = BufferUtil.INSTANCE.getByteBufferFromPointer(addr, size);
@@ -94,7 +96,7 @@ public class Utils {
         }
     }
 
-    private static byte[] m2bData = new byte[0];
+    private static WeakHashMap<Thread, byte[]> m2bDataMap = new WeakHashMap<>();
 
     private static void nMatToBitmap2(Mat src, Bitmap b, boolean premultiplyAlpha) {
         Mat tmp;
@@ -126,8 +128,11 @@ public class Utils {
 
         int size = tmp.rows() * tmp.cols() * tmp.channels();
 
-        if(m2bData.length != size) {
+        byte[] m2bData = m2bDataMap.get(Thread.currentThread());
+
+        if(m2bData == null || m2bData.length != size) {
             m2bData = new byte[size];
+            m2bDataMap.put(Thread.currentThread(), m2bData);
         }
 
         tmp.get(0, 0, m2bData);

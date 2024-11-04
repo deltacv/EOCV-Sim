@@ -24,6 +24,7 @@
 package io.github.deltacv.eocvsim.plugin.security.superaccess
 
 import com.github.serivesmejia.eocvsim.util.JavaProcess
+import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
@@ -31,6 +32,7 @@ import org.java_websocket.server.WebSocketServer
 import java.io.File
 import java.lang.Exception
 import java.net.InetSocketAddress
+import java.util.Random
 import java.util.concurrent.Executors
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantLock
@@ -39,12 +41,34 @@ import kotlin.concurrent.withLock
 typealias ResponseReceiver = (SuperAccessDaemon.SuperAccessResponse) -> Unit
 typealias ResponseCondition = (SuperAccessDaemon.SuperAccessResponse) -> Boolean
 
-class SuperAccessDaemonClient {
+private data class AccessCache(
+    val head: String,
+    val file: String,
+    val hasAccess: Boolean,
+    val timestamp: Long,
+    val footer: String,
+    val count: Int,
+    val countIntegrity: String
+) {
+
+    fun hash() = (head + file + hasAccess.toString() + timestamp.toString() + footer + count.toString() + countIntegrity).hashString
+
+}
+
+class SuperAccessDaemonClient(
+    val cacheTTLMillis: Long = 5000 // 5 seconds
+) {
 
     val logger by loggerForThis()
 
     private val startLock = ReentrantLock()
     val startCondition = startLock.newCondition()
+
+    private var cacheCount = Random().nextInt(Int.MAX_VALUE)
+    private var integrity = ""
+
+    private val cacheLock = Any()
+    private val accessCache = mutableMapOf<String, MutableList<AccessCache>>()
 
     // create a new WebSocket server
     private val server = WsServer(startLock, startCondition)
@@ -77,6 +101,35 @@ class SuperAccessDaemonClient {
     }
 
     fun checkAccess(file: File): Boolean {
+        synchronized(cacheLock) {
+            if (accessCache.containsKey(file.absolutePath)) {
+                val currentCaches = accessCache[file.absolutePath]!!
+                val currentCache = currentCaches.last()
+
+                if (System.currentTimeMillis() - currentCache.timestamp < cacheTTLMillis) {
+                    val sortedCache = mutableListOf<AccessCache>()
+
+                    for(caches in accessCache.values) {
+                        sortedCache.addAll(caches)
+                    }
+
+                    sortedCache.sortBy { it.timestamp }
+
+                    var expectedIntegrity = ""
+
+                    for(cache in sortedCache) {
+                        expectedIntegrity = (cache.hash() + expectedIntegrity).hashString
+                    }
+
+                    if (expectedIntegrity != integrity) {
+                        throw SecurityException("Access cache has been tampered with")
+                    }
+
+                    return currentCache.hasAccess
+                }
+            }
+        }
+
         val lock = ReentrantLock()
         val condition = lock.newCondition()
 
@@ -102,7 +155,22 @@ class SuperAccessDaemonClient {
         }
 
         lock.withLock {
-            condition.await(3, java.util.concurrent.TimeUnit.SECONDS)
+            condition.await(5, java.util.concurrent.TimeUnit.SECONDS)
+        }
+
+        synchronized(cacheLock) {
+            val list = accessCache.getOrPut(file.absolutePath) { mutableListOf() }
+
+            val head = list.lastOrNull()?.hash() ?: ""
+
+            var countIntegrity = (cacheCount + (cacheCount - 1)).hashString
+
+            val newCache = AccessCache(head, file.absolutePath, hasAccess, System.currentTimeMillis(), integrity, cacheCount, countIntegrity).apply {
+                integrity = (hash() + integrity).hashString
+                cacheCount++
+            }
+
+            list.add(newCache)
         }
 
         return hasAccess
@@ -111,12 +179,13 @@ class SuperAccessDaemonClient {
     private class WsServer(
         val startLock: ReentrantLock,
         val startCondition: Condition,
-    ) : WebSocketServer(InetSocketAddress(0)) {
+    ) : WebSocketServer(InetSocketAddress("127.0.0.1", 0)) {
         // create an executor with 1 thread
         private val executor = Executors.newSingleThreadExecutor()
 
         val logger by loggerForThis()
 
+        private val responseReceiverLock = Any()
         private val responseReceiver = mutableMapOf<ResponseCondition, ResponseReceiver>()
 
         private val pendingRequests = mutableMapOf<Int, ResponseReceiver>()
@@ -159,9 +228,11 @@ class SuperAccessDaemonClient {
         override fun onMessage(ws: WebSocket, msg: String) {
             val response = SuperAccessDaemon.gson.fromJson(msg, SuperAccessDaemon.SuperAccessResponse::class.java)
 
-            for((condition, receiver) in responseReceiver.toMap()) {
-                if(condition(response)) {
-                    receiver(response)
+            synchronized(responseReceiverLock) {
+                for ((condition, receiver) in responseReceiver.toMap()) {
+                    if (condition(response)) {
+                        receiver(response)
+                    }
                 }
             }
 
@@ -200,7 +271,10 @@ class SuperAccessDaemonClient {
 
         fun addResponseReceiver(id: Int, receiver: ResponseReceiver) {
             pendingRequests[id] = receiver
-            responseReceiver[{ it.id == id }] = receiver
+
+            synchronized(responseReceiverLock) {
+                responseReceiver[{ it.id == id }] = receiver
+            }
         }
     }
 
