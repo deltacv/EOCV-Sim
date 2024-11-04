@@ -29,7 +29,7 @@ dependencies {
     implementation project(':Common')
 
     api("com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version") {
-        exclude group: 'com.github.deltacv.EOCVSim', module: 'Common'
+        transitive = false
     }
 
     api "org.openpnp:opencv:$opencv_version"
