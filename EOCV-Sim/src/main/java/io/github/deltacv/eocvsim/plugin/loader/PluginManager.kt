@@ -48,6 +48,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
     companion object {
         val PLUGIN_FOLDER = (EOCVSimFolder + File.separator + "plugins").apply { mkdir() }
+        val PLUGIN_CACHING_FOLDER = (PLUGIN_FOLDER + File.separator + "caching").apply { mkdir() }
         val FILESYSTEMS_FOLDER = (PLUGIN_FOLDER + File.separator + "filesystems").apply { mkdir() }
 
         const val GENERIC_SUPERACCESS_WARN = "Plugins run in a restricted environment by default. <b>SuperAccess will grant full system access. Ensure you trust the authors before accepting.</b>"

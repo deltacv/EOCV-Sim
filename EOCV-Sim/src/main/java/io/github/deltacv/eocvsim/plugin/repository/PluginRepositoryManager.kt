@@ -48,7 +48,7 @@ class PluginRepositoryManager(
 
     companion object {
         val REPOSITORY_FILE = PluginManager.PLUGIN_FOLDER + File.separator + "repository.toml"
-        val CACHE_FILE = PluginManager.PLUGIN_FOLDER + File.separator + "cache.toml"
+        val CACHE_FILE = PluginManager.PLUGIN_CACHING_FOLDER + File.separator + "cache.toml"
 
         val REPOSITORY_TOML_RES = PluginRepositoryManager::class.java.getResourceAsStream("/repository.toml")
         val CACHE_TOML_RES = PluginRepositoryManager::class.java.getResourceAsStream("/cache.toml")

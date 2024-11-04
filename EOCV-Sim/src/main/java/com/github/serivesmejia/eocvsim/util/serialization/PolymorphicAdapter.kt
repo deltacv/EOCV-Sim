@@ -25,7 +25,6 @@ package com.github.serivesmejia.eocvsim.util.serialization
 
 import com.google.gson.*
 import java.lang.reflect.Type
-
 private val gson = Gson()
 
 open class PolymorphicAdapter<T>(

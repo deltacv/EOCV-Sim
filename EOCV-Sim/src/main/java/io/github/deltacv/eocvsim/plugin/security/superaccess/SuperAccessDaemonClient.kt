@@ -117,6 +117,7 @@ class SuperAccessDaemonClient {
 
         val logger by loggerForThis()
 
+        private val responseReceiverLock = Any()
         private val responseReceiver = mutableMapOf<ResponseCondition, ResponseReceiver>()
 
         private val pendingRequests = mutableMapOf<Int, ResponseReceiver>()
@@ -159,9 +160,11 @@ class SuperAccessDaemonClient {
         override fun onMessage(ws: WebSocket, msg: String) {
             val response = SuperAccessDaemon.gson.fromJson(msg, SuperAccessDaemon.SuperAccessResponse::class.java)
 
-            for((condition, receiver) in responseReceiver.toMap()) {
-                if(condition(response)) {
-                    receiver(response)
+            synchronized(responseReceiverLock) {
+                for ((condition, receiver) in responseReceiver.toMap()) {
+                    if (condition(response)) {
+                        receiver(response)
+                    }
                 }
             }
 
@@ -200,7 +203,10 @@ class SuperAccessDaemonClient {
 
         fun addResponseReceiver(id: Int, receiver: ResponseReceiver) {
             pendingRequests[id] = receiver
-            responseReceiver[{ it.id == id }] = receiver
+
+            synchronized(responseReceiverLock) {
+                responseReceiver[{ it.id == id }] = receiver
+            }
         }
     }
 
