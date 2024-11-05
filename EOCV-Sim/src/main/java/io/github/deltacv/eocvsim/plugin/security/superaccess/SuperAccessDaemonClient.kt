@@ -42,21 +42,23 @@ typealias ResponseReceiver = (SuperAccessDaemon.SuperAccessResponse) -> Unit
 typealias ResponseCondition = (SuperAccessDaemon.SuperAccessResponse) -> Boolean
 
 private data class AccessCache(
-    val head: String,
     val file: String,
     val hasAccess: Boolean,
-    val timestamp: Long,
-    val footer: String,
-    val count: Int,
-    val countIntegrity: String
+    val timestamp: Long
 ) {
+    init {
+        // get calling class
+        val stackTrace = Thread.currentThread().stackTrace
+        val callingClass = stackTrace[2].className
 
-    fun hash() = (head + file + hasAccess.toString() + timestamp.toString() + footer + count.toString() + countIntegrity).hashString
-
+        if(callingClass != SuperAccessDaemonClient::class.java.name) {
+            throw IllegalAccessException("AccessCache should only be created from SuperAccessDaemonClient")
+        }
+    }
 }
 
 class SuperAccessDaemonClient(
-    val cacheTTLMillis: Long = 5000 // 5 seconds
+    val cacheTTLMillis: Long = 3_000
 ) {
 
     val logger by loggerForThis()
@@ -64,11 +66,8 @@ class SuperAccessDaemonClient(
     private val startLock = ReentrantLock()
     val startCondition = startLock.newCondition()
 
-    private var cacheCount = Random().nextInt(Int.MAX_VALUE)
-    private var integrity = ""
-
     private val cacheLock = Any()
-    private val accessCache = mutableMapOf<String, MutableList<AccessCache>>()
+    private val accessCache = mutableMapOf<String, AccessCache>()
 
     // create a new WebSocket server
     private val server = WsServer(startLock, startCondition)
@@ -103,28 +102,9 @@ class SuperAccessDaemonClient(
     fun checkAccess(file: File): Boolean {
         synchronized(cacheLock) {
             if (accessCache.containsKey(file.absolutePath)) {
-                val currentCaches = accessCache[file.absolutePath]!!
-                val currentCache = currentCaches.last()
+                val currentCache = accessCache[file.absolutePath]!!
 
                 if (System.currentTimeMillis() - currentCache.timestamp < cacheTTLMillis) {
-                    val sortedCache = mutableListOf<AccessCache>()
-
-                    for(caches in accessCache.values) {
-                        sortedCache.addAll(caches)
-                    }
-
-                    sortedCache.sortBy { it.timestamp }
-
-                    var expectedIntegrity = ""
-
-                    for(cache in sortedCache) {
-                        expectedIntegrity = (cache.hash() + expectedIntegrity).hashString
-                    }
-
-                    if (expectedIntegrity != integrity) {
-                        throw SecurityException("Access cache has been tampered with")
-                    }
-
                     return currentCache.hasAccess
                 }
             }
@@ -159,18 +139,8 @@ class SuperAccessDaemonClient(
         }
 
         synchronized(cacheLock) {
-            val list = accessCache.getOrPut(file.absolutePath) { mutableListOf() }
-
-            val head = list.lastOrNull()?.hash() ?: ""
-
-            var countIntegrity = (cacheCount + (cacheCount - 1)).hashString
-
-            val newCache = AccessCache(head, file.absolutePath, hasAccess, System.currentTimeMillis(), integrity, cacheCount, countIntegrity).apply {
-                integrity = (hash() + integrity).hashString
-                cacheCount++
-            }
-
-            list.add(newCache)
+            val newCache = AccessCache(file.absolutePath, hasAccess, System.currentTimeMillis())
+            accessCache[file.absolutePath]  = newCache
         }
 
         return hasAccess
@@ -251,7 +221,8 @@ class SuperAccessDaemonClient(
                     val exitCode = JavaProcess.exec(
                         SuperAccessDaemon::class.java,
                         JavaProcess.SLF4JIOReceiver(logger),
-                        null, listOf(port.toString())
+                        listOf("-Dlog4j.configurationFile=log4j2_nofile.xml"),
+                        listOf(port.toString())
                     )
 
                     if(processRestarts == 6) {

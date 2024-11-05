@@ -53,6 +53,11 @@ class PluginClassLoader(
 
     private var additionalZipFiles = mutableListOf<WeakReference<ZipFile>>()
 
+    private var zipFiles = mutableMapOf<File, ZipFile>()
+
+    private var classpathCacheLock = Any()
+    private var classpathCache = mutableMapOf<String, File>()
+
     private val zipFile = try {
         ZipFile(pluginJar)
     } catch (e: Exception) {
@@ -129,13 +134,13 @@ class PluginClassLoader(
 
                 clazz = Class.forName(name)
             }
-        } catch(e: Throwable) {
+        } catch (e: Throwable) {
             clazz = try {
                 loadClassStrict(name)
-            } catch(_: Throwable) {
+            } catch (_: Throwable) {
                 val classpathClass = classFromClasspath(name)
 
-                if(classpathClass != null) {
+                if (classpathClass != null) {
                     classpathClass
                 } else {
                     throw e
@@ -182,48 +187,62 @@ class PluginClassLoader(
      * Get a resource from the classpath specified in the constructor
      */
     fun resourceAsStreamFromClasspath(name: String): InputStream? {
-        for (file in classpath) {
-            if (file == pluginJar) continue
-
-            val zipFile = ZipFile(file)
-
-            val entry = zipFile.getEntry(name)
-
-            if (entry != null) {
-                try {
-                    additionalZipFiles.add(WeakReference(zipFile))
-                    return zipFile.getInputStream(entry)
-                } catch (_: Exception) {
-                    zipFile.close()
-                }
-            } else {
-                zipFile.close()
-            }
-        }
-
-        return null
+        return resourceFromClasspath(name)?.openStream()
     }
 
     /**
      * Get a resource from the classpath specified in the constructor
      */
     fun resourceFromClasspath(name: String): URL? {
-        for (file in classpath) {
-            if (file == pluginJar) continue
-
-            val zipFile = ZipFile(file)
+        fun resFromJarFile(file: File): URL? {
+            if (file == pluginJar) return null
 
             try {
-                val entry = zipFile.getEntry(name)
+                val zipFile = zipFiles[file] ?: ZipFile(file)
+                zipFiles[file] = zipFile
 
-                if (entry != null) {
-                    try {
-                        return URL("jar:file:${file.absolutePath}!/$name")
-                    } catch (_: Exception) {
-                    }
+                val entry = zipFile.getEntry(name)
+                if (entry == null) return null
+
+                val packages = name.split("/")
+
+                val firstPackage = if (packages.size > 3)
+                    packages[0] + "." + packages[1] + "." + packages[3]
+                else if (packages.size > 2)
+                    packages[0] + "." + packages[1]
+                else name
+
+                synchronized(classpathCacheLock) {
+                    classpathCache[firstPackage] = file
                 }
-            } finally {
-                zipFile.close()
+
+                try {
+                    return URL("jar:file:${file.absolutePath}!/$name")
+                } catch (_: Exception) {
+                }
+            } catch (_: Exception) {
+            }
+
+            return null
+        }
+
+        val cache = synchronized(classpathCacheLock) {
+            classpathCache.filterKeys { name.contains(it.replace("/", ".")) }
+        }
+
+        for ((cacheName, file) in cache) {
+            if (name.contains(cacheName)) {
+                val res = resFromJarFile(file)
+                if (res != null) {
+                    return res
+                }
+            }
+        }
+
+        for (file in classpath) {
+            val res = resFromJarFile(file)
+            if (res != null) {
+                return res
             }
         }
 
@@ -234,20 +253,51 @@ class PluginClassLoader(
      * Load a class from the classpath specified in the constructor
      */
     fun classFromClasspath(className: String): Class<*>? {
-        for (file in classpath) {
-            if (file == pluginJar) continue
-
-            val zipFile = ZipFile(file)
+        fun classFromJarFile(file: File): Class<*>? {
+            if (file == pluginJar) return null
 
             try {
-                val entry = zipFile.getEntry(className.replace('.', '/') + ".class")
+                val zipFile = zipFiles[file] ?: ZipFile(file)
+                zipFiles[file] = zipFile
 
-                if (entry != null) {
-                    return loadClass(entry, zipFile = zipFile)
+                val entry = zipFile.getEntry(className.replace('.', '/') + ".class")
+                if (entry == null) return null
+
+                val packages = className.split(".")
+
+                val firstPackage = if (packages.size > 3)
+                    packages[0] + "." + packages[1] + "." + packages[3]
+                else if (packages.size > 2)
+                    packages[0] + "." + packages[1]
+                else className
+
+                synchronized(classpathCacheLock) {
+                    classpathCache[firstPackage] = file
                 }
-            } finally {
-                zipFile.close()
+
+                return loadClass(entry, zipFile = zipFile)
+            } catch (_: Exception) {
             }
+
+            return null
+        }
+
+        val cache = synchronized(classpathCacheLock) {
+            classpathCache.filterKeys { className.contains(it) }
+        }
+
+        for ((name, file) in cache) {
+            if (className.contains(name)) {
+                val clazz = classFromJarFile(file)
+                if (clazz != null) {
+                    return clazz
+                }
+            }
+        }
+
+        for (file in classpath) {
+            val clazz = classFromJarFile(file)
+            if (clazz != null) return clazz
         }
 
         return null
@@ -255,8 +305,11 @@ class PluginClassLoader(
 
     fun close() {
         zipFile.close()
-        for(ref in additionalZipFiles) {
+        for (ref in additionalZipFiles) {
             ref.get()?.close()
+        }
+        for ((_, zipFile) in zipFiles) {
+            zipFile.close()
         }
     }
 

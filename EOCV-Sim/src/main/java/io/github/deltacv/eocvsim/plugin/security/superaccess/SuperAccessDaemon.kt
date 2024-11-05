@@ -23,9 +23,8 @@
 
 package io.github.deltacv.eocvsim.plugin.security.superaccess
 
-import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.extension.fileHash
-import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
+import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.github.serivesmejia.eocvsim.util.serialization.PolymorphicAdapter
 import com.google.gson.GsonBuilder
@@ -38,11 +37,16 @@ import io.github.deltacv.eocvsim.plugin.loader.PluginParser
 import io.github.deltacv.eocvsim.plugin.security.Authority
 import io.github.deltacv.eocvsim.plugin.security.AuthorityFetcher
 import io.github.deltacv.eocvsim.plugin.security.MutablePluginSignature
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.core.LoggerContext
+import org.apache.logging.log4j.core.appender.FileAppender
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.io.File
 import java.lang.Exception
 import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.concurrent.Executors
 import java.util.zip.ZipFile
 import javax.swing.SwingUtilities
