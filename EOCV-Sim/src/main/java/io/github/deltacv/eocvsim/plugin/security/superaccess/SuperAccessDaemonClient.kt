@@ -221,7 +221,8 @@ class SuperAccessDaemonClient(
                     val exitCode = JavaProcess.exec(
                         SuperAccessDaemon::class.java,
                         JavaProcess.SLF4JIOReceiver(logger),
-                        null, listOf(port.toString())
+                        listOf("-Dlog4j.configurationFile=log4j2_nofile.xml"),
+                        listOf(port.toString())
                     )
 
                     if(processRestarts == 6) {

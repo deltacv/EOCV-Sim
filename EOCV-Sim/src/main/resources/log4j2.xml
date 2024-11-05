@@ -21,6 +21,12 @@
     </Appenders>
     <Loggers>
         <!-- Exclude org.java_websocket TRACE from the file appender -->
+        <Logger name="io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemon" level="INFO" additivity="false">
+            <AppenderRef ref="stdout"/>
+            <AppenderRef ref="stderr"/>
+        </Logger>
+
+        <!-- Exclude org.java_websocket TRACE from the file appender -->
         <Logger name="org.java_websocket" level="DEBUG" additivity="false">
             <AppenderRef ref="stdout"/>
             <AppenderRef ref="stderr"/>
