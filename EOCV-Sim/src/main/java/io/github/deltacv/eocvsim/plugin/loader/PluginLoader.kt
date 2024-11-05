@@ -27,21 +27,17 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.config.ConfigLoader
 import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
-import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.extension.fileHash
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.security.PluginSignature
 import io.github.deltacv.eocvsim.plugin.security.PluginSignatureVerifier
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import net.lingala.zip4j.ZipFile
 import java.io.File
-import java.security.MessageDigest
 
 enum class PluginSource {
     REPOSITORY,
