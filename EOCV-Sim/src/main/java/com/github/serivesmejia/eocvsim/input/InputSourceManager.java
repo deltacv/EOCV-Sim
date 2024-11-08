@@ -97,7 +97,7 @@ public class InputSourceManager {
 
             addInputSource(sourceName, src);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error while creating default image input source", e);
         }
     }
 
