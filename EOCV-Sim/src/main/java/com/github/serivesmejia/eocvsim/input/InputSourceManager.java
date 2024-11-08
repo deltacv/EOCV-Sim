@@ -76,7 +76,16 @@ public class InputSourceManager {
         createDefaultImgInputSource("/images/ug_1.jpg", "ug_eocvsim_1.jpg", "Ultimate Goal 1 Ring", size);
         createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size);
 
-        setInputSource("Ultimate Goal 4 Ring", true);
+        if(sources.isEmpty()) {
+            logger.warn("No input sources found, creating default source");
+
+            NullSource nullSource = new NullSource();
+            nullSource.isDefault = true;
+
+            addInputSource("Default", nullSource);
+        } else {
+            setInputSource("Ultimate Goal 4 Ring", true);
+        }
 
         inputSourceLoader.loadInputSourcesFromFile();
 
