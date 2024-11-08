@@ -198,6 +198,9 @@ public class TunerManager {
             }
         }
 
+        if(labeledField != null) {
+            labeledField.setIgnoreGuiUpdates(true);
+        }
         return labeledField;
     }
 

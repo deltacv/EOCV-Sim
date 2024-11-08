@@ -44,6 +44,8 @@ class TunableSlider(val index: Int,
     constructor(i: Int, tunableField: TunableField<Any>, eocvSim: EOCVSim) : this(i, tunableField, eocvSim, null, 0.0, 255.0)
 
     private val changeFieldValue = EventListener {
+        if(tunableField.shouldIgnoreGuiUpdates()) return@EventListener
+
         if(inControl) {
             tunableField.setFieldValueFromGui(index, scaledValue.toString())
 
@@ -53,7 +55,6 @@ class TunableSlider(val index: Int,
     }
 
     init {
-
         addChangeListener {
             eocvSim.onMainUpdate.doOnce(changeFieldValue)
 
@@ -68,7 +69,7 @@ class TunableSlider(val index: Int,
             if (!inControl) {
                 scaledValue = try {
                     tunableField.getGuiFieldValue(index).toString().toDouble()
-                } catch(ignored: NumberFormatException) { 0.0 }
+                } catch(_: NumberFormatException) { 0.0 }
             }
         }
     }

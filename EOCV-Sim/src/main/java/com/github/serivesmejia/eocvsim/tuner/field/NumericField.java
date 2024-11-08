@@ -29,7 +29,9 @@ import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import javax.swing.*;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 
 abstract public class NumericField<T extends Number> extends TunableField<T> {
 
@@ -62,7 +64,7 @@ abstract public class NumericField<T extends Number> extends TunableField<T> {
 
     @Override
     public void updateGuiFieldValues() {
-        fieldPanel.setFieldValue(0, value);
+        SwingUtilities.invokeLater(() -> fieldPanel.setFieldValue(0, value));
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import org.openftc.easyopencv.OpenCvPipeline
+import javax.swing.SwingUtilities
 
 @RegisterTunableField
 class EnumField(instance: Any,
@@ -37,7 +38,9 @@ class EnumField(instance: Any,
     }
 
     override fun updateGuiFieldValues() {
-        fieldPanel.setComboBoxSelection(0, currentValue)
+        SwingUtilities.invokeLater {
+            fieldPanel.setComboBoxSelection(0, currentValue)
+        }
     }
 
     override fun setFieldValue(index: Int, newValue: Any) {

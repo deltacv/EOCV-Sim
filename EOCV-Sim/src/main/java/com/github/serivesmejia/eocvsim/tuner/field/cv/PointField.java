@@ -30,6 +30,7 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.opencv.core.Point;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import javax.swing.*;
 import java.lang.reflect.Field;
 
 @RegisterTunableField
@@ -74,8 +75,10 @@ public class PointField extends TunableField<Point> {
 
     @Override
     public void updateGuiFieldValues() {
-        fieldPanel.setFieldValue(0, point.x);
-        fieldPanel.setFieldValue(1, point.y);
+        SwingUtilities.invokeLater(() -> {
+            fieldPanel.setFieldValue(0, point.x);
+            fieldPanel.setFieldValue(1, point.y);
+        });
     }
 
     @Override

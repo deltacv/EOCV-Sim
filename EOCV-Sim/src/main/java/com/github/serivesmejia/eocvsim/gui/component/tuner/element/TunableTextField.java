@@ -121,6 +121,8 @@ public class TunableTextField extends JTextField {
         getDocument().addDocumentListener(new DocumentListener() {
 
             Runnable changeFieldValue = () -> {
+                if(tunableField.shouldIgnoreGuiUpdates()) return;
+
                 if ((!hasValidText || !tunableField.isOnlyNumbers() || !getText().trim().equals(""))) {
                     try {
                         tunableField.setFieldValueFromGui(index, getText());

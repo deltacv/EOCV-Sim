@@ -46,6 +46,8 @@ public abstract class TunableField<T> {
     private int guiFieldAmount = 1;
     private int guiComboBoxAmount = 0;
 
+    private boolean ignoreGuiUpdates = false;
+
     public final EventHandler onValueChange = new EventHandler("TunableField-ValueChange");
 
     private TunableFieldPanel.Mode recommendedMode = null;
@@ -74,6 +76,10 @@ public abstract class TunableField<T> {
             reflectionField.set(newValue);
             onValueChange.run();
         }
+    }
+
+    public void setIgnoreGuiUpdates(boolean ignore) {
+        ignoreGuiUpdates = ignore;
     }
 
     public abstract void setFieldValue(int index, Object newValue) throws IllegalAccessException;
@@ -138,6 +144,10 @@ public abstract class TunableField<T> {
     public final boolean isOnlyNumbers() {
         return getAllowMode() == TunableField.AllowMode.ONLY_NUMBERS ||
                 getAllowMode() == TunableField.AllowMode.ONLY_NUMBERS_DECIMAL;
+    }
+
+    public boolean shouldIgnoreGuiUpdates() {
+        return ignoreGuiUpdates;
     }
 
     public abstract boolean hasChanged();

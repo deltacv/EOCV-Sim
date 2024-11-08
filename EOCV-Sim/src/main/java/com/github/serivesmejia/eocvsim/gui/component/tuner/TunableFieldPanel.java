@@ -139,6 +139,7 @@ public class TunableFieldPanel extends JPanel {
 
     public void setFieldValue(int index, Object value) {
         if(index >= fields.length) return;
+        if(fields[index].isFocusOwner() || sliders[index].isFocusOwner()) return; // don't update if the field is being edited
 
         String text;
         if(tunableField.getAllowMode() == TunableField.AllowMode.ONLY_NUMBERS) {

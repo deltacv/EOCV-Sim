@@ -281,6 +281,8 @@ public class InputSourceManager {
     }
 
     public void pauseIfImage() {
+        if(currentInputSource == null) return;
+
         //if the new input source is an image, we will pause the next frame
         //to execute one shot analysis on images and save resources.
         if (SourceType.fromClass(currentInputSource.getClass()) == SourceType.IMAGE) {

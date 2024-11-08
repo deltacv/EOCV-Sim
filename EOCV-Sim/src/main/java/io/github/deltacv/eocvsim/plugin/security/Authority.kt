@@ -98,10 +98,10 @@ object AuthorityFetcher {
             } catch (e: Exception) {
                 logger.error("Failed to read authorities file", e)
                 AUTHORITIES_FILE.delete()
+            } finally {
+                AUTHORITIES_LOCK_FILE.unlock()
             }
         }
-
-        AUTHORITIES_LOCK_FILE.unlock()
 
         // Fetch the authority from the server
         val authorityUrl = "${AUTHORITY_SERVER_URL.trim('/')}/$name"
@@ -180,7 +180,7 @@ object AuthorityFetcher {
 
         logger.info("Trying to lock authorities file")
 
-        while(!AUTHORITIES_LOCK_FILE.tryLock(false) && System.currentTimeMillis() - time < AUTHORITIES_LOCK_FILE_TIMEOUT_MS) {
+        while(!AUTHORITIES_LOCK_FILE.tryLock(false) && (System.currentTimeMillis() - time) < AUTHORITIES_LOCK_FILE_TIMEOUT_MS) {
             Thread.sleep(100)
         }
 
