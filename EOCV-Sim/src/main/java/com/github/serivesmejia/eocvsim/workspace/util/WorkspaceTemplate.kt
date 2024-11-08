@@ -28,9 +28,9 @@ import java.io.File
 
 abstract class WorkspaceTemplate {
 
-    val logger by loggerForThis()
-
     fun extractToIfEmpty(folder: File): Boolean {
+        val logger by loggerForThis()
+
         if(folder.isDirectory && folder.listFiles()!!.isEmpty()) {
             return try {
                 extractTo(folder)
