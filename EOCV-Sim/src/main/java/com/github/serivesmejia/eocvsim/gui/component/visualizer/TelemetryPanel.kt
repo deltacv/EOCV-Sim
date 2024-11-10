@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.gui.component.visualizer
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryTransmissionReceiver
 import java.awt.FlowLayout
+import java.awt.Font
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.GridLayout
@@ -44,6 +45,7 @@ class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
 
     init {
         border = TitledBorder("Telemetry").apply {
+            titleFont = titleFont.deriveFont(Font.BOLD)
             border = EmptyBorder(0, 0, 0, 0)
         }
 
