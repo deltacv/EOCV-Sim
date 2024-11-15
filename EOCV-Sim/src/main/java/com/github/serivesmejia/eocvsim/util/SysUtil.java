@@ -202,7 +202,10 @@ public class SysUtil {
         ArrayList<File> result = new ArrayList<>();
 
         if(parent.isDirectory()) {
-            for(File child : parent.listFiles()) {
+            File[] files = parent.listFiles();
+            if(files == null) return result;
+
+            for(File child : files) {
                 result.addAll(filesUnder(child, predicate));
             }
         } else if(parent.exists() && (predicate != null && predicate.test(parent))) {
@@ -226,7 +229,10 @@ public class SysUtil {
         if(!parent.exists()) return result;
 
         if(parent.isDirectory()) {
-            for(File f : parent.listFiles()) {
+            File[] files = parent.listFiles();
+            if(files == null) return result;
+
+            for(File f : files) {
                 if(predicate != null && predicate.test(f))
                     result.add(f);
             }
