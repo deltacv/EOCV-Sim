@@ -15,7 +15,7 @@ configurations.all {
 dependencies {
     implementation project(':Common')
 
-    api("com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version") {
+    api("org.deltacv:AprilTagDesktop:$apriltag_plugin_version") {
         transitive = false
     }
 
