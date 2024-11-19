@@ -68,10 +68,10 @@ public class SysUtil {
             return SystemArchitecture.X86_64;
         } else if(arch.contains("x86") || arch.contains("i38")) {
             return SystemArchitecture.X86_64;
-        } else if(arch.contains("arm")) {
-            return SystemArchitecture.ARMv7;
         } else if(arch.contains("arm64") || arch.contains("aarch")) {
             return SystemArchitecture.ARMv8;
+        } else if(arch.contains("arm")) {
+            return SystemArchitecture.ARMv7;
         }
 
         return SystemArchitecture.UNKNOWN;
@@ -267,12 +267,12 @@ public class SysUtil {
     public static boolean migrateFile(File oldFile, File newFile) {
         if(newFile.exists() || !oldFile.exists()) return false;
 
-        logger.info("Migrating old file " + oldFile.getAbsolutePath() + "  to " + newFile.getAbsolutePath());
+        logger.info("Migrating old file {}  to {}", oldFile.getAbsolutePath(), newFile.getAbsolutePath());
 
         try {
             Files.move(oldFile.toPath(), newFile.toPath());
         } catch (IOException e) {
-            logger.warn("Failed to migrate old file " + oldFile.getAbsolutePath());
+            logger.warn("Failed to migrate old file {}", oldFile.getAbsolutePath());
             return false;
         }
 

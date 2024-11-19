@@ -122,9 +122,8 @@ public class Configuration {
                 WebcamDriver.values()
         );
 
-        if(SysUtil.ARCH != SysUtil.SystemArchitecture.X86_64) {
-            preferredWebcamDriver.removeEnumOption(WebcamDriver.OpenIMAJ);
-        }
+        // we don't want OpenIMAJ anymore, disable it for legacy users
+        preferredWebcamDriver.removeEnumOption(WebcamDriver.OpenIMAJ);
 
         preferredWebcamDriver.setSelectedEnum(config.preferredWebcamDriver);
         inputSourcesPanel.add(preferredWebcamDriver);
