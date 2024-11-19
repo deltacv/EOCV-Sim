@@ -93,6 +93,12 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v3.8.4 - Maven Central Migration](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.4)
+- This is the 29th release for EOCV-Sim
+    - Migrates all of EOCV-Sim's artifacts to the maven central repository (bye bye JitPack)
+    - Bugfixes:
+        - Adds error checking at multiple points of the sim to handle simple edge cases that shouldn't cause an app crash
+  
 ## [v3.8.3 - Plugin Classloader major optimization](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.3)
 - This is the 28th release for EOCV-Sim
     - Improves plugin classloader classpath loading by caching and resource reusage, this brings an extremely noticeable performance boost for plugins that load a lot of class files from different Maven dependencies in a short amount of time (I'm looking at you Javalin)
