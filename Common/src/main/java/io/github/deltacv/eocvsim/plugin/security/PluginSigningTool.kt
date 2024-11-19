@@ -23,11 +23,8 @@
 
 package io.github.deltacv.eocvsim.plugin.security
 
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import com.moandjiezana.toml.Toml
-import io.github.deltacv.eocvsim.plugin.loader.PluginParser
 import picocli.CommandLine
 import java.io.File
 import java.security.KeyFactory
@@ -43,20 +40,19 @@ import java.util.zip.ZipEntry
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.zip.ZipOutputStream
-import kotlin.math.log
 import kotlin.system.exitProcess
 
 class PluginSigningTool : Runnable {
 
     val logger by loggerForThis()
 
-    @CommandLine.Option(names = ["-p", "--plugin"], description = ["The plugin JAR file to sign"], required = true)
+    @picocli.CommandLine.Option(names = ["-p", "--plugin"], description = ["The plugin JAR file to sign"], required = true)
     var pluginFile: String? = null
 
     @CommandLine.Option(names = ["-a", "--authority"], description = ["The authority to sign the plugin with"], required = true)
     var authority: String? = null
 
-    @CommandLine.Option(names = ["-k", "--key"], description = ["The private key file to sign the plugin with"], required = true)
+    @CommandLine.Option(names = ["-k", "--key"], description = ["The private key to sign the plugin with, can be both a file or a base64-encoded string"], required = true)
     var privateKeyFile: String? = null
 
     override fun run() {
@@ -83,8 +79,15 @@ class PluginSigningTool : Runnable {
         logger.info("Plugin signed successfully and saved")
     }
 
-    private fun loadPrivateKey(privateKeyPath: String): PrivateKey {
-        val keyBytes = File(privateKeyPath).readBytes()
+    private fun loadPrivateKey(privateKey: String): PrivateKey {
+        val privateKeyFile = File(privateKey)
+
+        val keyBytes = if(!privateKeyFile.exists()) {
+            Base64.getDecoder().decode(privateKey)
+        } else {
+            privateKeyFile.readBytes()
+        }
+
         val keyString = String(keyBytes)
         val decodedKey = Base64.getDecoder().decode(AuthorityFetcher.parsePem(keyString))
 
@@ -185,7 +188,7 @@ class PluginSigningTool : Runnable {
 
     private fun isPrivateKeyMatchingAuthority(publicKey: PublicKey, privateKey: PrivateKey): Boolean {
         // encrypt and decrypt a sample message to check if the keys match
-        val sampleMessage = PluginOutput.SPECIAL
+        val sampleMessage = "Hello, world!"
 
         val cipher = Cipher.getInstance("RSA")
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)

@@ -1,6 +1,5 @@
 package com.github.serivesmejia.eocvsim.util.extension
 
-import com.github.serivesmejia.eocvsim.util.SysUtil
 import java.security.MessageDigest
 
 /**
@@ -20,5 +19,5 @@ val Any.hashString get() = Integer.toHexString(hashCode())!!
 val String.hashString: String get() {
     val messageDigest = MessageDigest.getInstance("SHA-256")
     val hash = messageDigest.digest(toByteArray())
-    return SysUtil.byteArray2Hex(hash)
+    return byteArrayToHex(hash)
 }

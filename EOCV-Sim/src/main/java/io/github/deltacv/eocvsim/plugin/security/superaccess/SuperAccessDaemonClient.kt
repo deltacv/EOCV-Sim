@@ -24,7 +24,6 @@
 package io.github.deltacv.eocvsim.plugin.security.superaccess
 
 import com.github.serivesmejia.eocvsim.util.JavaProcess
-import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
@@ -32,7 +31,6 @@ import org.java_websocket.server.WebSocketServer
 import java.io.File
 import java.lang.Exception
 import java.net.InetSocketAddress
-import java.util.Random
 import java.util.concurrent.Executors
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantLock

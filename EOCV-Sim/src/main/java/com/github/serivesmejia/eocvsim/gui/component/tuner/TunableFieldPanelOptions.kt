@@ -25,7 +25,6 @@ package com.github.serivesmejia.eocvsim.gui.component.tuner
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
-import com.github.serivesmejia.eocvsim.gui.Icons
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import io.github.deltacv.vision.external.util.extension.cvtColor
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero

@@ -47,9 +47,9 @@ import kotlin.properties.Delegates
 class PluginManager(val eocvSim: EOCVSim) {
 
     companion object {
-        val PLUGIN_FOLDER = (EOCVSimFolder + File.separator + "plugins").apply { mkdir() }
-        val PLUGIN_CACHING_FOLDER = (PLUGIN_FOLDER + File.separator + "caching").apply { mkdir() }
-        val FILESYSTEMS_FOLDER = (PLUGIN_FOLDER + File.separator + "filesystems").apply { mkdir() }
+        val PLUGIN_FOLDER = io.github.deltacv.eocvsim.plugin.PLUGIN_FOLDER
+        val PLUGIN_CACHING_FOLDER = io.github.deltacv.eocvsim.plugin.PLUGIN_CACHING_FOLDER
+        val FILESYSTEMS_FOLDER = io.github.deltacv.eocvsim.plugin.FILESYSTEMS_FOLDER
 
         const val GENERIC_SUPERACCESS_WARN = "Plugins run in a restricted environment by default. <b>SuperAccess will grant full system access. Ensure you trust the authors before accepting.</b>"
         const val GENERIC_LAWYER_YEET = "<br><br>By accepting, you acknowledge that deltacv is not responsible for damages caused by third-party plugins."

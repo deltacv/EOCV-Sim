@@ -9,6 +9,8 @@ apply from: '../build.common.gradle'
 dependencies {
     api "org.openpnp:opencv:$opencv_version"
 
+    implementation "com.moandjiezana.toml:toml4j:$toml4j_version"
+    implementation "info.picocli:picocli:$picocli_version"
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 }

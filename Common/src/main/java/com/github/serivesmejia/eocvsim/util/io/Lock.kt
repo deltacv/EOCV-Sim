@@ -1,6 +1,5 @@
 package com.github.serivesmejia.eocvsim.util.io
 
-import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import java.io.File
 import java.io.RandomAccessFile
@@ -11,14 +10,6 @@ import java.nio.channels.FileLock
  * @param pathname the path of the file to lock
  */
 class LockFile(pathname: String) : File(pathname) {
-
-    companion object {
-        val POR_UNA_NOCHE = try {
-            SysUtil.loadResStr("/.lock")
-        } catch(ex: Exception) {
-            "lock"
-        }
-    }
 
     private var raf = RandomAccessFile(this, "rw")
 
@@ -45,7 +36,7 @@ class LockFile(pathname: String) : File(pathname) {
             throw IllegalArgumentException("Lock file cannot be a directory")
 
         if(!exists())
-            SysUtil.saveFileStr(this, POR_UNA_NOCHE)
+            createNewFile()
     }
 
     /**
