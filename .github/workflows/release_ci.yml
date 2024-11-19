@@ -1,4 +1,4 @@
-name: Create GitHub release(s)
+name: Maven Publish & Create GitHub Release(s)
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
         ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.JRELEASER_MAVENCENTRAL_PASSWORD }}
         ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
         ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
-      run: ./gradlew -Penv=release :Common:publishToMavenCentral :Vision:publishToMavenCentral :EOCV-Sim:publishToMavenCentral -x test shadowJar
+      run: ./gradlew -Penv=release :Common:publishToMavenCentral :Vision:publishToMavenCentral :EOCV-Sim:publishToMavenCentral -x test :EOCV-Sim:shadowJar
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}
 
     - name: Build release shadow jar with Gradle

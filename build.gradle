@@ -43,7 +43,7 @@ plugins {
 }
 
 allprojects {
-    group 'org.deltacv'
+    group 'org.deltacv.EOCV-Sim'
     version '3.8.4'
 
     apply plugin: 'java'
