@@ -29,6 +29,8 @@ import android.graphics.Rect;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class OpenCvViewRenderer
 {
@@ -66,6 +68,8 @@ public class OpenCvViewRenderer
     private volatile OpenCvCamera.ViewportRenderingPolicy renderingPolicy = OpenCvCamera.ViewportRenderingPolicy.MAXIMIZE_EFFICIENCY;
 
     private Bitmap bitmapFromMat;
+
+    private Logger logger = LoggerFactory.getLogger(OpenCvViewRenderer.class);
 
     public OpenCvViewRenderer(boolean renderingOffsceen, String fpsMeterDescriptor)
     {
@@ -255,7 +259,12 @@ public class OpenCvViewRenderer
         }
 
         //Convert that Mat to a bitmap we can render
-        Utils.matToBitmap(mat, bitmapFromMat, false);
+        try {
+            Utils.matToBitmap(mat, bitmapFromMat, false);
+        } catch(Exception ex) {
+            logger.warn("Failed to convert Mat to Bitmap", ex);
+            return;
+        }
         
         width = bitmapFromMat.getWidth();
         height = bitmapFromMat.getHeight();

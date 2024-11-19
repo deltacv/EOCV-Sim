@@ -33,7 +33,6 @@ import io.github.deltacv.steve.WebcamPropertyControl;
 import io.github.deltacv.steve.WebcamRotation;
 import io.github.deltacv.steve.opencv.OpenCvWebcam;
 import io.github.deltacv.steve.opencv.OpenCvWebcamBackend;
-import io.github.deltacv.steve.openimaj.OpenIMAJWebcamBackend;
 import io.github.deltacv.steve.openpnp.OpenPnpBackend;
 import io.github.deltacv.steve.openpnp.OpenPnpWebcam;
 import org.opencv.core.Mat;
@@ -124,8 +123,9 @@ public class CameraSource extends InputSource {
         if(webcamName != null) {
             if(eocvSim.getConfig().preferredWebcamDriver == WebcamDriver.OpenPnp) {
                 Webcam.Companion.setBackend(OpenPnpBackend.INSTANCE);
-            } else {
-                Webcam.Companion.setBackend(OpenIMAJWebcamBackend.INSTANCE);
+            } else if(eocvSim.getConfig().preferredWebcamDriver == WebcamDriver.OpenIMAJ) {
+                eocvSim.getConfig().preferredWebcamDriver = WebcamDriver.OpenPnp;
+                Webcam.Companion.setBackend(OpenPnpBackend.INSTANCE);
             }
 
             List<Webcam> webcams = Webcam.Companion.getAvailableWebcams();
@@ -239,12 +239,7 @@ public class CameraSource extends InputSource {
 
         if (size == null) size = lastFrame.size();
 
-
-        if(camera instanceof OpenPnpWebcam)
-            // we will look like the smurfs if we don't do this...
-            // (OpenPnpWebcam returns BGR instead of RGB, ugh, i should fix that)
-            Imgproc.cvtColor(newFrame, lastFrame, Imgproc.COLOR_BGR2RGB);
-        else newFrame.copyTo(lastFrame);
+        newFrame.copyTo(lastFrame);
 
         newFrame.release();
         newFrame.returnMat();

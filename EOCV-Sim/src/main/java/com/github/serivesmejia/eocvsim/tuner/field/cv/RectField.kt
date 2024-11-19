@@ -30,6 +30,7 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import org.opencv.core.Rect
 import org.openftc.easyopencv.OpenCvPipeline
 import java.lang.reflect.Field
+import javax.swing.SwingUtilities
 
 @RegisterTunableField
 class RectField(instance: Any, reflectionField: VirtualField, eocvSim: EOCVSim) :
@@ -89,8 +90,10 @@ class RectField(instance: Any, reflectionField: VirtualField, eocvSim: EOCVSim) 
     }
 
     override fun updateGuiFieldValues() {
-        for((i, value) in rect.withIndex()) {
-            fieldPanel.setFieldValue(i, value)
+        SwingUtilities.invokeLater {
+            for((i, value) in rect.withIndex()) {
+                fieldPanel.setFieldValue(i, value)
+            }
         }
     }
 

@@ -32,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
+import java.awt.Font
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.GridLayout
@@ -58,6 +59,7 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
         pipelinePanel.layout = GridBagLayout()
 
         pipelineSelectorPanel.border = TitledBorder("Pipelines").apply {
+            titleFont = titleFont.deriveFont(Font.BOLD)
             border = EmptyBorder(0, 0, 0, 0)
         }
 
@@ -73,6 +75,7 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
         })
 
         sourceSelectorPanel.border = TitledBorder("Sources").apply {
+            titleFont = titleFont.deriveFont(Font.BOLD)
             border = EmptyBorder(0, 0, 0, 0)
         }
 

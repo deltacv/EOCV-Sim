@@ -31,7 +31,6 @@ import io.github.deltacv.steve.Webcam;
 import io.github.deltacv.steve.WebcamRotation;
 import io.github.deltacv.steve.opencv.OpenCvWebcam;
 import io.github.deltacv.steve.opencv.OpenCvWebcamBackend;
-import io.github.deltacv.steve.openimaj.OpenIMAJWebcamBackend;
 import io.github.deltacv.steve.openpnp.OpenPnpBackend;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -94,6 +93,10 @@ public class CreateCameraSource {
     private boolean usingOpenCvDiscovery = false;
 
     public void initCreateImageSource() {
+        if(eocvSim.getConfig().preferredWebcamDriver == WebcamDriver.OpenIMAJ) {
+            eocvSim.getConfig().preferredWebcamDriver = WebcamDriver.OpenPnp;
+        }
+
         WebcamDriver preferredDriver = eocvSim.getConfig().preferredWebcamDriver;
 
         if(preferredDriver == WebcamDriver.OpenPnp) {
@@ -102,28 +105,6 @@ public class CreateCameraSource {
                 webcams = Webcam.Companion.getAvailableWebcams();
             } catch (Throwable e) {
                 logger.error("OpenPnp failed to discover cameras with error", e);
-            }
-        } else if(preferredDriver == WebcamDriver.OpenIMAJ) {
-            try {
-                Webcam.Companion.setBackend(OpenIMAJWebcamBackend.INSTANCE);
-                webcams = Webcam.Companion.getAvailableWebcams();
-            } catch (Throwable e) {
-                logger.error("OpenIMAJ failed to discover cameras with error", e);
-                logger.warn("OpenIMAJ is unusable, falling back to OpenCV webcam discovery");
-
-                Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);
-                webcams = Webcam.Companion.getAvailableWebcams();
-
-                usingOpenCvDiscovery = true;
-            }
-
-            if (!usingOpenCvDiscovery && webcams.isEmpty()) {
-                logger.warn("OpenIMAJ returned 0 cameras, trying with OpenCV webcam discovery");
-
-                Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);
-                webcams = Webcam.Companion.getAvailableWebcams();
-
-                usingOpenCvDiscovery = true;
             }
         } else {
             Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);

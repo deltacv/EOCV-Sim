@@ -68,10 +68,10 @@ public class SysUtil {
             return SystemArchitecture.X86_64;
         } else if(arch.contains("x86") || arch.contains("i38")) {
             return SystemArchitecture.X86_64;
-        } else if(arch.contains("arm")) {
-            return SystemArchitecture.ARMv7;
         } else if(arch.contains("arm64") || arch.contains("aarch")) {
             return SystemArchitecture.ARMv8;
+        } else if(arch.contains("arm")) {
+            return SystemArchitecture.ARMv7;
         }
 
         return SystemArchitecture.UNKNOWN;
@@ -202,7 +202,10 @@ public class SysUtil {
         ArrayList<File> result = new ArrayList<>();
 
         if(parent.isDirectory()) {
-            for(File child : parent.listFiles()) {
+            File[] files = parent.listFiles();
+            if(files == null) return result;
+
+            for(File child : files) {
                 result.addAll(filesUnder(child, predicate));
             }
         } else if(parent.exists() && (predicate != null && predicate.test(parent))) {
@@ -226,7 +229,10 @@ public class SysUtil {
         if(!parent.exists()) return result;
 
         if(parent.isDirectory()) {
-            for(File f : parent.listFiles()) {
+            File[] files = parent.listFiles();
+            if(files == null) return result;
+
+            for(File f : files) {
                 if(predicate != null && predicate.test(f))
                     result.add(f);
             }
@@ -261,12 +267,12 @@ public class SysUtil {
     public static boolean migrateFile(File oldFile, File newFile) {
         if(newFile.exists() || !oldFile.exists()) return false;
 
-        logger.info("Migrating old file " + oldFile.getAbsolutePath() + "  to " + newFile.getAbsolutePath());
+        logger.info("Migrating old file {}  to {}", oldFile.getAbsolutePath(), newFile.getAbsolutePath());
 
         try {
             Files.move(oldFile.toPath(), newFile.toPath());
         } catch (IOException e) {
-            logger.warn("Failed to migrate old file " + oldFile.getAbsolutePath());
+            logger.warn("Failed to migrate old file {}", oldFile.getAbsolutePath());
             return false;
         }
 

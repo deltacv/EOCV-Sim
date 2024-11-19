@@ -31,6 +31,7 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.opencv.core.Scalar;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import javax.swing.*;
 import java.util.Arrays;
 
 @RegisterTunableField
@@ -81,9 +82,11 @@ public class ScalarField extends TunableField<Scalar> {
 
     @Override
     public void updateGuiFieldValues() {
-        for (int i = 0; i < scalar.val.length; i++) {
-            fieldPanel.setFieldValue(i, scalar.val[i]);
-        }
+        SwingUtilities.invokeLater(() -> {
+            for (int i = 0; i < scalar.val.length; i++) {
+                fieldPanel.setFieldValue(i, scalar.val[i]);
+            }
+        });
     }
 
     @Override

@@ -76,7 +76,16 @@ public class InputSourceManager {
         createDefaultImgInputSource("/images/ug_1.jpg", "ug_eocvsim_1.jpg", "Ultimate Goal 1 Ring", size);
         createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size);
 
-        setInputSource("Ultimate Goal 4 Ring", true);
+        if(sources.isEmpty()) {
+            logger.warn("No input sources found, creating default source");
+
+            NullSource nullSource = new NullSource();
+            nullSource.isDefault = true;
+
+            addInputSource("Default", nullSource);
+        } else {
+            setInputSource("Ultimate Goal 4 Ring", true);
+        }
 
         inputSourceLoader.loadInputSourcesFromFile();
 
@@ -97,7 +106,7 @@ public class InputSourceManager {
 
             addInputSource(sourceName, src);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error while creating default image input source", e);
         }
     }
 
@@ -281,6 +290,8 @@ public class InputSourceManager {
     }
 
     public void pauseIfImage() {
+        if(currentInputSource == null) return;
+
         //if the new input source is an image, we will pause the next frame
         //to execute one shot analysis on images and save resources.
         if (SourceType.fromClass(currentInputSource.getClass()) == SourceType.IMAGE) {

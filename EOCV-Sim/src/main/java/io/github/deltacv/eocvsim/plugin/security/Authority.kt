@@ -82,26 +82,32 @@ object AuthorityFetcher {
         if (AUTHORITIES_FILE.exists() && tryLockAuthoritiesFile()) {
             try {
                 val authoritiesToml = Toml().read(AUTHORITIES_FILE)
-                val authorityData = authoritiesToml.getTable(name)
-                val authorityPublicKey = authorityData?.getString("public")
-                val fetchedTime = authorityData?.getLong("timestamp")
+                val timestamp = authoritiesToml.getLong("timestamp")
 
-                // Check if the fetched time is valid and within the TTL
-                if (authorityPublicKey != null && fetchedTime != null &&
-                    System.currentTimeMillis() - fetchedTime < TTL_DURATION_MS) {
+                if(System.currentTimeMillis() - timestamp > TTL_DURATION_MS) {
+                    AUTHORITIES_FILE.delete()
+                } else {
+                    val authorityData = authoritiesToml.getTable(name)
+                    val authorityPublicKey = authorityData?.getString("public")
+                    val fetchedTime = authorityData?.getLong("timestamp")
 
-                    val authority = Authority(name, parsePublicKey(authorityPublicKey))
-                    cache[name] = CachedAuthority(authority, fetchedTime)
+                    // Check if the fetched time is valid and within the TTL
+                    if (authorityPublicKey != null && fetchedTime != null &&
+                        System.currentTimeMillis() - fetchedTime < TTL_DURATION_MS
+                    ) {
+                        val authority = Authority(name, parsePublicKey(authorityPublicKey))
+                        cache[name] = CachedAuthority(authority, fetchedTime)
 
-                    return authority
+                        return authority
+                    }
                 }
             } catch (e: Exception) {
                 logger.error("Failed to read authorities file", e)
                 AUTHORITIES_FILE.delete()
+            } finally {
+                AUTHORITIES_LOCK_FILE.unlock()
             }
         }
-
-        AUTHORITIES_LOCK_FILE.unlock()
 
         // Fetch the authority from the server
         val authorityUrl = "${AUTHORITY_SERVER_URL.trim('/')}/$name"
@@ -159,6 +165,8 @@ object AuthorityFetcher {
             if (AUTHORITIES_FILE.exists()) {
                 val existingToml = AUTHORITIES_FILE.readText()
                 sb.append(existingToml)
+            } else {
+                sb.append("timestamp = ${System.currentTimeMillis()}\n")
             }
 
             // Append new authority information
@@ -180,7 +188,7 @@ object AuthorityFetcher {
 
         logger.info("Trying to lock authorities file")
 
-        while(!AUTHORITIES_LOCK_FILE.tryLock(false) && System.currentTimeMillis() - time < AUTHORITIES_LOCK_FILE_TIMEOUT_MS) {
+        while(!AUTHORITIES_LOCK_FILE.tryLock(false) && (System.currentTimeMillis() - time) < AUTHORITIES_LOCK_FILE_TIMEOUT_MS) {
             Thread.sleep(100)
         }
 

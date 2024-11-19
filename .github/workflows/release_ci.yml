@@ -20,6 +20,15 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
 
+    - name: Publish package to maven central
+      env:
+        ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
+        ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.JRELEASER_MAVENCENTRAL_PASSWORD }}
+        ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
+        ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
+      run: ./gradlew -Penv=release :Common:publishToMavenCentral :Vision:publishToMavenCentral :EOCV-Sim:publishToMavenCentral -x test shadowJar
+      if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+
     - name: Build release shadow jar with Gradle
       run: ./gradlew -Penv=release shadowJar -x test
       if: ${{ startsWith(github.ref, 'refs/tags/v') }}

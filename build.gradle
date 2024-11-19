@@ -4,7 +4,7 @@ import java.time.format.DateTimeFormatter
 
 buildscript {
     ext {
-        kotlin_version = "1.9.0"
+        kotlin_version = "1.9.20"
         kotlinx_coroutines_version = "1.5.0-native-mt"
         slf4j_version = "2.0.16"
         log4j_version = "2.24.1"
@@ -43,8 +43,8 @@ plugins {
 }
 
 allprojects {
-    group 'com.github.deltacv'
-    version '3.8.3'
+    group 'org.deltacv'
+    version '3.8.4'
 
     apply plugin: 'java'
 
@@ -64,8 +64,6 @@ allprojects {
         google()
 
         maven { url "https://jitpack.io" }
-        maven { url 'https://maven.openimaj.org/' }
-        maven { url 'https://maven.ecs.soton.ac.uk/content/repositories/thirdparty/' }
         maven { url "https://maven.pkg.jetbrains.space/public/p/compose/dev" }
     }
 

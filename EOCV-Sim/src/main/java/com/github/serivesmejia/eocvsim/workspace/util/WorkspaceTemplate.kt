@@ -23,13 +23,21 @@
 
 package com.github.serivesmejia.eocvsim.workspace.util
 
+import com.github.serivesmejia.eocvsim.util.loggerForThis
 import java.io.File
 
 abstract class WorkspaceTemplate {
 
     fun extractToIfEmpty(folder: File): Boolean {
+        val logger by loggerForThis()
+
         if(folder.isDirectory && folder.listFiles()!!.isEmpty()) {
-            return extractTo(folder)
+            return try {
+                extractTo(folder)
+            } catch(e: Exception) {
+                logger.error("Error while extracting workspace template to $folder", e)
+                false
+            }
         }
 
         return false
