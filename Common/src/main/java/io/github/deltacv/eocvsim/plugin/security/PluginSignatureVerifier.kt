@@ -70,7 +70,7 @@ object PluginSignatureVerifier {
             }
 
             val signatureToml = zip.getInputStream(signatureEntry).bufferedReader()
-            val signature = com.moandjiezana.toml.Toml().read(signatureToml)
+            val signature = Toml().read(signatureToml)
 
             val authorityName = signature.getString("authority")
             if (authorityName == null) {

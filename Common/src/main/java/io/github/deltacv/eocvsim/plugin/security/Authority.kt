@@ -141,7 +141,7 @@ object AuthorityFetcher {
         val authoritiesToml = com.moandjiezana.toml.Toml().read(AUTHORITIES_FILE)
         val timestamp = authoritiesToml.getLong("timestamp")
 
-        if(currentTime - timestamp > TTL_DURATION_MS) {
+        if(timestamp != null && currentTime - timestamp > TTL_DURATION_MS) {
             AUTHORITIES_FILE.delete()
             logger.info("Authorities file has expired, clearing cache")
             cache.clear()
