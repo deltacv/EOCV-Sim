@@ -407,7 +407,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
-        if(!config.flags.contains("showIAmA") || config.flags["showIAmA"] == true) {
+        if(!config.flags.contains("hasShownIamA") || config.flags["hasShownIamA"] == false) {
             DialogFactory.createIAmA(visualizer)
         }
 

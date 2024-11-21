@@ -100,7 +100,7 @@ class IAmAPaperVision(
         buttonsPanel.alignmentX = JPanel.CENTER_ALIGNMENT // Align the panel in the BoxLayout
         dialog.contentPane.add(buttonsPanel)
 
-        visualizer.eocvSim.config.flags["showIAmA"] = false
+        visualizer.eocvSim.config.flags["hasShownIamA"] = true
 
         dialog.isVisible = true
     }
