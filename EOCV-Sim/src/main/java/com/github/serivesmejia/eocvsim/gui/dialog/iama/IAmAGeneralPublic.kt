@@ -38,10 +38,9 @@ class IAmAGeneralPublic(
         val contentText = """
             <b>Hey there! EOCV-Sim is a tool that acts as a vision development platform.</b><br><br>
             Built from the ground up to use the OpenCV interfaces with Java bindings,<br>
-            EOCV-Sim allows you to develop vision pipelines with tools that help you iterate<br>
-            and visualize your code changes quickly in an easy-to-use minimalistic interface.<br><br>
+            EOCV-Sim allows you to develop vision pipelines, with tools that help you iterate<br>
+            and visualize your code changes quickly, in an easy-to-use interface.<br><br>
             <b>Click on "Open Docs"</b> to learn more about EOCV-Sim and its features.<br>
-            Come back and <b>click on "Next"</b> to hear about PaperVision...<br>
         """.trimIndent()
 
         // Add a descriptive JLabel to the contents panel

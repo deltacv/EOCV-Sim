@@ -41,7 +41,6 @@ class IAmAFirstRobotics(
             Work with code identical to the FtcRobotController, iterate with tools like the<br>
             variable tuner, and quickly visualize your code changes using workspaces.<br><br>
             <b>Click on "Open Docs"</b> to learn more about EOCV-Sim and workspaces.<br>
-            Come back and <b>click on "Next"</b> to hear about PaperVision...<br>
         """.trimIndent()
 
         // Add a descriptive JLabel to the contents panel

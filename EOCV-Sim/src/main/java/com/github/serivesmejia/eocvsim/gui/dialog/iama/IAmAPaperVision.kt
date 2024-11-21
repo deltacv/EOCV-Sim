@@ -82,10 +82,48 @@ class IAmAPaperVision(
 
             add(Box.createHorizontalGlue()) // Align the button to the right
 
-            add(JButton("Close").apply {
+            add(JButton("Use PaperVision").apply {
                 addActionListener {
-                    // Handle the next button click here
                     dialog.dispose() // Close the dialog on click
+
+                    // if the user prefers PaperVision, switch to it upon start up
+                    val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
+                    if(indexOfTab >= 0) {
+                        visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
+                    }
+
+                    fun openPaperVisionByDefault() {
+                        visualizer.eocvSim.config.flags["prefersPaperVision"] = true
+                    }
+
+                    if(specificallyInterested) {
+                        openPaperVisionByDefault()
+
+                        JOptionPane.showConfirmDialog(
+                            parent,
+                            "From now on, EOCV-Sim will focus on PaperVision upon startup.\nYou can change this in the settings.",
+                            "PaperVision",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE
+                        )
+                    } else {
+                        JOptionPane.showOptionDialog(
+                            parent,
+                            "Would you like to focus on PaperVision by default?\nThis is useful if you're not interested on the other tools.\nYou can change this in the settings.",
+                            "PaperVision",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            arrayOf("Yes", "No"),
+                            "No"
+                        ).let {
+                            if(it == JOptionPane.YES_OPTION) {
+                                openPaperVisionByDefault()
+                            } else {
+                                visualizer.eocvSim.config.flags["prefersPaperVision"] = false
+                            }
+                        }
+                    }
                 }
             })
 
@@ -102,48 +140,10 @@ class IAmAPaperVision(
                 add(Box.createHorizontalStrut(10)) // Add some space between the buttons
             }
 
-            add(JButton("Use PaperVision").apply {
+            add(JButton("Close").apply {
                 addActionListener {
+                    // Handle the next button click here
                     dialog.dispose() // Close the dialog on click
-
-                    // if the user prefers PaperVision, switch to it upon start up
-                    val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
-                    if(indexOfTab >= 0) {
-                        visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
-                    }
-
-                    fun openPaperVisionByDefault() {
-                        visualizer.eocvSim.config.flags["prefersPaperVision"] = true
-
-                        JOptionPane.showConfirmDialog(
-                            parent,
-                            "From now on, EOCV-Sim will focus on PaperVision upon startup.\nYou can change this in the settings.",
-                            "PaperVision",
-                            JOptionPane.DEFAULT_OPTION,
-                            JOptionPane.INFORMATION_MESSAGE
-                        )
-                    }
-
-                    if(specificallyInterested) {
-                        openPaperVisionByDefault()
-                    } else {
-                        JOptionPane.showOptionDialog(
-                            parent,
-                            "Would you like to focus on PaperVision by default?\nThis is useful if you're not interested on the other pipeline development tools.",
-                            "PaperVision",
-                            JOptionPane.YES_NO_OPTION,
-                            JOptionPane.QUESTION_MESSAGE,
-                            null,
-                            arrayOf("Yes", "No"),
-                            "No"
-                        ).let {
-                            if(it == JOptionPane.YES_OPTION) {
-                                openPaperVisionByDefault()
-                            } else {
-                                visualizer.eocvSim.config.flags["prefersPaperVision"] = false
-                            }
-                        }
-                    }
                 }
             })
 

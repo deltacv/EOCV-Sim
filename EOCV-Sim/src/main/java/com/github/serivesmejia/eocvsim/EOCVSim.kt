@@ -290,6 +290,27 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         workspaceManager.init()
 
+        visualizer.onInitFinished {
+            // SHOW WELCOME DIALOGS TO NEW USERS
+
+            if(!config.flags.contains("hasShownIamA") || config.flags["hasShownIamA"] == false) {
+                // Initial dialog to introduce our cool stuff to the user
+                DialogFactory.createIAmA(visualizer)
+            } else if(!config.flags.contains("hasShownIamPaperVision") || config.flags["hasShownIamPaperVision"] == false) {
+                // sometimes the users might miss the PaperVision dialog after the IAmA dialog
+                // so we show it here if the user hasn't seen it yet
+                DialogFactory.createIAmAPaperVision(visualizer, false)
+            } else if(config.flags["prefersPaperVision"] == true) {
+                // if the user prefers PaperVision, switch to it upon start up
+                val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
+                if(indexOfTab >= 0) {
+                    visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
+                }
+            }
+
+            // END OF WELCOME DIALOGS
+        }
+
         visualizer.initAsync(configManager.config.simTheme) //create gui in the EDT
 
         inputSourceManager.init() //loading user created input sources
@@ -406,18 +427,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
         }
 
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
-
-        if(!config.flags.contains("hasShownIamA") || config.flags["hasShownIamA"] == false) {
-            DialogFactory.createIAmA(visualizer)
-        } else if(!config.flags.contains("hasShownIamPaperVision") || config.flags["hasShownIamPaperVision"] == false) {
-            DialogFactory.createIAmAPaperVision(visualizer, false) // in case the user missed the PaperVision dialog
-        } else if(config.flags["prefersPaperVision"] == true) {
-            // if the user prefers PaperVision, switch to it upon start up
-            val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
-            if(indexOfTab >= 0) {
-                visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
-            }
-        }
 
         while (!eocvSimThread.isInterrupted && !destroying) {
             //run all pending requested runnables
