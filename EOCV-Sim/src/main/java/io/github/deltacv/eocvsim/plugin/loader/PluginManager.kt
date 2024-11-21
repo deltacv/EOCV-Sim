@@ -57,7 +57,11 @@ class PluginManager(val eocvSim: EOCVSim) {
 
     val logger by loggerForThis()
 
-    val superAccessDaemonClient = SuperAccessDaemonClient()
+    val superAccessDaemonClient by lazy {
+        SuperAccessDaemonClient(
+            autoacceptOnTrusted = eocvSim.config.autoAcceptSuperAccessOnTrusted
+        )
+    }
 
     private val _loadedPluginHashes = mutableListOf<String>()
     val loadedPluginHashes get() = _loadedPluginHashes.toList()
@@ -269,6 +273,8 @@ class PluginManager(val eocvSim: EOCVSim) {
         haltLock.withLock {
             haltCondition.await()
         }
+
+        appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginName} v${loader.pluginVersion} was ${if(access) "granted" else "denied"}")
 
         return access
     }

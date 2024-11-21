@@ -67,6 +67,8 @@ public class Config {
     @Deprecated
     public volatile List<String> superAccessPluginHashes = new ArrayList<>();
 
+    public volatile boolean autoAcceptSuperAccessOnTrusted = true;
+
     public volatile HashMap<String, Boolean> flags = new HashMap<>();
 
     public boolean hasFlag(String flagName) {

@@ -218,7 +218,11 @@ class PluginLoader(
         }
 
         pluginClass = pluginClassLoader.loadClassStrict(pluginToml.getString("main"))
-        plugin = pluginClass.getConstructor().newInstance() as EOCVSimPlugin
+        plugin = try {
+            pluginClass.getConstructor().newInstance() as EOCVSimPlugin
+        } catch(e: Throwable) {
+            throw InvalidPluginException("Failed to instantiate plugin class ${pluginClass.name}. Make sure your plugin class has a public no-args constructor.")
+        }
 
         plugin.onLoad()
 

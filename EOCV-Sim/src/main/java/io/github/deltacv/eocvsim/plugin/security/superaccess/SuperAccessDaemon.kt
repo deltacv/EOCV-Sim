@@ -41,7 +41,9 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.io.File
 import java.lang.Exception
+import java.lang.Thread.sleep
 import java.net.URI
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.zip.ZipFile
 import javax.swing.SwingUtilities
@@ -73,29 +75,30 @@ object SuperAccessDaemon {
 
     val SUPERACCESS_FILE = PluginManager.PLUGIN_CACHING_FOLDER + File.separator + "superaccess.txt"
 
-    private val access = mutableMapOf<String, Boolean>()
+    private val access = ConcurrentHashMap<String, Boolean>()
 
     @JvmStatic
     fun main(args: Array<String>) {
-        if(args.isEmpty()) {
-            logger.error("Port is required.")
-            return
+        if(args.size < 2) {
+            logger.error("Usage: <port> <autoAcceptOnTrusted (true/false)>")
+            exitProcess(-1)
         }
-        if(args.size > 1) {
+        if(args.size > 2) {
             logger.warn("Ignoring extra arguments.")
         }
 
         System.setProperty("sun.java2d.d3d", "false")
 
-        WsClient(args[0].toIntOrNull() ?: throw IllegalArgumentException("Port is not a valid int")).connect()
+        WsClient(args[0].toIntOrNull() ?: throw IllegalArgumentException("Port is not a valid int"), args[1].toBoolean()).connect()
     }
 
-    class WsClient(port: Int) : WebSocketClient(URI("ws://localhost:$port")) {
+    class WsClient(port: Int, val autoacceptTrusted: Boolean) : WebSocketClient(URI("ws://localhost:$port")) {
 
         private val executor = Executors.newFixedThreadPool(4)
 
         override fun onOpen(p0: ServerHandshake?) {
-            logger.info("SuperAccessDaemon connection opened")
+            logger.info("SuperAccessDaemon connection opened.")
+            logger.info("Autoaccept on trusted: $autoacceptTrusted")
         }
 
         override fun onMessage(msg: String) {
@@ -164,21 +167,32 @@ object SuperAccessDaemon {
                 warning += "<br><br><i>$reason</i>"
             }
 
+            // helper function to grant access, avoid code duplication
+            fun grant() {
+                SUPERACCESS_FILE.appendText(pluginFile.fileHash() + "\n")
+                accessGranted(message.id, message.pluginPath)
+            }
+
             warning += if(validAuthority != null) {
-                "<br><br>This plugin has been digitally signed by <b>${validAuthority.name}</b>, ensuring its integrity and authenticity.<br><b>${validAuthority.name}</b> is a trusted authority in the EOCV-Sim ecosystem."
+                "<br><br>This plugin has been digitally signed by <b>${validAuthority.name}</b>.<br>It is a trusted authority in the EOCV-Sim ecosystem."
             } else if(untrusted) {
-                "<br><br>This plugin claims to be made by trusted authority <b>${parser.pluginAuthor}</b>, but it has not been digitally signed by them.<br><h2>Beware of potential security risks.</h2>"
+                "<br><br>This plugin claims to be made by <b>${parser.pluginAuthor}</b>, but it has not been digitally signed by them.<br><h2>Beware of potential security risks.</h2>"
             } else {
                 GENERIC_LAWYER_YEET
             }
 
             warning += "</html>"
 
+            if(validAuthority != null && autoacceptTrusted) {
+                grant()
+                logger.info("Granted automatic SuperAccess to $name. The plugin has been signed by ${validAuthority.name}")
+                return
+            }
+
             SwingUtilities.invokeLater {
-                SuperAccessRequest(name, warning, validAuthority == null || untrusted) { granted ->
+                SuperAccessRequest(name, warning, validAuthority == null) { granted ->
                     if(granted) {
-                        SUPERACCESS_FILE.appendText(pluginFile.fileHash() + "\n")
-                        accessGranted(message.id, message.pluginPath)
+                        grant()
                     } else {
                         accessDenied(message.id, message.pluginPath)
                     }

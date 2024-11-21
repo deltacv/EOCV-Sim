@@ -92,7 +92,7 @@ class PluginSigningTool : Runnable {
             privateKeyFile.readBytes()
         }
 
-        val keyString = String(keyBytes)
+        val keyString = String(keyBytes, Charsets.UTF_8)
         val decodedKey = Base64.getDecoder().decode(AuthorityFetcher.parsePem(keyString))
 
         val keySpec = PKCS8EncodedKeySpec(decodedKey)

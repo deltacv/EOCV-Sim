@@ -44,10 +44,11 @@ public class Configuration {
     private final EOCVSim eocvSim;
     public JPanel contents = new JPanel(new GridBagLayout());
     public JComboBox<String> themeComboBox = new JComboBox<>();
+    public JCheckBox superAccessCheckBox = new JCheckBox("Auto Accept SuperAccess on Trusted Plugins");
 
     public JButton acceptButton = new JButton("Accept");
 
-    public JCheckBox pauseOnImageCheckBox = new JCheckBox();
+    public JCheckBox pauseOnImageCheckBox = new JCheckBox("Pause with Image Sources");
 
     public EnumComboBox<PipelineTimeout> pipelineTimeoutComboBox = null;
     public EnumComboBox<PipelineFps> pipelineFpsComboBox = null;
@@ -81,7 +82,7 @@ public class Configuration {
         UI TAB
          */
 
-        JPanel uiPanel = new JPanel(new GridLayout(1, 1, 1, 8));
+        JPanel uiPanel = new JPanel(new GridLayout(2, 1, 1, 8));
 
         /* THEME SETTING */
         JPanel themePanel = new JPanel(new FlowLayout());
@@ -98,6 +99,16 @@ public class Configuration {
         themePanel.add(this.themeComboBox);
         uiPanel.add(themePanel);
 
+        /* AUTO ACCEPT SUPERACCESS ON TRUSTED PLUGINS */
+
+        JPanel superAccessPanel = new JPanel(new FlowLayout());
+
+        superAccessCheckBox.setSelected(config.autoAcceptSuperAccessOnTrusted);
+
+        superAccessPanel.add(superAccessCheckBox);
+
+        uiPanel.add(superAccessPanel);
+
         tabbedPane.addTab("Interface", uiPanel);
 
         /*
@@ -107,12 +118,10 @@ public class Configuration {
 
         /* PAUSE WITH IMAGE SOURCES OPTION */
         JPanel pauseOnImagePanel = new JPanel(new FlowLayout());
-        JLabel pauseOnImageLabel = new JLabel("Pause with Image Sources");
 
         pauseOnImageCheckBox.setSelected(config.pauseOnImages);
 
         pauseOnImagePanel.add(pauseOnImageCheckBox);
-        pauseOnImagePanel.add(pauseOnImageLabel);
 
         inputSourcesPanel.add(pauseOnImagePanel);
 
@@ -215,6 +224,7 @@ public class Configuration {
         config.pipelineMaxFps = pipelineFpsComboBox.getSelectedEnum();
         config.videoRecordingSize = videoRecordingSize.getCurrentSize();
         config.videoRecordingFps = videoRecordingFpsComboBox.getSelectedEnum();
+        config.autoAcceptSuperAccessOnTrusted = superAccessCheckBox.isSelected();
 
         eocvSim.configManager.saveToFile(); //update config file
 
