@@ -61,7 +61,7 @@ public class Visualizer {
     public final ArrayList<JFrame> childFrames = new ArrayList<>();
     public final ArrayList<JDialog> childDialogs = new ArrayList<>();
 
-    private final EOCVSim eocvSim;
+    public final EOCVSim eocvSim;
     public JFrame frame;
 
     public SwingOpenCvViewport viewport = null;
@@ -156,7 +156,7 @@ public class Visualizer {
         /*
          * TOP MENU BAR
          */
-        
+
         frame.setJMenuBar(menuBar);
 
         /*
@@ -471,7 +471,7 @@ public class Visualizer {
             apwd.subMsg = subMsg;
             apwd.cancelBtt = cancelBtt;
         }
-        
+
         if(size == null) size = new Dimension(400, 200);
         dialog.setSize(size);
 

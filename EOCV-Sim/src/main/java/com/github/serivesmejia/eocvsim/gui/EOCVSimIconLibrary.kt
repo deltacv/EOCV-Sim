@@ -25,4 +25,8 @@ object EOCVSimIconLibrary {
 
     val icoColorPickPointer by icon("ico_colorpick_pointer", "/images/icon/ico_colorpick_pointer.png")
 
+    val icoFirstRobotics by icon("ico_first_robotics", "/images/icon/ico_firstrobotics.png", false)
+    val icoPaperVision by icon("ico_paper_vision", "/images/icon/ico_ezv.png", false)
+    val icoUser by icon("ico_user", "/images/icon/ico_user.png")
+
 }

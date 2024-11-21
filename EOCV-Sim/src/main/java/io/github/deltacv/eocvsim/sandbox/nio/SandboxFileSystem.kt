@@ -36,9 +36,10 @@ class SandboxFileSystem(loader: PluginLoader) : FileSystem() {
 
     init {
         logger.info("Loading filesystem ${loader.hash()}")
+
         Runtime.getRuntime().addShutdownHook(Thread {
             if(isOpen) {
-                logger.info("Unloading filesystem ${loader.hash()} on shutdown")
+                logger.info("SHUTDOWN - Unloading filesystem ${loader.hash()}")
                 close()
             }
         })

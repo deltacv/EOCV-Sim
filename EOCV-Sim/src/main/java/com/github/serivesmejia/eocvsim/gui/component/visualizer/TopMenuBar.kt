@@ -198,6 +198,13 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         mHelpMenu.add(helpExportLogs)
 
+        mHelpMenu.addSeparator()
+
+        val helpIAmA = JMenuItem("I am a...")
+        helpIAmA.addActionListener { DialogFactory.createIAmA(eocvSim.visualizer) }
+
+        mHelpMenu.add(helpIAmA)
+
         val helpAbout = JMenuItem("About")
         helpAbout.addActionListener { DialogFactory.createAboutDialog(eocvSim) }
 

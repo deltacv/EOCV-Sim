@@ -407,6 +407,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
+        if(!config.flags.contains("showIAmA") || config.flags["showIAmA"] == true) {
+            DialogFactory.createIAmA(visualizer)
+        }
+
         while (!eocvSimThread.isInterrupted && !destroying) {
             //run all pending requested runnables
             onMainUpdate.run()

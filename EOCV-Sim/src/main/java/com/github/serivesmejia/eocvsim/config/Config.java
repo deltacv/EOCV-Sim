@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Config {
-    public volatile Theme simTheme = Theme.Light;
+    public volatile Theme simTheme = Theme.Dark;
 
     @Deprecated
     public volatile double zoom = 1;
