@@ -44,7 +44,7 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
     val pipelineWorkspaceBtt = JButton("Workspace")
 
     val workspaceButtonsPanel = JPanel(GridBagLayout())
-    val pipelineCompileBtt = JButton("Build java files")
+    val pipelineCompileBtt = JButton("Build Java Files")
 
     private var lastWorkspacePopup: PopupX? = null
 

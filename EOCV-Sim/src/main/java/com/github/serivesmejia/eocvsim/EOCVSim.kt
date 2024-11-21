@@ -409,6 +409,14 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         if(!config.flags.contains("hasShownIamA") || config.flags["hasShownIamA"] == false) {
             DialogFactory.createIAmA(visualizer)
+        } else if(!config.flags.contains("hasShownIamPaperVision") || config.flags["hasShownIamPaperVision"] == false) {
+            DialogFactory.createIAmAPaperVision(visualizer, false) // in case the user missed the PaperVision dialog
+        } else if(config.flags["prefersPaperVision"] == true) {
+            // if the user prefers PaperVision, switch to it upon start up
+            val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
+            if(indexOfTab >= 0) {
+                visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
+            }
         }
 
         while (!eocvSimThread.isInterrupted && !destroying) {

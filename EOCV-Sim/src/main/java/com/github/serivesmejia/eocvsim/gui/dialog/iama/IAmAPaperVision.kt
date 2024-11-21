@@ -15,13 +15,15 @@ import javax.swing.JButton
 import javax.swing.JDialog
 import javax.swing.JFrame
 import javax.swing.JLabel
+import javax.swing.JOptionPane
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 class IAmAPaperVision(
     parent: JFrame,
     visualizer: Visualizer,
-    specificallyInterested: Boolean = false
+    specificallyInterested: Boolean = false,
+    showWorkspacesButton: Boolean = true
 ) {
 
     companion object {
@@ -89,7 +91,7 @@ class IAmAPaperVision(
 
             add(Box.createHorizontalStrut(10)) // Add some space between the buttons
 
-            if(!specificallyInterested) {
+            if(!specificallyInterested && showWorkspacesButton) {
                 add(JButton("Use Workspaces Instead").apply {
                     addActionListener {
                         dialog.dispose() // Close the dialog on click
@@ -103,7 +105,45 @@ class IAmAPaperVision(
             add(JButton("Use PaperVision").apply {
                 addActionListener {
                     dialog.dispose() // Close the dialog on click
-                    visualizer.pipelineOpModeSwitchablePanel.selectedIndex = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
+
+                    // if the user prefers PaperVision, switch to it upon start up
+                    val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
+                    if(indexOfTab >= 0) {
+                        visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
+                    }
+
+                    fun openPaperVisionByDefault() {
+                        visualizer.eocvSim.config.flags["prefersPaperVision"] = true
+
+                        JOptionPane.showConfirmDialog(
+                            parent,
+                            "From now on, EOCV-Sim will focus on PaperVision upon startup.\nYou can change this in the settings.",
+                            "PaperVision",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE
+                        )
+                    }
+
+                    if(specificallyInterested) {
+                        openPaperVisionByDefault()
+                    } else {
+                        JOptionPane.showOptionDialog(
+                            parent,
+                            "Would you like to focus on PaperVision by default?\nThis is useful if you're not interested on the other pipeline development tools.",
+                            "PaperVision",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            arrayOf("Yes", "No"),
+                            "No"
+                        ).let {
+                            if(it == JOptionPane.YES_OPTION) {
+                                openPaperVisionByDefault()
+                            } else {
+                                visualizer.eocvSim.config.flags["prefersPaperVision"] = false
+                            }
+                        }
+                    }
                 }
             })
 
@@ -113,8 +153,8 @@ class IAmAPaperVision(
         buttonsPanel.alignmentX = JPanel.CENTER_ALIGNMENT // Align the panel in the BoxLayout
         dialog.contentPane.add(buttonsPanel)
 
-        visualizer.eocvSim.config.flags["hasShownIamA"] = true
 
+        visualizer.eocvSim.config.flags["hasShownIamPaperVision"] = true
         dialog.isVisible = true
     }
 

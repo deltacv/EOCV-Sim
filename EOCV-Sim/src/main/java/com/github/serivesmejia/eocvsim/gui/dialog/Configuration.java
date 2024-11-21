@@ -45,6 +45,7 @@ public class Configuration {
     public JPanel contents = new JPanel(new GridBagLayout());
     public JComboBox<String> themeComboBox = new JComboBox<>();
     public JCheckBox superAccessCheckBox = new JCheckBox("Auto Accept SuperAccess on Trusted Plugins");
+    public JCheckBox prefersPaperVisionCheckbox = new JCheckBox("Focus on PaperVision Upon Startup");
 
     public JButton acceptButton = new JButton("Accept");
 
@@ -82,7 +83,7 @@ public class Configuration {
         UI TAB
          */
 
-        JPanel uiPanel = new JPanel(new GridLayout(2, 1, 1, 8));
+        JPanel uiPanel = new JPanel(new GridLayout(3, 1, 1, 8));
 
         /* THEME SETTING */
         JPanel themePanel = new JPanel(new FlowLayout());
@@ -104,10 +105,16 @@ public class Configuration {
         JPanel superAccessPanel = new JPanel(new FlowLayout());
 
         superAccessCheckBox.setSelected(config.autoAcceptSuperAccessOnTrusted);
-
         superAccessPanel.add(superAccessCheckBox);
-
         uiPanel.add(superAccessPanel);
+
+        /* FOCUS ON PAPERVISION UPON STARTUP */
+
+        JPanel prefersPaperVisionPanel = new JPanel(new FlowLayout());
+
+        prefersPaperVisionCheckbox.setSelected(config.flags.get("prefersPaperVision"));
+        prefersPaperVisionPanel.add(prefersPaperVisionCheckbox);
+        uiPanel.add(prefersPaperVisionPanel);
 
         tabbedPane.addTab("Interface", uiPanel);
 
@@ -225,6 +232,8 @@ public class Configuration {
         config.videoRecordingSize = videoRecordingSize.getCurrentSize();
         config.videoRecordingFps = videoRecordingFpsComboBox.getSelectedEnum();
         config.autoAcceptSuperAccessOnTrusted = superAccessCheckBox.isSelected();
+
+        config.flags.put("prefersPaperVision", prefersPaperVisionCheckbox.isSelected());
 
         eocvSim.configManager.saveToFile(); //update config file
 

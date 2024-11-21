@@ -98,6 +98,8 @@ class IAmA(
 
         dialog.defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE
         dialog.setLocationRelativeTo(null)
+
+        visualizer.eocvSim.config.flags["hasShownIamA"] = true
         dialog.isVisible = true
     }
 

@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.config.Config;
 import com.github.serivesmejia.eocvsim.gui.dialog.*;
 import com.github.serivesmejia.eocvsim.gui.dialog.SplashScreen;
 import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmA;
+import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmAPaperVision;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateCameraSource;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateImageSource;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateSource;
@@ -164,6 +165,10 @@ public class DialogFactory {
 
     public static void createIAmA(Visualizer visualizer) {
         invokeLater(() -> new IAmA(visualizer.frame, visualizer));
+    }
+
+    public static void createIAmAPaperVision(Visualizer visualizer, boolean showWorkspacesButton) {
+        invokeLater(() -> new IAmAPaperVision(visualizer.frame, visualizer, false, showWorkspacesButton));
     }
 
     public static void createWorkspace(Visualizer visualizer) {
