@@ -30,6 +30,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.input.SourceType
+import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
@@ -53,7 +54,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
     @JvmField val mWorkspMenu = JMenu("Workspace")
     @JvmField val mHelpMenu   = JMenu("Help")
 
-    @JvmField val workspCompile = JMenuItem("Build java files")
+    @JvmField val workspCompile = JMenuItem("Build Java Files")
 
     init {
         // FILE
@@ -77,7 +78,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
             fileNewInputSourceSubmenu.add(fileNewInputSourceItem)
         }
 
-        val fileSaveMat = JMenuItem("Screenshot pipeline")
+        val fileSaveMat = JMenuItem("Screenshot Pipeline")
 
 
         fileSaveMat.addActionListener {
@@ -118,10 +119,21 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         //WORKSPACE
 
-        val workspSetWorkspace = JMenuItem("Select workspace")
+        val workspSetWorkspace = JMenuItem("Select Workspace")
 
-        workspSetWorkspace.addActionListener { visualizer.selectPipelinesWorkspace() }
+        workspSetWorkspace.addActionListener { DialogFactory.createWorkspace(visualizer) }
         mWorkspMenu.add(workspSetWorkspace)
+
+        val workspClose = JMenuItem("Close Current Workspace")
+
+        workspClose.addActionListener {
+            eocvSim.onMainUpdate.doOnce {
+                eocvSim.workspaceManager.workspaceFile = CompiledPipelineManager.DEF_WORKSPACE_FOLDER
+            }
+        }
+        mWorkspMenu.add(workspClose)
+
+        mWorkspMenu.addSeparator()
 
         workspCompile.addActionListener { visualizer.asyncCompilePipelines() }
         mWorkspMenu.add(workspCompile)
@@ -138,14 +150,14 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val workspVSCode = JMenu("External")
 
-        val workspVSCodeCreate = JMenuItem("Create Gradle workspace")
+        val workspVSCodeCreate = JMenuItem("Create Gradle Workspace")
 
         workspVSCodeCreate.addActionListener { visualizer.createVSCodeWorkspace() }
         workspVSCode.add(workspVSCodeCreate)
 
         workspVSCode.addSeparator()
 
-        val workspVSCodeOpen = JMenuItem("Open VS Code here")
+        val workspVSCodeOpen = JMenuItem("Open VS Code Here")
 
         workspVSCodeOpen.addActionListener {
             VSCodeLauncher.asyncLaunch(eocvSim.workspaceManager.workspaceFile)

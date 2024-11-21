@@ -8,6 +8,8 @@ object EOCVSimIconLibrary {
     val icoCam by icon("ico_cam", "/images/icon/ico_cam.png")
     val icoVid by icon("ico_vid", "/images/icon/ico_vid.png")
 
+    val icoFolder by icon("ico_folder", "/images/icon/ico_folder.png", false)
+
     val icoConfig by icon("ico_config", "/images/icon/ico_config.png")
     val icoSlider by icon("ico_slider", "/images/icon/ico_slider.png")
     val icoTextbox by icon("ico_textbox", "/images/icon/ico_textbox.png")
@@ -27,6 +29,7 @@ object EOCVSimIconLibrary {
 
     val icoFirstRobotics by icon("ico_first_robotics", "/images/icon/ico_firstrobotics.png", false)
     val icoPaperVision by icon("ico_paper_vision", "/images/icon/ico_ezv.png", false)
+    val icoVsCode by icon("ico_vscode", "/images/icon/ico_vscode.png", false)
     val icoUser by icon("ico_user", "/images/icon/ico_user.png")
 
 }

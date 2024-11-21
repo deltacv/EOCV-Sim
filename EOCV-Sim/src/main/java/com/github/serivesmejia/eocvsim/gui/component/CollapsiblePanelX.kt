@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.gui.component
 
 import java.awt.Color
 import java.awt.Dimension
+import java.awt.Font
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.BorderFactory
@@ -55,6 +56,7 @@ class CollapsiblePanelX @JvmOverloads constructor(
         border = TitledBorder(titleAndDescriptor)
 
         border.titleColor = titleCol
+        border.titleFont = border.titleFont.deriveFont(Font.BOLD)
         border.border = BorderFactory.createMatteBorder(1, 1, 1, 1, borderCol)
 
         setBorder(border)

@@ -1,4 +1,4 @@
-package com.github.serivesmejia.eocvsim.gui.dialog.iama
+package com.github.serivesmejia.eocvsim.gui.dialog
 
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.Visualizer
@@ -10,9 +10,10 @@ import javax.swing.JButton
 import javax.swing.JDialog
 import javax.swing.JFrame
 import javax.swing.JLabel
+import javax.swing.JOptionPane
 import javax.swing.JPanel
 
-class IAmA(
+class CreateWorkspace(
     val parent: JFrame,
     val visualizer: Visualizer
 ) {
@@ -21,14 +22,14 @@ class IAmA(
 
     init {
         dialog.isModal = true
-        dialog.title = "Welcome !"
+        dialog.title = "Create a Workspace"
 
         dialog.contentPane.layout = GridBagLayout()
 
         val text = """
-            <b>Welcome to EOCV-Sim! We'll start with a walkthrough.</b><br>
-            Please select the option that best describes you.<br><br>
-            <b>I am..</b>
+            <b>Start visualizing your OpenCV pipelines now</b><br><br>
+            A workspace contains the <b>Java source code</b> of the pipelines you<br>
+            wish to run and build. Opt for the coding environment of your choice.
         """.trimIndent()
 
         dialog.contentPane.add(JLabel("<html><div style='text-align: center;'>$text</div></html>").apply {
@@ -41,12 +42,12 @@ class IAmA(
         })
 
         val buttonsPanel = JPanel().apply {
-            layout = GridLayout(1, 3, 10, 10)
+            layout = GridLayout(1, 2, 10, 10)
         }
 
         buttonsPanel.add(JButton(
-            "<html><div style='text-align: center;'>A FIRST Robotics Team</div></html>",
-            EOCVSimIconLibrary.icoFirstRobotics.scaleToFit(60, 60)
+            "<html><div style='text-align: center;'>Create a VS Code Workspace</div></html>",
+            EOCVSimIconLibrary.icoVsCode.scaleToFit(60, 60)
         ).apply {
             font = font.deriveFont(14f)
             horizontalTextPosition = JButton.CENTER
@@ -54,13 +55,22 @@ class IAmA(
 
             addActionListener {
                 dialog.dispose()
-                IAmAFirstRobotics(this@IAmA.parent, visualizer)
+
+                JOptionPane.showConfirmDialog(
+                    this@CreateWorkspace.parent,
+                    "This feature prefers that you have Visual Studio Code already installed. You can opt to use IntelliJ IDEA instead, but you will have to do so manually.\n\n",
+                    "VS Code Workspace",
+                    JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE
+                )
+
+                visualizer.createVSCodeWorkspace()
             }
         })
 
         buttonsPanel.add(JButton(
-            "<html><div style='text-align: center;'>A General Public User</div></html>",
-            EOCVSimIconLibrary.icoUser.scaleToFit(60, 60)
+            "<html><div style='text-align: center;'>Open an Existing Folder</div></html>",
+            EOCVSimIconLibrary.icoFolder.scaleToFit(60, 60)
         ).apply {
             font = font.deriveFont(14f)
             horizontalTextPosition = JButton.CENTER
@@ -68,21 +78,7 @@ class IAmA(
 
             addActionListener {
                 dialog.dispose()
-                IAmAGeneralPublic(this@IAmA.parent, visualizer)
-            }
-        })
-
-        buttonsPanel.add(JButton(
-            "<html><div style='text-align: center;'>Specifically Interested<br>in PaperVision</div></html>",
-            EOCVSimIconLibrary.icoPaperVision.scaleToFit(60, 60)
-        ).apply {
-            font = font.deriveFont(14f)
-            horizontalTextPosition = JButton.CENTER
-            verticalTextPosition = JButton.BOTTOM
-
-            addActionListener {
-                dialog.dispose()
-                IAmAPaperVision(this@IAmA.parent, visualizer, specificallyInterested = true)
+                visualizer.selectPipelinesWorkspace()
             }
         })
 
@@ -93,7 +89,7 @@ class IAmA(
             weighty = 1.0
         })
 
-        dialog.size = Dimension(600, 250)
+        dialog.size = Dimension(520, 250)
         dialog.isResizable = false
 
         dialog.defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE

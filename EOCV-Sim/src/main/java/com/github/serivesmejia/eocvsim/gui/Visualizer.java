@@ -385,7 +385,6 @@ public class Visualizer {
                 if(selectedFile.isDirectory() && selectedFile.listFiles().length == 0) {
                     eocvSim.workspaceManager.createWorkspaceWithTemplateAsync(
                             selectedFile, GradleWorkspaceTemplate.INSTANCE,
-
                             () -> {
                                 askOpenVSCode();
                                 return Unit.INSTANCE; // weird kotlin interop
@@ -405,6 +404,11 @@ public class Visualizer {
         DialogFactory.createYesOrNo(frame, "A new workspace was created. Do you want to open VS Code?", "",
             (result) -> {
                 if(result == 0) {
+                    JOptionPane.showMessageDialog(
+                            frame,
+                            "After opening VS Code, you will need to install the Extension Pack for Java, for proper autocompletion support. Ensure you do so when asked by the editor !"
+                    );
+
                     VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile());
                 }
             }

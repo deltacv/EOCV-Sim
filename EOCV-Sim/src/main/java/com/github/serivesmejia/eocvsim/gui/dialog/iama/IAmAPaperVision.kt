@@ -1,5 +1,6 @@
 package com.github.serivesmejia.eocvsim.gui.dialog.iama
 
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import java.awt.BorderLayout
 import java.awt.Desktop
@@ -19,7 +20,8 @@ import javax.swing.SwingConstants
 
 class IAmAPaperVision(
     parent: JFrame,
-    visualizer: Visualizer
+    visualizer: Visualizer,
+    specificallyInterested: Boolean = false
 ) {
 
     companion object {
@@ -87,7 +89,18 @@ class IAmAPaperVision(
 
             add(Box.createHorizontalStrut(10)) // Add some space between the buttons
 
-            add(JButton("Take me there !").apply {
+            if(!specificallyInterested) {
+                add(JButton("Use Workspaces Instead").apply {
+                    addActionListener {
+                        dialog.dispose() // Close the dialog on click
+                        DialogFactory.createWorkspace(visualizer)
+                    }
+                })
+
+                add(Box.createHorizontalStrut(10)) // Add some space between the buttons
+            }
+
+            add(JButton("Use PaperVision").apply {
                 addActionListener {
                     dialog.dispose() // Close the dialog on click
                     visualizer.pipelineOpModeSwitchablePanel.selectedIndex = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")

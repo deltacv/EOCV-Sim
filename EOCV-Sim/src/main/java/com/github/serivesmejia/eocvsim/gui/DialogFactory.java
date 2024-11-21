@@ -166,6 +166,10 @@ public class DialogFactory {
         invokeLater(() -> new IAmA(visualizer.frame, visualizer));
     }
 
+    public static void createWorkspace(Visualizer visualizer) {
+        invokeLater(() -> new CreateWorkspace(visualizer.frame, visualizer));
+    }
+
     public static FileAlreadyExists.UserChoice createFileAlreadyExistsDialog(EOCVSim eocvSim) {
         return new FileAlreadyExists(eocvSim.visualizer.frame, eocvSim).run();
     }
