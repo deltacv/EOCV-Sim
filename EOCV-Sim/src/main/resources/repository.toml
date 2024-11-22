@@ -6,6 +6,6 @@ jitpack = "https://jitpack.io/"
 
 [plugins]
 # Declare the ID and the Maven coordinates of the plugin (group:artifact:version)
-# which will be used to download the plugin from one of Maven repositories specified above.
-# Any dependency that does not have a plugin.toml in its jar will not be considered after download.
-PaperVision = "org.deltacv.PaperVision:EOCVSimPlugin:1.0.0"
+# which will be used to download the plugin from one of repositories specified above.
+# Any dependency that is not a valid EOCV-Sim plugin will not be considered after download.
+PaperVision = "org.deltacv.PaperVision:EOCVSimPlugin:1.0.2"

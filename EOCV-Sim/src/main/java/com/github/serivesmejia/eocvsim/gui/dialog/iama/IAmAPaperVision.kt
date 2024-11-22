@@ -79,17 +79,44 @@ class IAmAPaperVision(
         val buttonsPanel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.X_AXIS)
 
-
             add(Box.createHorizontalGlue()) // Align the button to the right
+
+
+            add(JButton("Close").apply {
+                addActionListener {
+                    // Handle the next button click here
+                    dialog.dispose() // Close the dialog on click
+                }
+            })
+
+            add(Box.createHorizontalStrut(10)) // Add some space between the buttons
+
+            if(!specificallyInterested && showWorkspacesButton) {
+                add(JButton("Use Workspaces Instead").apply {
+                    addActionListener {
+                        dialog.dispose() // Close the dialog on click
+                        DialogFactory.createWorkspace(visualizer)
+                    }
+                })
+
+                add(Box.createHorizontalStrut(10)) // Add some space between the buttons
+            }
 
             add(JButton("Use PaperVision").apply {
                 addActionListener {
                     dialog.dispose() // Close the dialog on click
 
-                    // if the user prefers PaperVision, switch to it upon start up
                     val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
                     if(indexOfTab >= 0) {
                         visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
+                    } else {
+                        JOptionPane.showMessageDialog(
+                            parent,
+                            "PaperVision is not currently available, please check your plugin settings.",
+                            "Warning",
+                            JOptionPane.ERROR_MESSAGE
+                        )
+                        return@addActionListener
                     }
 
                     fun openPaperVisionByDefault() {
@@ -124,26 +151,6 @@ class IAmAPaperVision(
                             }
                         }
                     }
-                }
-            })
-
-            add(Box.createHorizontalStrut(10)) // Add some space between the buttons
-
-            if(!specificallyInterested && showWorkspacesButton) {
-                add(JButton("Use Workspaces Instead").apply {
-                    addActionListener {
-                        dialog.dispose() // Close the dialog on click
-                        DialogFactory.createWorkspace(visualizer)
-                    }
-                })
-
-                add(Box.createHorizontalStrut(10)) // Add some space between the buttons
-            }
-
-            add(JButton("Close").apply {
-                addActionListener {
-                    // Handle the next button click here
-                    dialog.dispose() // Close the dialog on click
                 }
             })
 
