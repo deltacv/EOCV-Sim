@@ -101,7 +101,7 @@ public class Visualizer {
         if(Taskbar.isTaskbarSupported()){
             try {
                 //set icon for mac os (and other systems which do support this method)
-                Taskbar.getTaskbar().setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
+                Taskbar.getTaskbar().setIconImage(EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim128().getImage());
             } catch (final UnsupportedOperationException e) {
                 logger.warn("Setting the Taskbar icon image is not supported on this platform");
             } catch (final SecurityException e) {
