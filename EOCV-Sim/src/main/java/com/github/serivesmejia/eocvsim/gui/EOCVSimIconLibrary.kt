@@ -2,7 +2,12 @@ package com.github.serivesmejia.eocvsim.gui
 
 object EOCVSimIconLibrary {
 
-    val icoEOCVSim by icon("ico_eocvsim", "/images/icon/ico_eocvsim.png", false)
+    val icoEOCVSim by icon("ico_eocvsim", "/images/icon/ico_eocvsim_new.png", false)
+
+    val icoEOCVSim128 by icon("ico_eocvsim_128", "/images/icon/ico_eocvsim_new_128.png", false)
+    val icoEOCVSim64 by icon("ico_eocvsim_128", "/images/icon/ico_eocvsim_new_64.png", false)
+    val icoEOCVSim32 by icon("ico_eocvsim_32", "/images/icon/ico_eocvsim_new_32.png", false)
+    val icoEOCVSim16 by icon("ico_eocvsim_16", "/images/icon/ico_eocvsim_new_16.png", false)
 
     val icoImg by icon("ico_img", "/images/icon/ico_img.png")
     val icoCam by icon("ico_cam", "/images/icon/ico_cam.png")

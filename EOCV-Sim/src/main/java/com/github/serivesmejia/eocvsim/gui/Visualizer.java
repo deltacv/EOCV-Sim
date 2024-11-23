@@ -209,7 +209,12 @@ public class Visualizer {
 
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-        frame.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
+        frame.setIconImages(List.of(
+                EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim128().getImage(),
+                EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim64().getImage(),
+                EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim32().getImage(),
+                EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim16().getImage()
+        ));
 
         frame.setLocationRelativeTo(null);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
