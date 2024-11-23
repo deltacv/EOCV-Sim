@@ -50,6 +50,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import io.github.deltacv.eocvsim.plugin.papervision.PaperVisionChecker
 import io.github.deltacv.vision.external.PipelineRenderHook
 import nu.pattern.OpenCV
 import org.opencv.core.Mat
@@ -425,6 +426,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         if(Thread.currentThread() != eocvSimThread) {
             throw IllegalStateException("start() must be called from the EOCVSim thread")
         }
+
+        PaperVisionChecker.check(this)
 
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
