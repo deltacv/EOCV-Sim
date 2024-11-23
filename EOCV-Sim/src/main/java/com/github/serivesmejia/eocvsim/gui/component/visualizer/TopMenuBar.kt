@@ -47,7 +47,7 @@ import javax.swing.JMenuItem
 class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
     companion object {
-        val docsUrl = URI("https://deltacv.gitbook.io/eocv-sim/")
+        val docsUrl = URI("https://docs.deltacv.org/eocv-sim/")
     }
 
     @JvmField val mFileMenu   = JMenu("File")
