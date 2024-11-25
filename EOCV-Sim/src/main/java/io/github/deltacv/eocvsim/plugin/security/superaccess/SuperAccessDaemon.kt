@@ -88,6 +88,8 @@ object SuperAccessDaemon {
         }
 
         System.setProperty("sun.java2d.d3d", "false")
+        System.setProperty("apple.awt.application.appearance", "system")
+        System.setProperty("apple.awt.application.name", "EasyOpenCV Simulator - SuperUserAccess")
 
         WsClient(args[0].toIntOrNull() ?: throw IllegalArgumentException("Port is not a valid int"), args[1].toBoolean()).connect()
     }
