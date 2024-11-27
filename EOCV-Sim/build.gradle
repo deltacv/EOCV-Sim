@@ -18,6 +18,14 @@ apply from: '../build.common.gradle'
 
 ext.kotest_version = '5.7.2'
 
+components.java {
+    tasks.named("shadowJar").configure {
+        // only run shadowJar when explicitly specified by the user
+        // check if user invoked gradle with :shadowJar
+        enabled = project.gradle.startParameter.taskNames.contains("shadowJar")
+    }
+}
+
 shadowJar {
     mergeServiceFiles()
 }

@@ -24,6 +24,8 @@ class ParsedVersion(val version: String) {
      */
     val patch = splitVersion.getOrNull(2)?.toIntOrNull() ?: 0
 
+    constructor(major: Int, minor: Int, patch: Int = 0) : this("$major.$minor.$patch")
+
     /**
      * Compare this version to another ParsedVersion
      * @param o the other ParsedVersion to compare to

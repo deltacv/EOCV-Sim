@@ -14,7 +14,7 @@ import kotlin.math.log
 
 object PaperVisionChecker {
 
-    val LATEST_PAPERVISION = ParsedVersion("1.0.2")
+    val LATEST_PAPERVISION = ParsedVersion(1, 0, 3)
 
     const val RESET_QUESTION = "o you wish to fix this by resetting back to the default settings? Please note this will wipe your plugins folder!"
 
