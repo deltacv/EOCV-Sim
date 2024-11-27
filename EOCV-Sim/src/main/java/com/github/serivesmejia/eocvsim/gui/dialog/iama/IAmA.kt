@@ -6,6 +6,7 @@ import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.GridLayout
+import javax.swing.BorderFactory
 import javax.swing.JButton
 import javax.swing.JDialog
 import javax.swing.JFrame
@@ -86,6 +87,8 @@ class IAmA(
             }
         })
 
+        buttonsPanel.border = BorderFactory.createEmptyBorder(0, 0, 10, 0)
+
         dialog.contentPane.add(buttonsPanel, GridBagConstraints().apply {
             gridx = 0
             gridy = 1
@@ -93,7 +96,7 @@ class IAmA(
             weighty = 1.0
         })
 
-        dialog.size = Dimension(600, 250)
+        dialog.minimumSize = Dimension(620, 250)
         dialog.isResizable = false
 
         dialog.defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE
