@@ -16,13 +16,13 @@ object PaperVisionChecker {
 
     val LATEST_PAPERVISION = ParsedVersion("1.0.2")
 
-    const val RESET_QUESTION = "o you wish to fix this by resetting back to the default settings?\nPlease note this will wipe your plugins folder!"
+    const val RESET_QUESTION = "o you wish to fix this by resetting back to the default settings? Please note this will wipe your plugins folder!"
 
     val logger by loggerForThis()
 
     fun check(
         eocvSim: EOCVSim
-    ){
+    ) {
         fun startFresh() {
             eocvSim.onMainUpdate.doOnce {
                 eocvSim.config.flags["startFresh"] = true
@@ -36,7 +36,7 @@ object PaperVisionChecker {
                 "Restart Now",
                 JOptionPane.WARNING_MESSAGE,
                 JOptionPane.YES_NO_OPTION,
-                null, null, null
+                null, arrayOf("Restart", "Ignore"), null
             )
 
             if(result == JOptionPane.YES_OPTION) {
@@ -75,7 +75,7 @@ object PaperVisionChecker {
                     "PaperVision Missing",
                     JOptionPane.WARNING_MESSAGE,
                     JOptionPane.YES_NO_OPTION,
-                    null, null, null
+                    null, arrayOf("Reset and Fix", "Ignore and Continue"), null
                 )
 
                 if(result == JOptionPane.YES_OPTION) {
@@ -88,11 +88,11 @@ object PaperVisionChecker {
             SwingUtilities.invokeLater {
                 val result = JOptionPane.showOptionDialog(
                     eocvSim.visualizer.frame,
-                    "PaperVision was loaded from a file. You can ignore this message ONLY IF you are testing non-released versions.\nIf that's not the case, d$RESET_QUESTION",
+                    "PaperVision was loaded from a file. You can ignore this message ONLY IF you did this intentionally and intend to test development versions.\nIf that's not the case, d$RESET_QUESTION",
                     "PaperVision Source",
                     JOptionPane.WARNING_MESSAGE,
                     JOptionPane.YES_NO_OPTION,
-                    null, null, null
+                    null, arrayOf("Reset and Fix", "Ignore and Continue"), null
                 )
 
                 if(result == JOptionPane.YES_OPTION) {
@@ -110,7 +110,7 @@ object PaperVisionChecker {
                     "PaperVision Outdated",
                     JOptionPane.WARNING_MESSAGE,
                     JOptionPane.YES_NO_OPTION,
-                    null, null, null
+                    null, arrayOf("Reset and Fix", "Ignore and Continue"), null
                 )
 
                 if(result == JOptionPane.YES_OPTION) {
