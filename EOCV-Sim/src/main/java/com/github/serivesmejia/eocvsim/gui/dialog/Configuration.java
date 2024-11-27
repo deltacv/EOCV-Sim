@@ -112,7 +112,12 @@ public class Configuration {
 
         JPanel prefersPaperVisionPanel = new JPanel(new FlowLayout());
 
-        prefersPaperVisionCheckbox.setSelected(config.flags.get("prefersPaperVision"));
+        boolean prefersPaperVision = false;
+        if(config.flags.containsKey("prefersPaperVision")) {
+            prefersPaperVision = config.flags.get("prefersPaperVision");
+        }
+
+        prefersPaperVisionCheckbox.setSelected(prefersPaperVision);
         prefersPaperVisionPanel.add(prefersPaperVisionCheckbox);
         uiPanel.add(prefersPaperVisionPanel);
 
