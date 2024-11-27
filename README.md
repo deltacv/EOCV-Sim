@@ -14,7 +14,7 @@ transfer it onto your robot!
 
 <img src='doc/images/eocvsim_screenshot_1.png' width='75%' height='75%'>
 
-# Learn how to install and use the simulator in the [documentation here](https://deltacv.gitbook.io/eocv-sim/)
+# Learn how to install and use the simulator in the [documentation here](https://docs.deltacv.org/eocv-sim)
 ### (Common users won't need to scroll down any further from here - the gitbook has everything you need)
 
 # [Buy me a coffee](https://buymeacoffee.com/serivesmejia)
@@ -46,7 +46,7 @@ Since OpenCV in Java uses a native library, which is platform specific, the simu
 
 ## Downloading and documentation
 
-Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downloading-eocv-sim) to download the sim. The rest of the documentation can also be found [there](https://deltacv.gitbook.io/eocv-sim/).
+Follow the steps in [this page](https://docs.deltacv.org/eocv-sim/downloading-eocv-sim) to download the sim. The rest of the documentation can also be found [there](https://deltacv.gitbook.io/eocv-sim/).
 
 ## Adding EOCV-Sim as a dependency for plugin development
 
@@ -55,7 +55,8 @@ Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downl
    ### Gradle
    ```groovy
    repositories {
-       maven { url 'https://jitpack.com' } //add jitpack as a maven repo 
+       maven { url 'https://jitpack.com' } //add jitpack as a maven repo
+       mavenCentral() //add maven central as a maven repo
    }
    
    dependencies {
