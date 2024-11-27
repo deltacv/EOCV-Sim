@@ -58,7 +58,6 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
     init {
         // FILE
-
         val fileNew = JMenu("New")
         mFileMenu.add(fileNew)
 
@@ -79,7 +78,6 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         }
 
         val fileSaveMat = JMenuItem("Screenshot Pipeline")
-
 
         fileSaveMat.addActionListener {
             val mat = Mat()
