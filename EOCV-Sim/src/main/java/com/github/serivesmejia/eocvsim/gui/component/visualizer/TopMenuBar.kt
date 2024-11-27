@@ -57,6 +57,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
     @JvmField val workspCompile = JMenuItem("Build Java Files")
 
     init {
+        val desktop = Desktop.getDesktop()
         // FILE
         val fileNew = JMenu("New")
         mFileMenu.add(fileNew)
@@ -96,10 +97,14 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         mFileMenu.addSeparator()
 
-        val editSettings = JMenuItem("Settings")
-        editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
-
-        mFileMenu.add(editSettings)
+        if (desktop.isSupported(Desktop.Action.APP_PREFERENCES)) {
+            desktop.setPreferencesHandler { DialogFactory.createConfigDialog(eocvSim) }
+        }
+        else {
+            val editSettings = JMenuItem("Settings")
+            editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
+            mFileMenu.add(editSettings)
+        }
 
         val filePlugins = JMenuItem("Manage Plugins")
         filePlugins.addActionListener { eocvSim.pluginManager.appender.append(PluginOutput.SPECIAL_OPEN_MGR)}
@@ -170,7 +175,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val helpUsage = JMenuItem("Documentation")
         helpUsage.addActionListener {
-            Desktop.getDesktop().browse(docsUrl)
+            desktop.browse(docsUrl)
         }
 
         helpUsage.isEnabled = Desktop.isDesktopSupported()
@@ -215,10 +220,14 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         mHelpMenu.add(helpIAmA)
 
-        val helpAbout = JMenuItem("About")
-        helpAbout.addActionListener { DialogFactory.createAboutDialog(eocvSim) }
-
-        mHelpMenu.add(helpAbout)
+        if (desktop.isSupported(Desktop.Action.APP_ABOUT)) {
+            desktop.setAboutHandler { DialogFactory.createAboutDialog(eocvSim) }
+        }
+        else {
+            val helpAbout = JMenuItem("About")
+            helpAbout.addActionListener { DialogFactory.createAboutDialog(eocvSim) }
+            mHelpMenu.add(helpAbout)
+        }
 
         add(mHelpMenu)
     }
