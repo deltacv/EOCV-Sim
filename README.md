@@ -19,6 +19,8 @@ PaperVision takes inspiration in Blender and Unreal Engine's blueprint system, a
 PaperVision is still in its early stages, but it's already a powerful tool that will make it easier to work on your pipelines.<br><br>
 <b>Find it in the "PaperVision" tab in the simulator !</b>
 
+<img src='/EOCV-Sim/src/main/resources/images/papervision.gif' height='300px'>
+
 # Learn how to install and use the simulator in the [documentation here](https://docs.deltacv.org/eocv-sim)
 ### (Common users won't need to scroll down any further from here - the docs have everything you need)
 
