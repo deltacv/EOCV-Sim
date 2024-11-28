@@ -1,9 +1,7 @@
 <img src='/EOCV-Sim/src/main/resources/images/icon/ico_eocvsim_letters_transparent.png' height='128px'>
 
 ![Java CI with Gradle](https://github.com/deltacv/EOCV-Sim/workflows/Build%20and%20test%20with%20Gradle/badge.svg)
-[![](https://jitpack.io/v/deltacv/EOCV-Sim.svg)](https://jitpack.io/#deltacv/EOCV-Sim)
-
-[![Run on Repl.it](https://repl.it/badge/github/deltacv/EOCV-Sim)](https://repl.it/github/deltacv/EOCV-Sim)
+[![Maven Publish & Create GitHub Release(s)](https://github.com/deltacv/EOCV-Sim/actions/workflows/release_ci.yml/badge.svg)](https://github.com/deltacv/EOCV-Sim/actions/workflows/release_ci.yml)
 
 # Welcome!
 
