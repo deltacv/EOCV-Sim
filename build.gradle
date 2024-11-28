@@ -64,7 +64,7 @@ allprojects {
         maven { url "https://maven.pkg.jetbrains.space/public/p/compose/dev" }
     }
 
-    tasks.withType(Jar) {
+    tasks.withType(Jar).configureEach {
         manifest {
             attributes['Main-Class'] = 'com.github.serivesmejia.eocvsim.Main'
         }
