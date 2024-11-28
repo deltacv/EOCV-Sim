@@ -23,11 +23,7 @@
 
 package io.github.deltacv.eocvsim.plugin.security
 
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.extension.hashString
-import com.github.serivesmejia.eocvsim.util.loggerForThis
-import com.moandjiezana.toml.Toml
-import io.github.deltacv.eocvsim.plugin.loader.PluginParser
 import picocli.CommandLine
 import java.io.File
 import java.security.KeyFactory
@@ -43,49 +39,60 @@ import java.util.zip.ZipEntry
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.zip.ZipOutputStream
-import kotlin.math.log
 import kotlin.system.exitProcess
 
 class PluginSigningTool : Runnable {
 
-    val logger by loggerForThis()
-
-    @CommandLine.Option(names = ["-p", "--plugin"], description = ["The plugin JAR file to sign"], required = true)
+    @picocli.CommandLine.Option(names = ["-p", "--plugin"], description = ["The plugin JAR file to sign"], required = true)
     var pluginFile: String? = null
 
     @CommandLine.Option(names = ["-a", "--authority"], description = ["The authority to sign the plugin with"], required = true)
     var authority: String? = null
 
-    @CommandLine.Option(names = ["-k", "--key"], description = ["The private key file to sign the plugin with"], required = true)
+    @CommandLine.Option(names = ["-k", "--key"], description = ["The private key to sign the plugin with, can be both a file or a base64-encoded string"], required = true)
     var privateKeyFile: String? = null
 
     override fun run() {
-        logger.info("Signing plugin $pluginFile with authority $authority")
+        println("Signing plugin $pluginFile with authority $authority")
 
         val authority = AuthorityFetcher.fetchAuthority(authority ?: throw IllegalArgumentException("Authority is required"))
         if (authority == null) {
+            println("Failed to fetch authority ${this.authority}")
             exitProcess(1)
         }
 
         // Load the private key
-        val privateKey = loadPrivateKey(privateKeyFile ?: throw IllegalArgumentException("Private key file is required"))
+        val privateKey = loadPrivateKey(privateKeyFile ?: throw IllegalArgumentException("Private key is required"))
 
-        val publicKey = authority.publicKey // Assuming Authority has a publicKey property
+        val publicKey = authority.publicKey
+
         if (!isPrivateKeyMatchingAuthority(publicKey, privateKey)) {
-            logger.error("Private key does not match to the authority's public key.")
+            println("Private key does not match to the authority's public key.")
             exitProcess(1)
         } else {
-            logger.info("Private key matches to the authority's public key.")
+            println("Private key matches to the authority's public key.")
         }
 
-        signPlugin(File(pluginFile), privateKey, authority)
+        if(pluginFile == null) {
+            println("Plugin file is required")
+            exitProcess(1)
+        }
 
-        logger.info("Plugin signed successfully and saved")
+        signPlugin(File(pluginFile!!), privateKey, authority)
+
+        println("Plugin signed successfully and saved")
     }
 
-    private fun loadPrivateKey(privateKeyPath: String): PrivateKey {
-        val keyBytes = File(privateKeyPath).readBytes()
-        val keyString = String(keyBytes)
+    private fun loadPrivateKey(privateKey: String): PrivateKey {
+        val privateKeyFile = File(privateKey)
+
+        val keyBytes = if(!privateKeyFile.exists()) {
+            Base64.getDecoder().decode(privateKey)
+        } else {
+            privateKeyFile.readBytes()
+        }
+
+        val keyString = String(keyBytes, Charsets.UTF_8)
         val decodedKey = Base64.getDecoder().decode(AuthorityFetcher.parsePem(keyString))
 
         val keySpec = PKCS8EncodedKeySpec(decodedKey)
@@ -110,11 +117,11 @@ class PluginSigningTool : Runnable {
                 val signature = signClass(classData, privateKey)
                 signatures[className] = signature
 
-                logger.info("Signed class $className")
+                println("Signed class $className")
             }
         }
 
-        logger.info("Signed all classes, creating signature.toml in jar")
+        println("Signed all classes, creating signature.toml in jar")
 
         // Create signature.toml
         createSignatureToml(signatures, authority, jarFile)
@@ -185,7 +192,7 @@ class PluginSigningTool : Runnable {
 
     private fun isPrivateKeyMatchingAuthority(publicKey: PublicKey, privateKey: PrivateKey): Boolean {
         // encrypt and decrypt a sample message to check if the keys match
-        val sampleMessage = PluginOutput.SPECIAL
+        val sampleMessage = "Hello, world!"
 
         val cipher = Cipher.getInstance("RSA")
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)
@@ -196,24 +203,32 @@ class PluginSigningTool : Runnable {
 
         return sampleMessage == String(decrypted)
     }
-}
 
-fun main(args: Array<String>) {
-    if(args.isEmpty()) {
-        val scanner = Scanner(System.`in`)
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            if(args.isEmpty()) {
+                println("This tool provides a command line interface, but no arguments were provided.")
+                println("If you want to use command line arguments, please provide them in the format:")
+                println("java ... --plugin <plugin.jar> --authority <authority> --key <private_key>")
+                println("\nWe'll now ask for the required information interactively.")
 
-        val tool = PluginSigningTool()
-        println("Enter the plugin JAR file path:")
-        tool.pluginFile = scanner.next()
+                val scanner = Scanner(System.`in`)
 
-        println("Enter the authority to sign the plugin with:")
-        tool.authority = scanner.next()
+                val tool = PluginSigningTool()
+                println("Enter the plugin JAR file path:")
+                tool.pluginFile = scanner.next()
 
-        println("Enter the private key file path:")
-        tool.privateKeyFile = scanner.next()
+                println("Enter the authority to sign the plugin with:")
+                tool.authority = scanner.next()
 
-        tool.run()
-    } else {
-        CommandLine(PluginSigningTool()).execute(*args)
+                println("Enter the private key file path, or encoded in base64:")
+                tool.privateKeyFile = scanner.next()
+
+                tool.run()
+            } else {
+                CommandLine(PluginSigningTool()).execute(*args)
+            }
+        }
     }
 }

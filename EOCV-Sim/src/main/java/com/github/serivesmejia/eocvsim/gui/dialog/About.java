@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.gui.dialog;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary;
 import com.github.serivesmejia.eocvsim.gui.Icons;
 import io.github.deltacv.vision.external.gui.component.ImageX;
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil;
@@ -70,7 +71,7 @@ public class About {
         JPanel contents = new JPanel(new GridLayout(2, 1));
         contents.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        ImageX icon = new ImageX(Icons.INSTANCE.getImage("ico_eocvsim"));
+        ImageX icon = new ImageX(EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim64());
         icon.setSize(50, 50);
         icon.setAlignmentX(Component.CENTER_ALIGNMENT);
 

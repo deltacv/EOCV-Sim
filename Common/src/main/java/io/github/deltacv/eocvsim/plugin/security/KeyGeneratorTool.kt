@@ -30,15 +30,18 @@ import java.security.KeyPairGenerator
 import java.security.PrivateKey
 import java.util.Base64
 
-fun main() {
-    // Generate RSA key pair
-    val keyPair: KeyPair = generateKeyPair()
+object KeyGeneratorTool {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        // Generate RSA key pair
+        val keyPair: KeyPair = generateKeyPair()
 
-    // Save keys to files
-    saveKeyToFile("private_key.pem", keyPair.private)
-    saveKeyToFile("public_key.pem", keyPair.public)
+        // Save keys to files
+        saveKeyToFile("private_key.pem", keyPair.private)
+        saveKeyToFile("public_key.pem", keyPair.public)
 
-    println("Keys generated and saved to files.")
+        println("Keys generated and saved to files 'private_key.pem' and 'public_key.pem'")
+    }
 }
 
 fun generateKeyPair(): KeyPair {

@@ -6,16 +6,10 @@ plugins {
 
 apply from: '../build.common.gradle'
 
-configurations.all {
-    resolutionStrategy {
-        cacheChangingModulesFor 0, 'seconds'
-    }
-}
-
 dependencies {
     implementation project(':Common')
 
-    api("com.github.deltacv:AprilTagDesktop:$apriltag_plugin_version") {
+    api("org.deltacv:AprilTagDesktop:$apriltag_plugin_version") {
         transitive = false
     }
 

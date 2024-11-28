@@ -139,7 +139,12 @@ class SuperAccessRequest(sourceName: String, reason: String, val untrusted: Bool
             }
         })
 
-        frame.setIconImage(EOCVSimIconLibrary.icoEOCVSim.image)
+        frame.setIconImages(listOf(
+            EOCVSimIconLibrary.icoEOCVSim128.image,
+            EOCVSimIconLibrary.icoEOCVSim64.image,
+            EOCVSimIconLibrary.icoEOCVSim32.image,
+            EOCVSimIconLibrary.icoEOCVSim16.image
+        ));
 
         frame.pack()
 

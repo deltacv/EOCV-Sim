@@ -38,7 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Config {
-    public volatile Theme simTheme = Theme.Light;
+    public volatile Theme simTheme = Theme.Dark;
 
     @Deprecated
     public volatile double zoom = 1;
@@ -66,6 +66,8 @@ public class Config {
 
     @Deprecated
     public volatile List<String> superAccessPluginHashes = new ArrayList<>();
+
+    public volatile boolean autoAcceptSuperAccessOnTrusted = true;
 
     public volatile HashMap<String, Boolean> flags = new HashMap<>();
 

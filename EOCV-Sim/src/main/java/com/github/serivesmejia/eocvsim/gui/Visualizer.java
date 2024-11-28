@@ -61,7 +61,7 @@ public class Visualizer {
     public final ArrayList<JFrame> childFrames = new ArrayList<>();
     public final ArrayList<JDialog> childDialogs = new ArrayList<>();
 
-    private final EOCVSim eocvSim;
+    public final EOCVSim eocvSim;
     public JFrame frame;
 
     public SwingOpenCvViewport viewport = null;
@@ -101,7 +101,7 @@ public class Visualizer {
         if(Taskbar.isTaskbarSupported()){
             try {
                 //set icon for mac os (and other systems which do support this method)
-                Taskbar.getTaskbar().setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
+                Taskbar.getTaskbar().setIconImage(EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim128().getImage());
             } catch (final UnsupportedOperationException e) {
                 logger.warn("Setting the Taskbar icon image is not supported on this platform");
             } catch (final SecurityException e) {
@@ -156,7 +156,7 @@ public class Visualizer {
         /*
          * TOP MENU BAR
          */
-        
+
         frame.setJMenuBar(menuBar);
 
         /*
@@ -209,7 +209,12 @@ public class Visualizer {
 
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-        frame.setIconImage(Icons.INSTANCE.getImage("ico_eocvsim").getImage());
+        frame.setIconImages(List.of(
+                EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim128().getImage(),
+                EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim64().getImage(),
+                EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim32().getImage(),
+                EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim16().getImage()
+        ));
 
         frame.setLocationRelativeTo(null);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -385,7 +390,6 @@ public class Visualizer {
                 if(selectedFile.isDirectory() && selectedFile.listFiles().length == 0) {
                     eocvSim.workspaceManager.createWorkspaceWithTemplateAsync(
                             selectedFile, GradleWorkspaceTemplate.INSTANCE,
-
                             () -> {
                                 askOpenVSCode();
                                 return Unit.INSTANCE; // weird kotlin interop
@@ -405,6 +409,11 @@ public class Visualizer {
         DialogFactory.createYesOrNo(frame, "A new workspace was created. Do you want to open VS Code?", "",
             (result) -> {
                 if(result == 0) {
+                    JOptionPane.showMessageDialog(
+                            frame,
+                            "After opening VS Code, you will need to install the Extension Pack for Java, for proper autocompletion support. Ensure you do so when asked by the editor !"
+                    );
+
                     VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile());
                 }
             }
@@ -471,7 +480,7 @@ public class Visualizer {
             apwd.subMsg = subMsg;
             apwd.cancelBtt = cancelBtt;
         }
-        
+
         if(size == null) size = new Dimension(400, 200);
         dialog.setSize(size);
 

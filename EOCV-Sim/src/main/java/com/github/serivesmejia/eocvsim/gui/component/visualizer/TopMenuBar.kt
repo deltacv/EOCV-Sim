@@ -30,6 +30,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.input.SourceType
+import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
@@ -46,18 +47,18 @@ import javax.swing.JMenuItem
 class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
     companion object {
-        val docsUrl = URI("https://deltacv.gitbook.io/eocv-sim/")
+        val docsUrl = URI("https://docs.deltacv.org/eocv-sim/")
     }
 
     @JvmField val mFileMenu   = JMenu("File")
     @JvmField val mWorkspMenu = JMenu("Workspace")
     @JvmField val mHelpMenu   = JMenu("Help")
 
-    @JvmField val workspCompile = JMenuItem("Build java files")
+    @JvmField val workspCompile = JMenuItem("Build Java Files")
 
     init {
+        val desktop = Desktop.getDesktop()
         // FILE
-
         val fileNew = JMenu("New")
         mFileMenu.add(fileNew)
 
@@ -77,8 +78,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
             fileNewInputSourceSubmenu.add(fileNewInputSourceItem)
         }
 
-        val fileSaveMat = JMenuItem("Screenshot pipeline")
-
+        val fileSaveMat = JMenuItem("Screenshot Pipeline")
 
         fileSaveMat.addActionListener {
             val mat = Mat()
@@ -97,10 +97,14 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         mFileMenu.addSeparator()
 
-        val editSettings = JMenuItem("Settings")
-        editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
-
-        mFileMenu.add(editSettings)
+        if (desktop.isSupported(Desktop.Action.APP_PREFERENCES)) {
+            desktop.setPreferencesHandler { DialogFactory.createConfigDialog(eocvSim) }
+        }
+        else {
+            val editSettings = JMenuItem("Settings")
+            editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
+            mFileMenu.add(editSettings)
+        }
 
         val filePlugins = JMenuItem("Manage Plugins")
         filePlugins.addActionListener { eocvSim.pluginManager.appender.append(PluginOutput.SPECIAL_OPEN_MGR)}
@@ -118,10 +122,21 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         //WORKSPACE
 
-        val workspSetWorkspace = JMenuItem("Select workspace")
+        val workspSetWorkspace = JMenuItem("Select Workspace")
 
-        workspSetWorkspace.addActionListener { visualizer.selectPipelinesWorkspace() }
+        workspSetWorkspace.addActionListener { DialogFactory.createWorkspace(visualizer) }
         mWorkspMenu.add(workspSetWorkspace)
+
+        val workspClose = JMenuItem("Close Current Workspace")
+
+        workspClose.addActionListener {
+            eocvSim.onMainUpdate.doOnce {
+                eocvSim.workspaceManager.workspaceFile = CompiledPipelineManager.DEF_WORKSPACE_FOLDER
+            }
+        }
+        mWorkspMenu.add(workspClose)
+
+        mWorkspMenu.addSeparator()
 
         workspCompile.addActionListener { visualizer.asyncCompilePipelines() }
         mWorkspMenu.add(workspCompile)
@@ -138,14 +153,14 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val workspVSCode = JMenu("External")
 
-        val workspVSCodeCreate = JMenuItem("Create Gradle workspace")
+        val workspVSCodeCreate = JMenuItem("Create Gradle Workspace")
 
         workspVSCodeCreate.addActionListener { visualizer.createVSCodeWorkspace() }
         workspVSCode.add(workspVSCodeCreate)
 
         workspVSCode.addSeparator()
 
-        val workspVSCodeOpen = JMenuItem("Open VS Code here")
+        val workspVSCodeOpen = JMenuItem("Open VS Code Here")
 
         workspVSCodeOpen.addActionListener {
             VSCodeLauncher.asyncLaunch(eocvSim.workspaceManager.workspaceFile)
@@ -160,7 +175,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val helpUsage = JMenuItem("Documentation")
         helpUsage.addActionListener {
-            Desktop.getDesktop().browse(docsUrl)
+            desktop.browse(docsUrl)
         }
 
         helpUsage.isEnabled = Desktop.isDesktopSupported()
@@ -198,10 +213,21 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         mHelpMenu.add(helpExportLogs)
 
-        val helpAbout = JMenuItem("About")
-        helpAbout.addActionListener { DialogFactory.createAboutDialog(eocvSim) }
+        mHelpMenu.addSeparator()
 
-        mHelpMenu.add(helpAbout)
+        val helpIAmA = JMenuItem("I am a...")
+        helpIAmA.addActionListener { DialogFactory.createIAmA(eocvSim.visualizer) }
+
+        mHelpMenu.add(helpIAmA)
+
+        if (desktop.isSupported(Desktop.Action.APP_ABOUT)) {
+            desktop.setAboutHandler { DialogFactory.createAboutDialog(eocvSim) }
+        }
+        else {
+            val helpAbout = JMenuItem("About")
+            helpAbout.addActionListener { DialogFactory.createAboutDialog(eocvSim) }
+            mHelpMenu.add(helpAbout)
+        }
 
         add(mHelpMenu)
     }

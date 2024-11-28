@@ -29,6 +29,8 @@ import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
+import javax.swing.BorderFactory
+import javax.swing.Box
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.JToggleButton
@@ -42,7 +44,7 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
     val pipelineWorkspaceBtt = JButton("Workspace")
 
     val workspaceButtonsPanel = JPanel(GridBagLayout())
-    val pipelineCompileBtt = JButton("Build java files")
+    val pipelineCompileBtt = JButton("Build Java Files")
 
     private var lastWorkspacePopup: PopupX? = null
 
@@ -100,17 +102,22 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
 
         // WORKSPACE BUTTONS POPUP
 
-        pipelineCompileBtt.addActionListener { eocvSim.visualizer.asyncCompilePipelines() }
-        workspaceButtonsPanel.add(pipelineCompileBtt, GridBagConstraints().apply {
+        val selectWorkspBtt = JButton("Select Workspace")
+
+        selectWorkspBtt.addActionListener { DialogFactory.createWorkspace(eocvSim.visualizer) }
+        workspaceButtonsPanel.add(selectWorkspBtt, GridBagConstraints().apply {
             gridx = 0
             gridy = 0
         })
 
-        val selectWorkspBtt = JButton("Select workspace")
-
-        selectWorkspBtt.addActionListener { eocvSim.visualizer.selectPipelinesWorkspace() }
-        workspaceButtonsPanel.add(selectWorkspBtt, GridBagConstraints().apply {
+        workspaceButtonsPanel.add(Box.createHorizontalStrut(5), GridBagConstraints().apply {
             gridx = 1
+            gridy = 0
+        })
+
+        pipelineCompileBtt.addActionListener { eocvSim.visualizer.asyncCompilePipelines() }
+        workspaceButtonsPanel.add(pipelineCompileBtt, GridBagConstraints().apply {
+            gridx = 2
             gridy = 0
         })
 
@@ -120,7 +127,7 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
         workspaceButtonsPanel.add(outputBtt, GridBagConstraints().apply {
             gridy = 1
             weightx = 1.0
-            gridwidth = 2
+            gridwidth = 3
 
             fill = GridBagConstraints.HORIZONTAL
             anchor = GridBagConstraints.CENTER

@@ -1,14 +1,31 @@
 plugins {
     id 'kotlin'
     id 'signing'
+    id 'com.github.johnrengelman.shadow'
     id "com.vanniktech.maven.publish" version "0.30.0"
 }
 
 apply from: '../build.common.gradle'
 
+components.java {
+    tasks.named("shadowJar").configure {
+        // only run shadowJar when explicitly specified by the user
+        // check if user invoked gradle with :shadowJar
+        enabled = project.gradle.startParameter.taskNames.contains("shadowJar")
+    }
+}
+
+shadowJar {
+    dependencies {
+        exclude "nu/pattern/*"
+    }
+}
+
 dependencies {
     api "org.openpnp:opencv:$opencv_version"
 
+    implementation "com.moandjiezana.toml:toml4j:$toml4j_version"
+    implementation "info.picocli:picocli:$picocli_version"
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 }

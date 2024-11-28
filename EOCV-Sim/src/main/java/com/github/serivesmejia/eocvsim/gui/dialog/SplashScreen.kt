@@ -52,7 +52,7 @@ class SplashScreen(closeHandler: EventHandler? = null) : JDialog() {
             g.drawImage(img.image, 0, 0, width, height, this)
         }
 
-        override fun getPreferredSize() = Dimension(img.iconWidth / 2, img.iconHeight / 2)
+        override fun getPreferredSize() = Dimension(img.iconWidth / 6, img.iconHeight / 6)
     }
 
 }

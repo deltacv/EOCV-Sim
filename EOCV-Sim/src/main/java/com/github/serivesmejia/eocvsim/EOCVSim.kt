@@ -49,8 +49,8 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.common.util.ParsedVersion
-import io.github.deltacv.eocvsim.plugin.security.AuthorityFetcher
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import io.github.deltacv.eocvsim.plugin.papervision.PaperVisionChecker
 import io.github.deltacv.vision.external.PipelineRenderHook
 import nu.pattern.OpenCV
 import org.opencv.core.Mat
@@ -291,6 +291,27 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         workspaceManager.init()
 
+        visualizer.onInitFinished {
+            // SHOW WELCOME DIALOGS TO NEW USERS
+
+            if(!config.flags.contains("hasShownIamA") || config.flags["hasShownIamA"] == false) {
+                // Initial dialog to introduce our cool stuff to the user
+                DialogFactory.createIAmA(visualizer)
+            } else if(!config.flags.contains("hasShownIamPaperVision") || config.flags["hasShownIamPaperVision"] == false) {
+                // sometimes the users might miss the PaperVision dialog after the IAmA dialog
+                // so we show it here if the user hasn't seen it yet
+                DialogFactory.createIAmAPaperVision(visualizer, false)
+            } else if(config.flags["prefersPaperVision"] == true) {
+                // if the user prefers PaperVision, switch to it upon start up
+                val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
+                if(indexOfTab >= 0) {
+                    visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
+                }
+            }
+
+            // END OF WELCOME DIALOGS
+        }
+
         visualizer.initAsync(configManager.config.simTheme) //create gui in the EDT
 
         inputSourceManager.init() //loading user created input sources
@@ -405,6 +426,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         if(Thread.currentThread() != eocvSimThread) {
             throw IllegalStateException("start() must be called from the EOCVSim thread")
         }
+
+        PaperVisionChecker.check(this)
 
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 

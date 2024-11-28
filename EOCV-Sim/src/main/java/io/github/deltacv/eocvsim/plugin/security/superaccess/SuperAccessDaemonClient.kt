@@ -24,7 +24,6 @@
 package io.github.deltacv.eocvsim.plugin.security.superaccess
 
 import com.github.serivesmejia.eocvsim.util.JavaProcess
-import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
@@ -32,7 +31,6 @@ import org.java_websocket.server.WebSocketServer
 import java.io.File
 import java.lang.Exception
 import java.net.InetSocketAddress
-import java.util.Random
 import java.util.concurrent.Executors
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantLock
@@ -45,20 +43,11 @@ private data class AccessCache(
     val file: String,
     val hasAccess: Boolean,
     val timestamp: Long
-) {
-    init {
-        // get calling class
-        val stackTrace = Thread.currentThread().stackTrace
-        val callingClass = stackTrace[2].className
-
-        if(callingClass != SuperAccessDaemonClient::class.java.name) {
-            throw IllegalAccessException("AccessCache should only be created from SuperAccessDaemonClient")
-        }
-    }
-}
+)
 
 class SuperAccessDaemonClient(
-    val cacheTTLMillis: Long = 3_000
+    val cacheTTLMillis: Long = 3_000,
+    autoacceptOnTrusted: Boolean
 ) {
 
     val logger by loggerForThis()
@@ -70,7 +59,7 @@ class SuperAccessDaemonClient(
     private val accessCache = mutableMapOf<String, AccessCache>()
 
     // create a new WebSocket server
-    private val server = WsServer(startLock, startCondition)
+    private val server = WsServer(startLock, startCondition, autoacceptOnTrusted)
 
     fun init() {
         server.start()
@@ -91,10 +80,19 @@ class SuperAccessDaemonClient(
         server.broadcast(SuperAccessDaemon.gson.toJson(request))
 
         server.addResponseReceiver(request.id) { response ->
-            if(response is SuperAccessDaemon.SuperAccessResponse.Success) {
+            var result = if(response is SuperAccessDaemon.SuperAccessResponse.Success) {
                 onResponse(true)
+                true
             } else if(response is SuperAccessDaemon.SuperAccessResponse.Failure) {
                 onResponse(false)
+                false
+            } else null
+
+            if(result != null) {
+                synchronized(cacheLock) {
+                    val newCache = AccessCache(request.pluginPath, result, System.currentTimeMillis())
+                    accessCache[request.pluginPath] = newCache
+                }
             }
         }
     }
@@ -149,6 +147,7 @@ class SuperAccessDaemonClient(
     private class WsServer(
         val startLock: ReentrantLock,
         val startCondition: Condition,
+        val autoacceptOnTrusted: Boolean
     ) : WebSocketServer(InetSocketAddress("127.0.0.1", 0)) {
         // create an executor with 1 thread
         private val executor = Executors.newSingleThreadExecutor()
@@ -222,7 +221,7 @@ class SuperAccessDaemonClient(
                         SuperAccessDaemon::class.java,
                         JavaProcess.SLF4JIOReceiver(logger),
                         listOf("-Dlog4j.configurationFile=log4j2_nofile.xml"),
-                        listOf(port.toString())
+                        listOf(port.toString(), autoacceptOnTrusted.toString())
                     )
 
                     if(processRestarts == 6) {

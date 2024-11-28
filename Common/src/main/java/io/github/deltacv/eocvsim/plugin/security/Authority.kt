@@ -23,13 +23,10 @@
 
 package io.github.deltacv.eocvsim.plugin.security
 
-import com.github.serivesmejia.eocvsim.util.SysUtil
-import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.LockFile
-import com.github.serivesmejia.eocvsim.util.io.lockDirectory
-import com.moandjiezana.toml.Toml
-import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.eocvsim.plugin.PLUGIN_CACHING_FOLDER
 import java.io.File
 import java.net.URL
 import java.security.KeyFactory
@@ -59,8 +56,8 @@ object AuthorityFetcher {
 
     const val AUTHORITY_SERVER_URL = "https://raw.githubusercontent.com/deltacv/Authorities/refs/heads/master"
 
-    private val AUTHORITIES_FILE = PluginManager.PLUGIN_CACHING_FOLDER + File.separator + "authorities.toml"
-    private val AUTHORITIES_LOCK_FILE = LockFile(PluginManager.PLUGIN_CACHING_FOLDER + File.separator + "authorities.lock")
+    private val AUTHORITIES_FILE = PLUGIN_CACHING_FOLDER + File.separator + "authorities.toml"
+    private val AUTHORITIES_LOCK_FILE = LockFile(PLUGIN_CACHING_FOLDER + File.separator + "authorities.lock")
 
     private val AUTHORITIES_LOCK_FILE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(3)
 
@@ -81,7 +78,7 @@ object AuthorityFetcher {
         // Load authorities from file if it exists
         if (AUTHORITIES_FILE.exists() && tryLockAuthoritiesFile()) {
             try {
-                val authoritiesToml = Toml().read(AUTHORITIES_FILE)
+                val authoritiesToml = com.moandjiezana.toml.Toml().read(AUTHORITIES_FILE)
                 val timestamp = authoritiesToml.getLong("timestamp")
 
                 if(System.currentTimeMillis() - timestamp > TTL_DURATION_MS) {
@@ -138,13 +135,13 @@ object AuthorityFetcher {
         val currentTime = System.currentTimeMillis()
 
         if(!AUTHORITIES_FILE.exists()) {
-            SysUtil.saveFileStr(AUTHORITIES_FILE, "timestamp = $currentTime\n")
+            AUTHORITIES_FILE.writeText("timestamp = $currentTime\n")
         }
 
-        val authoritiesToml = Toml().read(AUTHORITIES_FILE)
+        val authoritiesToml = com.moandjiezana.toml.Toml().read(AUTHORITIES_FILE)
         val timestamp = authoritiesToml.getLong("timestamp")
 
-        if(currentTime - timestamp > TTL_DURATION_MS) {
+        if(timestamp != null && currentTime - timestamp > TTL_DURATION_MS) {
             AUTHORITIES_FILE.delete()
             logger.info("Authorities file has expired, clearing cache")
             cache.clear()
@@ -175,7 +172,7 @@ object AuthorityFetcher {
             sb.appendLine("timestamp = ${System.currentTimeMillis()}")
 
             // Write the updated content to the file
-            SysUtil.saveFileStr(AUTHORITIES_FILE, sb.toString())
+            AUTHORITIES_FILE.writeText(sb.toString())
         } catch (e: Exception) {
             logger.error("Failed to save authority to file", e)
         } finally {

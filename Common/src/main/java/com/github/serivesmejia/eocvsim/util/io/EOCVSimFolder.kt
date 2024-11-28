@@ -1,6 +1,6 @@
 package com.github.serivesmejia.eocvsim.util.io
 
-import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.extension.appData
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import java.io.File
 
@@ -10,7 +10,7 @@ import java.io.File
  * Also handles locking the folder to prevent multiple instances
  * from running at the same time (which could cause issues).
  */
-object EOCVSimFolder : File(SysUtil.getAppData().absolutePath + separator + ".eocvsim") {
+object EOCVSimFolder : File(appData.absolutePath + separator + ".eocvsim") {
 
     val logger by loggerForThis()
 

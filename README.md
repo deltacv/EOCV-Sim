@@ -1,9 +1,7 @@
-<img src='/EOCV-Sim/src/main/resources/images/icon/ico_eocvsim_letters_transparent.png' height='128px'>
+<img src='/EOCV-Sim/src/main/resources/images/icon/ico_eocvsim_new.png' height='128px'>
 
 ![Java CI with Gradle](https://github.com/deltacv/EOCV-Sim/workflows/Build%20and%20test%20with%20Gradle/badge.svg)
-[![](https://jitpack.io/v/deltacv/EOCV-Sim.svg)](https://jitpack.io/#deltacv/EOCV-Sim)
-
-[![Run on Repl.it](https://repl.it/badge/github/deltacv/EOCV-Sim)](https://repl.it/github/deltacv/EOCV-Sim)
+[![Maven Publish & Create GitHub Release(s)](https://github.com/deltacv/EOCV-Sim/actions/workflows/release_ci.yml/badge.svg)](https://github.com/deltacv/EOCV-Sim/actions/workflows/release_ci.yml)
 
 # Welcome!
 
@@ -14,8 +12,17 @@ transfer it onto your robot!
 
 <img src='doc/images/eocvsim_screenshot_1.png' width='75%' height='75%'>
 
-# Learn how to install and use the simulator in the [documentation here](https://deltacv.gitbook.io/eocv-sim/)
-### (Common users won't need to scroll down any further from here - the gitbook has everything you need)
+## Introducing PaperVision
+
+Starting at v4.0.0, EOCV-Sim comes with a new tool that will make it even easier to work on your computer vision pipelines.
+PaperVision takes inspiration in Blender and Unreal Engine's blueprint system, allowing you to create pipelines by connecting nodes together.<br><br>
+PaperVision is still in its early stages, but it's already a powerful tool that will make it easier to work on your pipelines.<br><br>
+<b>Find it in the "PaperVision" tab in the simulator !</b>
+
+<img src='/EOCV-Sim/src/main/resources/images/papervision.gif' height='300px'>
+
+# Learn how to install and use the simulator in the [documentation here](https://docs.deltacv.org/eocv-sim)
+### (Common users won't need to scroll down any further from here - the docs have everything you need)
 
 # [Buy me a coffee](https://buymeacoffee.com/serivesmejia)
 
@@ -46,7 +53,7 @@ Since OpenCV in Java uses a native library, which is platform specific, the simu
 
 ## Downloading and documentation
 
-Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downloading-eocv-sim) to download the sim. The rest of the documentation can also be found [there](https://deltacv.gitbook.io/eocv-sim/).
+Follow the steps in [this page](https://docs.deltacv.org/eocv-sim/downloading-eocv-sim) to download the sim. The rest of the documentation can also be found [there](https://deltacv.gitbook.io/eocv-sim/).
 
 ## Adding EOCV-Sim as a dependency for plugin development
 
@@ -55,7 +62,8 @@ Follow the steps in [this page](https://deltacv.gitbook.io/eocv-sim/basics/downl
    ### Gradle
    ```groovy
    repositories {
-       maven { url 'https://jitpack.com' } //add jitpack as a maven repo 
+       maven { url 'https://jitpack.com' } //add jitpack as a maven repo
+       mavenCentral() //add maven central as a maven repo
    }
    
    dependencies {
@@ -93,6 +101,13 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v4.0.0 - PaperVision is here !](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.0)
+- This is the 30th release for EOCV-Sim
+    - Introducing PaperVision ! A tool bundled in the simulator that will make it even easier to work on your computer vision pipelines.
+    - Auto-accepts superaccess on trusted plugins, this reduces the UI clutter, especially for PaperVision
+    - Improved several dialogs, adds a better "create workspace" dialog & a welcome dialog that is shown when the sim is opened for the first time
+    - New modernized application icon
+    - @qwertychouskie made their first contribution: "macOS: Add application name, use system light/dark mode in titlebar" and "macOS: Use standard Settings & About entries in menu". Thank you !
 ## [v3.8.4 - Maven Central Migration](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.4)
 - This is the 29th release for EOCV-Sim
     - Migrates all of EOCV-Sim's artifacts to the maven central repository (bye bye JitPack)
