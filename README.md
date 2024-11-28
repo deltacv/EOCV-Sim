@@ -14,8 +14,15 @@ transfer it onto your robot!
 
 <img src='doc/images/eocvsim_screenshot_1.png' width='75%' height='75%'>
 
+## Introducing PaperVision
+
+Starting at v4.0.0, EOCV-Sim comes with a new tool that will make it even easier to work on your computer vision pipelines.
+PaperVision takes inspiration in Blender and Unreal Engine's blueprint system, allowing you to create pipelines by connecting nodes together.<br><br>
+PaperVision is still in its early stages, but it's already a powerful tool that will make it easier to work on your pipelines.<br><br>
+<b>Find it in the "PaperVision" tab in the simulator !</b>
+
 # Learn how to install and use the simulator in the [documentation here](https://docs.deltacv.org/eocv-sim)
-### (Common users won't need to scroll down any further from here - the gitbook has everything you need)
+### (Common users won't need to scroll down any further from here - the docs have everything you need)
 
 # [Buy me a coffee](https://buymeacoffee.com/serivesmejia)
 
