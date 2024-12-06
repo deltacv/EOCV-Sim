@@ -35,6 +35,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateSource;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateVideoSource;
 import com.github.serivesmejia.eocvsim.input.SourceType;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
+import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport;
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager;
 
 import javax.swing.*;
@@ -173,6 +174,10 @@ public class DialogFactory {
 
     public static void createWorkspace(Visualizer visualizer) {
         invokeLater(() -> new CreateWorkspace(visualizer.frame, visualizer));
+    }
+
+    public static void createCrashReport(Visualizer visualizer, String crash) {
+        invokeLater(() -> new CrashReportOutput(visualizer == null ? null : visualizer.frame, crash));
     }
 
     public static FileAlreadyExists.UserChoice createFileAlreadyExistsDialog(EOCVSim eocvSim) {

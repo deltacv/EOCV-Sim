@@ -216,6 +216,10 @@ public class Visualizer {
                 EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim16().getImage()
         ));
 
+        if(true) {
+            throw new RuntimeException("This code is not supposed to be executed");
+        }
+
         frame.setLocationRelativeTo(null);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

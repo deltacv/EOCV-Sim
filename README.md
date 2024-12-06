@@ -108,12 +108,13 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
     - Improved several dialogs, adds a better "create workspace" dialog & a welcome dialog that is shown when the sim is opened for the first time
     - New modernized application icon
     - @qwertychouskie made their first contribution: "macOS: Add application name, use system light/dark mode in titlebar" and "macOS: Use standard Settings & About entries in menu". Thank you !
+
 ## [v3.8.4 - Maven Central Migration](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.4)
 - This is the 29th release for EOCV-Sim
     - Migrates all of EOCV-Sim's artifacts to the maven central repository (bye bye JitPack)
     - Bugfixes:
         - Adds error checking at multiple points of the sim to handle simple edge cases that shouldn't cause an app crash
-  
+
 ## [v3.8.3 - Plugin Classloader major optimization](https://github.com/deltacv/EOCV-Sim/releases/tag/v3.8.3)
 - This is the 28th release for EOCV-Sim
     - Improves plugin classloader classpath loading by caching and resource reusage, this brings an extremely noticeable performance boost for plugins that load a lot of class files from different Maven dependencies in a short amount of time (I'm looking at you Javalin)
