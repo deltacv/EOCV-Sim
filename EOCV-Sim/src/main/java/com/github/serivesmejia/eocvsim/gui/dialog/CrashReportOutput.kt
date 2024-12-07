@@ -2,13 +2,10 @@ package com.github.serivesmejia.eocvsim.gui.dialog
 
 import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
-import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel.DefaultBottomButtonsPanel
 import java.awt.Dimension
-import java.awt.FlowLayout
 import java.awt.Font
-import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JDialog
 import javax.swing.JFrame
@@ -30,8 +27,6 @@ class CrashReportOutput(
     }
 
     init {
-        FlatArcDarkIJTheme.setup()
-
         output.isModal = true
         output.title = "Crash Report"
         output.layout = BoxLayout(output.contentPane, BoxLayout.Y_AXIS)

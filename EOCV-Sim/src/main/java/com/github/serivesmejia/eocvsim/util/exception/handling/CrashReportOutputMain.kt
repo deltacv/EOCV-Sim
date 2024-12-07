@@ -7,6 +7,7 @@ import com.github.serivesmejia.eocvsim.util.SysUtil
 import kotlinx.coroutines.Runnable
 import picocli.CommandLine
 import java.io.File
+import javax.swing.SwingUtilities
 
 object CrashReportOutputMain {
     @CommandLine.Command(name = "report", mixinStandardHelpOptions = true, version = [Build.versionString])
@@ -15,6 +16,7 @@ object CrashReportOutputMain {
         @JvmField var crashReportPath: String? = null
 
         override fun run() {
+            SwingUtilities.invokeLater(FlatArcDarkIJTheme::setup)
             DialogFactory.createCrashReport(null, SysUtil.loadFileStr(File(crashReportPath ?: "")))
         }
     }
