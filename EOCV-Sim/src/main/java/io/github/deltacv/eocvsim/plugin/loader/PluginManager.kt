@@ -92,7 +92,7 @@ class PluginManager(val eocvSim: EOCVSim) {
     }
 
     val repositoryManager by lazy {
-        PluginRepositoryManager(appender, haltLock, haltCondition)
+        PluginRepositoryManager(appender, eocvSim, haltLock, haltCondition)
     }
 
     private val _pluginFiles = mutableListOf<File>()

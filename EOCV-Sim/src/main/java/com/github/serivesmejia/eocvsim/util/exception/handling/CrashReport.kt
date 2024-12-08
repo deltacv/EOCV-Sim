@@ -176,23 +176,26 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
     /**
      * Save the crash report to a file located in the working directory
      */
-    fun saveCrashReport() {
+    fun saveCrashReport(): File {
         val workingDir = File(System.getProperty("user.dir"))
 
         val crashLogFile = workingDir + defaultCrashFileName
 
         saveCrashReport(crashLogFile)
+
+        return crashLogFile
     }
 
     /**
      * Save the crash report to a file located in the working directory
      * @param filename the name of the file to save the crash report to
      */
-    fun saveCrashReport(filename: String) {
+    fun saveCrashReport(filename: String): File {
         val workingDir = File(System.getProperty("user.dir"))
         val crashLogFile = workingDir + File.separator + "$filename.log"
 
         saveCrashReport(crashLogFile)
+        return crashLogFile
     }
 
     /**

@@ -23,6 +23,7 @@
 
 package io.github.deltacv.eocvsim.plugin.repository
 
+import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.SysUtil
@@ -30,6 +31,7 @@ import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
+import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem
 import org.jboss.shrinkwrap.resolver.api.maven.Maven
@@ -37,11 +39,13 @@ import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.TimeUnit
+import javax.swing.JOptionPane
 import kotlin.collections.iterator
 import kotlin.concurrent.withLock
 
 class PluginRepositoryManager(
     val appender: AppendDelegate,
+    val eocvSim: EOCVSim,
     val haltLock: ReentrantLock,
     val haltCondition: Condition
 ) {
@@ -65,6 +69,8 @@ class PluginRepositoryManager(
     private lateinit var cacheTransitiveToml: Toml
 
     private lateinit var resolver: ConfigurableMavenResolverSystem
+
+    private val repositories = mutableListOf<String>()
 
     private val _resolvedFiles = mutableListOf<File>()
     val resolvedFiles get() = _resolvedFiles.toList()
@@ -106,6 +112,7 @@ class PluginRepositoryManager(
             }
 
             resolver.withRemoteRepo(repo.key, repoUrl, "default")
+            repositories += repoUrl
 
             logger.info("Added repository ${repo.key} with URL $repoUrl")
         }
@@ -139,6 +146,24 @@ class PluginRepositoryManager(
                 handleResolutionError(pluginDep, ex)
                 shouldHalt = true
             }
+
+            val latest = checkForUpdates(pluginDep, repositories.toTypedArray())
+
+            if(latest != null) {
+                appender.appendln(
+                    PluginOutput.SPECIAL_SILENT +
+                            "Plugin \"${plugin.key}\" is outdated. Latest version is ${latest.version}."
+                )
+
+                eocvSim.onMainUpdate.doOnce {
+                    promptUpdateAndRestart(plugin.key, pluginDep, latest)
+                }
+            } else {
+                appender.appendln(
+                    PluginOutput.SPECIAL_SILENT +
+                            "Plugin \"${plugin.key}\" is up to date."
+                )
+            }
         }
 
         writeCacheFile(newCache, newTransitiveCache)
@@ -146,6 +171,66 @@ class PluginRepositoryManager(
         handleResolutionOutcome(shouldHalt)
 
         return files
+    }
+
+    private fun promptUpdateAndRestart(pluginName: String, pluginDep: String, latest: ParsedVersion) {
+        if (promptUpdate(pluginName, latest)) {
+            appender.appendln(PluginOutput.SPECIAL_SILENT +"Updating plugin \"$pluginName\" to version ${latest.version}...")
+
+            val artifact = parseArtifact(pluginDep)
+
+            // Read the current TOML file content
+            val tomlFile = REPOSITORY_FILE
+            val tomlString = tomlFile.readText()
+            val tomlLines = tomlString.lines().toMutableList()
+
+            // Locate the `[plugins]` section
+            val indexOfPlugins = tomlLines.indexOfFirst { it.trim() == "[plugins]" }
+            if (indexOfPlugins == -1) {
+                appender.appendln("Failed to find [plugins] section in the TOML file.")
+                return
+            }
+
+            // Find the line for `pluginDep` under `[plugins]`
+            val pluginLineIndex = tomlLines
+                .subList(indexOfPlugins + 1, tomlLines.size) // Only consider lines after `[plugins]`
+                .indexOfFirst { it.trim().matches(Regex("^$pluginName\\s*=\\s*.*")) } // Find the line
+                .takeIf { it != -1 } // Check if the plugin was found
+                ?.let { it + indexOfPlugins + 1 } // Adjust the index relative to the full list
+
+            if (pluginLineIndex == -1 || pluginLineIndex == null) {
+                appender.appendln("Failed to find plugin \"$pluginName\" in the TOML file.")
+                return
+            }
+
+            // Update the version
+            val oldLine = tomlLines[pluginLineIndex]
+            tomlLines[pluginLineIndex] = "$pluginName = \"${artifact.groupId}:${artifact.artifactId}:${latest.version}\""
+
+            // Write updated content back to the TOML file
+            tomlFile.writeText(tomlLines.joinToString("\n"))
+
+            appender.appendln(PluginOutput.SPECIAL_SILENT +"Successfully updated \"$pluginName\" to version ${latest.version}. Restarting...")
+            eocvSim.restart()
+        }
+    }
+
+    private fun promptUpdate(
+        pluginName: String,
+        latest: ParsedVersion
+    ): Boolean {
+        val result = JOptionPane.showOptionDialog(
+            null,
+            "Plugin \"$pluginName\" is outdated. Latest version is ${latest.version}. Do you want to update? This will restart EOCV-Sim.",
+            "Update Plugin",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            arrayOf("Update", "Ignore"),
+            null
+        )
+
+        return result == JOptionPane.YES_OPTION
     }
 
     // Function to handle resolution from cache
@@ -283,7 +368,6 @@ class PluginRepositoryManager(
         val cacheBuilder = StringBuilder()
 
         cacheBuilder.appendLine("# Do not edit this file, it is generated by the application.")
-
         cacheBuilder.appendLine("[plugins]") // add plugins table
 
         for(cached in cache) {
@@ -313,6 +397,5 @@ class PluginRepositoryManager(
     private fun depsToHash(deps: List<String>) =
         deps.joinToString(File.pathSeparator).replace("\\", "/").trimEnd(File.pathSeparatorChar).hashString
 }
-
 
 class InvalidFileException(msg: String) : RuntimeException(msg)

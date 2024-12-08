@@ -40,6 +40,7 @@ class OutputPanel(
 ) : JPanel(GridBagLayout()) {
 
     val outputArea = JTextArea("")
+    val outputScroll = JScrollPane(outputArea)
 
     companion object {
         val monoFont: Font by lazy {
@@ -73,7 +74,6 @@ class OutputPanel(
             )
         }
 
-        val outputScroll = JScrollPane(outputArea)
         outputScroll.verticalScrollBarPolicy   = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
         outputScroll.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
 
@@ -93,6 +93,10 @@ class OutputPanel(
             ipadx   = 10
             ipady   = 10
         })
+    }
+
+    fun resetScroll() {
+        outputScroll.verticalScrollBar.value = 0
     }
 
     open class DefaultBottomButtonsPanel(

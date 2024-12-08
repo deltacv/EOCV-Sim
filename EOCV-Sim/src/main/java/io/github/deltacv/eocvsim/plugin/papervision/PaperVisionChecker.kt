@@ -14,7 +14,7 @@ import kotlin.math.log
 
 object PaperVisionChecker {
 
-    val LATEST_PAPERVISION = ParsedVersion(1, 0, 3)
+    val LATEST_PAPERVISION = ParsedVersion(1, 0, 4)
 
     const val RESET_QUESTION = "o you wish to fix this by resetting back to the default settings? Please note this will wipe your plugins folder!"
 
@@ -52,12 +52,6 @@ object PaperVisionChecker {
         logger.info("hash_check = ${eocvSim.config.flags["${hash}_check"]}")
         logger.info("null_check = ${eocvSim.config.flags["null_check"]}")
 
-        if(eocvSim.config.flags["${hash}_check"] == true) {
-            return
-        } else {
-            eocvSim.config.flags["${hash}_check"] = true
-        }
-
         val parsedVersion = try {
             ParsedVersion(paperVisionPlugin!!.pluginVersion).apply {
                 logger.info("Parsed PaperVision version: $this")
@@ -65,6 +59,12 @@ object PaperVisionChecker {
         } catch(e: Exception) {
             logger.warn("Failed to parse PaperVision version", e)
             null
+        }
+
+        if(eocvSim.config.flags["${hash}_check"] == true && (parsedVersion != null && parsedVersion >= LATEST_PAPERVISION)) {
+            return
+        } else {
+            eocvSim.config.flags["${hash}_check"] = true
         }
 
         if(paperVisionPlugin == null) {
@@ -102,7 +102,7 @@ object PaperVisionChecker {
 
             eocvSim.config.flags["null_check"] = false
             logger.warn("PaperVision plugin loaded from file")
-        } else if(parsedVersion == null || parsedVersion < LATEST_PAPERVISION) {
+        }/*else if(parsedVersion == null || parsedVersion < LATEST_PAPERVISION) {
             SwingUtilities.invokeLater {
                 val result = JOptionPane.showOptionDialog(
                     eocvSim.visualizer.frame,
@@ -120,7 +120,6 @@ object PaperVisionChecker {
 
             eocvSim.config.flags["null_check"] = false
             logger.warn("PaperVision plugin outdated")
-        }
+        }*/
     }
-
 }
