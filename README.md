@@ -101,6 +101,11 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v4.0.1 - Plugin Auto-Updater](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.1)
+- This is the 31th release for EOCV-Sim
+    - Adds a plugin auto-updater, which will automatically check for updates on the plugins you have pulled using repository.toml
+    - Adds a dialog prompt when another EOCV-Sim instance is detected, instead of silently failing
+    - Updates to [PaperVision v1.0.4](https://github.com/deltacv/PaperVision/releases/tag/v1.0.4)
 ## [v4.0.0 - PaperVision is here !](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.0)
 - This is the 30th release for EOCV-Sim
     - Introducing PaperVision ! A tool bundled in the simulator that will make it even easier to work on your computer vision pipelines.
