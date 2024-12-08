@@ -23,6 +23,8 @@
 
 package com.github.serivesmejia.eocvsim
 
+import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme
+import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme.setup
 import com.github.serivesmejia.eocvsim.EOCVSim.Parameters
 import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
@@ -59,6 +61,7 @@ import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.awt.Dimension
 import java.io.File
 import java.lang.Thread.sleep
+import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
@@ -260,6 +263,13 @@ class EOCVSim(val params: Parameters = Parameters()) {
         if (!EOCVSimFolder.couldLock) {
             logger.error(
                 "Couldn't finally claim lock file in \"${EOCVSimFolder.absolutePath}\"! " + "Is the folder opened by another EOCV-Sim instance?"
+            )
+
+            JOptionPane.showMessageDialog(
+                null,
+                "Another instance of EOCV-Sim is already running in this machine, please close it and try again.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE
             )
 
             logger.error("Unable to continue with the execution, the sim will exit now.")
