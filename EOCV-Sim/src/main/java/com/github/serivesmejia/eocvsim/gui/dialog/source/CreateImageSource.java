@@ -158,6 +158,7 @@ public class CreateImageSource {
 
         createImageSource.pack();
         createImageSource.setLocationRelativeTo(null);
+        createImageSource.setAlwaysOnTop(true);
         createImageSource.setResizable(false);
         createImageSource.setVisible(true);
 

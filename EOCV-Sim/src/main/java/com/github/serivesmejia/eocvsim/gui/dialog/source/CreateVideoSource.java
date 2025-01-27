@@ -158,6 +158,7 @@ public class CreateVideoSource {
 
         createVideoSource.pack();
         createVideoSource.setLocationRelativeTo(null);
+        createVideoSource.setAlwaysOnTop(true);
         createVideoSource.setResizable(false);
         createVideoSource.setVisible(true);
     }

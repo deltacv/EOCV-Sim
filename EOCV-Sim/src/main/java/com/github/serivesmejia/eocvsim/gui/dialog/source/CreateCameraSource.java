@@ -402,6 +402,7 @@ public class CreateCameraSource {
 
         createCameraSource.pack();
         createCameraSource.setResizable(false);
+        createCameraSource.setAlwaysOnTop(true);
         createCameraSource.setLocationRelativeTo(null);
         createCameraSource.setVisible(true);
     }
