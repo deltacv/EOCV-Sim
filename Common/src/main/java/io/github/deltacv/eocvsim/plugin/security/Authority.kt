@@ -54,7 +54,7 @@ data class CachedAuthority(
 
 object AuthorityFetcher {
 
-    const val AUTHORITY_SERVER_URL = "https://raw.githubusercontent.com/deltacv/Authorities/refs/heads/master"
+    const val AUTHORITY_SERVER_URL = "https://deltacv.org/authorities/"
 
     private val AUTHORITIES_FILE = PLUGIN_CACHING_FOLDER + File.separator + "authorities.toml"
     private val AUTHORITIES_LOCK_FILE = LockFile(PLUGIN_CACHING_FOLDER + File.separator + "authorities.lock")
@@ -107,8 +107,11 @@ object AuthorityFetcher {
         }
 
         // Fetch the authority from the server
-        val authorityUrl = "${AUTHORITY_SERVER_URL.trim('/')}/$name"
+        val authorityUrl = "${AUTHORITY_SERVER_URL.trim('/')}/${name}.txt"
+
         return try {
+            logger.info("Fetching authority from URL: $authorityUrl")
+
             val authorityPublicKey = URL(authorityUrl).readText()
             val pem = parsePem(authorityPublicKey)
 
