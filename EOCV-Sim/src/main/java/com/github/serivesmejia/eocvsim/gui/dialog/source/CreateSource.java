@@ -43,6 +43,7 @@ public class CreateSource {
 
         chooseSource = new JDialog(parent);
 
+
         this.parent = parent;
         this.eocvSim = eocvSim;
 
@@ -55,7 +56,9 @@ public class CreateSource {
 
         alreadyOpened = true;
 
-        chooseSource.setModal(true);
+        chooseSource.setModal(false);
+        chooseSource.setFocusableWindowState(false);
+        chooseSource.setAlwaysOnTop(true);
 
         chooseSource.setTitle("Select source type");
         chooseSource.setSize(300, 150);

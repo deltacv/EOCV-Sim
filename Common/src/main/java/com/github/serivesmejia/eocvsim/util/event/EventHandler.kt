@@ -45,8 +45,8 @@ class EventHandler(val name: String) : Runnable {
          * Check if a class loader is banned
          */
         fun isBanned(classLoader: ClassLoader): Boolean {
-            for(bannedClassLoader in bannedClassLoaders) {
-                if(bannedClassLoader.get() == classLoader) return true
+            for (bannedClassLoader in bannedClassLoaders) {
+                if (bannedClassLoader.get() == classLoader) return true
             }
 
             return false
@@ -63,7 +63,7 @@ class EventHandler(val name: String) : Runnable {
      * thread-safe operation (synchronized)
      */
     val listeners: Array<EventListener>
-        get()  {
+        get() {
             synchronized(lock) {
                 return internalListeners.toTypedArray()
             }
@@ -82,18 +82,18 @@ class EventHandler(val name: String) : Runnable {
 
     var callRightAway = false
 
-    private val internalListeners     = ArrayList<EventListener>()
+    private val internalListeners = ArrayList<EventListener>()
     private val internalOnceListeners = ArrayList<EventListener>()
 
     /**
      * Run all the listeners in this event handler
      */
     override fun run() {
-        for(listener in listeners) {
+        for (listener in listeners) {
             try {
                 runListener(listener, false)
             } catch (ex: Exception) {
-                if(ex is InterruptedException) {
+                if (ex is InterruptedException) {
                     logger.warn("Rethrowing InterruptedException...")
                     throw ex
                 } else {
@@ -105,11 +105,11 @@ class EventHandler(val name: String) : Runnable {
         val toRemoveOnceListeners = mutableListOf<EventListener>()
 
         //executing "doOnce" listeners
-        for(listener in onceListeners) {
+        for (listener in onceListeners) {
             try {
                 runListener(listener, true)
             } catch (ex: Exception) {
-                if(ex is InterruptedException) {
+                if (ex is InterruptedException) {
                     logger.warn("Rethrowing InterruptedException...")
                     throw ex
                 } else {
@@ -122,7 +122,7 @@ class EventHandler(val name: String) : Runnable {
         }
 
         synchronized(onceLock) {
-            for(listener in toRemoveOnceListeners) {
+            for (listener in toRemoveOnceListeners) {
                 internalOnceListeners.remove(listener)
             }
         }
@@ -133,7 +133,7 @@ class EventHandler(val name: String) : Runnable {
      * @param listener the listener to add
      */
     fun doOnce(listener: EventListener) {
-        if(callRightAway)
+        if (callRightAway)
             runListener(listener, true)
         else synchronized(onceLock) {
             internalOnceListeners.add(listener)
@@ -155,7 +155,7 @@ class EventHandler(val name: String) : Runnable {
             internalListeners.add(listener)
         }
 
-        if(callRightAway) runListener(listener, false)
+        if (callRightAway) runListener(listener, false)
 
         return EventListenerRemover(this, listener, false)
     }
@@ -171,7 +171,7 @@ class EventHandler(val name: String) : Runnable {
      * @param listener the listener to remove
      */
     fun removePersistentListener(listener: EventListener) {
-        if(internalListeners.contains(listener)) {
+        if (internalListeners.contains(listener)) {
             synchronized(lock) { internalListeners.remove(listener) }
         }
     }
@@ -181,7 +181,7 @@ class EventHandler(val name: String) : Runnable {
      * @param listener the listener to remove
      */
     fun removeOnceListener(listener: EventListener) {
-        if(internalOnceListeners.contains(listener)) {
+        if (internalOnceListeners.contains(listener)) {
             synchronized(onceLock) { internalOnceListeners.remove(listener) }
         }
     }
@@ -215,7 +215,7 @@ class EventHandler(val name: String) : Runnable {
     operator fun invoke(listener: EventListener) = doPersistent(listener)
 
     private fun runListener(listener: EventListener, isOnce: Boolean) {
-        if(isBanned(listener.javaClass.classLoader)) {
+        if (isBanned(listener.javaClass.classLoader)) {
             removeBannedListeners()
             return
         }
@@ -224,15 +224,15 @@ class EventHandler(val name: String) : Runnable {
     }
 
     private fun removeBannedListeners() {
-        for(listener in internalListeners.toArray()) {
-            if(isBanned(listener.javaClass.classLoader)) {
+        for (listener in internalListeners.toArray()) {
+            if (isBanned(listener.javaClass.classLoader)) {
                 internalListeners.remove(listener)
                 logger.warn("Removed banned listener from ${listener.javaClass.classLoader}")
             }
         }
 
-        for(listener in internalOnceListeners.toArray()) {
-            if(isBanned(listener.javaClass.classLoader)) internalOnceListeners.remove(listener)
+        for (listener in internalOnceListeners.toArray()) {
+            if (isBanned(listener.javaClass.classLoader)) internalOnceListeners.remove(listener)
             logger.warn("Removed banned listener from ${listener.javaClass.classLoader}")
         }
     }
