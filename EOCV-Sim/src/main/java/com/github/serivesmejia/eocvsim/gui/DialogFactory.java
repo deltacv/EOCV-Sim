@@ -38,6 +38,8 @@ import com.github.serivesmejia.eocvsim.util.event.EventHandler;
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport;
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager;
 
+
+
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -63,6 +65,7 @@ public class DialogFactory {
         }
 
         invokeLater(() -> result.accept(
+
                 JOptionPane.showConfirmDialog(parent, panel, "Confirm",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.PLAIN_MESSAGE
@@ -97,6 +100,7 @@ public class DialogFactory {
     public static void createSourceDialog(EOCVSim eocvSim,
                                           SourceType type,
                                           File initialFile) {
+
         invokeLater(() -> {
             switch (type) {
                 case IMAGE:
