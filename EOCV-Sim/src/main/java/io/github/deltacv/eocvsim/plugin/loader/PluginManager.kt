@@ -155,14 +155,19 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
 
         for (pluginFile in pluginFiles) {
-            _loaders[pluginFile] = PluginLoader(
-                pluginFile,
-                repositoryManager.resolvedFiles,
-                if(pluginFile in repositoryManager.resolvedFiles)
-                    PluginSource.REPOSITORY else PluginSource.FILE,
-                eocvSim,
-                appender
-            )
+            try {
+                _loaders[pluginFile] = PluginLoader(
+                    pluginFile,
+                    repositoryManager.resolvedFiles,
+                    if (pluginFile in repositoryManager.resolvedFiles)
+                        PluginSource.REPOSITORY else PluginSource.FILE,
+                    eocvSim,
+                    appender
+                )
+            } catch (e: Throwable) {
+                appender.appendln("Failure creating PluginLoader for ${pluginFile.name}: ${e.message}")
+                logger.error("Failure creating PluginLoader for ${pluginFile.name}", e)
+            }
         }
 
         enableTimestamp = System.currentTimeMillis()
