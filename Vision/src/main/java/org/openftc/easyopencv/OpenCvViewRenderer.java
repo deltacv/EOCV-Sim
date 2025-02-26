@@ -258,6 +258,11 @@ public class OpenCvViewRenderer
             bitmapFromMat = Bitmap.createBitmap(mat.width(), mat.height(), Bitmap.Config.ARGB_8888);
         }
 
+        if(mat == null || mat.empty())
+        {
+            return;
+        }
+
         //Convert that Mat to a bitmap we can render
         try {
             Utils.matToBitmap(mat, bitmapFromMat, false);

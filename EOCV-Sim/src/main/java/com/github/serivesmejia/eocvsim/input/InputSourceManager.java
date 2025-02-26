@@ -319,7 +319,7 @@ public class InputSourceManager {
     public Visualizer.AsyncPleaseWaitDialog showApwdIfNeeded(String sourceName) {
         Visualizer.AsyncPleaseWaitDialog apwd = null;
 
-        if (getSourceType(sourceName) == SourceType.CAMERA || getSourceType(sourceName) == SourceType.VIDEO) {
+        if (getSourceType(sourceName) == SourceType.CAMERA || getSourceType(sourceName) == SourceType.VIDEO || getSourceType(sourceName) == SourceType.HTTP) {
             apwd = eocvSim.visualizer.asyncPleaseWaitDialog(
                     "Opening source...", null, "Exit",
                     new Dimension(300, 150), true

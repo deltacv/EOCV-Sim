@@ -37,10 +37,6 @@ public class SourcesListIconRenderer extends DefaultListCellRenderer {
 
     public InputSourceManager sourceManager = null;
 
-    ImageIcon imageIcon = null;
-    ImageIcon camIcon = null;
-    ImageIcon vidIcon = null;
-
     public SourcesListIconRenderer(InputSourceManager sourceManager) {
         this.sourceManager = sourceManager;
     }
@@ -59,22 +55,16 @@ public class SourcesListIconRenderer extends DefaultListCellRenderer {
 
         switch (sourceManager.getSourceType((String) value)) {
             case IMAGE:
-                if(imageIcon == null) {
-                    imageIcon = EOCVSimIconLibrary.INSTANCE.getIcoImg().resized(15, 15);
-                }
-                label.setIcon(imageIcon);
+                label.setIcon(EOCVSimIconLibrary.INSTANCE.getIcoImg().resized(15, 15));
                 break;
             case CAMERA:
-                if(camIcon == null) {
-                    camIcon = EOCVSimIconLibrary.INSTANCE.getIcoCam().resized(15, 15);
-                }
-                label.setIcon(camIcon);
+                label.setIcon(EOCVSimIconLibrary.INSTANCE.getIcoCam().resized(15, 15));
                 break;
             case VIDEO:
-                if(vidIcon == null) {
-                    vidIcon = EOCVSimIconLibrary.INSTANCE.getIcoVid().resized(15, 15);
-                }
-                label.setIcon(vidIcon);
+                label.setIcon(EOCVSimIconLibrary.INSTANCE.getIcoVid().resized(15, 15));
+                break;
+            case HTTP:
+                label.setIcon(EOCVSimIconLibrary.INSTANCE.getIcoStream().resized(15, 15));
                 break;
         }
 

@@ -1,6 +1,7 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.CreateSourcePanel
 import com.github.serivesmejia.eocvsim.gui.util.icon.SourcesListIconRenderer
@@ -65,7 +66,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         sourceSelector.cellRenderer = SourcesListIconRenderer(eocvSim.inputSourceManager)
 
         sourceSelectorCreateBtt.addActionListener {
-            lastCreateSourcePopup?.hide()
+            /* lastCreateSourcePopup?.hide()
 
             val panel = CreateSourcePanel(eocvSim)
             val location = sourceSelectorCreateBtt.locationOnScreen
@@ -75,7 +76,9 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
             val popup = PopupX(frame, panel, location.x, location.y, true)
             lastCreateSourcePopup = popup
 
-            popup.show()
+            popup.show() */
+
+            DialogFactory.createSourceDialogEx(eocvSim)
         }
 
         sourceSelectorButtonsContainer = JPanel(FlowLayout(FlowLayout.CENTER))

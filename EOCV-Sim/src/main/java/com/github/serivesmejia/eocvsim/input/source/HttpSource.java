@@ -24,11 +24,14 @@
 package com.github.serivesmejia.eocvsim.input.source;
 
 import com.github.serivesmejia.eocvsim.input.InputSource;
+import com.google.gson.annotations.Expose;
 import io.github.deltacv.papervision.plugin.ipc.stream.MjpegHttpReader;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.Videoio;
 import org.openftc.easyopencv.MatRecycler;
 import org.slf4j.Logger;
@@ -40,20 +43,19 @@ import java.util.Iterator;
 
 public class HttpSource extends InputSource {
 
-    String url;
+    @Expose
+    protected String url;
 
-    private volatile transient MatRecycler matRecycler = new MatRecycler(6);
+    private transient MjpegHttpReader mjpegHttpReader;
 
-    MjpegHttpReader mjpegHttpReader = null;
+    private static final Logger logger = LoggerFactory.getLogger(HttpSource.class);
 
-    Logger logger = LoggerFactory.getLogger(HttpSource.class);
+    private transient MatOfByte buf;
+    private transient Mat img;
 
-    MatOfByte buf = new MatOfByte();
-    Mat img = new Mat();
+    private transient Iterator<byte[]> iterator;
 
-    Iterator<byte[]> iterator;
-
-    long capTimeNanos = 0;
+    private transient long capTimeNanos = 0;
 
     public HttpSource(String url) {
         this.url = url;
@@ -61,30 +63,51 @@ public class HttpSource extends InputSource {
 
     @Override
     public boolean init() {
+        buf = new MatOfByte();
+        img = new Mat();
+
         try {
             mjpegHttpReader = new MjpegHttpReader(url);
             mjpegHttpReader.start();
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.error("Error while initializing MjpegHttpReader", e);
+            return false;
         }
 
-        iterator = mjpegHttpReader.iterator();
+        try {
+            iterator = mjpegHttpReader.iterator();
+        } catch (Exception e) {
+            logger.error("Error while getting MjpegHttpReader iterator", e);
+            return false;
+        }
 
-        return mjpegHttpReader != null;
+        logger.info("HttpSource initialized");
+
+        return mjpegHttpReader != null && iterator != null;
     }
 
     @Override
     public Mat update() {
         if (mjpegHttpReader == null) return null;
 
-        if (img == null) return null;
-
         byte[] frame = iterator.next();
-        buf.put(0, 0, frame);
 
-        Mat mat = Imgcodecs.imdecode(buf, Imgcodecs.IMREAD_UNCHANGED);
-        mat.copyTo(img);
+        if(!dataIsValidJPEG(frame)) {
+            logger.error("Received data is not a valid JPEG image");
+            return null;
+        }
+
+        buf.fromArray(frame);
+
+        if(buf.empty()) {
+            return null;
+        }
+
+        Mat mat = Imgcodecs.imdecode(buf, Imgcodecs.IMREAD_COLOR);
+        Imgproc.cvtColor(mat, img, Imgproc.COLOR_BGR2RGBA);
+
         mat.release();
+
         capTimeNanos = System.nanoTime();
 
         return img;
@@ -130,5 +153,22 @@ public class HttpSource extends InputSource {
     @Override
     public long getCaptureTimeNanos() {
         return capTimeNanos;
+    }
+
+    @Override
+    public String toString() {
+        return "HttpSource(" + url + ")";
+    }
+
+    private static boolean dataIsValidJPEG(byte[] data) {
+        if (data == null || data.length < 2) {
+            return false;
+        }
+
+        int totalBytes = data.length;
+        return (data[0] == (byte) 0xFF &&
+                data[1] == (byte) 0xD8 &&
+                data[totalBytes - 2] == (byte) 0xFF &&
+                data[totalBytes - 1] == (byte) 0xD9);
     }
 }

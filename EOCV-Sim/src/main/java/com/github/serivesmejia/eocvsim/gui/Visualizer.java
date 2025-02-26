@@ -432,7 +432,8 @@ public class Visualizer {
             rows--;
         }
 
-        dialog.setModal(true);
+        dialog.setModal(false);
+        dialog.setAlwaysOnTop(true);
         dialog.setLayout(new GridLayout(rows, 1));
 
         if (isError) {
