@@ -33,7 +33,7 @@ import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import javax.swing.*
 
-class PopupX @JvmOverloads constructor(windowAncestor: Window,
+class PopupX @JvmOverloads constructor(private val windowAncestor: Window,
                                        private val panel: JPanel,
                                        private var x: Int,
                                        private var y: Int,
@@ -55,7 +55,6 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
 
         window.size = panel.preferredSize
 
-        windowAncestor.requestFocusInWindow()
         windowAncestor.addKeyListener(object: KeyAdapter() {
             override fun keyPressed(e: KeyEvent?) {
                 if(e?.keyCode == KeyEvent.VK_ESCAPE) {
@@ -64,11 +63,12 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
                 }
             }
         })
+
     }
 
     override fun show() {
-        window.addWindowFocusListener(this)
         window.isVisible = true
+        windowAncestor.addWindowFocusListener(this)
 
         //fixes position since our panel dimensions
         //aren't known until it's set visible (above)
@@ -82,14 +82,18 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
     override fun hide() {
         if(!window.isVisible) return
 
-        window.removeWindowFocusListener(this)
         window.isVisible = false
         onHide.run()
     }
 
-    override fun windowGainedFocus(e: WindowEvent?) {}
+    override fun windowGainedFocus(e: WindowEvent?) {
+        if(closeOnFocusLost) {
+            hide()
+        }
+    }
 
-    override fun windowLostFocus(e: WindowEvent?) {}
+    override fun windowLostFocus(e: WindowEvent?) {
+    }
 
     fun setLocation(width: Int, height: Int) = window.setLocation(width, height)
 
