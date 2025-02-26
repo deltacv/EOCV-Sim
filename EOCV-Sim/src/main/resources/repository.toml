@@ -2,10 +2,9 @@
 # Declare the URL of the Maven repositories to use, with a key name.
 # The URL must preferably end with a slash to be handled correctly.
 central = "https://repo.maven.apache.org/maven2/"
-jitpack = "https://jitpack.io/"
 
 [plugins]
 # Declare the ID and the Maven coordinates of the plugin (group:artifact:version)
 # which will be used to download the plugin from one of repositories specified above.
 # Any dependency that is not a valid EOCV-Sim plugin will not be considered after download.
-PaperVision = "org.deltacv.PaperVision:EOCVSimPlugin:1.0.4"
+PaperVision = "org.deltacv.PaperVision:EOCVSimPlugin:1.0.5"

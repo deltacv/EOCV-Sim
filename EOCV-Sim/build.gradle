@@ -101,6 +101,14 @@ dependencies {
 
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain:3.3.2'
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:3.3.2'
+
+    implementation('org.deltacv.visionloop:streaming:1.2.4') {
+        exclude group: 'org.jetbrains.skiko'
+        exclude group: 'org.deltacv'
+        exclude group: 'org.deltacv.EOCVSim'
+        exclude group: 'org.deltacv.steve'
+        exclude group: 'org.openpnp'
+    }
 }
 
 task(writeBuildClassJava) {

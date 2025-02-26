@@ -175,12 +175,11 @@ public class CvUtil {
         try {
             capture.open(videoPath);
             capture.read(img);
+        } finally {
             capture.release();
-
-            return img;
-        } catch (Exception ex) {
-            return img;
         }
+
+        return img;
     }
 
     public static Size scaleToFit(Size currentSize, Size targetSize) {
