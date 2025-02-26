@@ -55,6 +55,7 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
 
         window.size = panel.preferredSize
 
+        windowAncestor.requestFocusInWindow()
         windowAncestor.addKeyListener(object: KeyAdapter() {
             override fun keyPressed(e: KeyEvent?) {
                 if(e?.keyCode == KeyEvent.VK_ESCAPE) {
@@ -88,11 +89,7 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
 
     override fun windowGainedFocus(e: WindowEvent?) {}
 
-    override fun windowLostFocus(e: WindowEvent?) {
-        if(closeOnFocusLost) {
-            hide()
-        }
-    }
+    override fun windowLostFocus(e: WindowEvent?) {}
 
     fun setLocation(width: Int, height: Int) = window.setLocation(width, height)
 
