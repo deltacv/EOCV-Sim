@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.input.source;
 
 import com.github.serivesmejia.eocvsim.input.InputSource;
+import com.github.serivesmejia.eocvsim.input.InputSourceInitializer;
 import com.google.gson.annotations.Expose;
 import io.github.deltacv.papervision.plugin.ipc.stream.MjpegHttpReader;
 import org.opencv.core.Mat;
@@ -86,11 +87,20 @@ public class HttpSource extends InputSource {
         return mjpegHttpReader != null && iterator != null;
     }
 
+    byte[] frame;
+
     @Override
     public Mat update() {
         if (mjpegHttpReader == null) return null;
 
-        byte[] frame = iterator.next();
+        boolean result = InputSourceInitializer.INSTANCE.runWithTimeout(name, () -> {
+            frame = iterator.next();
+            return frame != null;
+        });
+
+        if(!result) {
+            return null;
+        }
 
         if(!dataIsValidJPEG(frame)) {
             logger.error("Received data is not a valid JPEG image");
@@ -129,15 +139,13 @@ public class HttpSource extends InputSource {
     @Override
     public void onPause() {
         if (mjpegHttpReader != null) {
-            mjpegHttpReader.stop();
+            reset();
         }
     }
 
     @Override
     public void onResume() {
-        if (mjpegHttpReader != null) {
-            mjpegHttpReader.start();
-        }
+        InputSourceInitializer.INSTANCE.runWithTimeout(name, eocvSim.inputSourceManager, this::init);
     }
 
     @Override
@@ -165,10 +173,68 @@ public class HttpSource extends InputSource {
             return false;
         }
 
-        int totalBytes = data.length;
+        int totalBytes = getJPEGSize(data, data.length);
+
+        if (totalBytes == -1) {
+            return false;
+        }
+
         return (data[0] == (byte) 0xFF &&
                 data[1] == (byte) 0xD8 &&
                 data[totalBytes - 2] == (byte) 0xFF &&
                 data[totalBytes - 1] == (byte) 0xD9);
+    }
+
+    private static int getJPEGSize(byte[] data, int maxLength) {
+        if (data == null || maxLength < 4) {
+            return -1; // Invalid or too small to be a JPEG
+        }
+
+        // Check for SOI marker
+        if (data[0] != (byte) 0xFF || data[1] != (byte) 0xD8) {
+            return -1; // Not a JPEG
+        }
+
+        int pos = 2; // Start after SOI
+
+        while (pos < maxLength - 2) {
+            // Look for the next marker (0xFF xx)
+            if (data[pos] == (byte) 0xFF) {
+                byte marker = data[pos + 1];
+
+                // End of Image (EOI) found
+                if (marker == (byte) 0xD9) {
+                    return pos + 2; // JPEG size
+                }
+
+                // Skip padding bytes (some JPEGs use 0xFF 0x00)
+                if (marker == (byte) 0x00) {
+                    pos++;
+                    continue;
+                }
+
+                // Most markers have a 2-byte length field
+                if ((marker >= (byte) 0xC0 && marker <= (byte) 0xFE) && marker != (byte) 0xD9) {
+                    if (pos + 3 >= maxLength) {
+                        return -1; // Incomplete JPEG
+                    }
+
+                    // Read segment length (big-endian)
+                    int segmentLength = ((data[pos + 2] & 0xFF) << 8) | (data[pos + 3] & 0xFF);
+
+                    if (segmentLength < 2 || pos + segmentLength >= maxLength) {
+                        return -1; // Corrupt or incomplete JPEG
+                    }
+
+                    pos += segmentLength; // Move to next marker
+                } else {
+                    pos++; // Skip unknown byte
+                }
+            } else {
+                pos++; // Continue searching
+            }
+        }
+
+        return -1; // No valid JPEG end found
     }
 }

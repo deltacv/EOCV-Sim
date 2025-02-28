@@ -47,6 +47,7 @@ object InputSourceInitializer {
 
 
     @OptIn(DelicateCoroutinesApi::class)
+    @JvmOverloads
     fun runWithTimeout(sourceName: String, manager: InputSourceManager? = null, callback: () -> Boolean): Boolean {
         var result = false
 
@@ -54,7 +55,7 @@ object InputSourceInitializer {
             try {
                 result = callback()
             } catch (e: Exception) {
-                logger.error("Error initializing InputSource", e)
+                logger.error("Error running InputSource", e)
             }
         }
 
@@ -66,7 +67,7 @@ object InputSourceInitializer {
                     job.join()
                 }
             } catch (e: CancellationException) {
-                logger.error("InputSource initialization timed out after $TIMEOUT ms", e)
+                logger.error("InputSource run timed out after $TIMEOUT ms", e)
             } finally {
                 job.cancel()
                 dialog?.destroyDialog()
