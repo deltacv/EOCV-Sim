@@ -9,7 +9,6 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.WeakHashMap;
 
 public class Utils {
@@ -96,7 +95,8 @@ public class Utils {
         }
     }
 
-    private static WeakHashMap<Thread, byte[]> m2bDataMap = new WeakHashMap<>();
+
+    private static WeakHashMap<Thread, WeakHashMap<Integer, byte[]>> m2bReusableBufferCache = new WeakHashMap<>();
 
     private static void nMatToBitmap2(Mat src, Bitmap b, boolean premultiplyAlpha) {
         Mat tmp;
@@ -128,12 +128,15 @@ public class Utils {
 
         int size = tmp.rows() * tmp.cols() * tmp.channels();
 
-        byte[] m2bData = m2bDataMap.get(Thread.currentThread());
+        WeakHashMap<Integer, byte[]> m2bArrays = m2bReusableBufferCache.getOrDefault(Thread.currentThread(), new WeakHashMap<>());
+        byte[] m2bData = m2bArrays.getOrDefault(size, null);
 
         if(m2bData == null || m2bData.length != size) {
             m2bData = new byte[size];
-            m2bDataMap.put(Thread.currentThread(), m2bData);
+            m2bArrays.put(size, m2bData);
         }
+
+        m2bReusableBufferCache.put(Thread.currentThread(), m2bArrays);
 
         tmp.get(0, 0, m2bData);
 

@@ -11,7 +11,7 @@ import kotlinx.coroutines.withTimeout
 
 object InputSourceInitializer {
 
-    const val TIMEOUT = 5000L
+    const val TIMEOUT = 10000L
 
     val logger by loggerForThis()
 
