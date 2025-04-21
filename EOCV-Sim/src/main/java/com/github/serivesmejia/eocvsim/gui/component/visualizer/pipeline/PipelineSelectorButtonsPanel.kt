@@ -124,6 +124,7 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
         val outputBtt = JButton("Pipeline Output")
 
         outputBtt.addActionListener { DialogFactory.createPipelineOutput(eocvSim) }
+
         workspaceButtonsPanel.add(outputBtt, GridBagConstraints().apply {
             gridy = 1
             weightx = 1.0
