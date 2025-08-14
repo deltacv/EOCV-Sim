@@ -58,6 +58,8 @@ class PipelineOpModeSwitchablePanel(val eocvSim: EOCVSim) : JTabbedPane() {
     init {
         pipelinePanel.layout = GridBagLayout()
 
+        font = font.deriveFont(Font.PLAIN, 14f)
+
         pipelineSelectorPanel.border = TitledBorder("Pipelines").apply {
             titleFont = titleFont.deriveFont(Font.BOLD)
             border = EmptyBorder(0, 0, 0, 0)

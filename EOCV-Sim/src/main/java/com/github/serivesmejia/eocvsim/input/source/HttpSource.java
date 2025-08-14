@@ -29,17 +29,12 @@ import com.google.gson.annotations.Expose;
 import io.github.deltacv.papervision.plugin.ipc.stream.MjpegHttpReader;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
-import org.opencv.core.Size;
-import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.opencv.videoio.Videoio;
-import org.openftc.easyopencv.MatRecycler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.filechooser.FileFilter;
-import java.io.IOException;
 import java.util.Iterator;
 
 public class HttpSource extends InputSource {
