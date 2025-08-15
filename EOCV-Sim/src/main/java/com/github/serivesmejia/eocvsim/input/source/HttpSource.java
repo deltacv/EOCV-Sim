@@ -26,7 +26,7 @@ package com.github.serivesmejia.eocvsim.input.source;
 import com.github.serivesmejia.eocvsim.input.InputSource;
 import com.github.serivesmejia.eocvsim.input.InputSourceInitializer;
 import com.google.gson.annotations.Expose;
-import io.github.deltacv.papervision.plugin.ipc.stream.MjpegHttpReader;
+import io.github.deltacv.visionloop.io.MjpegHttpReader;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgcodecs.Imgcodecs;

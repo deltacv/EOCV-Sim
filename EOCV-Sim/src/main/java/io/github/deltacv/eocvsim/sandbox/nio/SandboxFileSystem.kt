@@ -28,18 +28,21 @@ import io.github.deltacv.eocvsim.plugin.loader.PluginLoader
 import java.nio.file.*
 import java.nio.file.attribute.FileAttribute
 
-class SandboxFileSystem(loader: PluginLoader) : FileSystem() {
+class SandboxFileSystem(
+    val path: Path,
+    val hash: String
+) : FileSystem() {
 
-    val parent = FileSystems.newFileSystem(loader.fileSystemZipPath, null)
+    val parent = FileSystems.newFileSystem(path, null)
 
     val logger by loggerForThis()
 
     init {
-        logger.info("Loading filesystem ${loader.hash()}")
+        logger.info("Loading filesystem $hash")
 
         Runtime.getRuntime().addShutdownHook(Thread {
             if(isOpen) {
-                logger.info("SHUTDOWN - Unloading filesystem ${loader.hash()}")
+                logger.info("SHUTDOWN - Unloading filesystem $hash")
                 close()
             }
         })

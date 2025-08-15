@@ -60,6 +60,7 @@ allprojects {
 
         google()
         maven { url "https://maven.pkg.jetbrains.space/public/p/compose/dev" }
+        maven { url 'https://artifacts.openmicroscopy.org/artifactory/ome.releases/' }
     }
 
     tasks.withType(Jar).configureEach {

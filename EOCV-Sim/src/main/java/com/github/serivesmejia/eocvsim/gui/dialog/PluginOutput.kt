@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoader
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginSource
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
@@ -218,7 +219,7 @@ class PluginOutput(
         } else {
             val tabbedPane = JTabbedPane(JTabbedPane.LEFT)
 
-            for((_, loader) in pluginManager.loaders) {
+            for(loader in pluginManager.loaders) {
                 val pluginPanel = JPanel()
                 pluginPanel.layout = GridBagLayout()
 
@@ -253,13 +254,16 @@ class PluginOutput(
                     "It has super access."
                 else "It does not have super access."
 
-                val wantsSuperAccess = if(loader.pluginToml.getBoolean("super-access", false))
-                    "It requests super access in its manifest."
-                else "It does not request super access in its manifest."
+                val wantsSuperAccess = when(loader) {
+                    is FilePluginLoader -> {
+                        if(loader.pluginToml.getBoolean("super-access", false))
+                            "It requests super access in its manifest."
+                        else "It does not request super access in its manifest."
+                    }
+                    else -> ""
+                }
 
-                val description = if(loader.pluginDescription.isBlank())
-                    "No description available."
-                else loader.pluginDescription
+                val description = loader.pluginDescription.ifBlank { "No description available." }
 
                 val font = pluginNameLabel.font.deriveFont(13.0f)
 

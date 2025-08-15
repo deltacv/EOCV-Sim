@@ -29,12 +29,22 @@ import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 
 class PluginContext(
     val eocvSim: EOCVSim,
-    val fileSystem: SandboxFileSystem,
     val loader: PluginLoader
 ) {
     companion object {
-        @JvmStatic fun current(plugin: EOCVSimPlugin) = (plugin.javaClass.classLoader as PluginClassLoader).pluginContextProvider()
+        var globalContextMap = mutableMapOf<EOCVSimPlugin, PluginContext>()
+        var currentGlobalContext: PluginContext? = null
+
+        @JvmStatic fun current(plugin: EOCVSimPlugin) = globalContextMap[plugin] ?: try {
+            (plugin.javaClass.classLoader as PluginClassLoader).pluginContextProvider()
+        } catch (e: Exception) {
+            currentGlobalContext
+        }
     }
+
+
+    val fileSystem: SandboxFileSystem
+        get() = loader.fileSystem
 
     val plugin get() = loader.plugin
     val pluginSource get() = loader.pluginSource
