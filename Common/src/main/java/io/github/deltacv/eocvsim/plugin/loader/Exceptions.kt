@@ -25,6 +25,6 @@ package io.github.deltacv.eocvsim.plugin.loader
 
 import kotlin.RuntimeException
 
-class InvalidPluginException(message: String) : RuntimeException(message)
+class InvalidPluginException(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
 
 class UnsupportedPluginException(message: String) : RuntimeException(message)

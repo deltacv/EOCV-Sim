@@ -64,56 +64,57 @@ class PluginParser(pluginToml: Toml) {
     fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
 }
 
-interface PluginLoader {
+abstract class PluginLoader {
+    abstract val pluginSource: PluginSource
 
-    val pluginSource: PluginSource
+    abstract val pluginFile: File
 
-    val loaded: Boolean
-    val enabled: Boolean
-    var shouldEnable: Boolean
+    abstract val loaded: Boolean
+    abstract val enabled: Boolean
+    abstract var shouldEnable: Boolean
 
-    val pluginName: String
-    val pluginVersion: String
-    val pluginDescription: String
-    val pluginAuthor: String
-    val pluginAuthorEmail: String
+    abstract val pluginName: String
+    abstract val pluginVersion: String
+    abstract val pluginDescription: String
+    abstract val pluginAuthor: String
+    abstract val pluginAuthorEmail: String
 
-    val classpath: List<File>
+    abstract val classpath: List<File>
 
-    val pluginClass: Class<*>
-    val plugin: EOCVSimPlugin
+    abstract val pluginClass: Class<*>
+    abstract val plugin: EOCVSimPlugin
 
-    val fileSystem: SandboxFileSystem
-    val signature: PluginSignature
-    val hasSuperAccess: Boolean
+    abstract val fileSystem: SandboxFileSystem
+    abstract val signature: PluginSignature
+    abstract val hasSuperAccess: Boolean
 
     /**
      * Loads the plugin into memory without enabling it.
      */
-    fun load()
+    abstract fun load()
 
     /**
      * Enables the plugin if loaded and allowed.
      */
-    fun enable()
+    abstract fun enable()
 
     /**
      * Disables the plugin if enabled.
      */
-    fun disable()
+    abstract fun disable()
 
     /**
      * Fully unloads the plugin and closes resources.
      */
-    fun kill()
+    abstract fun kill()
 
     /**
      * Requests elevated permissions for the plugin.
      */
-    fun requestSuperAccess(reason: String): Boolean
+    abstract fun requestSuperAccess(reason: String): Boolean
 
     /**
      * Hash of the plugin based on name and author.
      */
-    fun hash(): String
+    abstract fun hash(): String
 }

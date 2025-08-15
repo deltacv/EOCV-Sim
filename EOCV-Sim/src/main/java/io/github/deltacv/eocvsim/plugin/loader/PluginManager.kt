@@ -23,6 +23,7 @@
 
 package io.github.deltacv.eocvsim.plugin.loader
 
+import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
@@ -126,6 +127,32 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         superAccessDaemonClient.init()
 
+        // replace papervision line
+
+        if(!eocvSim.config.flags.getOrDefault("hasDiscardedPaperVisionRepository", false)) {
+            try {
+                val repositoriesStr = PluginRepositoryManager.REPOSITORY_FILE.readText()
+                for (line in repositoriesStr.lines()) {
+                    // retrofit to now instead use embedded papervision
+                    if (line.contains("papervision", ignoreCase = true) && !line.trim().startsWith("#")) {
+                        // add a # to the start of the line to comment it out
+                        PluginRepositoryManager.REPOSITORY_FILE.writeText(
+                            repositoriesStr.replaceFirst(
+                                line,
+                                "\n# PaperVision is now embedded inside EOCV-Sim, there's no need to declare it here\n# $line"
+                            )
+                        )
+
+                        logger.info("Commented out PaperVision repository line in ${PluginRepositoryManager.REPOSITORY_FILE.absolutePath}")
+                        break
+                    }
+                }
+            } catch (_: Exception) {
+            }
+
+            eocvSim.config.flags["hasDiscardedPaperVisionRepository"] = true
+        }
+
         repositoryManager.init()
 
         val pluginFilesInFolder = PLUGIN_FOLDER.listFiles()?.let {
@@ -147,45 +174,48 @@ class PluginManager(val eocvSim: EOCVSim) {
             _pluginFiles.addAll(pluginFilesInFolder)
         }
 
-        for (file in pluginFiles) {
-            if (file.extension == "jar") _pluginFiles.add(file)
-        }
-
         if(pluginFiles.isEmpty()) {
             appender.appendln(PluginOutput.SPECIAL_SILENT + "No plugin files to load")
         }
 
         for (pluginFile in pluginFiles) {
             try {
-                _loaders.add(FilePluginLoader(
+                val loader = FilePluginLoader(
                     pluginFile,
                     repositoryManager.resolvedFiles,
                     if (pluginFile in repositoryManager.resolvedFiles)
                         PluginSource.REPOSITORY else PluginSource.FILE,
                     eocvSim,
                     appender
-                ))
+                )
+
+                _loaders.add(loader)
+                loader.fetchInfoFromToml()
             } catch (e: Throwable) {
                 appender.appendln("Failure creating PluginLoader for ${pluginFile.name}: ${e.message}")
                 logger.error("Failure creating PluginLoader for ${pluginFile.name}", e)
             }
         }
 
-        @Suppress("UNCHECKED_CAST")
-        addEmbeddedPlugin(
-            Class.forName("io.github.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin") as Class<out EOCVSimPlugin>,
-            "PaperVision", "1.0.6", "deltacv",
-            "Create your custom OpenCV algorithms using a user-friendly node editor interface",
-            "dev@deltacv.org"
-        )
+        if(_loaders.find { it.pluginName == "PaperVision" && it.pluginAuthor == "deltacv" } == null) {
+            @Suppress("UNCHECKED_CAST")
+            addEmbeddedPlugin(
+                Class.forName("io.github.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin") as Class<out EOCVSimPlugin>,
+                "PaperVision", Build.paperVisionVersion, "deltacv",
+                "Create your custom OpenCV algorithms using a user-friendly node editor interface",
+                "dev@deltacv.org"
+            )
+        } else {
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "PaperVision plugin is already loaded, skipping embedded plugin.")
+        }
 
         enableTimestamp = System.currentTimeMillis()
         isEnabled = true
     }
 
-    fun addEmbeddedPlugin(plugin: Class<out EOCVSimPlugin>, name: String, version: String, author: String = "", description: String = "", email: String = "", superAccess: Boolean = true) {
+    fun <T: EOCVSimPlugin> addEmbeddedPlugin(plugin: Class<T>, name: String, version: String, author: String = "", description: String = "", email: String = "", superAccess: Boolean = true) {
         try {
-            addEmbeddedPlugin(name, version, author, description, email, superAccess) {
+            addEmbeddedPlugin(name, version, author, description, email, superAccess, plugin) {
                 plugin.getDeclaredConstructor().newInstance()
             }
         } catch (e: Exception) {
@@ -194,7 +224,7 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
     }
 
-    fun addEmbeddedPlugin(name: String, version: String, author: String = "", description: String = "", email: String = "", superAccess: Boolean = true, pluginInstantiator: () -> EOCVSimPlugin) {
+    fun <T: EOCVSimPlugin> addEmbeddedPlugin(name: String, version: String, author: String = "", description: String = "", email: String = "", superAccess: Boolean = true, pluginClass: Class<T>, pluginInstantiator: () -> T) {
         val tempLoader = EmbeddedPluginLoader(
             eocvSim = eocvSim,
             pluginName = name,
@@ -203,6 +233,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             pluginAuthor = author,
             pluginAuthorEmail = email,
             superAccess = superAccess,
+            pluginClass = pluginClass,
             pluginInstantiator = pluginInstantiator
         )
 
@@ -218,10 +249,6 @@ class PluginManager(val eocvSim: EOCVSim) {
     fun loadPlugins() {
         for (loader in _loaders.toTypedArray()) {
             try {
-                if(loader is FilePluginLoader) {
-                    loader.fetchInfoFromToml()
-                }
-
                 val hash = loader.hash()
 
                 if(hash in _loadedPluginHashes) {

@@ -102,7 +102,7 @@ dependencies {
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain:3.3.2'
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:3.3.2'
 
-    implementation("org.deltacv.PaperVision:EOCVSimPlugin:1.0.6") {
+    implementation("org.deltacv.PaperVision:EOCVSimPlugin:$papervision_version") {
         exclude group: 'org.deltacv.EOCV-Sim'
     }
 
@@ -142,6 +142,7 @@ task(writeBuildClassJava) {
         "    public static final boolean isDev = ${version.contains("dev")};\n\n" +
         "    public static final String opencvVersion = \"$opencv_version\";\n" +
         "    public static final String apriltagPluginVersion = \"$apriltag_plugin_version\";\n" +
+        "    public static final String paperVisionVersion = \"$papervision_version\";\n" +
         "}"
 }
 

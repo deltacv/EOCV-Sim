@@ -244,11 +244,13 @@ class PluginOutput(
                     "The author did not provide contact information."
                 else "Contact the author at ${loader.pluginAuthorEmail}"
 
-                val source = if(loader.pluginSource == PluginSource.REPOSITORY)
-                    "Maven repository"
-                else "local file"
+                val source = when(loader.pluginSource) {
+                    PluginSource.REPOSITORY -> "from a Maven repository"
+                    PluginSource.FILE -> "from a local file"
+                    PluginSource.EMBEDDED -> "as an embedded plugin"
+                }
 
-                val sourceEnabled = if(loader.shouldEnable) "It was LOADED from a $source." else "It is DISABLED, it comes from a $source."
+                val sourceEnabled = if(loader.shouldEnable) "It was LOADED $source." else "It is DISABLED, it comes $source."
 
                 val superAccess = if(loader.hasSuperAccess)
                     "It has super access."

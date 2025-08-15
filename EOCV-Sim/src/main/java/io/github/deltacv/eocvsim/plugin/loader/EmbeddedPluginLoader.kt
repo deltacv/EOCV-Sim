@@ -15,7 +15,7 @@ import java.io.File
  * A PluginLoader that wraps an already-instantiated plugin
  * without loading from a JAR.
  */
-class EmbeddedPluginLoader(
+class EmbeddedPluginLoader<T: EOCVSimPlugin>(
     val eocvSim: EOCVSim,
     override val pluginName: String,
     override val pluginVersion: String,
@@ -24,34 +24,16 @@ class EmbeddedPluginLoader(
     override val pluginAuthorEmail: String = "",
     private val superAccess: Boolean = true,
     private val pluginSignature: PluginSignature? = null,
-    val pluginInstantiator: () -> EOCVSimPlugin
-) : PluginLoader {
-
-    // take a Class<out EOCVSimPlugin> as a parameter
-    constructor(
-        eocvSim: EOCVSim,
-        pluginClass: Class<out EOCVSimPlugin>,
-        pluginName: String,
-        pluginVersion: String,
-        pluginDescription: String = "",
-        pluginAuthor: String = "",
-        pluginAuthorEmail: String = "",
-        superAccess: Boolean = true,
-        pluginSignature: PluginSignature? = null
-    ) : this(
-        eocvSim,
-        pluginName,
-        pluginVersion,
-        pluginDescription,
-        pluginAuthor,
-        pluginAuthorEmail,
-        superAccess,
-        pluginSignature,
-        {
-            pluginClass.getDeclaredConstructor().newInstance()
-        })
+    override val pluginClass: Class<T>,
+    val pluginInstantiator: () -> T
+) : PluginLoader() {
 
     override val pluginSource: PluginSource = PluginSource.EMBEDDED
+
+    override val pluginFile: File get() {
+        // find the jar where the plugin class is located
+        return pluginClass.protectionDomain.codeSource.location.file.let { File(it) }
+    }
 
     override var loaded: Boolean = false
         private set
@@ -63,8 +45,6 @@ class EmbeddedPluginLoader(
 
     override lateinit var plugin: EOCVSimPlugin
         private set
-
-    override val pluginClass: Class<*> get() = plugin::class.java
 
     override val signature = PluginSignature(false, null, System.currentTimeMillis())
 
@@ -106,9 +86,8 @@ class EmbeddedPluginLoader(
 
         val ctx = PluginContext(eocvSim, this)
 
-        PluginContext.currentGlobalContext = ctx
+        PluginContext.globalContextMap[pluginClass.name] = ctx
         plugin = pluginInstantiator()
-        PluginContext.globalContextMap[plugin] = ctx
 
         if (loaded) return
         plugin.onLoad()
@@ -141,7 +120,10 @@ class EmbeddedPluginLoader(
         return hasSuperAccess
     }
 
-    override fun hash(): String {
-        return "EMBEDDED-$pluginName-$pluginAuthor".hashString
-    }
+    /**
+     * Get the hash of the plugin based off the plugin name and author
+     * @return the hash
+     */
+    override fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
+
 }

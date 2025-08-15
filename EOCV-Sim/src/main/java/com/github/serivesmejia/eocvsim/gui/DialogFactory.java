@@ -108,6 +108,7 @@ public class DialogFactory {
                     break;
                 case VIDEO:
                     new CreateVideoSource(eocvSim.visualizer.frame, eocvSim, initialFile);
+                    break;
                 case HTTP:
                     new CreateHttpSource(eocvSim.visualizer.frame, eocvSim);
                     break;

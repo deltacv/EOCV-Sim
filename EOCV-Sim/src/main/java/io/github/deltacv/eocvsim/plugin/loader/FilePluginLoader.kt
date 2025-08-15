@@ -45,12 +45,12 @@ import java.io.File
  * @param eocvSim the EOCV-Sim instance
  */
 class FilePluginLoader(
-    val pluginFile: File,
+    override val pluginFile: File,
     override val classpath: List<File>,
     override val pluginSource: PluginSource,
     val eocvSim: EOCVSim,
     val appender: AppendDelegate
-) : PluginLoader{
+) : PluginLoader() {
 
     val logger by loggerForThis()
 
@@ -60,7 +60,12 @@ class FilePluginLoader(
     override var enabled = false
         private set
 
-    val pluginClassLoader: PluginClassLoader
+    val pluginClassLoader = PluginClassLoader(
+        pluginFile,
+        classpath
+    ) {
+        PluginContext(eocvSim, this)
+    }
 
     override var shouldEnable: Boolean
         get() {
@@ -110,15 +115,6 @@ class FilePluginLoader(
      * Whether the plugin has super access (full system access)
      */
     override val hasSuperAccess get() = eocvSim.pluginManager.superAccessDaemonClient.checkAccess(pluginFile)
-
-    init {
-        pluginClassLoader = PluginClassLoader(
-            pluginFile,
-            classpath
-        ) {
-            PluginContext(eocvSim, this)
-        }
-    }
 
     /**
      * Fetch the plugin info from the plugin.toml file
@@ -198,7 +194,7 @@ class FilePluginLoader(
         plugin = try {
             pluginClass.getConstructor().newInstance() as EOCVSimPlugin
         } catch(e: Throwable) {
-            throw InvalidPluginException("Failed to instantiate plugin class ${pluginClass.name}. Make sure your plugin class has a public no-args constructor.")
+            throw InvalidPluginException("Failed to instantiate plugin class ${pluginClass.name}. Make sure your plugin class has a public no-args constructor.", e)
         }
 
         plugin.onLoad()
