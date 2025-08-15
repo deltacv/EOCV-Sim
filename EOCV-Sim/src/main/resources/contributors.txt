@@ -1,5 +1,5 @@
 <html>NPE (Windwoes) - EasyOpenCV and AprilTag Plugin</html>
-<html>serivesmejia - Main Dev</html>
+<html>serivesmejia - Main deltacv Dev</html>
 <html>Purav - Contributor & Mac Tester </html>
 <html>Jaran - Kotlin & Coroutines Advisor</html>
 <html>Shaurya - Guide Contributor & Mac Tester</html>

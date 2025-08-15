@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.input;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
+import com.google.gson.annotations.Expose;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 
@@ -38,7 +39,8 @@ public abstract class InputSource implements Comparable<InputSource> {
     protected transient boolean isPaused;
     private transient boolean beforeIsPaused;
 
-    protected transient long createdOn = -1L;
+    @Expose
+    protected long createdOn = -1L;
 
     public abstract boolean init();
     public abstract void reset();

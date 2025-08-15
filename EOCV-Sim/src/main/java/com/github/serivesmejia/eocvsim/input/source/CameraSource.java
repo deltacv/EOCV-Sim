@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.input.source;
 import com.github.serivesmejia.eocvsim.gui.Visualizer;
 import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.input.InputSource;
+import com.github.serivesmejia.eocvsim.input.InputSourceInitializer;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
 import com.google.gson.annotations.Expose;
 import io.github.deltacv.steve.Webcam;
@@ -266,10 +267,10 @@ public class CameraSource extends InputSource {
 
     @Override
     public void onResume() {
-        Visualizer.AsyncPleaseWaitDialog apwdCam = eocvSim.inputSourceManager.showApwdIfNeeded(name);
-        camera.open();
-
-        apwdCam.destroyDialog();
+        InputSourceInitializer.INSTANCE.runWithTimeout(name, eocvSim.inputSourceManager, () -> {
+            camera.open();
+            return camera.isOpen();
+        });
     }
 
     @Override

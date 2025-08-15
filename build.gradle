@@ -10,6 +10,7 @@ buildscript {
         log4j_version = "2.24.1"
         opencv_version = "4.7.0-0"
         apriltag_plugin_version = "2.1.0-D"
+        papervision_version = "1.0.7"
 
         skiko_version = "0.8.15"
 
@@ -46,7 +47,7 @@ plugins {
 
 allprojects {
     group 'org.deltacv.EOCV-Sim'
-    version '4.0.1'
+    version '4.0.2'
 
     apply plugin: 'java'
 
@@ -59,9 +60,8 @@ allprojects {
         mavenLocal()
 
         google()
-
-        maven { url "https://jitpack.io" }
         maven { url "https://maven.pkg.jetbrains.space/public/p/compose/dev" }
+        maven { url 'https://artifacts.openmicroscopy.org/artifactory/ome.releases/' }
     }
 
     tasks.withType(Jar).configureEach {

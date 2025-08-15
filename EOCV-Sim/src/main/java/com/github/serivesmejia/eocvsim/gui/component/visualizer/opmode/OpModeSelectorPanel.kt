@@ -242,11 +242,27 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
     }
 
     private fun teleOpSelected(index: Int) {
-        opModeSelected(teleopIndexMap[index]!!, teleopSelector.selectedValue!!)
+        opModeSelected(teleopIndexMap[index] ?: run {
+            logger.error("teleopIndexMap[$index] is null")
+            updateOpModesList()
+
+            SwingUtilities.invokeLater {
+                teleOpSelected(index)
+            }
+            return
+        }, teleopSelector.selectedValue ?: return)
     }
 
     private fun autonomousSelected(index: Int) {
-        opModeSelected(autonomousIndexMap[index]!!, autonomousSelector.selectedValue!!)
+        opModeSelected(autonomousIndexMap[index] ?: run {
+            logger.error("autonomousIndexMap[$index] is null")
+            updateOpModesList()
+
+            SwingUtilities.invokeLater {
+                autonomousSelected(index)
+            }
+            return
+        }, autonomousSelector.selectedValue ?: return)
     }
 
     private fun opModeSelected(managerIndex: Int, name: String, forceChangePipeline: Boolean = true) {
@@ -281,13 +297,21 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
                 if(type == OpModeType.AUTONOMOUS) {
                     val autonomousAnnotation = pipeline.clazz.autonomousAnnotation
 
-                    autonomousListModel.addElement(autonomousAnnotation.name)
+                    autonomousListModel.addElement(
+                        if(autonomousAnnotation.name.isBlank())
+                            pipeline.clazz.simpleName
+                        else autonomousAnnotation.name
+                    )
                     autonomousIndexMap[autonomousSelectorIndex] = managerIndex
                     autonomousSelectorIndex++
                 } else if(type == OpModeType.TELEOP) {
                     val teleopAnnotation = pipeline.clazz.teleopAnnotation
 
-                    teleopListModel.addElement(teleopAnnotation.name)
+                    teleopListModel.addElement(
+                        if(teleopAnnotation.name.isBlank())
+                            pipeline.clazz.simpleName
+                        else teleopAnnotation.name
+                    )
                     teleopIndexMap[teleopSelectorIndex] = managerIndex
                     teleopSelectorIndex++
                 }

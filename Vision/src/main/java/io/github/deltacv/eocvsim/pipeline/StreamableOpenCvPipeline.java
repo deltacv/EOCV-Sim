@@ -10,7 +10,7 @@ import org.openftc.easyopencv.OpenCvPipeline;
  */
 public abstract class StreamableOpenCvPipeline extends OpenCvPipeline {
 
-    private Object streamerLock = new Object();
+    private final Object streamerLock = new Object();
     private ImageStreamer streamer = null;
 
     public void streamFrame(int id, Mat image, Integer cvtCode) {

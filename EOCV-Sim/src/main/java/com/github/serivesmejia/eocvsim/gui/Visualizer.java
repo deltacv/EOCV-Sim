@@ -184,8 +184,6 @@ public class Visualizer {
 
         rightContainer.add(telemetryWithInsets);
 
-        onPluginGuiAttachment.run();
-
         //global
         frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));
 
@@ -198,6 +196,8 @@ public class Visualizer {
         tunerScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 
         tunerCollapsible.add(tunerScrollPane);
+
+        onPluginGuiAttachment.run();
 
         frame.add(tunerCollapsible, BorderLayout.SOUTH);
         frame.add(rightContainer, BorderLayout.EAST);
@@ -432,7 +432,8 @@ public class Visualizer {
             rows--;
         }
 
-        dialog.setModal(true);
+        dialog.setModal(false);
+        dialog.setAlwaysOnTop(true);
         dialog.setLayout(new GridLayout(rows, 1));
 
         if (isError) {

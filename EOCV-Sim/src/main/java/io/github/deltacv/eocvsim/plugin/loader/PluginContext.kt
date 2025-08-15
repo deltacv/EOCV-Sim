@@ -26,15 +26,22 @@ package io.github.deltacv.eocvsim.plugin.loader
 import com.github.serivesmejia.eocvsim.EOCVSim
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
+import java.util.concurrent.ConcurrentHashMap
 
 class PluginContext(
     val eocvSim: EOCVSim,
-    val fileSystem: SandboxFileSystem,
     val loader: PluginLoader
 ) {
     companion object {
-        @JvmStatic fun current(plugin: EOCVSimPlugin) = (plugin.javaClass.classLoader as PluginClassLoader).pluginContextProvider()
+       internal val globalContextMap = ConcurrentHashMap<String, PluginContext>()
+
+        @JvmStatic fun current(plugin: EOCVSimPlugin) = globalContextMap[plugin::class.java.name] ?:
+            (plugin.javaClass.classLoader as PluginClassLoader).pluginContextProvider()
     }
+
+
+    val fileSystem: SandboxFileSystem
+        get() = loader.fileSystem
 
     val plugin get() = loader.plugin
     val pluginSource get() = loader.pluginSource

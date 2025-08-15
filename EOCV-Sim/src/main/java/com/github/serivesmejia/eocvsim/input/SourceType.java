@@ -33,6 +33,7 @@ public enum SourceType {
     IMAGE(new ImageSource(""), "Image"),
     CAMERA(new CameraSource("", null), "Camera"),
     VIDEO(new VideoSource("", null), "Video"),
+    HTTP(new HttpSource(""), "HTTP"),
     UNKNOWN(null, "Unknown");
 
     public final Class<? extends InputSource> klazz;

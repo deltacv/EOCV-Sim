@@ -32,6 +32,8 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.openftc.easyopencv.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenCvWebcam, FrameReceiver {
 
@@ -39,6 +41,8 @@ public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenC
     OpenCvViewport handedViewport;
 
     boolean streaming = false;
+
+    private Logger logger = LoggerFactory.getLogger(FrameReceiverOpenCvCamera.class);
 
     public FrameReceiverOpenCvCamera(VisionSource source, OpenCvViewport handedViewport, boolean viewportEnabled) {
         super(handedViewport, viewportEnabled);
@@ -59,10 +63,14 @@ public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenC
         new Thread(() -> {
             int code = openCameraDevice();
 
-            if(code == 0) {
-                cameraOpenListener.onOpened();
-            } else {
-                cameraOpenListener.onError(code);
+            try {
+                if (code == 0) {
+                    cameraOpenListener.onOpened();
+                } else {
+                    cameraOpenListener.onError(code);
+                }
+            } catch (Exception e) {
+                logger.error("Error in camera open listener", e);
             }
         }).start();
     }

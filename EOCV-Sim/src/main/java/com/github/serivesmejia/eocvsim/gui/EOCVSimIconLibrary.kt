@@ -12,6 +12,7 @@ object EOCVSimIconLibrary {
     val icoImg by icon("ico_img", "/images/icon/ico_img.png")
     val icoCam by icon("ico_cam", "/images/icon/ico_cam.png")
     val icoVid by icon("ico_vid", "/images/icon/ico_vid.png")
+    val icoStream by icon("ico_stream", "/images/icon/ico_stream.png")
 
     val icoFolder by icon("ico_folder", "/images/icon/ico_folder.png", false)
 

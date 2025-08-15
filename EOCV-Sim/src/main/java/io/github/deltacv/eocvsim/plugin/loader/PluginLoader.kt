@@ -34,6 +34,7 @@ import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.security.PluginSignature
 import io.github.deltacv.eocvsim.plugin.security.PluginSignatureVerifier
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import net.lingala.zip4j.ZipFile
@@ -41,7 +42,8 @@ import java.io.File
 
 enum class PluginSource {
     REPOSITORY,
-    FILE
+    FILE,
+    EMBEDDED
 }
 
 class PluginParser(pluginToml: Toml) {
@@ -62,240 +64,57 @@ class PluginParser(pluginToml: Toml) {
     fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
 }
 
-/**
- * Loads a plugin from a jar file
- * @param pluginFile the jar file of the plugin
- * @param eocvSim the EOCV-Sim instance
- */
-class PluginLoader(
-    val pluginFile: File,
-    val classpath: List<File>,
-    val pluginSource: PluginSource,
-    val eocvSim: EOCVSim,
-    val appender: AppendDelegate
-) {
+abstract class PluginLoader {
+    abstract val pluginSource: PluginSource
 
-    val logger by loggerForThis()
+    abstract val pluginFile: File
 
-    var loaded = false
-        private set
+    abstract val loaded: Boolean
+    abstract val enabled: Boolean
+    abstract var shouldEnable: Boolean
 
-    var enabled = false
-        private set
+    abstract val pluginName: String
+    abstract val pluginVersion: String
+    abstract val pluginDescription: String
+    abstract val pluginAuthor: String
+    abstract val pluginAuthorEmail: String
 
-    val pluginClassLoader: PluginClassLoader
+    abstract val classpath: List<File>
 
-    var shouldEnable: Boolean
-        get() {
-            return eocvSim.config.flags.getOrDefault(hash(), true)
-        }
-        set(value) {
-            eocvSim.config.flags[hash()] = value
-            eocvSim.configManager.saveToFile()
-        }
+    abstract val pluginClass: Class<*>
+    abstract val plugin: EOCVSimPlugin
 
-    lateinit var pluginToml: Toml
-        private set
-
-    lateinit var pluginName: String
-        private set
-    lateinit var pluginVersion: String
-        private set
-
-    lateinit var pluginDescription: String
-        private set
-
-    lateinit var pluginAuthor: String
-        private set
-    lateinit var pluginAuthorEmail: String
-        private set
-
-    lateinit var pluginClass: Class<*>
-        private set
-    lateinit var plugin: EOCVSimPlugin
-        private set
+    abstract val fileSystem: SandboxFileSystem
+    abstract val signature: PluginSignature
+    abstract val hasSuperAccess: Boolean
 
     /**
-     * The file system for the plugin
+     * Loads the plugin into memory without enabling it.
      */
-    lateinit var fileSystem: SandboxFileSystem
-        private set
+    abstract fun load()
 
     /**
-     * The signature of the plugin, issued by a verified authority
+     * Enables the plugin if loaded and allowed.
      */
-    val signature by lazy { PluginSignatureVerifier.verify(pluginFile) }
-
-    val fileSystemZip by lazy { PluginManager.FILESYSTEMS_FOLDER + File.separator + "${hash()}-fs" }
-    val fileSystemZipPath by lazy { fileSystemZip.toPath() }
+    abstract fun enable()
 
     /**
-     * Whether the plugin has super access (full system access)
+     * Disables the plugin if enabled.
      */
-    val hasSuperAccess get() = eocvSim.pluginManager.superAccessDaemonClient.checkAccess(pluginFile)
-
-    init {
-        pluginClassLoader = PluginClassLoader(
-            pluginFile,
-            classpath
-        ) {
-            PluginContext(eocvSim, fileSystem, this)
-        }
-    }
+    abstract fun disable()
 
     /**
-     * Fetch the plugin info from the plugin.toml file
-     * Fills the pluginName, pluginVersion, pluginAuthor and pluginAuthorEmail fields
+     * Fully unloads the plugin and closes resources.
      */
-    fun fetchInfoFromToml() {
-        if(::pluginToml.isInitialized) return
-
-        pluginToml = Toml().read(pluginClassLoader.getResourceAsStream("plugin.toml")
-            ?: throw InvalidPluginException("No plugin.toml in the jar file")
-        )
-
-        val parser = PluginParser(pluginToml)
-
-        pluginName = parser.pluginName
-        pluginVersion = parser.pluginVersion
-        pluginAuthor = parser.pluginAuthor
-        pluginAuthorEmail = parser.pluginAuthorEmail ?: ""
-        pluginDescription = parser.pluginDescription ?: ""
-    }
+    abstract fun kill()
 
     /**
-     * Load the plugin from the jar file
-     * @throws InvalidPluginException if the plugin.toml file is not found
-     * @throws UnsupportedPluginException if the plugin requests an api version higher than the current one
+     * Requests elevated permissions for the plugin.
      */
-    fun load() {
-        if(loaded) return
-
-        fetchInfoFromToml()
-
-        if(!shouldEnable) {
-            appender.appendln("${PluginOutput.SPECIAL_SILENT}Plugin $pluginName v$pluginVersion is disabled")
-            return
-        }
-
-        appender.appendln("${PluginOutput.SPECIAL_SILENT}Loading plugin $pluginName v$pluginVersion by $pluginAuthor from ${pluginSource.name}")
-
-        signature
-
-        setupFs()
-
-        if(pluginToml.contains("api-version") || pluginToml.contains("min-api-version")) {
-            // default to api-version if min-api-version is not present
-            val apiVersionKey = if(pluginToml.contains("api-version")) "api-version" else "min-api-version"
-            val parsedVersion = ParsedVersion(pluginToml.getString(apiVersionKey))
-
-            if(parsedVersion > EOCVSim.PARSED_VERSION)
-                throw UnsupportedPluginException("Plugin requires a minimum api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
-
-            logger.info("Plugin $pluginName requests min api version of v${parsedVersion}")
-        }
-
-        if(pluginToml.contains("max-api-version")) {
-            val parsedVersion = ParsedVersion(pluginToml.getString("max-api-version"))
-
-            if(parsedVersion < EOCVSim.PARSED_VERSION)
-                throw UnsupportedPluginException("Plugin requires a max api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
-
-            logger.info("Plugin $pluginName requests max api version of v${parsedVersion}")
-        }
-
-        if(pluginToml.contains("exact-api-version")) {
-            val parsedVersion = ParsedVersion(pluginToml.getString("exact-api-version"))
-
-            if(parsedVersion != EOCVSim.PARSED_VERSION)
-                throw UnsupportedPluginException("Plugin requires an exact api version of v${parsedVersion}, EOCV-Sim is currently running at v${EOCVSim.PARSED_VERSION}")
-
-            logger.info("Plugin $pluginName requests exact api version of v${parsedVersion}")
-        }
-
-        if(pluginToml.getBoolean("super-access", false)) {
-            requestSuperAccess(pluginToml.getString("super-access-reason", ""))
-        }
-
-        pluginClass = pluginClassLoader.loadClassStrict(pluginToml.getString("main"))
-        plugin = try {
-            pluginClass.getConstructor().newInstance() as EOCVSimPlugin
-        } catch(e: Throwable) {
-            throw InvalidPluginException("Failed to instantiate plugin class ${pluginClass.name}. Make sure your plugin class has a public no-args constructor.")
-        }
-
-        plugin.onLoad()
-
-        loaded = true
-    }
-
-    private fun setupFs() {
-        if(!fileSystemZip.exists()) {
-            val zip = ZipFile(fileSystemZip) // kinda wack but uh, yeah...
-            zip.addFile(ConfigLoader.CONFIG_SAVEFILE)
-            zip.removeFile(ConfigLoader.CONFIG_SAVEFILE.name)
-            zip.close()
-        }
-
-        fileSystem = SandboxFileSystem(this)
-    }
+    abstract fun requestSuperAccess(reason: String): Boolean
 
     /**
-     * Enable the plugin
+     * Hash of the plugin based on name and author.
      */
-    fun enable() {
-        if(enabled || !loaded) return
-
-        if(!shouldEnable) return
-
-        appender.appendln("${PluginOutput.SPECIAL_SILENT}Enabling plugin $pluginName v$pluginVersion")
-
-        plugin.enabled = true
-        plugin.onEnable()
-
-        enabled = true
-    }
-
-    /**
-     * Disable the plugin
-     */
-    fun disable() {
-        if(!enabled || !loaded) return
-
-        appender.appendln("${PluginOutput.SPECIAL_SILENT}Disabling plugin $pluginName v$pluginVersion")
-
-        plugin.enabled = false
-        plugin.onDisable()
-
-        kill()
-    }
-
-    /**
-     * Kill the plugin
-     * This will close the file system and ban the class loader
-     * @see EventHandler.banClassLoader
-     */
-    fun kill() {
-        if(!loaded) return
-        fileSystem.close()
-        enabled = false
-        EventHandler.banClassLoader(pluginClassLoader)
-
-        pluginClassLoader.close()
-    }
-
-    /**
-     * Request super access for the plugin
-     * @param reason the reason for requesting super access
-     */
-    fun requestSuperAccess(reason: String): Boolean {
-        return eocvSim.pluginManager.requestSuperAccessFor(this, reason)
-    }
-
-    /**
-     * Get the hash of the plugin based off the plugin name and author
-     * @return the hash
-     */
-    fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
-
+    abstract fun hash(): String
 }

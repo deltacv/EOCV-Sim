@@ -35,13 +35,14 @@ import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem
 import org.jboss.shrinkwrap.resolver.api.maven.Maven
+import org.jboss.shrinkwrap.resolver.impl.maven.MavenWorkingSessionContainer
 import java.io.File
-import java.util.concurrent.locks.ReentrantLock
-import java.util.concurrent.locks.Condition
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.Condition
+import java.util.concurrent.locks.ReentrantLock
 import javax.swing.JOptionPane
-import kotlin.collections.iterator
 import kotlin.concurrent.withLock
+
 
 class PluginRepositoryManager(
     val appender: AppendDelegate,
@@ -308,6 +309,7 @@ class PluginRepositoryManager(
         appender.appendln("Resolving plugin \"$pluginDep\"...")
 
         var pluginJar: File? = null
+
         resolver.resolve(pluginDep)
             .withTransitivity()
             .asFile()

@@ -25,23 +25,44 @@ package com.github.serivesmejia.eocvsim.gui.component
 
 import com.github.serivesmejia.eocvsim.gui.util.Corner
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import java.awt.AWTEvent
 import java.awt.Point
+import java.awt.Toolkit
 import java.awt.Window
+import java.awt.event.AWTEventListener
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
 import javax.swing.*
 
-class PopupX @JvmOverloads constructor(windowAncestor: Window,
+class PopupX @JvmOverloads constructor(private val windowAncestor: Window,
                                        private val panel: JPanel,
                                        private var x: Int,
                                        private var y: Int,
                                        var closeOnFocusLost: Boolean = true,
                                        private val fixX: Boolean = false,
-                                       private val fixY: Boolean = true) : Popup(), WindowFocusListener {
+                                       private val fixY: Boolean = true) : Popup() {
 
     val window = JWindow(windowAncestor)
+
+    val ancestorClickListener = object: MouseListener {
+        override fun mouseClicked(e: MouseEvent?) {
+        }
+        override fun mousePressed(e: MouseEvent?) {
+        }
+        override fun mouseReleased(e: MouseEvent?) {
+            if(closeOnFocusLost) {
+                hide()
+            }
+        }
+        override fun mouseEntered(e: MouseEvent?) {
+        }
+        override fun mouseExited(e: MouseEvent?) {
+        }
+    }
 
     @JvmField val onShow = EventHandler("PopupX-OnShow")
     @JvmField val onHide = EventHandler("PopupX-OnHide")
@@ -66,8 +87,17 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
     }
 
     override fun show() {
-        window.addWindowFocusListener(this)
         window.isVisible = true
+
+        SwingUtilities.invokeLater {
+            Toolkit.getDefaultToolkit().addAWTEventListener({
+                if(it is MouseEvent && it.id == MouseEvent.MOUSE_CLICKED) {
+                    if(it.source != panel && it.source != window && closeOnFocusLost) {
+                        hide()
+                    }
+                }
+            }, AWTEvent.MOUSE_EVENT_MASK)
+        }
 
         //fixes position since our panel dimensions
         //aren't known until it's set visible (above)
@@ -81,17 +111,8 @@ class PopupX @JvmOverloads constructor(windowAncestor: Window,
     override fun hide() {
         if(!window.isVisible) return
 
-        window.removeWindowFocusListener(this)
         window.isVisible = false
         onHide.run()
-    }
-
-    override fun windowGainedFocus(e: WindowEvent?) {}
-
-    override fun windowLostFocus(e: WindowEvent?) {
-        if(closeOnFocusLost) {
-            hide()
-        }
     }
 
     fun setLocation(width: Int, height: Int) = window.setLocation(width, height)

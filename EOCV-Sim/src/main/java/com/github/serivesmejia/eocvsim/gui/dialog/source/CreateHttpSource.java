@@ -26,10 +26,11 @@ package com.github.serivesmejia.eocvsim.gui.dialog.source;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.input.FileSelector;
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields;
+import com.github.serivesmejia.eocvsim.input.source.HttpSource;
 import com.github.serivesmejia.eocvsim.input.source.ImageSource;
-import io.github.deltacv.vision.external.util.CvUtil;
 import com.github.serivesmejia.eocvsim.util.FileFilters;
 import com.github.serivesmejia.eocvsim.util.StrUtil;
+import io.github.deltacv.vision.external.util.CvUtil;
 import org.opencv.core.Size;
 
 import javax.swing.*;
@@ -38,27 +39,22 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.io.File;
 
-public class CreateImageSource {
+public class CreateHttpSource {
 
     public JDialog createImageSource;
 
     public JTextField nameTextField = null;
 
-    public SizeFields sizeFieldsInput = null;
-
-    public FileSelector imageFileSelector = null;
-
-    private File initialFile = null;
+    public JTextField urlField = null;
 
     public JButton createButton = null;
-    public boolean selectedValidImage = false;
+
     private EOCVSim eocvSim = null;
 
-    public CreateImageSource(JFrame parent, EOCVSim eocvSim, File initialFile) {
+    public CreateHttpSource(JFrame parent, EOCVSim eocvSim) {
         createImageSource = new JDialog(parent);
 
         this.eocvSim = eocvSim;
-        this.initialFile = initialFile;
 
         eocvSim.visualizer.childDialogs.add(createImageSource);
 
@@ -66,59 +62,57 @@ public class CreateImageSource {
     }
 
     public void initCreateImageSource() {
-
         createImageSource.setModal(false);
-        createImageSource.setFocusableWindowState(false);
+        // createImageSource.setFocusableWindowState(false);
         createImageSource.setAlwaysOnTop(true);
 
-        createImageSource.setTitle("Create image source");
-        createImageSource.setSize(370, 200);
+        createImageSource.setTitle("Create HTTP Source");
+        createImageSource.setSize(370, 80);
 
-        JPanel contentsPanel = new JPanel(new GridLayout(4, 1));
+        JPanel contentsPanel = new JPanel();
+        contentsPanel.setLayout(new BoxLayout(contentsPanel, BoxLayout.Y_AXIS));
+
+        contentsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JPanel fieldsPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        fieldsPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(7, 0, 0, 7);
 
         //file select part
 
-        imageFileSelector = new FileSelector(18, FileFilters.imagesFilter);
+        JLabel urlLabel = new JLabel("URL: ");
+        urlLabel.setHorizontalAlignment(JLabel.LEFT);
+        gbc.gridx = 0;
+        fieldsPanel.add(urlLabel, gbc);
 
-        imageFileSelector.onFileSelect.doPersistent(() ->
-            imageFileSelected(imageFileSelector.getLastSelectedFile())
-        );
-
-
-        if(initialFile != null)
-            SwingUtilities.invokeLater(() ->
-                imageFileSelector.setLastSelectedFile(initialFile)
-            );
-
-        contentsPanel.add(imageFileSelector);
-
-        // Size part
-
-        sizeFieldsInput = new SizeFields();
-        sizeFieldsInput.onChange.doPersistent(this::updateCreateBtt);
-
-        contentsPanel.add(sizeFieldsInput);
-        contentsPanel.setBorder(BorderFactory.createEmptyBorder(15, 0, 0, 0));
+        urlField = new JTextField("http://", 15);
+        gbc.gridx = 1;
+        fieldsPanel.add(urlField, gbc);
 
         //Name part
-
-        JPanel namePanel = new JPanel(new FlowLayout());
+        gbc.gridy = 1;
 
         JLabel nameLabel = new JLabel("Source name: ");
         nameLabel.setHorizontalAlignment(JLabel.LEFT);
 
-        nameTextField = new JTextField("ImageSource-" + (eocvSim.inputSourceManager.sources.size() + 1), 15);
+        gbc.gridx = 0;
+        fieldsPanel.add(nameLabel, gbc);
 
-        namePanel.add(nameLabel);
-        namePanel.add(nameTextField);
+        nameTextField = new JTextField("HttpSource-" + (eocvSim.inputSourceManager.sources.size() + 1), 15);
 
-        contentsPanel.add(namePanel);
+        gbc.gridx = 1;
+        fieldsPanel.add(nameTextField, gbc);
+
+        contentsPanel.add(fieldsPanel);
 
         // Bottom buttons
 
         JPanel buttonsPanel = new JPanel(new FlowLayout());
         createButton = new JButton("Create");
-        createButton.setEnabled(selectedValidImage);
 
         buttonsPanel.add(createButton);
 
@@ -151,8 +145,26 @@ public class CreateImageSource {
             }
         });
 
+        urlField.getDocument().addDocumentListener(new DocumentListener() {
+            public void changedUpdate(DocumentEvent e) {
+                changed();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                changed();
+            }
+
+            public void insertUpdate(DocumentEvent e) {
+                changed();
+            }
+
+            public void changed() {
+                updateCreateBtt();
+            }
+        });
+
         createButton.addActionListener(e -> {
-            createSource(nameTextField.getText(), imageFileSelector.getLastSelectedFile().getAbsolutePath(), sizeFieldsInput.getCurrentSize());
+            createSource(nameTextField.getText(), urlField.getText());
             close();
         });
 
@@ -166,49 +178,24 @@ public class CreateImageSource {
 
     }
 
-    public void imageFileSelected(File f) {
-        String fileAbsPath = f.getAbsolutePath();
-
-        if (CvUtil.checkImageValid(fileAbsPath)) {
-
-            String fileName = StrUtil.getFileBaseName(f.getName());
-            if(!fileName.trim().equals("")) {
-                nameTextField.setText(eocvSim.inputSourceManager.tryName(fileName));
-            }
-
-            Size size = CvUtil.scaleToFit(CvUtil.getImageSize(fileAbsPath), EOCVSim.DEFAULT_EOCV_SIZE);
-
-            sizeFieldsInput.getWidthTextField().setText(String.valueOf(Math.round(size.width)));
-            sizeFieldsInput.getHeightTextField().setText(String.valueOf(Math.round(size.height)));
-
-            selectedValidImage = true;
-        } else {
-            imageFileSelector.getDirTextField().setText("Unable to load selected file.");
-            selectedValidImage = false;
-        }
-
-        updateCreateBtt();
-    }
-
     public void close() {
         createImageSource.setVisible(false);
         createImageSource.dispose();
     }
 
-    public void createSource(String sourceName, String imgPath, Size size) {
+    public void createSource(String sourceName, String imgPath) {
         eocvSim.onMainUpdate.doOnce(() ->
                 eocvSim.inputSourceManager.addInputSource(
                         sourceName,
-                        new ImageSource(imgPath, size),
+                        new HttpSource(imgPath),
                         false
                 )
         );
     }
 
     public void updateCreateBtt() {
-        createButton.setEnabled(!nameTextField.getText().trim().equals("")
-                && sizeFieldsInput.getValid()
-                && selectedValidImage
+        createButton.setEnabled(!nameTextField.getText().trim().isEmpty()
+                && !urlField.getText().trim().isEmpty()
                 && !eocvSim.inputSourceManager.isNameOnUse(nameTextField.getText()));
     }
 

@@ -342,7 +342,7 @@ public class SysUtil {
     public static void debugLogCalled(String name) {
         StringBuilder builder = new StringBuilder();
         for (StackTraceElement s : Thread.currentThread().getStackTrace()) {
-            builder.append(s.toString()).append("\n");
+            builder.append(s).append("\n");
         }
 
         logger.debug("{} called in: {}", name, builder.toString().trim());

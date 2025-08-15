@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
 import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingExactMatchBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageAlwaysBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
 import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageWhitelist
 import java.io.ByteArrayOutputStream
@@ -132,6 +133,15 @@ class PluginClassLoader(
                     }
                 }
 
+
+                blacklistLoop@
+                for (blacklistedPackage in dynamicLoadingPackageAlwaysBlacklist) {
+                    if (name.contains(blacklistedPackage)) {
+                        throw IllegalAccessError("Plugins are always blacklisted to use $name")
+                    }
+                }
+
+
                 clazz = Class.forName(name)
             }
         } catch (e: Throwable) {
@@ -140,11 +150,7 @@ class PluginClassLoader(
             } catch (_: Throwable) {
                 val classpathClass = classFromClasspath(name)
 
-                if (classpathClass != null) {
-                    classpathClass
-                } else {
-                    throw e
-                }
+                classpathClass ?: throw e
             }
         }
 

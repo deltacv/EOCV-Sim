@@ -95,7 +95,6 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             "encontrarás otro desastre que hacer,",
             "¿qué será de sentarse bajo la tumba del sol sin nunca hacer un desastre?",
             "y por una ultima noche juntos,"
-
         )
 
         @JvmStatic val defaultCrashFileName get() = "crashreport-$defaultFileName"

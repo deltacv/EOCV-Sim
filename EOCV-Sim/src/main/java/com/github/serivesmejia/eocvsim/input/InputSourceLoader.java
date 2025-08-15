@@ -23,10 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.input;
 
-import com.github.serivesmejia.eocvsim.input.source.CameraSource;
-import com.github.serivesmejia.eocvsim.input.source.CameraSourceAdapter;
-import com.github.serivesmejia.eocvsim.input.source.ImageSource;
-import com.github.serivesmejia.eocvsim.input.source.VideoSource;
+import com.github.serivesmejia.eocvsim.input.source.*;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -138,6 +135,7 @@ public class InputSourceLoader {
         public HashMap<String, ImageSource> imageSources = new HashMap<>();
         public HashMap<String, CameraSource> cameraSources = new HashMap<>();
         public HashMap<String, VideoSource> videoSources = new HashMap<>();
+        public HashMap<String, HttpSource> httpSources = new HashMap<>();
 
         @Expose
         public SourcesFileVersion sourcesFileVersion = null;
@@ -146,7 +144,7 @@ public class InputSourceLoader {
 
         public void updateAllSources() {
 
-            if(sourcesFileVersion == null) sourcesFileVersion = SourcesFileVersion.DOS;
+            if (sourcesFileVersion == null) sourcesFileVersion = SourcesFileVersion.DOS;
 
             allSources.clear();
 
@@ -157,15 +155,17 @@ public class InputSourceLoader {
             for (Map.Entry<String, CameraSource> entry : cameraSources.entrySet()) {
                 allSources.put(entry.getKey(), entry.getValue());
             }
+            for(Map.Entry<String, HttpSource> entry : httpSources.entrySet()) {
+                allSources.put(entry.getKey(), entry.getValue());
+            }
 
             //check if file version is bigger than DOS, we should have video sources section
             //declared in any file with a version greater than that
-            if(sourcesFileVersion.ordinal() >= 1) {
+            if (sourcesFileVersion.ordinal() >= 1) {
                 for (Map.Entry<String, VideoSource> entry : videoSources.entrySet()) {
                     allSources.put(entry.getKey(), entry.getValue());
                 }
             }
-
         }
 
         public void classifySource(String sourceName, InputSource source) {
@@ -179,6 +179,9 @@ public class InputSourceLoader {
                     break;
                 case VIDEO:
                     videoSources.put(sourceName, (VideoSource) source);
+                    break;
+                case HTTP:
+                    httpSources.put(sourceName, (HttpSource) source);
                     break;
             }
 

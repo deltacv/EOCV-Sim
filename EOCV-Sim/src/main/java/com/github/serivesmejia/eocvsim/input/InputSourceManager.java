@@ -30,6 +30,7 @@ import com.github.serivesmejia.eocvsim.input.source.ImageSource;
 import com.github.serivesmejia.eocvsim.input.source.NullSource;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
+import kotlinx.coroutines.Job;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -42,6 +43,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.concurrent.CancellationException;
 
 public class InputSourceManager {
 
@@ -229,15 +231,8 @@ public class InputSourceManager {
             src.reset();
         }
 
-        //check if source type is a camera, and if so, create a please wait dialog
-        Visualizer.AsyncPleaseWaitDialog apwd = showApwdIfNeeded(sourceName);
-
         if (src != null) {
-            if (!src.init()) {
-                if (apwd != null) {
-                    apwd.destroyDialog();
-                }
-
+            if (!InputSourceInitializer.INSTANCE.initializeWithTimeout(src, this)) {
                 eocvSim.visualizer.asyncPleaseWaitDialog("Error while loading requested source", "Falling back to previous source",
                         "Close", new Dimension(300, 150), true, true);
 
@@ -245,11 +240,6 @@ public class InputSourceManager {
 
                 return false;
             }
-        }
-
-        //if there's a please wait dialog for a camera source, destroy it.
-        if (apwd != null) {
-            apwd.destroyDialog();
         }
 
         if (currentInputSource != null) {
@@ -316,16 +306,20 @@ public class InputSourceManager {
         eocvSim.onMainUpdate.doOnce(() -> setInputSource(name));
     }
 
-    public Visualizer.AsyncPleaseWaitDialog showApwdIfNeeded(String sourceName) {
+    public Visualizer.AsyncPleaseWaitDialog showApwdIfNeeded(String sourceName, Job job) {
         Visualizer.AsyncPleaseWaitDialog apwd = null;
 
-        if (getSourceType(sourceName) == SourceType.CAMERA || getSourceType(sourceName) == SourceType.VIDEO) {
+        if (getSourceType(sourceName) == SourceType.CAMERA || getSourceType(sourceName) == SourceType.VIDEO || getSourceType(sourceName) == SourceType.HTTP) {
             apwd = eocvSim.visualizer.asyncPleaseWaitDialog(
-                    "Opening source...", null, "Exit",
+                    "Opening source...", null, "Cancel",
                     new Dimension(300, 150), true
             );
 
-            apwd.onCancel(eocvSim::destroy);
+            apwd.onCancel(() -> {
+                if (job != null) {
+                    job.cancel(new CancellationException());
+                }
+            });
         }
 
         return apwd;

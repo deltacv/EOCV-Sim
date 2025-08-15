@@ -82,6 +82,14 @@ val dynamicLoadingPackageBlacklist  = setOf(
     "com.github.serivesmejia.eocvsim.config",
 )
 
+val dynamicLoadingPackageAlwaysBlacklist = setOf(
+    // Embedded PaperVision to prevent duplicate class loading
+    "io.github.deltacv.papervision",
+
+    // Do not use EOCV-Sim's log4j in plugins
+    "org.apache.logging.log4j"
+)
+
 val dynamicLoadingMethodBlacklist = setOf(
     "java.lang.System#load",
     "java.lang.System#loadLibrary",

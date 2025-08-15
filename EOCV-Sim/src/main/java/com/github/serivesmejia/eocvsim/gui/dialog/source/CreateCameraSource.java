@@ -29,6 +29,8 @@ import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.input.source.CameraSource;
 import io.github.deltacv.steve.Webcam;
 import io.github.deltacv.steve.WebcamRotation;
+import io.github.deltacv.steve.WebcamUtil;
+import io.github.deltacv.steve.opencv.OpenCvUtil;
 import io.github.deltacv.steve.opencv.OpenCvWebcam;
 import io.github.deltacv.steve.opencv.OpenCvWebcamBackend;
 import io.github.deltacv.steve.openpnp.OpenPnpBackend;
@@ -106,9 +108,17 @@ public class CreateCameraSource {
             } catch (Throwable e) {
                 logger.error("OpenPnp failed to discover cameras with error", e);
             }
-        } else {
+        } else if(preferredDriver == WebcamDriver.OpenCV) {
+            java.util.List<Webcam> defaultWebcams = null;
+            try {
+                defaultWebcams = OpenPnpBackend.INSTANCE.getAvailableWebcams();
+            } catch (Throwable e) {
+                logger.error("OpenPnp failed to discover cameras with error", e);
+            }
+
+            webcams = new ArrayList<>();
+
             Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);
-            webcams = Webcam.Companion.getAvailableWebcams();
             usingOpenCvDiscovery = true;
         }
 
@@ -145,19 +155,20 @@ public class CreateCameraSource {
 
                     if(!sizes.containsKey(name)) {
                         int camIndex = index;
-                        executor.execute(() -> {
+
+                        if(webcam instanceof OpenCvWebcam) {
+                            java.util.List<Size> resolutions = WebcamUtil.getCommonResolutions();
+                            sizes.put(name, resolutions); // don't try to figure out opencv resolutions, it's just asking for trouble
+                        } else {
                             java.util.List<Size> resolutions = webcam.getSupportedResolutions();
 
-                            if (resolutions.size() == 0) {
+                            if (resolutions.isEmpty()) {
                                 // remove webcam from list since it didn't return valid res
-
                                 ArrayList<Webcam> newWebcams = new ArrayList<>();
 
-                                for (int i = 0; i < webcams.size(); i++) {
-                                    if (i != camIndex) {
-                                        newWebcams.add(webcams.get(i));
-                                    } else {
-                                        newWebcams.add(null);
+                                for(Webcam w : webcams) {
+                                    if(w != webcam) {
+                                        newWebcams.add(w);
                                     }
                                 }
 
@@ -166,7 +177,7 @@ public class CreateCameraSource {
                             } else {
                                 sizes.put(name, resolutions);
                             }
-                        });
+                        }
                     }
                 }
 
@@ -402,6 +413,7 @@ public class CreateCameraSource {
 
         createCameraSource.pack();
         createCameraSource.setResizable(false);
+        createCameraSource.setAlwaysOnTop(true);
         createCameraSource.setLocationRelativeTo(null);
         createCameraSource.setVisible(true);
     }

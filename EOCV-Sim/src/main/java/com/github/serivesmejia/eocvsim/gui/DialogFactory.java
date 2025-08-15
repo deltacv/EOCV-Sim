@@ -29,14 +29,13 @@ import com.github.serivesmejia.eocvsim.gui.dialog.*;
 import com.github.serivesmejia.eocvsim.gui.dialog.SplashScreen;
 import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmA;
 import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmAPaperVision;
-import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateCameraSource;
-import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateImageSource;
-import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateSource;
-import com.github.serivesmejia.eocvsim.gui.dialog.source.CreateVideoSource;
+import com.github.serivesmejia.eocvsim.gui.dialog.source.*;
 import com.github.serivesmejia.eocvsim.input.SourceType;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport;
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager;
+
+
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -63,6 +62,7 @@ public class DialogFactory {
         }
 
         invokeLater(() -> result.accept(
+
                 JOptionPane.showConfirmDialog(parent, panel, "Confirm",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.PLAIN_MESSAGE
@@ -97,6 +97,7 @@ public class DialogFactory {
     public static void createSourceDialog(EOCVSim eocvSim,
                                           SourceType type,
                                           File initialFile) {
+
         invokeLater(() -> {
             switch (type) {
                 case IMAGE:
@@ -107,6 +108,10 @@ public class DialogFactory {
                     break;
                 case VIDEO:
                     new CreateVideoSource(eocvSim.visualizer.frame, eocvSim, initialFile);
+                    break;
+                case HTTP:
+                    new CreateHttpSource(eocvSim.visualizer.frame, eocvSim);
+                    break;
             }
         });
     }
@@ -117,6 +122,10 @@ public class DialogFactory {
 
     public static void createSourceDialog(EOCVSim eocvSim) {
         invokeLater(() -> new CreateSource(eocvSim.visualizer.frame, eocvSim));
+    }
+
+    public static void createSourceDialogEx(EOCVSim eocvSim) {
+        invokeLater(() -> new CreateSourceEx(eocvSim.visualizer.frame, eocvSim.visualizer));
     }
 
     public static void createConfigDialog(EOCVSim eocvSim) {
