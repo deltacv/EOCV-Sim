@@ -103,6 +103,7 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ## [v4.0.2 - Embedded PaperVision v1.0.7](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.2)
 - This is the 32nd release for EOCV-Sim
+    - Adds HTTP input source to support MJPEG streams as an input source. Limelight cameras can stream to EOCV-Sim !
     - Updates to [PaperVision v1.0.7](https://github.com/deltacv/PaperVision/releases/tag/v1.0.4)
     - PaperVision is now embedded in EOCV-Sim's binary instead of being downloaded on startup
 
