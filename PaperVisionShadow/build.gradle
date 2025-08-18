@@ -12,7 +12,5 @@ shadowJar {
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
-
     implementation("org.deltacv.PaperVision:EOCVSimPlugin:$papervision_version")
 }

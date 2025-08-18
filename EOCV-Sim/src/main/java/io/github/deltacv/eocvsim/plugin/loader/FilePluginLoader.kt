@@ -291,7 +291,13 @@ class EmbeddedFilePluginLoader(
 
         file
     },
-    classpath = classpath,
+    classpath = classpath.let {
+        // add pluginFile
+        val hash = it.hashString
+        val file = EMBEDDED_PLUGIN_FOLDER + File.separator + "$hash.jar"
+
+        classpath + file
+    },
     pluginSource = pluginSource,
     eocvSim = eocvSim,
     appender = appender
