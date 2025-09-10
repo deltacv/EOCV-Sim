@@ -54,7 +54,7 @@ import java.util.List;
 public class Visualizer {
 
     public final EventHandler onInitFinished = new EventHandler("OnVisualizerInitFinish");
-    public final EventHandler onPluginGuiAttachment = new EventHandler("OnPLuginGuiAttachment");
+    public final EventHandler onPluginGuiAttachment = new EventHandler("OnPluginGuiAttachment");
 
     public final ArrayList<AsyncPleaseWaitDialog> pleaseWaitDialogs = new ArrayList<>();
 

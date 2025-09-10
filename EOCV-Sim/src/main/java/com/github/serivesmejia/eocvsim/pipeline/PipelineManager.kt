@@ -467,21 +467,31 @@ class PipelineManager(
     }
 
     fun addInstantiator(instantiatorFor: Class<*>, instantiator: PipelineInstantiator) {
+        logger.info("Added pipeline instantiator for ${instantiatorFor.name}/${instantiatorFor.classLoader} (${instantiator.javaClass.simpleName})")
         pipelineInstantiators[instantiatorFor] = instantiator
     }
 
     fun getInstantiatorFor(clazz: Class<*>): PipelineInstantiator? {
-        if(pipelineInstantiators.containsKey(clazz)) {
-            return pipelineInstantiators[clazz]
-        }
+        var possibleInstantiator: PipelineInstantiator? = null
+
+        logger.debug("Searching instantiator for pipeline class {}, loader {}", clazz.name, clazz.classLoader)
 
         for((instantiatorFor, instantiator) in pipelineInstantiators) {
-            if(ReflectUtil.hasSuperclass(clazz, instantiatorFor)) {
-                return instantiator
+            logger.debug(
+                " - Checking against instantiator for {} {}",
+                instantiatorFor.name,
+                instantiatorFor.classLoader
+            )
+
+            if(clazz == instantiatorFor) {
+                possibleInstantiator = instantiator
+                break
+            } else if(ReflectUtil.hasSuperclass(clazz, instantiatorFor)) {
+                possibleInstantiator = instantiator
             }
         }
 
-        return null
+        return possibleInstantiator
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -584,9 +594,9 @@ class PipelineManager(
             }
 
             nextPipeline = instantiator?.instantiate(pipelineClass, nextTelemetry)
-                ?: throw RuntimeException("No instantiator found for pipeline class ${pipelineClass.name}")
+                ?: throw NoSuchMethodException("No instantiator found for pipeline class ${pipelineClass.name}")
 
-            logger.info("Instantiated pipeline class ${pipelineClass.name}")
+            logger.info("Instantiated pipeline class ${pipelineClass.name} with ${instantiator.javaClass.simpleName}")
         } catch (ex: NoSuchMethodException) {
             pipelineExceptionTracker.addMessage("Error while instantiating requested pipeline, \"${pipelineClass.simpleName}\". Falling back to previous one.")
             pipelineExceptionTracker.addMessage("Make sure your pipeline implements a public constructor with no parameters or a Telemetry parameter.")
@@ -736,6 +746,8 @@ class PipelineManager(
 
     fun setPaused(paused: Boolean, pauseReason: PauseReason = PauseReason.USER_REQUESTED) {
         this.paused = paused
+
+        logger.info("${if(paused) "Paused" else "Resumed"} pipeline execution (reason: $pauseReason)")
 
         if (this.paused) {
             this.pauseReason = pauseReason

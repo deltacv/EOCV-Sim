@@ -65,13 +65,13 @@ public class CreateVideoSource {
 
         eocvSim.visualizer.childDialogs.add(createVideoSource);
 
-        initCreateImageSource();
+        initCreateVideoSource();
 
     }
 
-    public void initCreateImageSource() {
-
+    private void initCreateVideoSource() {
         createVideoSource.setModal(true);
+        createVideoSource.setAlwaysOnTop(true);
 
         createVideoSource.setTitle("Create video source");
         createVideoSource.setSize(370, 200);

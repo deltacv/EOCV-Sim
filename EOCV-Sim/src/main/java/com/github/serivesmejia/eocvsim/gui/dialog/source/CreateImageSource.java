@@ -67,8 +67,7 @@ public class CreateImageSource {
 
     public void initCreateImageSource() {
 
-        createImageSource.setModal(false);
-        createImageSource.setFocusableWindowState(false);
+        createImageSource.setModal(true);
         createImageSource.setAlwaysOnTop(true);
 
         createImageSource.setTitle("Create image source");

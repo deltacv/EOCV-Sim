@@ -47,6 +47,7 @@ public final class StrUtil {
      * @return an array of URLs found in the string
      */
     public static String[] findUrlsInString(String str) {
+        if(str == null) return new String[0];
 
         Matcher urlMatcher = URL_PATTERN.matcher(str);
 
@@ -59,7 +60,6 @@ public final class StrUtil {
         }
 
         return matches.toArray(new String[0]);
-
     }
 
     /**
