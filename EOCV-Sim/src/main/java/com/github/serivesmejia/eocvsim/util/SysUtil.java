@@ -338,11 +338,13 @@ public class SysUtil {
         return result;
     }
 
-
     public static void debugLogCalled(String name) {
         StringBuilder builder = new StringBuilder();
-        for (StackTraceElement s : Thread.currentThread().getStackTrace()) {
-            builder.append(s).append("\n");
+        StackTraceElement[] stack = Thread.currentThread().getStackTrace();
+
+        // skip [0] = getStackTrace, [1] = debugLogCalled
+        for (int i = 2; i < stack.length; i++) {
+            builder.append(stack[i]).append("\n");
         }
 
         logger.debug("{} called in: {}", name, builder.toString().trim());
