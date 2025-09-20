@@ -51,7 +51,6 @@ import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport
 import org.openftc.easyopencv.processFrameInternal
-import java.lang.RuntimeException
 import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong

@@ -27,7 +27,6 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
-import org.openftc.easyopencv.OpenCvPipeline;
 
 import javax.swing.*;
 

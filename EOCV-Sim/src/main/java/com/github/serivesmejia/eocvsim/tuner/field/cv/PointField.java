@@ -28,10 +28,8 @@ import com.github.serivesmejia.eocvsim.tuner.TunableField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
 import org.opencv.core.Point;
-import org.openftc.easyopencv.OpenCvPipeline;
 
 import javax.swing.*;
-import java.lang.reflect.Field;
 
 @RegisterTunableField
 public class PointField extends TunableField<Point> {

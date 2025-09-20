@@ -27,9 +27,6 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.tuner.field.NumericField;
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField;
-import org.openftc.easyopencv.OpenCvPipeline;
-
-import java.lang.reflect.Field;
 
 @RegisterTunableField
 public class FloatField extends NumericField<Float> {

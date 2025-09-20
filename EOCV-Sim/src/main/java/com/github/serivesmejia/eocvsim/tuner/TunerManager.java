@@ -32,7 +32,6 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection;
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection;
 import org.jetbrains.annotations.Nullable;
-import org.openftc.easyopencv.OpenCvPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

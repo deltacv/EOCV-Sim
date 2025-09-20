@@ -109,13 +109,6 @@ public class CreateCameraSource {
                 logger.error("OpenPnp failed to discover cameras with error", e);
             }
         } else if(preferredDriver == WebcamDriver.OpenCV) {
-            java.util.List<Webcam> defaultWebcams = null;
-            try {
-                defaultWebcams = OpenPnpBackend.INSTANCE.getAvailableWebcams();
-            } catch (Throwable e) {
-                logger.error("OpenPnp failed to discover cameras with error", e);
-            }
-
             webcams = new ArrayList<>();
 
             Webcam.Companion.setBackend(OpenCvWebcamBackend.INSTANCE);

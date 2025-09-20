@@ -23,7 +23,6 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.instantiator.processor
 
-import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.instantiator.PipelineInstantiator
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
