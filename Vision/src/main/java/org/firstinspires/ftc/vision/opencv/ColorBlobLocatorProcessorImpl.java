@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.vision.opencv;
 
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 
@@ -40,6 +39,7 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
     private Mat mask = new Mat();
 
     private final Paint boundingRectPaint;
+    private final Paint circleFitPaint;
     private final Paint roiPaint;
     private final Paint contourPaint;
     private final boolean drawContours;
@@ -47,6 +47,7 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
     private final @ColorInt int roiColor;
     private final @ColorInt int contourColor;
 
+    private final MorphOperationType morphOperationType;
     private final Mat erodeElement;
     private final Mat dilateElement;
     private final Size blurElement;
@@ -58,8 +59,9 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
     private volatile ArrayList<Blob> userBlobs = new ArrayList<>();
 
     ColorBlobLocatorProcessorImpl(ColorRange colorRange, ImageRegion roiImg, ContourMode contourMode,
-                                  int erodeSize, int dilateSize, boolean drawContours, int blurSize,
-                                  @ColorInt int boundingBoxColor, @ColorInt int roiColor, @ColorInt int contourColor)
+                                  MorphOperationType morphOperationType, int erodeSize, int dilateSize,
+                                  boolean drawContours, int blurSize, @ColorInt int boundingBoxColor,
+                                  @ColorInt int circleFitColor, @ColorInt int roiColor, @ColorInt int contourColor)
     {
         this.colorRange = colorRange;
         this.roiImg = roiImg;
@@ -67,6 +69,7 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
         this.boundingBoxColor = boundingBoxColor;
         this.roiColor = roiColor;
         this.contourColor = contourColor;
+        this.morphOperationType = morphOperationType;
 
         if (blurSize > 0)
         {
@@ -105,10 +108,30 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
             dilateElement = null;
         }
 
-        boundingRectPaint = new Paint();
-        boundingRectPaint.setAntiAlias(true);
-        boundingRectPaint.setStrokeCap(Paint.Cap.BUTT);
-        boundingRectPaint.setColor(boundingBoxColor);
+        if (boundingBoxColor != 0)
+        {
+            boundingRectPaint = new Paint();
+            boundingRectPaint.setAntiAlias(true);
+            boundingRectPaint.setStrokeCap(Paint.Cap.BUTT);
+            boundingRectPaint.setColor(boundingBoxColor);
+        }
+        else
+        {
+            boundingRectPaint = null;
+        }
+
+        if (circleFitColor != 0)
+        {
+            circleFitPaint = new Paint();
+            circleFitPaint.setAntiAlias(true);
+            circleFitPaint.setStrokeCap(Paint.Cap.BUTT);
+            circleFitPaint.setStyle(Paint.Style.STROKE);
+            circleFitPaint.setColor(circleFitColor);
+        }
+        else
+        {
+            circleFitPaint = null;
+        }
 
         roiPaint = new Paint();
         roiPaint.setAntiAlias(true);
@@ -158,14 +181,31 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
 
         Core.inRange(roiMat_userColorSpace, colorRange.min, colorRange.max, mask);
 
-        if (erodeElement != null)
+        switch (morphOperationType)
         {
-            Imgproc.erode(mask, mask, erodeElement);
-        }
+            case OPENING:
+                if (erodeElement != null)
+                {
+                    Imgproc.erode(mask, mask, erodeElement);
+                }
 
-        if (dilateElement != null)
-        {
-            Imgproc.dilate(mask, mask, dilateElement);
+                if (dilateElement != null)
+                {
+                    Imgproc.dilate(mask, mask, dilateElement);
+                }
+                break;
+
+            case CLOSING:
+                if (dilateElement != null)
+                {
+                    Imgproc.dilate(mask, mask, dilateElement);
+                }
+
+                if (erodeElement != null)
+                {
+                    Imgproc.erode(mask, mask, erodeElement);
+                }
+                break;
         }
 
         ArrayList<MatOfPoint> contours = new ArrayList<>();
@@ -185,18 +225,7 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
         {
             for (BlobFilter filter : filters)
             {
-                switch (filter.criteria)
-                {
-                    case BY_CONTOUR_AREA:
-                        Util.filterByArea(filter.minValue, filter.maxValue, blobs);
-                        break;
-                    case BY_DENSITY:
-                        Util.filterByDensity(filter.minValue, filter.maxValue, blobs);
-                        break;
-                    case BY_ASPECT_RATIO:
-                        Util.filterByAspectRatio(filter.minValue, filter.maxValue, blobs);
-                        break;
-                }
+                Util.filterByCriteria(filter.criteria, filter.minValue, filter.maxValue, blobs);
             }
         }
 
@@ -204,23 +233,12 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
         BlobSort sort = this.sort; // Put the field into a local variable for thread safety.
         if (sort != null)
         {
-            switch (sort.criteria)
-            {
-                case BY_CONTOUR_AREA:
-                    Util.sortByArea(sort.sortOrder, blobs);
-                    break;
-                case BY_DENSITY:
-                    Util.sortByDensity(sort.sortOrder, blobs);
-                    break;
-                case BY_ASPECT_RATIO:
-                    Util.sortByAspectRatio(sort.sortOrder, blobs);
-                    break;
-            }
+            Util.sortByCriteria(sort.criteria, sort.sortOrder, blobs);
         }
         else
         {
             // Apply a default sort by area
-            Util.sortByArea(SortOrder.DESCENDING, blobs);
+            Util.sortByCriteria(BlobCriteria.BY_CONTOUR_AREA, SortOrder.DESCENDING, blobs);
         }
 
         // Deep copy this to prevent concurrent modification exception
@@ -235,7 +253,14 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
         ArrayList<Blob> blobs = (ArrayList<Blob>) userContext;
 
         contourPaint.setStrokeWidth(scaleCanvasDensity * 4);
-        boundingRectPaint.setStrokeWidth(scaleCanvasDensity * 10);
+        if (boundingRectPaint != null)
+        {
+            boundingRectPaint.setStrokeWidth(scaleCanvasDensity * 10);
+        }
+        if (circleFitPaint != null)
+        {
+            circleFitPaint.setStrokeWidth(scaleCanvasDensity * 10);
+        }
         roiPaint.setStrokeWidth(scaleCanvasDensity * 10);
 
         android.graphics.Rect gfxRect = makeGraphicsRect(roi, scaleBmpPxToCanvasPx);
@@ -261,16 +286,28 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
             /*
              * Draws a rotated rect by drawing each of the 4 lines individually
              */
-            Point[] rotRectPts = new Point[4];
-            blob.getBoxFit().points(rotRectPts);
-
-            for(int i = 0; i < 4; ++i)
+            if (boundingRectPaint != null)
             {
-                canvas.drawLine(
-                        (float) (rotRectPts[i].x)*scaleBmpPxToCanvasPx, (float) (rotRectPts[i].y)*scaleBmpPxToCanvasPx,
-                        (float) (rotRectPts[(i+1)%4].x)*scaleBmpPxToCanvasPx, (float) (rotRectPts[(i+1)%4].y)*scaleBmpPxToCanvasPx,
-                        boundingRectPaint
-                        );
+                Point[] rotRectPts = new Point[4];
+                blob.getBoxFit().points(rotRectPts);
+
+                for (int i = 0; i < 4; ++i)
+                {
+                    canvas.drawLine(
+                            (float) (rotRectPts[i].x) * scaleBmpPxToCanvasPx, (float) (rotRectPts[i].y) * scaleBmpPxToCanvasPx,
+                            (float) (rotRectPts[(i + 1) % 4].x) * scaleBmpPxToCanvasPx, (float) (rotRectPts[(i + 1) % 4].y) * scaleBmpPxToCanvasPx,
+                            boundingRectPaint
+                    );
+                }
+            }
+
+            if (circleFitPaint != null)
+            {
+                Circle circle = blob.getCircle();
+                canvas.drawCircle(
+                        circle.getX() * scaleBmpPxToCanvasPx, circle.getY() * scaleBmpPxToCanvasPx,
+                        circle.getRadius() * scaleBmpPxToCanvasPx, circleFitPaint
+                );
             }
         }
 
@@ -333,10 +370,14 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
     {
         private MatOfPoint contour;
         private Point[] contourPts;
+        private MatOfPoint2f contourAsFloat;
         private int area = -1;
         private double density = -1;
         private double aspectRatio = -1;
         private RotatedRect rect;
+        private double arcLength = -1;
+        private double circularity = -1;
+        private Circle circle;
 
         BlobImpl(MatOfPoint contour)
         {
@@ -358,6 +399,15 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
             }
 
             return contourPts;
+        }
+
+        @Override
+        public MatOfPoint2f getContourAsFloat() {
+            if (contourAsFloat == null) {
+                contourAsFloat = new MatOfPoint2f(getContourPoints());
+            }
+
+            return contourAsFloat;
         }
 
         @Override
@@ -422,9 +472,45 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
         {
             if (rect == null)
             {
-                rect = Imgproc.minAreaRect(new MatOfPoint2f(getContourPoints()));
+                rect = Imgproc.minAreaRect(getContourAsFloat());
             }
             return rect;
+        }
+
+        @Override
+        public double getArcLength()
+        {
+            if (arcLength < 0)
+            {
+                arcLength = Imgproc.arcLength(getContourAsFloat(), true);
+            }
+
+            return arcLength;
+        }
+
+        @Override
+        public double getCircularity()
+        {
+            if (circularity < 0)
+            {
+                circularity = 4 * Math.PI * (getContourArea() / Math.pow(getArcLength(), 2));
+            }
+
+            return circularity;
+        }
+
+        @Override
+        public Circle getCircle()
+        {
+            if (circle == null)
+            {
+                Point center = new Point();
+                float[] radius = new float[1];
+                Imgproc.minEnclosingCircle(getContourAsFloat(), center, radius);
+                circle = new Circle(center, radius[0]);
+            }
+
+            return circle;
         }
     }
 }

@@ -43,7 +43,7 @@ import kotlin.system.exitProcess
 
 class PluginSigningTool : Runnable {
 
-    @picocli.CommandLine.Option(names = ["-p", "--plugin"], description = ["The plugin JAR file to sign"], required = true)
+    @CommandLine.Option(names = ["-p", "--plugin"], description = ["The plugin JAR file to sign"], required = true)
     var pluginFile: String? = null
 
     @CommandLine.Option(names = ["-a", "--authority"], description = ["The authority to sign the plugin with"], required = true)

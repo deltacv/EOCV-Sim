@@ -195,21 +195,21 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
 
         if(_loaders.find { it.pluginName == "PaperVision" && it.pluginAuthor == "deltacv" } == null) {
-            /*_loaders.add(EmbeddedFilePluginLoader(
+            _loaders.add(EmbeddedFilePluginLoader(
                 "/embedded_plugins/PaperVisionPlugin.jar",
                 listOf(),
                 PluginSource.FILE,
                 eocvSim,
                 appender
-            ))*/
+            ))
 
-            @Suppress("UNCHECKED_CAST")
+            /*@Suppress("UNCHECKED_CAST")
             addEmbeddedPlugin(
                 Class.forName("io.github.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin") as Class<out EOCVSimPlugin>,
                 "PaperVision", Build.paperVisionVersion, "deltacv",
                 "Create your custom OpenCV algorithms using a user-friendly node editor interface",
                 "dev@deltacv.org"
-            )
+            )*/
         } else {
             appender.appendln(PluginOutput.SPECIAL_SILENT + "PaperVision plugin is already loaded, skipping embedded plugin.")
         }
@@ -225,7 +225,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             }
         } catch (e: Exception) {
             appender.appendln("Failed to instantiate embedded plugin $name: ${e.message}")
-            logger.error("Failed to instantiate embedded plugin $name", e)
+            logger.warn("", e)
         }
     }
 

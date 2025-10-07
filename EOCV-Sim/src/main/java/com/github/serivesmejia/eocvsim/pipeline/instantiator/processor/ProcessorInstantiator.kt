@@ -50,6 +50,6 @@ object ProcessorInstantiator : PipelineInstantiator {
 
     override fun virtualReflectOf(pipeline: OpenCvPipeline) = JvmVirtualReflection
 
-    override fun variableTunerTarget(pipeline: OpenCvPipeline) = (pipeline as ProcessorPipeline).processor
+    override fun variableTunerTarget(pipeline: OpenCvPipeline): VisionProcessor = (pipeline as ProcessorPipeline).processor
 
 }

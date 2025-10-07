@@ -73,6 +73,18 @@ public class ColorRange
             new Scalar(255, 120, 133)
     );
 
+    public static final ColorRange ARTIFACT_GREEN = new ColorRange(
+            ColorSpace.YCrCb,
+            new Scalar( 32,  50, 118),
+            new Scalar(255, 105, 145)
+    );
+
+    public static final ColorRange ARTIFACT_PURPLE = new ColorRange(
+            ColorSpace.YCrCb,
+            new Scalar( 32, 135, 135),
+            new Scalar(255, 155, 169)
+    );
+
     // -----------------------------------------------------------------------------
     // ROLL YOUR OWN
     // -----------------------------------------------------------------------------
