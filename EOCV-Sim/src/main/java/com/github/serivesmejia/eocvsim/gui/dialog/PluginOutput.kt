@@ -46,44 +46,6 @@ import java.awt.Desktop
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 
-class AppendDelegate {
-    private val appendables = mutableListOf<Appendable>()
-
-    @Synchronized
-    fun subscribe(appendable: Appendable) {
-        appendables.add(appendable)
-    }
-
-    fun subscribe(appendable: (String) -> Unit) {
-        appendables.add(object : Appendable {
-            override fun append(csq: CharSequence?): java.lang.Appendable? {
-                appendable(csq.toString())
-                return this
-            }
-
-            override fun append(csq: CharSequence?, start: Int, end: Int): java.lang.Appendable? {
-                appendable(csq.toString().substring(start, end))
-                return this
-            }
-
-            override fun append(c: Char): java.lang.Appendable? {
-                appendable(c.toString())
-                return this
-            }
-        })
-    }
-
-    @Synchronized
-    fun append(text: String) {
-        appendables.forEach { it.append(text) }
-    }
-
-    @Synchronized
-    fun appendln(text: String) {
-        appendables.forEach { it.appendLine(text) }
-    }
-}
-
 class PluginOutput(
     appendDelegate: AppendDelegate,
     val pluginManager: PluginManager,
@@ -557,5 +519,44 @@ class PluginOutput(
 
             add(Box.createRigidArea(Dimension(4, 0)))
         }
+    }
+}
+
+
+class AppendDelegate {
+    private val appendables = mutableListOf<Appendable>()
+
+    @Synchronized
+    fun subscribe(appendable: Appendable) {
+        appendables.add(appendable)
+    }
+
+    fun subscribe(appendable: (String) -> Unit) {
+        appendables.add(object : Appendable {
+            override fun append(csq: CharSequence?): java.lang.Appendable? {
+                appendable(csq.toString())
+                return this
+            }
+
+            override fun append(csq: CharSequence?, start: Int, end: Int): java.lang.Appendable? {
+                appendable(csq.toString().substring(start, end))
+                return this
+            }
+
+            override fun append(c: Char): java.lang.Appendable? {
+                appendable(c.toString())
+                return this
+            }
+        })
+    }
+
+    @Synchronized
+    fun append(text: String) {
+        appendables.forEach { it.append(text) }
+    }
+
+    @Synchronized
+    fun appendln(text: String) {
+        appendables.forEach { it.appendLine(text) }
     }
 }
