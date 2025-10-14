@@ -45,10 +45,10 @@ class CreateVideoSource(
 ) {
     private val dialog: JDialog = JDialog(parent)
 
-    private lateinit var nameTextField: JTextField
-    private lateinit var fileSelector: FileSelector
-    private lateinit var sizeFields: SizeFields
-    private lateinit var createButton: JButton
+    private var nameTextField: JTextField
+    private var fileSelector: FileSelector
+    private var sizeFields: SizeFields
+    private var createButton: JButton
 
     private var selectedValidVideo = false
 

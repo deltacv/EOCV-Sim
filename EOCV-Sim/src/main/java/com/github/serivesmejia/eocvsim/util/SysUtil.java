@@ -95,7 +95,7 @@ public class SysUtil {
         }
     }
 
-    public static CopyFileIsData copyFileIs(InputStream is, File toPath, boolean replaceIfExisting) throws IOException {
+    public static FileCopyResult copyFileIs(InputStream is, File toPath, boolean replaceIfExisting) throws IOException {
 
         boolean alreadyExists = true;
 
@@ -111,7 +111,7 @@ public class SysUtil {
 
         is.close();
 
-        CopyFileIsData data = new CopyFileIsData();
+        FileCopyResult data = new FileCopyResult();
         data.alreadyExists = alreadyExists;
         data.file = toPath;
 
@@ -119,7 +119,7 @@ public class SysUtil {
 
     }
 
-    public static CopyFileIsData copyFileIsTemp(InputStream is, String fileName, boolean replaceIfExisting) throws IOException {
+    public static FileCopyResult copyFileIsTemp(InputStream is, String fileName, boolean replaceIfExisting) throws IOException {
         String tmpDir = System.getProperty("java.io.tmpdir");
         File tempFile = new File(tmpDir + File.separator + fileName);
 
@@ -253,6 +253,7 @@ public class SysUtil {
     public static void deleteFilesUnder(File parent) {
         deleteFilesUnder(parent, null);
     }
+
     public static boolean migrateFile(File oldFile, File newFile) {
         if(newFile.exists() || !oldFile.exists()) return false;
 
@@ -362,7 +363,7 @@ public class SysUtil {
         UNKNOWN
     }
 
-    public static class CopyFileIsData {
+    public static class FileCopyResult {
         public File file = null;
         public boolean alreadyExists = false;
     }

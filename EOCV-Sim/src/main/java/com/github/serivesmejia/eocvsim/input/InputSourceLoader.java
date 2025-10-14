@@ -140,7 +140,7 @@ public class InputSourceLoader {
         @Expose
         public SourcesFileVersion sourcesFileVersion = null;
 
-        enum SourcesFileVersion { DOS, SEIS, SIETE }
+        public enum SourcesFileVersion { DOS, SEIS, SIETE }
 
         public void updateAllSources() {
 
@@ -162,9 +162,7 @@ public class InputSourceLoader {
             //check if file version is bigger than DOS, we should have video sources section
             //declared in any file with a version greater than that
             if (sourcesFileVersion.ordinal() >= 1) {
-                for (Map.Entry<String, VideoSource> entry : videoSources.entrySet()) {
-                    allSources.put(entry.getKey(), entry.getValue());
-                }
+                allSources.putAll(videoSources);
             }
         }
 
