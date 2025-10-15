@@ -27,12 +27,14 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.config.ConfigLoader
 import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
+import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.common.util.ParsedVersion
+import io.github.deltacv.eocvsim.plugin.EMBEDDED_PLUGIN_FOLDER
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.plugin.security.PluginSignatureVerifier
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
@@ -44,7 +46,7 @@ import java.io.File
  * @param pluginFile the jar file of the plugin
  * @param eocvSim the EOCV-Sim instance
  */
-class FilePluginLoader(
+open class FilePluginLoader(
     override val pluginFile: File,
     override val classpath: List<File>,
     override val pluginSource: PluginSource,
@@ -55,10 +57,10 @@ class FilePluginLoader(
     val logger by loggerForThis()
 
     override var loaded = false
-        private set
+        protected set
 
     override var enabled = false
-        private set
+        protected set
 
     val pluginClassLoader = PluginClassLoader(
         pluginFile,
@@ -80,28 +82,28 @@ class FilePluginLoader(
         private set
 
     override lateinit var pluginName: String
-        private set
+        protected set
     override lateinit var pluginVersion: String
-        private set
+        protected set
 
     override lateinit var pluginDescription: String
-        private set
+        protected set
 
     override lateinit var pluginAuthor: String
-        private set
+        protected set
     override lateinit var pluginAuthorEmail: String
-        private set
+        protected set
 
     override lateinit var pluginClass: Class<*>
-        private set
+        protected set
     override lateinit var plugin: EOCVSimPlugin
-        private set
+        protected set
 
     /**
      * The file system for the plugin
      */
     override lateinit var fileSystem: SandboxFileSystem
-        private set
+        protected set
 
     /**
      * The signature of the plugin, issued by a verified authority
@@ -271,4 +273,38 @@ class FilePluginLoader(
      */
     override fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
 
+}
+
+class EmbeddedFilePluginLoader(
+    resourcePath: String,
+    classpath: List<File>,
+    pluginSource: PluginSource,
+    eocvSim: EOCVSim,
+    appender: AppendDelegate
+) : FilePluginLoader(
+    pluginFile = resourcePath.let {
+        // extract to EMBEDDED_PLUGIN_FOLDER
+        val hash = it.hashString
+        val file = EMBEDDED_PLUGIN_FOLDER + File.separator + "$hash.jar"
+
+        SysUtil.copyFileIs(EmbeddedFilePluginLoader::class.java.getResourceAsStream(it), file, true)
+
+        file
+    },
+    classpath = classpath.let {
+        // add pluginFile
+        val hash = it.hashString
+        val file = EMBEDDED_PLUGIN_FOLDER + File.separator + "$hash.jar"
+
+        classpath + file
+    },
+    pluginSource = pluginSource,
+    eocvSim = eocvSim,
+    appender = appender
+) {
+    override val hasSuperAccess = true // Embedded plugins always have super access
+
+    init {
+        fetchInfoFromToml()
+    }
 }

@@ -68,7 +68,6 @@ public class InputSourceLoader {
     }
 
     public void saveInputSourcesToFile(File f) {
-
         InputSourcesContainer sourcesContainer = new InputSourcesContainer();
 
         //updates file version to most recent since it will be regenerated at this point
@@ -84,7 +83,6 @@ public class InputSourceLoader {
         }
 
         saveInputSourcesToFile(f, sourcesContainer);
-
     }
 
     public void saveInputSourcesToFile(File file, InputSourcesContainer sourcesContainer) {
@@ -140,36 +138,25 @@ public class InputSourceLoader {
         @Expose
         public SourcesFileVersion sourcesFileVersion = null;
 
-        enum SourcesFileVersion { DOS, SEIS, SIETE }
+        public enum SourcesFileVersion { DOS, SEIS, SIETE }
 
         public void updateAllSources() {
-
             if (sourcesFileVersion == null) sourcesFileVersion = SourcesFileVersion.DOS;
 
             allSources.clear();
 
-            for (Map.Entry<String, ImageSource> entry : imageSources.entrySet()) {
-                allSources.put(entry.getKey(), entry.getValue());
-            }
-
-            for (Map.Entry<String, CameraSource> entry : cameraSources.entrySet()) {
-                allSources.put(entry.getKey(), entry.getValue());
-            }
-            for(Map.Entry<String, HttpSource> entry : httpSources.entrySet()) {
-                allSources.put(entry.getKey(), entry.getValue());
-            }
+            allSources.putAll(imageSources);
+            allSources.putAll(cameraSources);
+            allSources.putAll(httpSources);
 
             //check if file version is bigger than DOS, we should have video sources section
             //declared in any file with a version greater than that
             if (sourcesFileVersion.ordinal() >= 1) {
-                for (Map.Entry<String, VideoSource> entry : videoSources.entrySet()) {
-                    allSources.put(entry.getKey(), entry.getValue());
-                }
+                allSources.putAll(videoSources);
             }
         }
 
         public void classifySource(String sourceName, InputSource source) {
-
             switch (SourceType.fromClass(source.getClass())) {
                 case IMAGE:
                     imageSources.put(sourceName, (ImageSource) source);
@@ -184,7 +171,6 @@ public class InputSourceLoader {
                     httpSources.put(sourceName, (HttpSource) source);
                     break;
             }
-
         }
 
     }

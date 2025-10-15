@@ -43,7 +43,7 @@ import kotlin.system.exitProcess
 
 class PluginSigningTool : Runnable {
 
-    @picocli.CommandLine.Option(names = ["-p", "--plugin"], description = ["The plugin JAR file to sign"], required = true)
+    @CommandLine.Option(names = ["-p", "--plugin"], description = ["The plugin JAR file to sign"], required = true)
     var pluginFile: String? = null
 
     @CommandLine.Option(names = ["-a", "--authority"], description = ["The authority to sign the plugin with"], required = true)
@@ -209,7 +209,7 @@ class PluginSigningTool : Runnable {
         fun main(args: Array<String>) {
             if(args.isEmpty()) {
                 println("This tool provides a command line interface, but no arguments were provided.")
-                println("If you want to use command line arguments, please provide them in the format:")
+                println("If you want to use command line arguments, please provide them as such:")
                 println("java ... --plugin <plugin.jar> --authority <authority> --key <private_key>")
                 println("\nWe'll now ask for the required information interactively.")
 

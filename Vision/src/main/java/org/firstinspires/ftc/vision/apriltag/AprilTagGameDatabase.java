@@ -47,7 +47,7 @@ public class AprilTagGameDatabase
     {
         return new AprilTagLibrary.Builder()
                 .addTags(getSampleTagLibrary())
-                .addTags(getIntoTheDeepTagLibrary())
+                .addTags(getDecodeTagLibrary())
                 .build();
     }
 
@@ -116,6 +116,27 @@ public class AprilTagGameDatabase
                 .addTag(16, "RedAudienceWall",
                         4, new VectorF(-70.25f, -46.83f, 5.75f), DistanceUnit.INCH,
                         new Quaternion(0.5f, -0.5f, -0.5f, 0.5f, 0))
+                .build();
+    }
+
+    /**
+     * Get the {@link AprilTagLibrary} for the Decode FTC game
+     * @return the {@link AprilTagLibrary} for the Decode FTC game
+     */
+    public static AprilTagLibrary getDecodeTagLibrary(){
+        return new AprilTagLibrary.Builder()
+                .addTag(20, "BlueTarget",
+                        6.5, new VectorF(-58.3727f, -55.6425f, 29.5f), DistanceUnit.INCH,
+                        new Quaternion(0.2182149f, -0.2182149f, -0.6725937f, 0.6725937f, 0))
+                .addTag(21, "Obelisk_GPP",
+                        6.5, DistanceUnit.INCH)
+                .addTag(22, "Obelisk_PGP",
+                        6.5, DistanceUnit.INCH)
+                .addTag(23, "Obelisk_PPG",
+                        6.5, DistanceUnit.INCH)
+                .addTag(24, "RedTarget",
+                        6.5, new VectorF(-58.3727f, 55.6425f, 29.5f), DistanceUnit.INCH,
+                        new Quaternion(0.6725937f, -0.6725937f, -0.2182149f, 0.2182149f, 0))
                 .build();
     }
 

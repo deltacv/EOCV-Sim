@@ -23,11 +23,22 @@
 
 package io.github.deltacv.vision.external.source;
 
-import org.opencv.core.Mat;
+public final class ThreadVisionSourceProvider {
 
-public interface FrameReceiver {
-    default void onFrameStart() {}
-    void consume(Mat frame, long timestamp);
+    private ThreadVisionSourceProvider() {} // No instantiation
 
-    void stop();
+    private static final ThreadLocal<VisionSourceProvider> provider = new ThreadLocal<>();
+
+    public static void register(VisionSourceProvider provider) {
+        ThreadVisionSourceProvider.provider.set(provider);
+    }
+
+    public static VisionSourceProvider getCurrentProvider() {
+        return provider.get();
+    }
+
+    public static VisionSource get(String name) {
+        return getCurrentProvider().get(name);
+    }
+
 }

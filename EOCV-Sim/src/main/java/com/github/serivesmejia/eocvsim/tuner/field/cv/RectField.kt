@@ -28,8 +28,6 @@ import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import org.opencv.core.Rect
-import org.openftc.easyopencv.OpenCvPipeline
-import java.lang.reflect.Field
 import javax.swing.SwingUtilities
 
 @RegisterTunableField

@@ -23,7 +23,6 @@ class EmbeddedPluginLoader<T: EOCVSimPlugin>(
     override val pluginAuthor: String = "",
     override val pluginAuthorEmail: String = "",
     private val superAccess: Boolean = true,
-    private val pluginSignature: PluginSignature? = null,
     override val pluginClass: Class<T>,
     val pluginInstantiator: () -> T
 ) : PluginLoader() {

@@ -55,7 +55,7 @@ public class MatRecycler {
     }
 
     public synchronized RecyclableMat takeMatOrNull() {
-        if (availableMats.size() == 0) {
+        if (availableMats.isEmpty()) {
             return null;
         }
 

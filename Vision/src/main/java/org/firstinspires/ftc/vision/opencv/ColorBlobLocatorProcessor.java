@@ -41,6 +41,7 @@ import com.qualcomm.robotcore.util.SortOrder;
 
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.RotatedRect;
 
@@ -62,12 +63,14 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
     {
         private ColorRange colorRange;
         private ContourMode contourMode;
-        private ImageRegion imageRegion;
+        private ImageRegion imageRegion = ImageRegion.entireFrame();
+        private MorphOperationType morphOperationType = MorphOperationType.OPENING;
         private int erodeSize = -1;
         private int dilateSize = -1;
         private boolean drawContours = false;
         private int blurSize = -1;
         private int boundingBoxColor = Color.rgb(255, 120, 31);
+        private int circleFitColor = 0;
         private int roiColor = Color.rgb(255, 255, 255);
         private int contourColor = Color.rgb(3, 227, 252);
 
@@ -86,12 +89,23 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
 
         /**
          * Set the color used to draw the "best fit" bounding boxes for blobs
-         * @param color Android color int
+         * @param color Android color int or 0 to disable
          * @return Builder object, to allow for method chaining
          */
         public Builder setBoxFitColor(@ColorInt int color)
         {
             this.boundingBoxColor = color;
+            return this;
+        }
+
+        /**
+         * Set the color used to draw the enclosing circle around blobs
+         * @param color Android color int or 0 to disable
+         * @return Builder object, to allow for method chaining
+         */
+        public Builder setCircleFitColor(@ColorInt int color)
+        {
+            this.circleFitColor = color;
             return this;
         }
 
@@ -166,6 +180,20 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
         }
 
         /**
+         * Set the type of morph operation to perform. Only relevant
+         * if using both erosion and dilation.
+         * @param morphOperationType type of morph operation to perform
+         * @return Builder object, to allow for method chaining
+         * @see #setErodeSize(int)
+         * @see #setDilateSize(int)
+         */
+        public Builder setMorphOperationType(MorphOperationType morphOperationType)
+        {
+            this.morphOperationType = morphOperationType;
+            return this;
+        }
+
+        /**
          * Set the size of the Erosion operation performed after applying
          * the color threshold. Erosion eats away at the mask, reducing
          * noise by eliminating super small areas, but also reduces the
@@ -203,6 +231,11 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
          */
         public ColorBlobLocatorProcessor build()
         {
+            if (imageRegion == null)
+            {
+                throw new IllegalArgumentException("You must set a region of interest!");
+            }
+
             if (colorRange == null)
             {
                 throw new IllegalArgumentException("You must set a color range!");
@@ -213,7 +246,7 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
                 throw new IllegalArgumentException("You must set a contour mode!");
             }
 
-            return new ColorBlobLocatorProcessorImpl(colorRange, imageRegion, contourMode, erodeSize, dilateSize, drawContours, blurSize, boundingBoxColor, roiColor, contourColor);
+            return new ColorBlobLocatorProcessorImpl(colorRange, imageRegion, contourMode, morphOperationType, erodeSize, dilateSize, drawContours, blurSize, boundingBoxColor, circleFitColor, roiColor, contourColor);
         }
     }
 
@@ -234,6 +267,21 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
     }
 
     /**
+     * Determines which compound morphological operation to perform on blobs
+     */
+    public enum MorphOperationType
+    {
+        /**
+         * Performs erosion followed by dilation
+         */
+        OPENING,
+        /**
+         * Performs dilation followed by erosion
+         */
+        CLOSING
+    }
+
+    /**
      * The criteria used for filtering and sorting.
      */
     public enum BlobCriteria
@@ -241,6 +289,8 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
         BY_CONTOUR_AREA,
         BY_DENSITY,
         BY_ASPECT_RATIO,
+        BY_ARC_LENGTH,
+        BY_CIRCULARITY,
     }
 
     /**
@@ -292,6 +342,12 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
         public abstract Point[] getContourPoints();
 
         /**
+         * Get this contour as a MatOfPoint2f
+         * @return a MatOfPoint2f of this contour
+         */
+        public abstract MatOfPoint2f getContourAsFloat();
+
+        /**
          * Get the area enclosed by this blob's contour
          * @return area enclosed by this blob's contour
          */
@@ -316,6 +372,24 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
          * @return "best fit" bounding box for this blob
          */
         public abstract RotatedRect getBoxFit();
+
+        /**
+         * Get the arc length of this blob
+         * @return the arc length of this blob
+         */
+        public abstract double getArcLength();
+
+        /**
+         * Get the circularity of this blob
+         * @return the circularity of this blob
+         */
+        public abstract double getCircularity();
+
+        /**
+         * Get the center Point and radius of the circle enclosing this blob
+         * @return the center Point and radius of the circle enclosing this blob
+         */
+        public abstract Circle getCircle();
     }
 
     /**
@@ -350,11 +424,87 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
     public static class Util
     {
         /**
+         * Remove from a List of Blobs those which fail to meet a given criteria
+         * @param criteria criteria by which to filter by
+         * @param minValue minimum value
+         * @param maxValue maximum value
+         * @param blobs List of Blobs to operate on
+         */
+        public static void filterByCriteria(BlobCriteria criteria, double minValue, double maxValue, List<Blob> blobs)
+        {
+            ArrayList<Blob> toRemove = new ArrayList<>();
+
+            for (Blob b : blobs)
+            {
+                double value = 0;
+                switch (criteria)
+                {
+                    case BY_CONTOUR_AREA:
+                        value = b.getContourArea();
+                        break;
+                    case BY_DENSITY:
+                        value = b.getDensity();
+                        break;
+                    case BY_ASPECT_RATIO:
+                        value = b.getAspectRatio();
+                        break;
+                    case BY_ARC_LENGTH:
+                        value = b.getArcLength();
+                        break;
+                    case BY_CIRCULARITY:
+                        value = b.getCircularity();
+                        break;
+                }
+
+                if (value > maxValue || value < minValue)
+                {
+                    toRemove.add(b);
+                }
+            }
+
+            blobs.removeAll(toRemove);
+        }
+
+        public static void sortByCriteria(BlobCriteria criteria, SortOrder sortOrder, List<Blob> blobs)
+        {
+            blobs.sort((c1, c2) -> {
+                int tmp = 0;
+                switch (criteria)
+                {
+                    case BY_CONTOUR_AREA:
+                        tmp = (int)Math.signum(c2.getContourArea() - c1.getContourArea());
+                        break;
+                    case BY_DENSITY:
+                        tmp = (int)Math.signum(c2.getDensity() - c1.getDensity());
+                        break;
+                    case BY_ASPECT_RATIO:
+                        tmp = (int)Math.signum(c2.getAspectRatio() - c1.getAspectRatio());
+                        break;
+                    case BY_ARC_LENGTH:
+                        tmp = (int)Math.signum(c2.getArcLength() - c1.getArcLength());
+                        break;
+                    case BY_CIRCULARITY:
+                        tmp = (int)Math.signum(c2.getCircularity() - c1.getCircularity());
+                        break;
+                }
+
+                if (sortOrder == SortOrder.ASCENDING)
+                {
+                    tmp = -tmp;
+                }
+
+                return tmp;
+            });
+        }
+
+        /**
          * Remove from a List of Blobs those which fail to meet an area criteria
          * @param minArea minimum area
          * @param maxArea maximum area
          * @param blobs List of Blobs to operate on
+         * @deprecated use {@link #filterByCriteria} instead
          */
+        @Deprecated
         public static void filterByArea(double minArea, double maxArea, List<Blob> blobs)
         {
             ArrayList<Blob> toRemove = new ArrayList<>();
@@ -374,7 +524,9 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
          * Sort a list of Blobs based on area
          * @param sortOrder sort order
          * @param blobs List of Blobs to operate on
+         * @deprecated use {@link #sortByCriteria} instead
          */
+        @Deprecated
         public static void sortByArea(SortOrder sortOrder, List<Blob> blobs)
         {
             blobs.sort(new Comparator<Blob>()
@@ -398,7 +550,9 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
          * @param minDensity minimum density
          * @param maxDensity maximum desnity
          * @param blobs List of Blobs to operate on
+         * @deprecated use {@link #filterByCriteria} instead
          */
+        @Deprecated
         public static void filterByDensity(double minDensity, double maxDensity, List<Blob> blobs)
         {
             ArrayList<Blob> toRemove = new ArrayList<>();
@@ -418,7 +572,9 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
          * Sort a list of Blobs based on density
          * @param sortOrder sort order
          * @param blobs List of Blobs to operate on
+         * @deprecated use {@link #sortByCriteria} instead
          */
+        @Deprecated
         public static void sortByDensity(SortOrder sortOrder, List<Blob> blobs)
         {
             blobs.sort(new Comparator<Blob>()
@@ -442,7 +598,9 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
          * @param minAspectRatio minimum aspect ratio
          * @param maxAspectRatio maximum aspect ratio
          * @param blobs List of Blobs to operate on
+         * @deprecated use {@link #filterByCriteria} instead
          */
+        @Deprecated
         public static void filterByAspectRatio(double minAspectRatio, double maxAspectRatio, List<Blob> blobs)
         {
             ArrayList<Blob> toRemove = new ArrayList<>();
@@ -462,7 +620,9 @@ public abstract class ColorBlobLocatorProcessor implements VisionProcessor
          * Sort a list of Blobs based on aspect ratio
          * @param sortOrder sort order
          * @param blobs List of Blobs to operate on
+         * @deprecated use {@link #sortByCriteria} instead
          */
+        @Deprecated
         public static void sortByAspectRatio(SortOrder sortOrder, List<Blob> blobs)
         {
             blobs.sort(new Comparator<Blob>()

@@ -38,10 +38,10 @@ public abstract class VisionSourceBase implements VisionSource {
 
     ArrayList<FrameReceiver> frameReceivers = new ArrayList<>();
 
-    SourceBaseHelperThread helperThread;
+    VisionSourceBaseHelperThread helperThread;
 
     public VisionSourceBase(ThrowableHandler throwableHandler) {
-        helperThread = new SourceBaseHelperThread(this, throwableHandler);
+        helperThread = new VisionSourceBaseHelperThread(this, throwableHandler);
     }
 
     public VisionSourceBase() {
@@ -96,7 +96,7 @@ public abstract class VisionSourceBase implements VisionSource {
         return pullFrame();
     }
 
-    private static class SourceBaseHelperThread extends Thread {
+    private static class VisionSourceBaseHelperThread extends Thread {
 
         VisionSourceBase sourceBase;
         ThrowableHandler throwableHandler;
@@ -105,7 +105,7 @@ public abstract class VisionSourceBase implements VisionSource {
 
         Logger logger;
 
-        public SourceBaseHelperThread(VisionSourceBase sourcedBase, ThrowableHandler throwableHandler) {
+        public VisionSourceBaseHelperThread(VisionSourceBase sourcedBase, ThrowableHandler throwableHandler) {
             super("Thread-SourceBaseHelper-" + sourcedBase.getClass().getSimpleName());
             logger = LoggerFactory.getLogger(getName());
 
@@ -133,7 +133,7 @@ public abstract class VisionSourceBase implements VisionSource {
                 synchronized (sourceBase.lock) {
                     for (FrameReceiver frameReceiver : sourceBase.frameReceivers) {
                         try {
-                            frameReceiver.onNewFrame(frame.getValue(), frame.getTimestamp());
+                            frameReceiver.consume(frame.getValue(), frame.getTimestamp());
                         } catch(Throwable e) {
                             if(e instanceof InterruptedException) {
                                 logger.warn("FrameReceiver interrupted", e);

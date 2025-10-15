@@ -14,7 +14,7 @@ transfer it onto your robot!
 
 ## Introducing PaperVision
 
-Starting at v4.0.0, EOCV-Sim comes with a new tool that will make it even easier to work on your computer vision pipelines.
+EOCV-Sim comes with a tool that will make it even easier to work on your computer vision pipelines.
 PaperVision takes inspiration in Blender and Unreal Engine's blueprint system, allowing you to create pipelines by connecting nodes together.<br><br>
 PaperVision is still in its early stages, but it's already a powerful tool that will make it easier to work on your pipelines.<br><br>
 <b>Find it in the "PaperVision" tab in the simulator !</b>
@@ -101,10 +101,17 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v4.0.3 - PaperVision launch hotfix](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.3)
+- This is the 33nd release for EOCV-Sim
+    - Updates PaperVision to [1.0.10](https://github.com/deltacv/PaperVision/releases/tag/v1.0.10)
+    - Fixes issues [#136](https://github.com/deltacv/EOCV-Sim/issues/136) and [#137](https://github.com/deltacv/EOCV-Sim/issues/137)
+    - Adds embedded PaperVision as a separate shadow jar file instead of being an integrated dependency to fix a hard to trace native crash
+
 ## [v4.0.2 - Embedded PaperVision v1.0.7](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.2)
 - This is the 32nd release for EOCV-Sim
     - Adds HTTP input source to support MJPEG streams as an input source. Limelight cameras can stream to EOCV-Sim !
     - Updates to [PaperVision v1.0.7](https://github.com/deltacv/PaperVision/releases/tag/v1.0.4)
+    - Addresses the changes made to the Vision module in the FTC SDK v11.0
     - PaperVision is now embedded in EOCV-Sim's binary instead of being downloaded on startup
 
 ## [v4.0.1 - Plugin Auto-Updater](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.1)

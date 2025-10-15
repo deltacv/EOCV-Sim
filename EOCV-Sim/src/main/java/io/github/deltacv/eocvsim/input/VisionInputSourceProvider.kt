@@ -4,7 +4,7 @@ import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.input.source.CameraSource
 import com.github.serivesmejia.eocvsim.input.source.ImageSource
 import com.github.serivesmejia.eocvsim.input.source.VideoSource
-import io.github.deltacv.vision.external.source.ViewportAndSourceHander
+import io.github.deltacv.vision.external.source.ViewportVisionSourceProvider
 import io.github.deltacv.vision.external.source.VisionSource
 import io.github.deltacv.vision.internal.opmode.OpModeNotifier
 import io.github.deltacv.vision.internal.opmode.OpModeState
@@ -17,11 +17,11 @@ import java.io.File
 import java.io.IOException
 import javax.imageio.ImageIO
 
-class VisionInputSourceHander(
+class VisionInputSourceProvider(
     val notifier: OpModeNotifier,
     val viewport: OpenCvViewport,
     val inputSourceManager: InputSourceManager
-) : ViewportAndSourceHander {
+) : ViewportVisionSourceProvider {
 
     private fun isImage(path: String) = try {
         ImageIO.read(File(path)) != null
@@ -40,13 +40,13 @@ class VisionInputSourceHander(
         return isVideo
     }
 
-    override fun hand(name: String): VisionSource {
+    override fun get(name: String): VisionSource {
         val source = VisionInputSource(if(File(name).exists()) {
             if(isImage(name)) {
                 ImageSource(name)
             } else if(isVideo(name)) {
                 VideoSource(name, null)
-            } else throw IllegalArgumentException("File is neither an image nor a video")
+            } else throw IllegalArgumentException("File $name is neither an image nor a video")
         } else {
             val index = name.toIntOrNull()
                     ?: if(name == "default" || name == "Webcam 1") 0

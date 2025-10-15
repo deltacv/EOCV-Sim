@@ -10,7 +10,7 @@ buildscript {
         log4j_version = "2.24.1"
         opencv_version = "4.7.0-0"
         apriltag_plugin_version = "2.1.0-D"
-        papervision_version = "1.0.7"
+        papervision_version = "1.0.10"
 
         skiko_version = "0.8.15"
 
@@ -36,7 +36,7 @@ buildscript {
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath 'gradle.plugin.com.github.johnrengelman:shadow:7.1.1'
+        classpath "com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.0.2"
         classpath 'io.github.fvarrui:javapackager:1.7.6'
     }
 }
@@ -47,7 +47,7 @@ plugins {
 
 allprojects {
     group 'org.deltacv.EOCV-Sim'
-    version '4.0.2'
+    version '4.0.3'
 
     apply plugin: 'java'
 

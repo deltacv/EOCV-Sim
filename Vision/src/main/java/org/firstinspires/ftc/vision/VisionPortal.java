@@ -38,7 +38,7 @@ import android.util.Size;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.deltacv.vision.external.source.ThreadSourceHander;
+import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider;
 import io.github.deltacv.vision.internal.source.ftc.SourcedCameraNameImpl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
@@ -173,7 +173,7 @@ public abstract class VisionPortal
          */
         public Builder setCamera(BuiltinCameraDirection cameraDirection)
         {
-            this.camera = new SourcedCameraNameImpl(ThreadSourceHander.hand("default"));
+            this.camera = new SourcedCameraNameImpl(ThreadVisionSourceProvider.get("default"));
             return this;
         }
 

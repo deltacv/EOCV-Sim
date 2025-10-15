@@ -1,6 +1,6 @@
 package com.qualcomm.robotcore.hardware;
 
-import io.github.deltacv.vision.external.source.ThreadSourceHander;
+import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider;
 import io.github.deltacv.vision.internal.source.ftc.SourcedCameraNameImpl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 
@@ -18,7 +18,7 @@ public class HardwareMap {
     @SuppressWarnings("unchecked")
     public <T> T get(Class<T> classType, String deviceName) {
         if(hasSuperclass(classType, CameraName.class)) {
-            return (T) new SourcedCameraNameImpl(ThreadSourceHander.hand(deviceName));
+            return (T) new SourcedCameraNameImpl(ThreadVisionSourceProvider.get(deviceName));
         }
 
         throw new IllegalArgumentException("Unknown device type " + classType.getName());

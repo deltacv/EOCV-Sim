@@ -1,13 +1,12 @@
 package com.qualcomm.robotcore.eventloop.opmode
 
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.pipeline.handler.SpecificPipelineHandler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.qualcomm.robotcore.hardware.HardwareMap
-import io.github.deltacv.eocvsim.input.VisionInputSourceHander
-import io.github.deltacv.vision.external.source.ThreadSourceHander
+import io.github.deltacv.eocvsim.input.VisionInputSourceProvider
+import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport
@@ -45,7 +44,7 @@ class OpModePipelineHandler(
         if(pipeline == null) return
 
         inputSourceManager.setInputSource(null)
-        ThreadSourceHander.register(VisionInputSourceHander(pipeline?.notifier ?: return, viewport, inputSourceManager))
+        ThreadVisionSourceProvider.register(VisionInputSourceProvider(pipeline?.notifier ?: return, viewport, inputSourceManager))
 
         pipeline?.telemetry = telemetry
         pipeline?.hardwareMap = HardwareMap()    }

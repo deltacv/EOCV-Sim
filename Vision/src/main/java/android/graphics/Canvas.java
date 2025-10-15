@@ -36,7 +36,6 @@ public class Canvas {
 
     private Bitmap backingBitmap = null;
 
-    final Object surfaceLock = new Object();
     private int providedWidth;
     private int providedHeight;
 

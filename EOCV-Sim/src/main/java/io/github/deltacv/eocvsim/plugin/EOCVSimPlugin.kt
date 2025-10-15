@@ -33,7 +33,7 @@ abstract class EOCVSimPlugin {
     /**
      * The context of the plugin, containing entry point objects
      */
-    val context get() = PluginContext.current(this)!!
+    val context get() = PluginContext.current(this)
 
     /**
      * The EOCV-Sim instance, containing the main functionality of the program

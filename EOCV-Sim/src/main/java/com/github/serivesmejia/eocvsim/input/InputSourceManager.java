@@ -32,6 +32,7 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineManager;
 import com.github.serivesmejia.eocvsim.util.SysUtil;
 import kotlinx.coroutines.Job;
 import org.opencv.core.Mat;
+import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
@@ -46,6 +47,8 @@ import java.util.*;
 import java.util.concurrent.CancellationException;
 
 public class InputSourceManager {
+
+    private static final Scalar BLACK = new Scalar(0, 0, 0, 255);
 
     private final EOCVSim eocvSim;
 
@@ -79,7 +82,7 @@ public class InputSourceManager {
         createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size);
 
         if(sources.isEmpty()) {
-            logger.warn("No input sources found, creating default source");
+            logger.warn("No input sources found, creating default null source");
 
             NullSource nullSource = new NullSource();
             nullSource.isDefault = true;
@@ -121,6 +124,7 @@ public class InputSourceManager {
             Mat m = currentInputSource.update();
 
             if(m != null && !m.empty()) {
+                lastMatFromSource.setTo(BLACK); // clear previous mat
                 m.copyTo(lastMatFromSource);
                 // add an extra alpha channel because that's what eocv returns for some reason... (more realistic simulation lol)
                 Imgproc.cvtColor(lastMatFromSource, lastMatFromSource, Imgproc.COLOR_RGB2RGBA);

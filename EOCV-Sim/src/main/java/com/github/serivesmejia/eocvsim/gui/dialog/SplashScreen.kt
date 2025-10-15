@@ -11,12 +11,10 @@ import javax.swing.SwingUtilities
 class SplashScreen(closeHandler: EventHandler? = null) : JDialog() {
 
     init {
-        if(closeHandler != null) {
-            closeHandler {
-                SwingUtilities.invokeLater {
-                    isVisible = false
-                    dispose()
-                }
+        closeHandler?.doOnce {
+            SwingUtilities.invokeLater {
+                isVisible = false
+                dispose()
             }
         }
 

@@ -32,7 +32,6 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext;
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection;
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection;
 import org.jetbrains.annotations.Nullable;
-import org.openftc.easyopencv.OpenCvPipeline;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,13 +173,13 @@ public class TunerManager {
             } catch(InvocationTargetException e) {
                 if(e.getCause() instanceof CancelTunableFieldAddingException) {
                     String message = e.getCause().getMessage();
-                    logger.info("Field " + field.getName() + " wasn't added due to \"" + message + "\"");
+                    logger.info("Field {} wasn't added due to \"{}\"", field.getName(), message);
                 } else {
-                    logger.error("Reflection error while processing field: " + field.getName(), e.getCause());
+                    logger.error("Reflection error while processing field: {}", field.getName(), e.getCause());
                 }
             } catch (Exception ex) {
                 //oops rip
-                logger.error("Reflection error while processing field: " + field.getName(), ex);
+                logger.error("Reflection error while processing field: {}", field.getName(), ex);
             }
 
         }

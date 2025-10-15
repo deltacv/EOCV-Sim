@@ -23,11 +23,8 @@
 
 package io.github.deltacv.vision.external.source;
 
-import org.opencv.core.Mat;
+import org.openftc.easyopencv.OpenCvViewport;
 
-public interface FrameReceiver {
-    default void onFrameStart() {}
-    void consume(Mat frame, long timestamp);
-
-    void stop();
+public interface ViewportVisionSourceProvider extends VisionSourceProvider {
+    OpenCvViewport viewport();
 }
