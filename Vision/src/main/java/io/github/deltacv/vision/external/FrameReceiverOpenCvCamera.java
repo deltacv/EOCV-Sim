@@ -215,7 +215,7 @@ public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenC
     // Inheritance from Sourced
     //
     @Override
-    public void onNewFrame(Mat frame, long timestamp) {
+    public void consume(Mat frame, long timestamp) {
         if(!isStreaming()) return;
         if(frame == null || frame.empty()) return;
 

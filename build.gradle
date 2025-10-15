@@ -10,7 +10,7 @@ buildscript {
         log4j_version = "2.24.1"
         opencv_version = "4.7.0-0"
         apriltag_plugin_version = "2.1.0-D"
-        papervision_version = "1.0.9"
+        papervision_version = "1.0.10"
 
         skiko_version = "0.8.15"
 

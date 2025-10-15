@@ -25,24 +25,24 @@ package org.openftc.easyopencv;
 
 import io.github.deltacv.vision.external.FrameReceiverOpenCvCamera;
 import io.github.deltacv.vision.external.source.VisionSource;
-import io.github.deltacv.vision.external.source.ThreadSourceHander;
-import io.github.deltacv.vision.external.source.ViewportAndSourceHander;
+import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider;
+import io.github.deltacv.vision.external.source.ViewportVisionSourceProvider;
 import io.github.deltacv.vision.internal.source.ftc.SourcedCameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 
 public class SourcedOpenCvCameraFactoryImpl extends OpenCvCameraFactory {
 
     private OpenCvViewport viewport() {
-        if(ThreadSourceHander.threadHander() instanceof ViewportAndSourceHander) {
-            return ((ViewportAndSourceHander) ThreadSourceHander.threadHander()).viewport();
+        if(ThreadVisionSourceProvider.getCurrentProvider() instanceof ViewportVisionSourceProvider) {
+            return ((ViewportVisionSourceProvider) ThreadVisionSourceProvider.getCurrentProvider()).viewport();
         }
 
         return null;
     }
 
     private VisionSource source(String name) {
-        if(ThreadSourceHander.threadHander() instanceof ViewportAndSourceHander) {
-            return ThreadSourceHander.threadHander().hand(name);
+        if(ThreadVisionSourceProvider.getCurrentProvider() instanceof ViewportVisionSourceProvider) {
+            return ThreadVisionSourceProvider.getCurrentProvider().get(name);
         }
 
         return null;

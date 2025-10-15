@@ -82,7 +82,7 @@ public class InputSourceManager {
         createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size);
 
         if(sources.isEmpty()) {
-            logger.warn("No input sources found, creating default source");
+            logger.warn("No input sources found, creating default null source");
 
             NullSource nullSource = new NullSource();
             nullSource.isDefault = true;

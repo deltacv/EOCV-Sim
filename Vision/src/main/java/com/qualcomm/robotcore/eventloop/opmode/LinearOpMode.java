@@ -31,14 +31,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.robotcore.eventloop.opmode;
 
-import io.github.deltacv.vision.external.source.ThreadSourceHander;
+import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider;
+import io.github.deltacv.vision.external.source.VisionSourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public abstract class LinearOpMode extends OpMode {
 
     protected final Object lock = new Object();
-    private LinearOpModeHelperThread helper = new LinearOpModeHelperThread(this);
+    private LinearOpModeHelperThread helper = new LinearOpModeHelperThread(this, ThreadVisionSourceProvider.getCurrentProvider());
 
     public LinearOpMode() {
     }
@@ -158,8 +159,6 @@ public abstract class LinearOpMode extends OpMode {
         isStarted = false;
         stopRequested = false;
 
-        ThreadSourceHander.register(helper, ThreadSourceHander.threadHander());
-
         helper.start();
     }
 
@@ -196,17 +195,21 @@ public abstract class LinearOpMode extends OpMode {
     private static class LinearOpModeHelperThread extends Thread {
 
         LinearOpMode opMode;
+        VisionSourceProvider provider;
 
         static Logger logger = LoggerFactory.getLogger(LinearOpModeHelperThread.class);
 
-        public LinearOpModeHelperThread(LinearOpMode opMode) {
+        public LinearOpModeHelperThread(LinearOpMode opMode, VisionSourceProvider provider) {
             super("Thread-LinearOpModeHelper-" + opMode.getClass().getSimpleName());
 
             this.opMode = opMode;
+            this.provider = provider;
         }
 
         @Override
         public void run() {
+            ThreadVisionSourceProvider.register(provider);
+
             logger.info("{}: starting", opMode.getClass().getSimpleName());
 
             try {
