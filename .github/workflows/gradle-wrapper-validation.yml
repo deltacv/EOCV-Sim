@@ -17,12 +17,3 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: gradle/wrapper-validation-action@v1
-  validationJavaSample:
-    name: "Validation Java Sample"
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: demo/java
-    steps:
-      - uses: actions/checkout@v2
-      - uses: gradle/wrapper-validation-action@v1
