@@ -111,6 +111,7 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 - This is the 32nd release for EOCV-Sim
     - Adds HTTP input source to support MJPEG streams as an input source. Limelight cameras can stream to EOCV-Sim !
     - Updates to [PaperVision v1.0.7](https://github.com/deltacv/PaperVision/releases/tag/v1.0.4)
+    - Addresses the changes made to the Vision module in the FTC SDK v11.0
     - PaperVision is now embedded in EOCV-Sim's binary instead of being downloaded on startup
 
 ## [v4.0.1 - Plugin Auto-Updater](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.1)
