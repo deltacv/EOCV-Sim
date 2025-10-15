@@ -14,7 +14,7 @@ transfer it onto your robot!
 
 ## Introducing PaperVision
 
-Starting at v4.0.0, EOCV-Sim comes with a new tool that will make it even easier to work on your computer vision pipelines.
+EOCV-Sim comes with a tool that will make it even easier to work on your computer vision pipelines.
 PaperVision takes inspiration in Blender and Unreal Engine's blueprint system, allowing you to create pipelines by connecting nodes together.<br><br>
 PaperVision is still in its early stages, but it's already a powerful tool that will make it easier to work on your pipelines.<br><br>
 <b>Find it in the "PaperVision" tab in the simulator !</b>
