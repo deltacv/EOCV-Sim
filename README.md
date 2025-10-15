@@ -103,6 +103,8 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ## [v4.0.3 - PaperVision launch hotfix](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.3)
 - This is the 33nd release for EOCV-Sim
+    - Updates PaperVision to [1.0.10](https://github.com/deltacv/PaperVision/releases/tag/v1.0.10)
+    - Fixes issues [#136](https://github.com/deltacv/EOCV-Sim/issues/136) and [#137](https://github.com/deltacv/EOCV-Sim/issues/137)
     - Adds embedded PaperVision as a separate shadow jar file instead of being an integrated dependency to fix a hard to trace native crash
 
 ## [v4.0.2 - Embedded PaperVision v1.0.7](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.0.2)
