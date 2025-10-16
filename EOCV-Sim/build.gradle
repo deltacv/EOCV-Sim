@@ -113,6 +113,8 @@ dependencies {
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:3.3.2'
 
     implementation('org.deltacv.visionloop:streaming:1.2.9') { transitive = false }
+
+    // implementation "org.deltacv.PaperVision:EOCVSimPlugin:$papervision_version"
 }
 
 tasks.register('writeBuildClassJava') {

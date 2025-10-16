@@ -51,8 +51,10 @@ class PluginManager(val eocvSim: EOCVSim) {
         val PLUGIN_CACHING_FOLDER = io.github.deltacv.eocvsim.plugin.PLUGIN_CACHING_FOLDER
         val FILESYSTEMS_FOLDER = io.github.deltacv.eocvsim.plugin.FILESYSTEMS_FOLDER
 
-        const val GENERIC_SUPERACCESS_WARN = "Plugins run in a restricted environment by default. <b>SuperAccess will grant full system access. Ensure you trust the authors before accepting.</b>"
-        const val GENERIC_LAWYER_YEET = "<br><br>By accepting, you acknowledge that deltacv is not responsible for damages caused by third-party plugins."
+        const val GENERIC_SUPERACCESS_WARN =
+            "Plugins run in a restricted environment by default. <b>SuperAccess will grant full system access. Ensure you trust the authors before accepting.</b>"
+        const val GENERIC_LAWYER_YEET =
+            "<br><br>By accepting, you acknowledge that deltacv is not responsible for damages caused by third-party plugins."
     }
 
     val logger by loggerForThis()
@@ -79,10 +81,10 @@ class PluginManager(val eocvSim: EOCVSim) {
         val logger by loggerOf("PluginOutput")
 
         appender.subscribe {
-            if(!it.isBlank()) {
+            if (!it.isBlank()) {
                 val message = it.trimSpecials()
 
-                if(message.isNotBlank()) {
+                if (message.isNotBlank()) {
                     logger.info(message)
                 }
             }
@@ -126,7 +128,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         // replace papervision line
 
-        if(!eocvSim.config.flags.getOrDefault("hasDiscardedPaperVisionRepository", false)) {
+        if (!eocvSim.config.flags.getOrDefault("hasDiscardedPaperVisionRepository", false)) {
             try {
                 val repositoriesStr = PluginRepositoryManager.REPOSITORY_FILE.readText()
                 for (line in repositoriesStr.lines()) {
@@ -158,7 +160,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         _pluginFiles.addAll(repositoryManager.resolveAll())
 
-        if(eocvSim.config.flags.getOrDefault("startFresh", false)) {
+        if (eocvSim.config.flags.getOrDefault("startFresh", false)) {
             logger.warn("startFresh = true, deleting all plugins in the plugins folder")
 
             for (file in pluginFilesInFolder) {
@@ -171,7 +173,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             _pluginFiles.addAll(pluginFilesInFolder)
         }
 
-        if(pluginFiles.isEmpty()) {
+        if (pluginFiles.isEmpty()) {
             appender.appendln(PluginOutput.SPECIAL_SILENT + "No plugin files to load")
         }
 
@@ -194,31 +196,51 @@ class PluginManager(val eocvSim: EOCVSim) {
             }
         }
 
-        if(_loaders.find { it.pluginName == "PaperVision" && it.pluginAuthor == "deltacv" } == null) {
-            _loaders.add(EmbeddedFilePluginLoader(
-                "/embedded_plugins/PaperVisionPlugin.jar",
-                listOf(),
-                PluginSource.FILE,
-                eocvSim,
-                appender
-            ))
+        enableTimestamp = System.currentTimeMillis()
+        isEnabled = true
 
-            /*@Suppress("UNCHECKED_CAST")
-            addEmbeddedPlugin(
-                Class.forName("io.github.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin") as Class<out EOCVSimPlugin>,
-                "PaperVision", Build.paperVisionVersion, "deltacv",
-                "Create your custom OpenCV algorithms using a user-friendly node editor interface",
-                "dev@deltacv.org"
-            )*/
+        if (_loaders.find { it.pluginName == "PaperVision" && it.pluginAuthor == "deltacv" } == null) {
+            if (PluginManager::class.java.getResourceAsStream("/embedded_plugins/PaperVisionPlugin") != null) {
+                _loaders.add(
+                    EmbeddedFilePluginLoader(
+                        "/embedded_plugins/PaperVisionPlugin.jar",
+                        listOf(),
+                        PluginSource.FILE,
+                        eocvSim,
+                        appender
+                    )
+                )
+
+                logger.info("Loaded embedded PaperVision from resources")
+            } else {
+                try {
+                    @Suppress("UNCHECKED_CAST")
+                    addEmbeddedPlugin(
+                        Class.forName("io.github.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin") as Class<out EOCVSimPlugin>,
+                        "PaperVision", Build.paperVisionVersion, "deltacv",
+                        "Create your custom OpenCV algorithms using a user-friendly node editor interface",
+                        "dev@deltacv.org"
+                    )
+
+                    logger.info("Loaded embedded PaperVision from built-in class")
+                } catch(_: ClassNotFoundException) {
+                    logger.info("Embedded PaperVision was not found")
+                }
+            }
         } else {
             appender.appendln(PluginOutput.SPECIAL_SILENT + "PaperVision plugin is already loaded, skipping embedded plugin.")
         }
-
-        enableTimestamp = System.currentTimeMillis()
-        isEnabled = true
     }
 
-    private fun <T: EOCVSimPlugin> addEmbeddedPlugin(plugin: Class<T>, name: String, version: String, author: String = "", description: String = "", email: String = "", superAccess: Boolean = true) {
+    private fun <T : EOCVSimPlugin> addEmbeddedPlugin(
+        plugin: Class<T>,
+        name: String,
+        version: String,
+        author: String = "",
+        description: String = "",
+        email: String = "",
+        superAccess: Boolean = true
+    ) {
         try {
             addEmbeddedPlugin(name, version, author, description, email, superAccess, plugin) {
                 plugin.getDeclaredConstructor().newInstance()
@@ -229,7 +251,16 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
     }
 
-    private fun <T: EOCVSimPlugin> addEmbeddedPlugin(name: String, version: String, author: String = "", description: String = "", email: String = "", superAccess: Boolean = true, pluginClass: Class<T>, pluginInstantiator: () -> T) {
+    private fun <T : EOCVSimPlugin> addEmbeddedPlugin(
+        name: String,
+        version: String,
+        author: String = "",
+        description: String = "",
+        email: String = "",
+        superAccess: Boolean = true,
+        pluginClass: Class<T>,
+        pluginInstantiator: () -> T
+    ) {
         val tempLoader = EmbeddedPluginLoader(
             eocvSim = eocvSim,
             pluginName = name,
@@ -257,8 +288,8 @@ class PluginManager(val eocvSim: EOCVSim) {
             try {
                 val hash = loader.hash()
 
-                if(hash in _loadedPluginHashes) {
-                    val source = when(loader.pluginSource) {
+                if (hash in _loadedPluginHashes) {
+                    val source = when (loader.pluginSource) {
                         PluginSource.FILE -> "plugins folder"
                         PluginSource.REPOSITORY -> "repository"
                         PluginSource.EMBEDDED -> "embedded plugin"
@@ -303,7 +334,7 @@ class PluginManager(val eocvSim: EOCVSim) {
      */
     @Synchronized
     fun disablePlugins() {
-        if(!isEnabled) return
+        if (!isEnabled) return
 
         for (loader in _loaders) {
             try {
@@ -326,7 +357,7 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @return true if super access was granted, false otherwise
      */
     fun requestSuperAccessFor(loader: PluginLoader, reason: String): Boolean {
-        if(loader.hasSuperAccess) {
+        if (loader.hasSuperAccess) {
             appender.appendln(PluginOutput.SPECIAL_SILENT + "Plugin ${loader.pluginName} v${loader.pluginVersion} already has super access")
             return true
         }
@@ -335,15 +366,17 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         appender.appendln(PluginOutput.SPECIAL_SILENT + "Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
 
-        if(loader is FilePluginLoader) {
+        if (loader is FilePluginLoader) {
             var access = false
 
-            superAccessDaemonClient.sendRequest(SuperAccessDaemon.SuperAccessMessage.Request(
-                loader.pluginFile.absolutePath,
-                signature.toMutable(),
-                reason
-            )) {
-                if(it) {
+            superAccessDaemonClient.sendRequest(
+                SuperAccessDaemon.SuperAccessMessage.Request(
+                    loader.pluginFile.absolutePath,
+                    signature.toMutable(),
+                    reason
+                )
+            ) {
+                if (it) {
                     access = true
                 }
 
@@ -356,11 +389,11 @@ class PluginManager(val eocvSim: EOCVSim) {
                 haltCondition.await()
             }
 
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginName} v${loader.pluginVersion} was ${if(access) "granted" else "denied"}")
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginName} v${loader.pluginVersion} was ${if (access) "granted" else "denied"}")
 
             return access
         } else {
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginName} v${loader.pluginVersion} is automatically determined, it was ${if(loader.hasSuperAccess) "granted" else "denied"}")
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginName} v${loader.pluginVersion} is automatically determined, it was ${if (loader.hasSuperAccess) "granted" else "denied"}")
             return loader.hasSuperAccess
         }
     }
