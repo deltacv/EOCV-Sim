@@ -287,7 +287,11 @@ class EmbeddedFilePluginLoader(
         val hash = it.hashString
         val file = EMBEDDED_PLUGIN_FOLDER + File.separator + "$hash.jar"
 
-        SysUtil.copyFileIs(EmbeddedFilePluginLoader::class.java.getResourceAsStream(it), file, true)
+        try {
+            SysUtil.copyFileIs(EmbeddedFilePluginLoader::class.java.getResourceAsStream(it), file, true)
+        } catch (e: Exception) {
+            throw InvalidPluginException("Failed to extract embedded plugin from resource path $resourcePath", e)
+        }
 
         file
     },

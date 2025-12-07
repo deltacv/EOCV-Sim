@@ -26,12 +26,13 @@ package com.github.serivesmejia.eocvsim.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * A utility class for executing a Java process to run a main class within this project.
@@ -39,11 +40,10 @@ import java.util.Scanner;
 public final class JavaProcess {
 
     public interface ProcessIOReceiver {
-        void receive(InputStream in, InputStream err, int pid);
+        void receiveLine(String line, boolean isError, int pid);
     }
 
-    public static class SLF4JIOReceiver implements JavaProcess.ProcessIOReceiver {
-
+    public static class SLF4JIOReceiver implements ProcessIOReceiver {
         private final Logger logger;
 
         public SLF4JIOReceiver(Logger logger) {
@@ -51,130 +51,160 @@ public final class JavaProcess {
         }
 
         @Override
-        public void receive(InputStream out, InputStream err, int pid) {
-            new Thread(() -> {
-                Thread.currentThread().setContextClassLoader(SLF4JIOReceiver.class.getClassLoader());
-
-                Scanner sc = new Scanner(out);
-                while (sc.hasNextLine()) {
-                    logger.info(sc.nextLine());
-                }
-            }, "SLFJ4IOReceiver-out-" + pid).start();
-
-            new Thread(() -> {
-                Thread.currentThread().setContextClassLoader(SLF4JIOReceiver.class.getClassLoader());
-
-                Scanner sc = new Scanner(err);
-                while (sc.hasNextLine()) {
-                    logger.error(sc.nextLine());
-                }
-            }, "SLF4JIOReceiver-err-" + pid).start();
-
-            logger.debug("SLF4JIOReceiver started for PID: {}", pid); // Debug log to check if the logger is working
+        public void receiveLine(String line, boolean isError, int pid) {
+            if (isError) logger.error(line);
+            else logger.info(line);
         }
-
     }
 
+    // ------------------------------------------------------------------------
 
-    private JavaProcess() {}
+    private JavaProcess() {
+    }
 
     private static int count;
+    private static ConcurrentLinkedQueue<Process> subprocesses = new ConcurrentLinkedQueue<>();
 
     public static boolean killSubprocessesOnExit = true;
-
     private static final Logger logger = LoggerFactory.getLogger(JavaProcess.class);
 
-    /**
-     * Executes a Java process with the given class and arguments.
-     * @param klass the class to execute
-     * @param ioReceiver the receiver for the process' input and error streams (will use inheritIO if null)
-     * @param classpath the classpath to use
-     *                  (use System.getProperty("java.class.path") for the default classpath)
-     * @param jvmArgs the JVM arguments to pass to the process
-     * @param args the arguments to pass to the class
-     * @return the exit value of the process
-     * @throws InterruptedException if the process is interrupted
-     * @throws IOException if an I/O error occurs
-     */
-    public static int execClasspath(Class klass, ProcessIOReceiver ioReceiver, String classpath, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
-        String javaHome = System.getProperty("java.home");
-        String javaBin = javaHome +
-                File.separator + "bin" +
-                File.separator + "java";
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (!killSubprocessesOnExit) return;
+
+            for (Process p : subprocesses) {
+                if (p.isAlive()) {
+                    logger.info("SHUTDOWN - Killing subprocess with PID {}", p.pid());
+                    p.destroyForcibly();
+                }
+            }
+        }, "JavaProcess-ShutdownHook"));
+    }
+
+    // ========================================================================
+    // ASYNC VERSION (MAIN VERSION)
+    // ========================================================================
+    public static CompletableFuture<Integer> execClasspathAsync(
+            Class<?> klass,
+            ProcessIOReceiver receiver,
+            String classpath,
+            List<String> jvmArgs,
+            List<String> args
+    ) throws IOException {
+
+        String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
         String className = klass.getName();
 
         List<String> command = new LinkedList<>();
         command.add(javaBin);
-        if (jvmArgs != null) {
-            command.addAll(jvmArgs);
-        }
+        if (jvmArgs != null) command.addAll(jvmArgs);
         command.add("-cp");
         command.add(classpath);
         command.add(className);
-        if (args != null) {
-            command.addAll(args);
+        if (args != null) command.addAll(args);
+
+        int processIndex = count++;
+        logger.info("Executing Java process #{}: {}", processIndex, className);
+        logger.debug("Java Binary: {}", javaBin);
+        logger.debug("JVM Args: {}", jvmArgs);
+        logger.debug("Program Args: {}", args);
+        logger.debug("Classpath: {}", classpath);
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        Process process = pb.start();
+        long pid = process.pid();
+
+        subprocesses.add(process);
+
+        // No receiver → inherit IO → return exit future
+        if (receiver == null) {
+            pb.inheritIO();
+            logger.info("Process #{} running with inherited IO, PID {}", processIndex, pid);
+            return process.onExit().thenApply(Process::exitValue);
         }
 
-        int processCount = count;
+        logger.info("Process #{} started with PID {}, routing IO to {}",
+                processIndex, pid, receiver.getClass().getSimpleName());
 
-        logger.info("Executing Java process #{} at \"{}\", main class \"{}\", JVM args \"{}\" and args \"{}\"", processCount, javaBin, className, jvmArgs, args);
+        // ONE thread for reading stdout + stderr
+        Thread ioThread = new Thread(() -> handleIO(process, receiver), "JavaProcess-IO-" + pid);
+        ioThread.start();
 
-        count++;
+        // Exit code future
+        CompletableFuture<Integer> exitFuture = new CompletableFuture<>();
 
-        ProcessBuilder builder = new ProcessBuilder(command);
+        // When process exits, wait for IO thread to finish draining streams
+        process.onExit().thenAccept(p -> {
+            try {
+                ioThread.join(); // no exitWatcher needed
+                exitFuture.complete(p.exitValue());
+            } catch (InterruptedException e) {
+                exitFuture.completeExceptionally(e);
+            }
+        });
 
-        if (ioReceiver != null) {
-            Process process = builder.start();
-            logger.info("Started #{} with PID {}, inheriting IO to {}", processCount, process.pid(), ioReceiver.getClass().getSimpleName());
+        return exitFuture;
+    }
 
-            ioReceiver.receive(process.getInputStream(), process.getErrorStream(), (int) process.pid());
-            killOnExit(process);
+    // ========================================================================
+    // IO HANDLER
+    // ========================================================================
+    private static void handleIO(Process process, ProcessIOReceiver receiver) {
+        try (
+                BufferedReader out = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader err = new BufferedReader(new InputStreamReader(process.getErrorStream()))
+        ) {
+            boolean running = true;
 
-            process.waitFor();
-            return process.exitValue();
-        } else {
-            builder.inheritIO();
-            Process process = builder.start();
-            logger.info("Started #{} with PID {}, IO will be inherited to System.out and System.err", processCount, process.pid());
+            while (running) {
+                running = process.isAlive();
 
-            killOnExit(process);
+                // Read stdout
+                while (out.ready()) {
+                    String line = out.readLine();
+                    if (line == null) break;
+                    receiver.receiveLine(line, false, (int) process.pid());
+                }
 
-            process.waitFor();
-            return process.exitValue();
+                // Read stderr
+                while (err.ready()) {
+                    String line = err.readLine();
+                    if (line == null) break;
+                    receiver.receiveLine(line, true, (int) process.pid());
+                }
+
+                // Exit only when fully drained
+                if (!running && (!out.ready() && !err.ready())) break;
+
+                Thread.sleep(5);
+            }
+
+        } catch (Exception ignored) {
         }
     }
 
-    private static void killOnExit(Process process) {
-        if(!killSubprocessesOnExit) return;
-        Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
+    // ========================================================================
+    // SYNC VERSION (OPTIONAL, STILL SUPPORTED)
+    // ========================================================================
+    public static int execClasspath(
+            Class<?> klass,
+            ProcessIOReceiver receiver,
+            String classpath,
+            List<String> jvmArgs,
+            List<String> args
+    ) throws InterruptedException, IOException {
+
+        return execClasspathAsync(klass, receiver, classpath, jvmArgs, args)
+                .join(); // wait synchronously
     }
 
-    /**
-     * Executes a Java process with the given class and arguments.
-     * @param klass the class to execute
-     * @param jvmArgs the JVM arguments to pass to the process
-     * @param args the arguments to pass to the class
-     * @return the exit value of the process
-     * @throws InterruptedException if the process is interrupted
-     * @throws IOException if an I/O error occurs
-     */
-    public static int exec(Class klass, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
+    public static int exec(Class<?> klass, List<String> jvmArgs, List<String> args)
+            throws InterruptedException, IOException {
         return execClasspath(klass, null, System.getProperty("java.class.path"), jvmArgs, args);
     }
 
-    /**
-     * Executes a Java process with the given class and arguments.
-     * @param klass the class to execute
-     * @param ioReceiver the receiver for the process' input and error streams (will use inheritIO if null)
-     * @param jvmArgs the JVM arguments to pass to the process
-     * @param args the arguments to pass to the class
-     * @return the exit value of the process
-     * @throws InterruptedException if the process is interrupted
-     * @throws IOException if an I/O error occurs
-     */
-    public static int exec(Class klass, ProcessIOReceiver ioReceiver, List<String> jvmArgs, List<String> args) throws InterruptedException, IOException {
+    public static int exec(Class<?> klass, ProcessIOReceiver ioReceiver, List<String> jvmArgs, List<String> args)
+            throws InterruptedException, IOException {
         return execClasspath(klass, ioReceiver, System.getProperty("java.class.path"), jvmArgs, args);
     }
-
-
 }

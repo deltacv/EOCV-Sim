@@ -200,7 +200,7 @@ class PluginManager(val eocvSim: EOCVSim) {
         isEnabled = true
 
         if (_loaders.find { it.pluginName == "PaperVision" && it.pluginAuthor == "deltacv" } == null) {
-            if (PluginManager::class.java.getResourceAsStream("/embedded_plugins/PaperVisionPlugin") != null) {
+            if (PluginManager::class.java.getResourceAsStream("/embedded_plugins/PaperVisionPlugin.jar") != null) {
                 _loaders.add(
                     EmbeddedFilePluginLoader(
                         "/embedded_plugins/PaperVisionPlugin.jar",
