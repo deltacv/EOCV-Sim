@@ -80,19 +80,21 @@ class SuperAccessDaemonClient(
         server.broadcast(SuperAccessDaemon.gson.toJson(request))
 
         server.addResponseReceiver(request.id) { response ->
-            var result = if(response is SuperAccessDaemon.SuperAccessResponse.Success) {
-                onResponse(true)
-                true
-            } else if(response is SuperAccessDaemon.SuperAccessResponse.Failure) {
-                onResponse(false)
-                false
-            } else null
-
-            if(result != null) {
-                synchronized(cacheLock) {
-                    val newCache = AccessCache(request.pluginPath, result, System.currentTimeMillis())
-                    accessCache[request.pluginPath] = newCache
+            val result = when (response) {
+                is SuperAccessDaemon.SuperAccessResponse.Success -> {
+                    onResponse(true)
+                    true
                 }
+
+                is SuperAccessDaemon.SuperAccessResponse.Failure -> {
+                    onResponse(false)
+                    false
+                }
+            }
+
+            synchronized(cacheLock) {
+                val newCache = AccessCache(request.pluginPath, result, System.currentTimeMillis())
+                accessCache[request.pluginPath] = newCache
             }
         }
     }

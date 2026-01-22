@@ -23,9 +23,6 @@
 
 package com.github.serivesmejia.eocvsim
 
-import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme
-import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme.setup
-import com.github.serivesmejia.eocvsim.EOCVSim.Parameters
 import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory

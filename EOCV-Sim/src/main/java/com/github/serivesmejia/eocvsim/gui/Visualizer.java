@@ -198,6 +198,7 @@ public class Visualizer {
         tunerCollapsible.add(tunerScrollPane);
 
         onPluginGuiAttachment.run();
+        onPluginGuiAttachment.setCallRightAway(true);
 
         frame.add(tunerCollapsible, BorderLayout.SOUTH);
         frame.add(rightContainer, BorderLayout.EAST);
@@ -230,7 +231,7 @@ public class Visualizer {
         hasFinishedInitializing = true;
 
         if(!PipelineCompiler.Companion.getIS_USABLE()) {
-            compilingUnsupported();
+            compilerUnsupported();
         }
     }
 
@@ -254,16 +255,7 @@ public class Visualizer {
             }
         });
 
-        //VIEWPORT RESIZE HANDLING
-        // imgScrollPane.addMouseWheelListener(e -> {
-        //    if (isCtrlPressed) { //check if control key is pressed
-                // double scale = viewport.getViewportScale() - (0.15 * e.getPreciseWheelRotation());
-                // viewport.setViewportScale(scale);
-        //    }
-        // });
-
         // stop color-picking mode when changing pipeline
-        // TODO: find out why this breaks everything?????
         eocvSim.pipelineManager.onPipelineChange.doPersistent(() -> colorPicker.stopPicking());
     }
 
@@ -353,14 +345,14 @@ public class Visualizer {
                 return Unit.INSTANCE;
             });
         } else {
-            compilingUnsupported();
+            compilerUnsupported();
         }
     }
 
-    public void compilingUnsupported() {
+    public void compilerUnsupported() {
         asyncPleaseWaitDialog(
                 "Runtime pipeline builds are not supported on this JVM",
-                "For further info, check the EOCV-Sim GitHub repo",
+                "For further info, check the EOCV-Sim docs",
                 "Close",
                 new Dimension(320, 160),
                 true, true
@@ -411,7 +403,7 @@ public class Visualizer {
                 if(result == 0) {
                     JOptionPane.showMessageDialog(
                             frame,
-                            "After opening VS Code, you will need to install the Extension Pack for Java, for proper autocompletion support. Ensure you do so when asked by the editor !"
+                            "After opening VS Code, you will need to install the Extension Pack for Java, for proper autocompletion support. Ensure you do so when asked by the editor!"
                     );
 
                     VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile());
@@ -450,13 +442,11 @@ public class Visualizer {
 
         JLabel subMsg = null;
         if (addSubMessage) {
-
             subMsg = new JLabel(subMessage);
             subMsg.setHorizontalAlignment(JLabel.CENTER);
             subMsg.setVerticalAlignment(JLabel.CENTER);
 
             dialog.add(subMsg);
-
         }
 
         JPanel exitBttPanel = new JPanel(new FlowLayout());

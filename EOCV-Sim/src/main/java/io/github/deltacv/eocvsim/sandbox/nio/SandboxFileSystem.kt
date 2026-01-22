@@ -24,7 +24,6 @@
 package io.github.deltacv.eocvsim.sandbox.nio
 
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import io.github.deltacv.eocvsim.plugin.loader.PluginLoader
 import java.nio.file.*
 import java.nio.file.attribute.FileAttribute
 
@@ -33,7 +32,7 @@ class SandboxFileSystem(
     val hash: String
 ) : FileSystem() {
 
-    val parent = FileSystems.newFileSystem(path, null)
+    val parent = FileSystems.newFileSystem(path)
 
     val logger by loggerForThis()
 
@@ -47,8 +46,6 @@ class SandboxFileSystem(
             }
         })
     }
-
-    private fun checkForPath(path: Path) = Files.exists(path)
 
     override fun close() {
         parent.close()
@@ -68,7 +65,7 @@ class SandboxFileSystem(
 
     override fun supportedFileAttributeViews() = parent.supportedFileAttributeViews()
 
-    override fun getPath(first: String, vararg more: String?) = parent.getPath(first, *more).apply { checkForPath(this) }
+    override fun getPath(first: String, vararg more: String?) = parent.getPath(first, *more).apply { checkSandboxed(this) }
 
     override fun getPathMatcher(syntaxAndPattern: String?) = parent.getPathMatcher(syntaxAndPattern)
 
@@ -76,57 +73,79 @@ class SandboxFileSystem(
 
     override fun newWatchService() = parent.newWatchService()
 
-    private fun checkIfPathIsSandboxed(path: Path) {
-        if(path.fileSystem != parent)
-            throw IllegalArgumentException("Path at filesystem ${path.fileSystem} is outside of the plugin sandbox")
+    private val sandboxRoot: Path =
+        parent.getPath("/").toRealPath(LinkOption.NOFOLLOW_LINKS)
 
-        checkForPath(path)
+    private fun checkSandboxed(path: Path) {
+        // 1. Must belong to the sandbox filesystem
+        if (path.fileSystem !== parent) {
+            throw IllegalArgumentException(
+                "Path at filesystem ${path.fileSystem} is outside of the plugin sandbox"
+            )
+        }
+
+        // 2. Resolve against sandbox root and normalize (prevents ../ traversal)
+        val resolved = sandboxRoot.resolve(path).normalize()
+
+        // 3. Resolve symlinks WITHOUT following them first
+        val realPath = try {
+            resolved.toRealPath(LinkOption.NOFOLLOW_LINKS)
+        } catch (e: NoSuchFileException) {
+            // Allow non-existing paths (e.g. createFile),
+            // but still validate containment
+            resolved
+        }
+
+        // 4. Enforce containment
+        if (!realPath.startsWith(sandboxRoot)) {
+            throw SecurityException("Path escapes sandbox root: $path")
+        }
     }
 
     fun exists(path: Path, vararg options: LinkOption): Boolean {
-        checkIfPathIsSandboxed(path)
+        checkSandboxed(path)
         return Files.exists(path, *options)
     }
 
     fun createFile(path: Path, vararg attrs: FileAttribute<*>): Path {
-        checkIfPathIsSandboxed(path)
+        checkSandboxed(path)
         return Files.createFile(path, *attrs)
     }
 
     fun delete(path: Path) {
-        checkIfPathIsSandboxed(path)
+        checkSandboxed(path)
         Files.delete(path)
     }
 
     fun copy(source: Path, target: Path, vararg options: CopyOption): Path {
-        checkIfPathIsSandboxed(source)
-        checkIfPathIsSandboxed(target)
+        checkSandboxed(source)
+        checkSandboxed(target)
         return Files.copy(source, target, *options)
     }
 
     fun move(source: Path, target: Path, vararg options: CopyOption): Path {
-        checkIfPathIsSandboxed(source)
-        checkIfPathIsSandboxed(target)
+        checkSandboxed(source)
+        checkSandboxed(target)
         return Files.move(source, target, *options)
     }
 
     fun readAllBytes(path: Path): ByteArray {
-        checkIfPathIsSandboxed(path)
+        checkSandboxed(path)
         return Files.readAllBytes(path)
     }
 
     fun write(path: Path, bytes: ByteArray, vararg options: OpenOption): Path {
-        checkIfPathIsSandboxed(path)
+        checkSandboxed(path)
         return Files.write(path, bytes, *options)
     }
 
     fun createDirectory(dir: Path, vararg attrs: FileAttribute<*>) {
-        checkIfPathIsSandboxed(dir)
+        checkSandboxed(dir)
         Files.createDirectory(dir, *attrs)
     }
 
     fun createDirectories(dir: Path, vararg attrs: FileAttribute<*>) {
-        checkIfPathIsSandboxed(dir)
+        checkSandboxed(dir)
         Files.createDirectories(dir, *attrs)
     }
 

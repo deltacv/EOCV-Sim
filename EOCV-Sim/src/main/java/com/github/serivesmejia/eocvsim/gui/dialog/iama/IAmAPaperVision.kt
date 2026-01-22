@@ -3,10 +3,7 @@ package com.github.serivesmejia.eocvsim.gui.dialog.iama
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import java.awt.BorderLayout
-import java.awt.Desktop
 import java.awt.Dimension
-import java.awt.FlowLayout
-import java.net.URI
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout

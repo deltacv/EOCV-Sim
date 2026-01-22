@@ -212,7 +212,7 @@ public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenC
     }
 
     //
-    // Inheritance from Sourced
+    // Inheritance from FrameReceiver
     //
     @Override
     public void consume(Mat frame, long timestamp) {

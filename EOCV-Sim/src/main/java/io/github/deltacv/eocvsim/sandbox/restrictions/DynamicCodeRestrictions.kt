@@ -23,7 +23,7 @@
 
 package io.github.deltacv.eocvsim.sandbox.restrictions
 
-val dynamicLoadingPackageWhitelist = setOf(
+val dynamicCodePackageWhitelist = setOf(
     "java.lang",
     "java.lang.RuntimeException",
     "java.util",
@@ -53,11 +53,11 @@ val dynamicLoadingPackageWhitelist = setOf(
     "com.formdev.flatlaf"
 )
 
-val dynamicLoadingExactMatchBlacklist = setOf(
+val dynamicCodeExactMatchBlacklist = setOf(
     "java.lang.Runtime"
 )
 
-val dynamicLoadingPackageBlacklist  = setOf(
+val dynamicCodePackageBlacklist  = setOf(
     // System and Runtime Classes
     "java.lang.ProcessBuilder",
     "java.lang.reflect",
@@ -82,7 +82,7 @@ val dynamicLoadingPackageBlacklist  = setOf(
     "com.github.serivesmejia.eocvsim.config",
 )
 
-val dynamicLoadingPackageAlwaysBlacklist = setOf(
+val dynamicCodePackageAlwaysBlacklist = setOf(
     // Embedded PaperVision to prevent duplicate class loading
     "io.github.deltacv.papervision",
 
@@ -90,7 +90,7 @@ val dynamicLoadingPackageAlwaysBlacklist = setOf(
     "org.apache.logging.log4j"
 )
 
-val dynamicLoadingMethodBlacklist = setOf(
+val dynamicCodeMethodBlacklist = setOf(
     "java.lang.System#load",
     "java.lang.System#loadLibrary",
     "java.lang.System#setSecurityManager",

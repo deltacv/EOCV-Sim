@@ -27,9 +27,9 @@ import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
 import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
-import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
-import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
-import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageWhitelist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicCodeMethodBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicCodePackageBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicCodePackageWhitelist
 import org.openftc.easyopencv.OpenCvPipeline
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -60,7 +60,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
                 SysUtil.copyStream(inStream, outStream)
                 val bytes = outStream.toByteArray()
 
-                MethodCallByteCodeChecker(bytes, dynamicLoadingMethodBlacklist)
+                MethodCallByteCodeChecker(bytes, dynamicCodeMethodBlacklist)
 
                 val clazz = defineClass(name, bytes, 0, bytes.size)
                 loadedClasses[name] = clazz
@@ -76,7 +76,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
         var clazz = loadedClasses[name]
 
         if(clazz == null) {
-            for(blacklistedPackage in dynamicLoadingPackageBlacklist) {
+            for(blacklistedPackage in dynamicCodePackageBlacklist) {
                 if (name.contains(blacklistedPackage)) {
                     throw IllegalAccessError("Dynamically loaded pipelines are blacklisted to use $name")
                 }
@@ -88,7 +88,7 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
             } catch(e: Exception) {
                 var inWhitelist = false
 
-                for(whiteListedPackage in dynamicLoadingPackageWhitelist) {
+                for(whiteListedPackage in dynamicCodePackageWhitelist) {
                     if(name.contains(whiteListedPackage)) {
                         inWhitelist = true
                         break

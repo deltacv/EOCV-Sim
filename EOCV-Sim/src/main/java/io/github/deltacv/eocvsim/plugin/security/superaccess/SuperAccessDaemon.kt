@@ -90,7 +90,7 @@ object SuperAccessDaemon {
         System.setProperty("sun.java2d.d3d", "false")
         System.setProperty("apple.awt.UIElement", "true");
         System.setProperty("apple.awt.application.appearance", "system")
-        System.setProperty("apple.awt.application.name", "EasyOpenCV Simulator - SuperUserAccess")
+        System.setProperty("apple.awt.application.name", "EasyOpenCV Simulator - SuperAccess")
 
         // start websocket client, listen for EOCV-Sim's requests
         WsClient(args[0].toIntOrNull() ?: throw IllegalArgumentException("Port is not a valid int"), args[1].toBoolean()).connect()

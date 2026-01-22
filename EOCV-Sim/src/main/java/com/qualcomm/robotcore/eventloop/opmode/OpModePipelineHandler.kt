@@ -47,7 +47,8 @@ class OpModePipelineHandler(
         ThreadVisionSourceProvider.register(VisionInputSourceProvider(pipeline?.notifier ?: return, viewport, inputSourceManager))
 
         pipeline?.telemetry = telemetry
-        pipeline?.hardwareMap = HardwareMap()    }
+        pipeline?.hardwareMap = HardwareMap()
+    }
 
     override fun init() { }
 

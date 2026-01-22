@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public abstract class LinearOpMode extends OpMode {
 
     protected final Object lock = new Object();
-    private LinearOpModeHelperThread helper = new LinearOpModeHelperThread(this, ThreadVisionSourceProvider.getCurrentProvider());
+    private LinearOpModeHelperThread helper;
 
     public LinearOpMode() {
     }
@@ -159,6 +159,8 @@ public abstract class LinearOpMode extends OpMode {
         isStarted = false;
         stopRequested = false;
 
+        helper = new LinearOpModeHelperThread(this, ThreadVisionSourceProvider.getCurrentProvider());
+
         helper.start();
     }
 
@@ -187,7 +189,7 @@ public abstract class LinearOpMode extends OpMode {
         helper.interrupt();
 
         try {
-            helper.join();
+            if(helper != null) helper.join();
         } catch (InterruptedException ignored) {
         }
     }
