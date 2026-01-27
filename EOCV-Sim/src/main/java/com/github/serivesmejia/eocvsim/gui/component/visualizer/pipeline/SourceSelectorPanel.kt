@@ -2,8 +2,6 @@ package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.gui.component.PopupX
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.CreateSourcePanel
 import com.github.serivesmejia.eocvsim.gui.util.icon.SourcesListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
@@ -29,8 +27,6 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
     private var beforeSelectedSource = ""
     private var beforeSelectedSourceIndex = 0
-
-    private var lastCreateSourcePopup: PopupX? = null
 
     var allowSourceSwitching = false
 
@@ -66,18 +62,6 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         sourceSelector.cellRenderer = SourcesListIconRenderer(eocvSim.inputSourceManager)
 
         sourceSelectorCreateBtt.addActionListener {
-            /* lastCreateSourcePopup?.hide()
-
-            val panel = CreateSourcePanel(eocvSim)
-            val location = sourceSelectorCreateBtt.locationOnScreen
-
-            val frame = SwingUtilities.getWindowAncestor(this)
-
-            val popup = PopupX(frame, panel, location.x, location.y, true)
-            lastCreateSourcePopup = popup
-
-            popup.show() */
-
             DialogFactory.createSourceDialogEx(eocvSim)
         }
 
@@ -177,14 +161,6 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         }
 
         return 0
-    }
-
-    fun revalAndRepaint() {
-        sourceSelector.revalidate()
-        sourceSelector.repaint()
-        sourceSelectorScroll.revalidate()
-        sourceSelectorScroll.repaint()
-        revalidate(); repaint()
     }
 
 }

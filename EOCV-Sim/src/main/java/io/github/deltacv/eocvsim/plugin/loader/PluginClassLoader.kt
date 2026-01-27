@@ -204,8 +204,7 @@ class PluginClassLoader(
                 val zipFile = zipFiles[file] ?: ZipFile(file)
                 zipFiles[file] = zipFile
 
-                val entry = zipFile.getEntry(name)
-                if (entry == null) return null
+                zipFile.getEntry(name) ?: return null
 
                 val packages = name.split("/")
 
@@ -263,8 +262,7 @@ class PluginClassLoader(
                 val zipFile = zipFiles[file] ?: ZipFile(file)
                 zipFiles[file] = zipFile
 
-                val entry = zipFile.getEntry(className.replace('.', '/') + ".class")
-                if (entry == null) return null
+                val entry = zipFile.getEntry(className.replace('.', '/') + ".class") ?: return null
 
                 val packages = className.split(".")
 

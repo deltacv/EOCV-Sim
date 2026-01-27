@@ -25,11 +25,16 @@ package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.api.EOCVSimApi
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import java.util.concurrent.ConcurrentHashMap
 
+fun interface EOCVSimApiProvider {
+    fun provideApiForPlugin(plugin: EOCVSimPlugin): EOCVSimApi
+}
+
 class PluginContext(
-    val eocvSim: EOCVSim,
+    private val eocvSimApiProvider: EOCVSimApiProvider,
     val loader: PluginLoader
 ) {
     companion object {
@@ -39,6 +44,10 @@ class PluginContext(
             (plugin.javaClass.classLoader as PluginClassLoader).pluginContextProvider()
     }
 
+    val eocvSimApi by lazy {
+        eocvSimApiProvider.provideApiForPlugin(loader.plugin
+            ?: throw IllegalAccessException("Tried to access the EOCV-Sim API while plugin was being instantiated."))
+    }
 
     val fileSystem: SandboxFileSystem
         get() = loader.fileSystem

@@ -10,31 +10,62 @@ abstract class Api(val owner: EOCVSimPlugin){
     var isDisabled: Boolean = false
         private set
 
-    private var registeredApis = mutableListOf<Api>()
+    private var childrenApis = mutableListOf<Api>()
 
-    fun throwIfDisabled() {
+    protected fun throwIfDisabled() {
         if(isDisabled) {
             throw IllegalStateException("The API owned by $ownerName has been disabled and can no longer be used")
         }
     }
 
-    fun throwIfOwnerMismatch(other: Api){
+    protected fun throwIfOwnerMismatch(other: Api){
         if(other.owner != this@Api.owner) {
             throw IllegalAccessException("The API is owned by a different plugin (${other.ownerName}) than $ownerName")
         }
     }
 
-    abstract fun disable()
+    protected abstract fun disableApi()
 
-    internal fun internalDisable() {
+    internal fun internalDisableApi() {
         if(isDisabled) return
 
         isDisabled = true
-        disable()
+        disableApi()
 
-        for(api in registeredApis) {
-            api.internalDisable()
+        for(api in childrenApis) {
+            api.internalDisableApi()
         }
+    }
+
+    protected fun addChildrenApi(vararg apis: Api) {
+        for(api in apis) {
+            if(childrenApis.contains(api)) continue
+
+            throwIfDisabled()
+            throwIfOwnerMismatch(api)
+
+            childrenApis.add(api)
+        }
+    }
+
+    /**
+     * Helper to wrap API implementations that need to check for disabled state
+     * Meant to be used for every public API method implementation, for consistency
+     * @throws IllegalStateException if the API is disabled
+     */
+    protected fun <R> apiImpl(vararg passedApis: Api, block: () -> R): R {
+        for(api in passedApis) {
+            throwIfOwnerMismatch(api)
+        }
+        throwIfDisabled()
+
+        val returnedValue = block()
+        if(returnedValue is Api) {
+            throwIfOwnerMismatch(returnedValue)
+            addChildrenApi(returnedValue)
+        }
+
+        return returnedValue
     }
 
     companion object {
@@ -63,8 +94,7 @@ abstract class Api(val owner: EOCVSimPlugin){
 
                     // register if it's an Api
                     if (v is Api && !initialized) {
-                        thisRef.throwIfOwnerMismatch(v)
-                        thisRef.registeredApis.add(v)
+                        thisRef.addChildrenApi(v)
                     }
 
                     if (lazy) {
@@ -88,7 +118,7 @@ abstract class Api(val owner: EOCVSimPlugin){
          * - If lazy is false, the value provider is called on each access, but API registration only happens once.
          * */
         @JvmStatic
-        protected fun <T : Any> apiField(lazy: Boolean = true, valueProvider: () -> T): ReadOnlyProperty<Api, T> =
+        protected fun <T> apiField(lazy: Boolean = true, valueProvider: () -> T): ReadOnlyProperty<Api, T> =
             object : ReadOnlyProperty<Api, T> {
                 private val delegate = nullableApiField(lazy, valueProvider)
 
@@ -97,9 +127,27 @@ abstract class Api(val owner: EOCVSimPlugin){
                 }
             }
 
-        /** Convenience overloads for immediate values */
+        /**
+         * apiField with lazy = false, for fields that are recomputed on each access
+         * (i.e. values that need to be recomputed on each access)
+         */
         @JvmStatic
-        protected fun <T : Any> apiField(value: T): ReadOnlyProperty<Api, T> = apiField { value }
+        protected fun <T> liveApiField(valueProvider: () -> T) = apiField(lazy = false, valueProvider)
+
+        /**
+         * nullableApiField with lazy = false, for fields that are recomputed on each access
+         */
+        @JvmStatic
+        protected fun <T> liveNullableApiField(valueProvider: () -> T?) = nullableApiField(lazy = false, valueProvider)
+
+        /**
+         * apiField with a constant value
+         */
+        @JvmStatic
+        protected fun <T> apiField(value: T): ReadOnlyProperty<Api, T> = apiField { value }
+        /**
+         * nullableApiField with a constant value
+         */
         @JvmStatic
         protected fun <T> nullableApiField(value: T?): ReadOnlyProperty<Api, T?> = nullableApiField { value }
     }

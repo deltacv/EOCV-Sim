@@ -28,6 +28,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput.Companion.trimSpecials
+import com.github.serivesmejia.eocvsim.plugin.api.impl.EOCVSimApiImpl
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.github.serivesmejia.eocvsim.util.loggerOf
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
@@ -111,6 +112,11 @@ class PluginManager(val eocvSim: EOCVSim) {
     private var isEnabled = false
 
     /**
+     * Provides EOCV-Sim API instances for plugins
+     */
+    val eocvSimApiProvider = EOCVSimApiProvider { plugin -> EOCVSimApiImpl(plugin, eocvSim) }
+
+    /**
      * Initializes the plugin manager
      * Loads all plugin files in the plugins folder
      * Creates a PluginLoader for each plugin file
@@ -184,7 +190,7 @@ class PluginManager(val eocvSim: EOCVSim) {
                     repositoryManager.resolvedFiles,
                     if (pluginFile in repositoryManager.resolvedFiles)
                         PluginSource.REPOSITORY else PluginSource.FILE,
-                    eocvSim,
+                    this,
                     appender
                 )
 
@@ -199,9 +205,9 @@ class PluginManager(val eocvSim: EOCVSim) {
         enableTimestamp = System.currentTimeMillis()
         isEnabled = true
 
-        if (_loaders.find { it.pluginName == "PaperVision" && it.pluginAuthor == "deltacv" } == null) {
+        if (_loaders.find { it.pluginInfo.name == "PaperVision" && it.pluginInfo.author == "deltacv" } == null) {
             if (PluginManager::class.java.getResourceAsStream("/embedded_plugins/PaperVisionPlugin.jar") != null) {
-                _loaders.add(
+                /*_loaders.add(
                     EmbeddedFilePluginLoader(
                         "/embedded_plugins/PaperVisionPlugin.jar",
                         listOf(),
@@ -209,17 +215,25 @@ class PluginManager(val eocvSim: EOCVSim) {
                         eocvSim,
                         appender
                     )
-                )
+                )*/
 
                 logger.info("Loaded embedded PaperVision from resources")
             } else {
                 try {
+                    val pluginInfo = PluginInfo(
+                        "PaperVision",
+                        Build.paperVisionVersion,
+                        "deltacv",
+                        "dev@deltacv.org",
+                        "io.github.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin",
+                        "Create your custom OpenCV algorithms using a user-friendly node editor interface",
+                        true
+                    )
+
                     @Suppress("UNCHECKED_CAST")
                     addEmbeddedPlugin(
+                        pluginInfo,
                         Class.forName("io.github.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin") as Class<out EOCVSimPlugin>,
-                        "PaperVision", Build.paperVisionVersion, "deltacv",
-                        "Create your custom OpenCV algorithms using a user-friendly node editor interface",
-                        "dev@deltacv.org"
                     )
 
                     logger.info("Loaded embedded PaperVision from built-in class")
@@ -233,48 +247,12 @@ class PluginManager(val eocvSim: EOCVSim) {
     }
 
     private fun <T : EOCVSimPlugin> addEmbeddedPlugin(
-        plugin: Class<T>,
-        name: String,
-        version: String,
-        author: String = "",
-        description: String = "",
-        email: String = "",
-        superAccess: Boolean = true
+        pluginInfo: PluginInfo,
+        pluginClass: Class<T>
     ) {
-        try {
-            addEmbeddedPlugin(name, version, author, description, email, superAccess, plugin) {
-                plugin.getDeclaredConstructor().newInstance()
-            }
-        } catch (e: Exception) {
-            appender.appendln("Failed to instantiate embedded plugin $name: ${e.message}")
-            logger.warn("", e)
-        }
-    }
+        val tempLoader = EmbeddedPluginLoader(pluginInfo, pluginClass, eocvSimApiProvider)
 
-    private fun <T : EOCVSimPlugin> addEmbeddedPlugin(
-        name: String,
-        version: String,
-        author: String = "",
-        description: String = "",
-        email: String = "",
-        superAccess: Boolean = true,
-        pluginClass: Class<T>,
-        pluginInstantiator: () -> T
-    ) {
-        val tempLoader = EmbeddedPluginLoader(
-            eocvSim = eocvSim,
-            pluginName = name,
-            pluginVersion = version,
-            pluginDescription = description,
-            pluginAuthor = author,
-            pluginAuthorEmail = email,
-            superAccess = superAccess,
-            pluginClass = pluginClass,
-            pluginInstantiator = pluginInstantiator
-        )
-
-        logger.info("Adding embedded plugin: $name v$version by $author")
-
+        logger.info("Adding embedded plugin: ${pluginInfo.name} v${pluginInfo.version} by ${pluginInfo.author}")
         _loaders.add(tempLoader)
     }
 
@@ -295,16 +273,16 @@ class PluginManager(val eocvSim: EOCVSim) {
                         PluginSource.EMBEDDED -> "embedded plugin"
                     }
 
-                    appender.appendln("Plugin ${loader.pluginName} by ${loader.pluginAuthor} is already loaded. Please delete the duplicate from the $source !")
+                    appender.appendln("Plugin ${loader.pluginInfo.name} by ${loader.pluginInfo.author} is already loaded. Please delete the duplicate from the $source !")
                     return
                 }
 
                 loader.load()
                 _loadedPluginHashes.add(hash)
             } catch (e: Throwable) {
-                appender.appendln("Failure loading ${loader.pluginName} v${loader.pluginVersion}:")
+                appender.appendln("Failure loading ${loader.pluginInfo.name} v${loader.pluginInfo.version}:")
                 appender.appendln(e.message ?: "Unknown error")
-                logger.error("Failure loading ${loader.pluginName} v${loader.pluginVersion}", e)
+                logger.error("Failure loading ${loader.pluginInfo.name} v${loader.pluginInfo.version}", e)
 
                 _loaders.remove(loader)
                 loader.kill()
@@ -321,8 +299,8 @@ class PluginManager(val eocvSim: EOCVSim) {
             try {
                 loader.enable()
             } catch (e: Throwable) {
-                appender.appendln("Failure enabling ${loader.pluginName} v${loader.pluginVersion}: ${e.message}")
-                logger.error("Failure enabling ${loader.pluginName} v${loader.pluginVersion}", e)
+                appender.appendln("Failure enabling ${loader.pluginInfo.name} v${loader.pluginInfo.version}: ${e.message}")
+                logger.error("Failure enabling ${loader.pluginInfo.name} v${loader.pluginInfo.version}", e)
                 loader.kill()
             }
         }
@@ -340,8 +318,8 @@ class PluginManager(val eocvSim: EOCVSim) {
             try {
                 loader.disable()
             } catch (e: Throwable) {
-                appender.appendln("Failure disabling ${loader.pluginName} v${loader.pluginVersion}: ${e.message}")
-                logger.error("Failure disabling ${loader.pluginName} v${loader.pluginVersion}", e)
+                appender.appendln("Failure disabling ${loader.pluginInfo.name} v${loader.pluginInfo.version}: ${e.message}")
+                logger.error("Failure disabling ${loader.pluginInfo.name} v${loader.pluginInfo.version}", e)
                 loader.kill()
             }
         }
@@ -358,13 +336,13 @@ class PluginManager(val eocvSim: EOCVSim) {
      */
     fun requestSuperAccessFor(loader: PluginLoader, reason: String): Boolean {
         if (loader.hasSuperAccess) {
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "Plugin ${loader.pluginName} v${loader.pluginVersion} already has super access")
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "Plugin ${loader.pluginInfo.name} v${loader.pluginInfo.version} already has super access")
             return true
         }
 
         val signature = loader.signature
 
-        appender.appendln(PluginOutput.SPECIAL_SILENT + "Requesting super access for ${loader.pluginName} v${loader.pluginVersion}")
+        appender.appendln(PluginOutput.SPECIAL_SILENT + "Requesting super access for ${loader.pluginInfo.name} v${loader.pluginInfo.version}")
 
         if (loader is FilePluginLoader) {
             var access = false
@@ -389,12 +367,21 @@ class PluginManager(val eocvSim: EOCVSim) {
                 haltCondition.await()
             }
 
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginName} v${loader.pluginVersion} was ${if (access) "granted" else "denied"}")
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginInfo.nameWithVersion} was ${if (access) "granted" else "denied"}")
 
             return access
         } else {
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginName} v${loader.pluginVersion} is automatically determined, it was ${if (loader.hasSuperAccess) "granted" else "denied"}")
+            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginInfo.nameWithVersion} is automatically determined, it was ${if (loader.hasSuperAccess) "granted" else "denied"}")
             return loader.hasSuperAccess
         }
+    }
+
+    fun hasSuperAccess(loader: PluginLoader) = superAccessDaemonClient.checkAccess(loader.pluginFile)
+
+    fun isPluginEnabledInConfig(loader: PluginLoader) = eocvSim.config.flags.getOrDefault(loader.hash(), true)
+
+    fun setPluginEnabledInConfig(loader: PluginLoader, enabled: Boolean) {
+        eocvSim.config.flags[loader.hash()] = enabled
+        eocvSim.configManager.saveToFile()
     }
 }

@@ -28,6 +28,7 @@ import io.github.deltacv.eocvsim.plugin.loader.PluginContext
 /**
  * Represents a plugin for EOCV-Sim
  */
+@Suppress("UNUSED")
 abstract class EOCVSimPlugin {
 
     /**
@@ -38,13 +39,13 @@ abstract class EOCVSimPlugin {
     /**
      * The EOCV-Sim instance, containing the main functionality of the program
      */
-    val eocvSim get() = context.eocvSim
+    val eocvSimApi get() = context.eocvSimApi
 
     /**
      * The virtual filesystem assigned to this plugin.
      * With this filesystem, the plugin can access files in a sandboxed environment.
      * Without SuperAccess, the plugin can only access files in its own virtual fs.
-     * @see SandboxFileSystem
+     * @see io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
      */
     val fileSystem get() = context.fileSystem
 

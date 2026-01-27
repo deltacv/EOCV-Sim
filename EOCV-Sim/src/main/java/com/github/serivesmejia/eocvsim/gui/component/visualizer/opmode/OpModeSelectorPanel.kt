@@ -34,6 +34,10 @@ import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.qualcomm.robotcore.eventloop.opmode.*
 import com.qualcomm.robotcore.util.Range
 import io.github.deltacv.vision.internal.opmode.OpModeState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.swing.Swing
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.event.MouseAdapter
@@ -82,6 +86,8 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             opModeControlsPanel.isActive = value
             field = value
         }
+
+    var allowOpModeSwitching = false
 
     init {
         layout = GridBagLayout()
@@ -191,7 +197,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
         autonomousSelector.addMouseListener(object: MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (!isActive) return
+                if (!isActive || !allowOpModeSwitching) return
 
                 val index = (e.source as JList<*>).locationToIndex(e.point)
                 if(index >= 0) {
@@ -202,7 +208,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
         teleopSelector.addMouseListener(object: MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (!isActive) return
+                if (!isActive || !allowOpModeSwitching) return
 
                 val index = (e.source as JList<*>).locationToIndex(e.point)
                 if(index >= 0) {
@@ -238,6 +244,17 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
                     }
                 }
             }
+        }
+
+        eocvSim.pipelineManager.onPipelineListRefresh {
+            updateOpModesList()
+        }
+
+        eocvSim.pipelineManager.onExternalSwitchingEnable {
+            allowOpModeSwitching = true
+        }
+        eocvSim.pipelineManager.onExternalSwitchingDisable {
+            allowOpModeSwitching = false
         }
     }
 
@@ -278,51 +295,49 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         opModeControlsPanel.opModeSelected(managerIndex, forceChangePipeline)
     }
 
-    fun updateOpModesList() {
-        val autonomousListModel = DefaultListModel<String>()
-        val teleopListModel = DefaultListModel<String>()
+    fun updateOpModesList() = runBlocking {
+        launch(Dispatchers.Swing) {
+            val autonomousListModel = DefaultListModel<String>()
+            val teleopListModel = DefaultListModel<String>()
 
-        pipelinesData = eocvSim.pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
+            pipelinesData = eocvSim.pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
 
-        var autonomousSelectorIndex = Range.clip(autonomousListModel.size() - 1, 0, Int.MAX_VALUE)
-        var teleopSelectorIndex = Range.clip(teleopListModel.size() - 1, 0, Int.MAX_VALUE)
+            var autonomousSelectorIndex = Range.clip(autonomousListModel.size() - 1, 0, Int.MAX_VALUE)
+            var teleopSelectorIndex = Range.clip(teleopListModel.size() - 1, 0, Int.MAX_VALUE)
 
-        autonomousIndexMap.clear()
-        teleopIndexMap.clear()
+            autonomousIndexMap.clear()
+            teleopIndexMap.clear()
 
-        for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
-            if(ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java)) {
-                val type = pipeline.clazz.opModeType
+            for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
+                if (ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java)) {
+                    val type = pipeline.clazz.opModeType
 
-                if(type == OpModeType.AUTONOMOUS) {
-                    val autonomousAnnotation = pipeline.clazz.autonomousAnnotation
+                    if (type == OpModeType.AUTONOMOUS) {
+                        val autonomousAnnotation = pipeline.clazz.autonomousAnnotation
 
-                    autonomousListModel.addElement(
-                        if(autonomousAnnotation.name.isBlank())
-                            pipeline.clazz.simpleName
-                        else autonomousAnnotation.name
-                    )
-                    autonomousIndexMap[autonomousSelectorIndex] = managerIndex
-                    autonomousSelectorIndex++
-                } else if(type == OpModeType.TELEOP) {
-                    val teleopAnnotation = pipeline.clazz.teleopAnnotation
+                        autonomousListModel.addElement(
+                            autonomousAnnotation.name.ifBlank { pipeline.clazz.simpleName }
+                        )
+                        autonomousIndexMap[autonomousSelectorIndex] = managerIndex
+                        autonomousSelectorIndex++
+                    } else if (type == OpModeType.TELEOP) {
+                        val teleopAnnotation = pipeline.clazz.teleopAnnotation
 
-                    teleopListModel.addElement(
-                        if(teleopAnnotation.name.isBlank())
-                            pipeline.clazz.simpleName
-                        else teleopAnnotation.name
-                    )
-                    teleopIndexMap[teleopSelectorIndex] = managerIndex
-                    teleopSelectorIndex++
+                        teleopListModel.addElement(
+                            teleopAnnotation.name.ifBlank { pipeline.clazz.simpleName }
+                        )
+                        teleopIndexMap[teleopSelectorIndex] = managerIndex
+                        teleopSelectorIndex++
+                    }
                 }
             }
+
+            autonomousSelector.fixedCellWidth = 240
+            autonomousSelector.model = autonomousListModel
+
+            teleopSelector.fixedCellWidth = 240
+            teleopSelector.model = teleopListModel
         }
-
-        autonomousSelector.fixedCellWidth = 240
-        autonomousSelector.model = autonomousListModel
-
-        teleopSelector.fixedCellWidth = 240
-        teleopSelector.model = teleopListModel
     }
 
     fun reset(nextPipeline: Int? = null) {

@@ -148,6 +148,10 @@ public class HttpSource extends InputSource {
         return new HttpSource(url);
     }
 
+    public String getUrl() {
+        return url;
+    }
+
     @Override
     public FileFilter getFileFilters() {
         return null;

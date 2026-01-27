@@ -202,11 +202,17 @@ public class VideoSource extends InputSource {
         video.set(Videoio.CAP_PROP_POS_FRAMES, lastFramePosition);
     }
 
+    public String getVideoPath() {
+        return videoPath;
+    }
+
     @Override
     protected InputSource internalCloneSource() {
         return new VideoSource(videoPath, size);
     }
 
+    @Override
+    public Size getSize() { return size; }
     @Override
     public void setSize(Size size) {
         this.size = size;

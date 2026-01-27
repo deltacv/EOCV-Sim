@@ -56,7 +56,7 @@ class PipelineCompiler(
 
         val COMPILER = compiler
 
-        val INDENT = "      "
+        const val INDENT = "      "
     }
 
     private var diagnosticBuilders = mutableMapOf<String, StringBuilder>()

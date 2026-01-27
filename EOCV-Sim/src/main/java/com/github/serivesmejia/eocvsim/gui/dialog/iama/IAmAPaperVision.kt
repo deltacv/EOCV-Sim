@@ -103,9 +103,9 @@ class IAmAPaperVision(
                 addActionListener {
                     dialog.dispose() // Close the dialog on click
 
-                    val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
+                    val indexOfTab = visualizer.sidebarPanel.indexOfTab("PaperVision")
                     if(indexOfTab >= 0) {
-                        visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
+                        visualizer.sidebarPanel.selectedIndex = indexOfTab
                     } else {
                         JOptionPane.showMessageDialog(
                             parent,

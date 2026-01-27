@@ -62,11 +62,15 @@ class PipelineManager(
 ) {
 
     companion object {
-        const val MAX_ALLOWED_ACTIVE_PIPELINE_CONTEXTS = 18
 
         var staticSnapshot: PipelineSnapshot? = null
             private set
     }
+
+    @JvmField val onPipelineListRefresh      = EventHandler("OnPipelineListRefresh")
+
+    @JvmField val onExternalSwitchingEnable  = EventHandler("OnEnableExternalPipelineSwitching")
+    @JvmField val onExternalSwitchingDisable = EventHandler("OnDisableExternalPipelineSwitching")
 
     @JvmField val onUpdate          = EventHandler("OnPipelineUpdate")
     @JvmField val onPipelineChange  = EventHandler("OnPipelineChange")
@@ -142,7 +146,7 @@ class PipelineManager(
         // when getTunableFieldOf returns null, it means that
         // it wasn't able to find a suitable TunableField for
         // the passed Field type.
-        eocvSim.tunerManager.getTunableFieldOf(it) != null
+        eocvSim.tunerManager.getTunableFieldClassOf(it) != null
     }
 
     //manages and builds pipelines in runtime
@@ -255,7 +259,7 @@ class PipelineManager(
                 }
             }
 
-            eocvSim.visualizer.pipelineOpModeSwitchablePanel.enableSwitchingBlocking()
+            onExternalSwitchingEnable.run() // enable external pipeline switching after initial pipeline is set
         }
     }
 
@@ -306,7 +310,7 @@ class PipelineManager(
             try {
                 //if we have a pipeline, we run it right here, passing the input mat
                 //given to us. we'll post the frame the pipeline returns as long
-                //as we haven't ran out of time (the main loop will not wait it
+                //as we haven't run out of time (the main loop will not wait it
                 //forever to finish its job). if we run out of time, and if the
                 //pipeline ever returns, we will not post the frame, since we
                 //don't know when it was actually requested, we might even be in
@@ -318,7 +322,7 @@ class PipelineManager(
                 if(inputMat != null) {
                     if(!hasInitCurrentPipeline) {
                         for(pipeHandler in pipelineHandlers) {
-                            pipeHandler.preInit();
+                            pipeHandler.preInit()
                         }
                     }
 
@@ -347,7 +351,7 @@ class PipelineManager(
 
                     if(!hasInitCurrentPipeline) {
                         for(pipeHandler in pipelineHandlers) {
-                            pipeHandler.init();
+                            pipeHandler.init()
                         }
 
                         logger.info("Initialized pipeline $currentPipelineName")
@@ -364,7 +368,6 @@ class PipelineManager(
                         StrUtil.fromException(ex).trim()
                     )
 
-                    eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = 0
                     changePipeline(0)
 
                     logger.error("Error while initializing requested pipeline, $currentPipelineName. Falling back to default.", ex)
@@ -391,7 +394,7 @@ class PipelineManager(
                 withTimeout(timeout) {
                     pipelineJob.join()
                 }
-            } catch (ex: TimeoutCancellationException) {
+            } catch (_: TimeoutCancellationException) {
                 //oops, pipeline ran out of time! we'll fall back
                 //to default pipeline to avoid further issues.
                 requestForceChangePipeline(0)
@@ -436,18 +439,13 @@ class PipelineManager(
                     viewportTappedJob.join()
                 }
             }
-        } catch(ex: TimeoutCancellationException) {
+        } catch(_: TimeoutCancellationException) {
             //send a warning to the user
             logger.warn("User pipeline $currentPipelineName took too long to handle onViewportTapped (more than $configTimeoutMs ms).")
         } finally {
             //cancel the job
             viewportTappedJob.cancel()
         }
-    }
-
-    @JvmOverloads
-    fun requestAddPipelineClass(C: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH) {
-        onUpdate.doOnce { addPipelineClass(C, source) }
     }
 
     fun requestAddPipelineClasses(classes: List<Class<*>>,
@@ -457,7 +455,7 @@ class PipelineManager(
             for(clazz in classes) {
                 addPipelineClass(clazz, source)
             }
-            if(refreshGui) refreshGuiPipelineList()
+            if(refreshGui) onPipelineListRefresh.run()
         }
     }
 
@@ -494,9 +492,9 @@ class PipelineManager(
     }
 
     @Suppress("UNCHECKED_CAST")
-    @JvmOverloads fun addPipelineClass(C: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH) {
+    @JvmOverloads fun addPipelineClass(c: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH) {
         try {
-            pipelines.add(PipelineData(source, C))
+            pipelines.add(PipelineData(source, c))
         } catch (ex: Exception) {
             logger.warn("Error while adding pipeline class", ex)
             updateExceptionTracker(ex)
@@ -517,7 +515,7 @@ class PipelineManager(
             }
         }
 
-        if(refreshGuiPipelineList) refreshGuiPipelineList()
+        if(refreshGuiPipelineList) onPipelineListRefresh.run()
     }
 
     @JvmOverloads
@@ -543,12 +541,6 @@ class PipelineManager(
         }
 
         logger.warn("Pipeline class with name $name and source $source couldn't be found")
-    }
-
-    fun requestChangePipeline(name: String, source: PipelineSource) {
-        eocvSim.onMainUpdate.doOnce {
-            changePipeline(name, source)
-        }
     }
 
     /**
@@ -587,11 +579,7 @@ class PipelineManager(
         val instantiator = getInstantiatorFor(pipelineClass)
 
         try {
-            nextTelemetry = EOCVSimTelemetryImpl().apply {
-                // send telemetry updates to the ui
-                addTransmissionReceiver(eocvSim.visualizer.telemetryPanel)
-            }
-
+            nextTelemetry = EOCVSimTelemetryImpl()
             nextPipeline = instantiator?.instantiate(pipelineClass, nextTelemetry)
                 ?: throw NoSuchMethodException("No instantiator found for pipeline class ${pipelineClass.name}")
 
@@ -714,9 +702,6 @@ class PipelineManager(
         return false
     }
 
-    fun getIndexOf(pipeline: OpenCvPipeline, source: PipelineSource = PipelineSource.CLASSPATH) =
-        getIndexOf(pipeline::class.java, source)
-
     fun getIndexOf(pipelineClass: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH): Int? {
         for((i, pipelineData) in pipelines.withIndex()) {
             if(pipelineData.clazz.name == pipelineClass.name && pipelineData.source == source) {
@@ -738,11 +723,6 @@ class PipelineManager(
         return pipelinesData.toTypedArray()
     }
 
-    fun runThenPause() {
-        setPaused(false)
-        eocvSim.onMainUpdate.doOnce { setPaused(true) }
-    }
-
     fun setPaused(paused: Boolean, pauseReason: PauseReason = PauseReason.USER_REQUESTED) {
         this.paused = paused
 
@@ -755,19 +735,11 @@ class PipelineManager(
             this.pauseReason = PauseReason.NOT_PAUSED
             onResume.run()
         }
-
-        eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelinePauseBtt.isSelected = paused
     }
-
-    fun togglePause() = setPaused(!paused)
 
     @JvmOverloads
     fun requestSetPaused(paused: Boolean, pauseReason: PauseReason = PauseReason.USER_REQUESTED) {
         eocvSim.onMainUpdate.doOnce { setPaused(paused, pauseReason) }
-    }
-
-    fun refreshGuiPipelineList() {
-        eocvSim.visualizer.pipelineOpModeSwitchablePanel.updateSelectorLists()
     }
 
     fun reloadPipelineByName() {
@@ -792,7 +764,7 @@ enum class PipelineTimeout(val ms: Long, val coolName: String) {
     companion object {
         @JvmStatic
         fun fromCoolName(coolName: String): PipelineTimeout? {
-            for(timeout in values()) {
+            for(timeout in entries) {
                 if(timeout.coolName == coolName)
                     return timeout
             }
@@ -811,7 +783,7 @@ enum class PipelineFps(val fps: Int, val coolName: String) {
     companion object {
         @JvmStatic
         fun fromCoolName(coolName: String): PipelineFps? {
-            for(fps in values()) {
+            for(fps in entries) {
                 if(fps.coolName == coolName)
                     return fps
             }

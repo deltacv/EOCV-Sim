@@ -23,21 +23,12 @@
 
 package io.github.deltacv.eocvsim.plugin.loader
 
-import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.config.ConfigLoader
-import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
-import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.hashString
-import com.github.serivesmejia.eocvsim.util.extension.plus
-import com.github.serivesmejia.eocvsim.util.loggerForThis
 import com.moandjiezana.toml.Toml
-import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.plugin.security.PluginSignature
-import io.github.deltacv.eocvsim.plugin.security.PluginSignatureVerifier
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
-import net.lingala.zip4j.ZipFile
 import java.io.File
 
 enum class PluginSource {
@@ -46,22 +37,43 @@ enum class PluginSource {
     EMBEDDED
 }
 
-class PluginParser(pluginToml: Toml) {
-    val pluginName = pluginToml.getString("name")?.trim() ?: throw InvalidPluginException("No name in plugin.toml")
-    val pluginVersion = pluginToml.getString("version")?.trim() ?: throw InvalidPluginException("No version in plugin.toml")
+data class PluginInfo(
+    val name: String,
+    val version: String,
+    val author: String,
+    val authorEmail: String,
+    val main: String,
+    val description: String,
+    val superAccess: Boolean,
+) {
+    val nameWithVersion = "$name v$version"
 
-    val pluginAuthor = pluginToml.getString("author")?.trim() ?: throw InvalidPluginException("No author in plugin.toml")
-    val pluginAuthorEmail = pluginToml.getString("author-email", "")?.trim()
+    val nameWithAuthorVersion = "$name v$version by $author"
 
-    val pluginMain = pluginToml.getString("main")?.trim() ?: throw InvalidPluginException("No main in plugin.toml")
+    companion object {
+        // should throw corresponding exceptions if invalid
+        fun fromToml(pluginToml: Toml): PluginInfo {
+            val name = pluginToml.getString("name")?.trim() ?: throw InvalidPluginException("No name in plugin.toml")
+            val version = pluginToml.getString("version")?.trim() ?: throw InvalidPluginException("No version in plugin.toml")
+            val author = pluginToml.getString("author")?.trim() ?: throw InvalidPluginException("No author in plugin.toml")
+            val authorEmail = pluginToml.getString("author-email")?.trim() ?: ""
+            val main = pluginToml.getString("main")?.trim() ?: throw InvalidPluginException("No main in plugin.toml")
+            val description = pluginToml.getString("description")?.trim() ?: ""
+            val superAccess = pluginToml.getBoolean("super-access") ?: false
 
-    val pluginDescription = pluginToml.getString("description", "")?.trim()
+            return PluginInfo(
+                name,
+                version,
+                author,
+                authorEmail,
+                main,
+                description,
+                superAccess
+            )
+        }
+    }
 
-    /**
-     * Get the hash of the plugin based off the plugin name and author
-     * @return the hash
-     */
-    fun hash() = "${pluginName}${PluginOutput.SPECIAL}${pluginAuthor}".hashString
+    fun hash() = "$name${PluginOutput.SPECIAL}$author".hashString
 }
 
 abstract class PluginLoader {
@@ -73,16 +85,12 @@ abstract class PluginLoader {
     abstract val enabled: Boolean
     abstract var shouldEnable: Boolean
 
-    abstract val pluginName: String
-    abstract val pluginVersion: String
-    abstract val pluginDescription: String
-    abstract val pluginAuthor: String
-    abstract val pluginAuthorEmail: String
+    abstract val pluginInfo: PluginInfo
 
     abstract val classpath: List<File>
 
     abstract val pluginClass: Class<*>
-    abstract val plugin: EOCVSimPlugin
+    abstract val plugin: EOCVSimPlugin?
 
     abstract val fileSystem: SandboxFileSystem
     abstract val signature: PluginSignature
@@ -116,5 +124,5 @@ abstract class PluginLoader {
     /**
      * Hash of the plugin based on name and author.
      */
-    abstract fun hash(): String
+    fun hash(): String = pluginInfo.hash()
 }

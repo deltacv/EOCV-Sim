@@ -36,7 +36,8 @@ import org.firstinspires.ftc.vision.VisionProcessor
 import org.openftc.easyopencv.OpenCvPipeline
 
 /**
- * Class to scan the classpath for classes
+ * Classpath scanner using ClassGraph.
+ *
  * It scans for OpenCvPipelines, OpModes, VisionProcessors and TunableFields
  */
 class ClasspathScan {

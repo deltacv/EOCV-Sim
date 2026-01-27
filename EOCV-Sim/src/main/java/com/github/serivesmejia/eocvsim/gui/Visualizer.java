@@ -29,6 +29,8 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.CollapsiblePanelX;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.*;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.OpModeSelectorPanel;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.SidebarOpModeTabPanel;
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SidebarPipelineTabPanel;
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel;
 import io.github.deltacv.vision.external.gui.SwingOpenCvViewport;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker;
@@ -50,6 +52,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Visualizer {
 
@@ -69,16 +72,17 @@ public class Visualizer {
     public TopMenuBar menuBar = null;
     public JPanel tunerMenuPanel;
 
-    public JPanel rightContainer = null;
+    public JPanel sidebarContainer = null;
 
-    public PipelineOpModeSwitchablePanel pipelineOpModeSwitchablePanel = null;
+    public SidebarPanel sidebarPanel = null;
+
+    public SidebarPipelineTabPanel sidebarPipelineTabPanel= null;
+    public SidebarOpModeTabPanel sidebarOpModeTabPanel= null;
 
     public PipelineSelectorPanel pipelineSelectorPanel = null;
     public SourceSelectorPanel sourceSelectorPanel = null;
 
     public OpModeSelectorPanel opModeSelectorPanel = null;
-
-    public TelemetryPanel telemetryPanel;
 
     public JPanel tunerCollapsible;
 
@@ -98,7 +102,7 @@ public class Visualizer {
     }
 
     public void init(Theme theme) {
-        if(Taskbar.isTaskbarSupported()){
+        if (Taskbar.isTaskbarSupported()) {
             try {
                 //set icon for mac os (and other systems which do support this method)
                 Taskbar.getTaskbar().setIconImage(EOCVSimIconLibrary.INSTANCE.getIcoEOCVSim128().getImage());
@@ -117,7 +121,7 @@ public class Visualizer {
 
         Icons.INSTANCE.setDark(FlatLaf.isLafDark());
 
-        if(Build.isDev) {
+        if (Build.isDev) {
             title += "-dev ";
         }
 
@@ -125,7 +129,7 @@ public class Visualizer {
         frame = new JFrame();
 
         String fpsMeterDescriptor = "deltacv EOCV-Sim v" + Build.standardVersionString;
-        if(Build.isDev) fpsMeterDescriptor += "-dev";
+        if (Build.isDev) fpsMeterDescriptor += "-dev";
 
         viewport = new SwingOpenCvViewport(new Size(1080, 720), fpsMeterDescriptor);
         viewport.setDark(FlatLaf.isLafDark());
@@ -141,17 +145,19 @@ public class Visualizer {
 
         tunerMenuPanel = new JPanel();
 
-        pipelineOpModeSwitchablePanel = new PipelineOpModeSwitchablePanel(eocvSim);
-        pipelineOpModeSwitchablePanel.disableSwitching();
+        sidebarPanel = new SidebarPanel(eocvSim);
 
-        pipelineSelectorPanel = pipelineOpModeSwitchablePanel.getPipelineSelectorPanel();
-        sourceSelectorPanel = pipelineOpModeSwitchablePanel.getSourceSelectorPanel();
+        sidebarPipelineTabPanel = new SidebarPipelineTabPanel(eocvSim);
+        pipelineSelectorPanel = sidebarPipelineTabPanel.getPipelineSelectorPanel();
+        sourceSelectorPanel = sidebarPipelineTabPanel.getSourceSelectorPanel();
 
-        opModeSelectorPanel = pipelineOpModeSwitchablePanel.getOpModeSelectorPanel();
+        sidebarOpModeTabPanel = new SidebarOpModeTabPanel(eocvSim);
+        opModeSelectorPanel = sidebarOpModeTabPanel.getOpModeSelectorPanel();
 
-        telemetryPanel = new TelemetryPanel();
+        sidebarPanel.add("Pipeline", sidebarPipelineTabPanel);
+        sidebarPanel.add("OpMode", sidebarOpModeTabPanel);
 
-        rightContainer = new JPanel();
+        sidebarContainer = new JPanel();
 
         /*
          * TOP MENU BAR
@@ -163,26 +169,14 @@ public class Visualizer {
          * IMG VISUALIZER & SCROLL PANE
          */
 
-        rightContainer.setLayout(new BoxLayout(rightContainer, BoxLayout.Y_AXIS));
+        sidebarContainer.setLayout(new BoxLayout(sidebarContainer, BoxLayout.Y_AXIS));
         // add pretty border
-        rightContainer.setBorder(
+        sidebarContainer.setBorder(
                 BorderFactory.createMatteBorder(0, 1, 0, 0, UIManager.getColor("Separator.foreground"))
         );
 
-        pipelineOpModeSwitchablePanel.setBorder(new EmptyBorder(0, 0, 0, 0));
-        rightContainer.add(pipelineOpModeSwitchablePanel);
-
-        /*
-         * TELEMETRY
-         */
-
-        JPanel telemetryWithInsets = new JPanel();
-        telemetryWithInsets.setLayout(new BoxLayout(telemetryWithInsets, BoxLayout.LINE_AXIS));
-        telemetryWithInsets.setBorder(new EmptyBorder(0, 20, 20, 20));
-
-        telemetryWithInsets.add(telemetryPanel);
-
-        rightContainer.add(telemetryWithInsets);
+        sidebarPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
+        sidebarContainer.add(sidebarPanel);
 
         //global
         frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));
@@ -201,7 +195,7 @@ public class Visualizer {
         onPluginGuiAttachment.setCallRightAway(true);
 
         frame.add(tunerCollapsible, BorderLayout.SOUTH);
-        frame.add(rightContainer, BorderLayout.EAST);
+        frame.add(sidebarContainer, BorderLayout.EAST);
 
         //initialize other various stuff of the frame
         frame.setSize(780, 645);
@@ -230,7 +224,7 @@ public class Visualizer {
 
         hasFinishedInitializing = true;
 
-        if(!PipelineCompiler.Companion.getIS_USABLE()) {
+        if (!PipelineCompiler.Companion.getIS_USABLE()) {
             compilerUnsupported();
         }
     }
@@ -250,7 +244,7 @@ public class Visualizer {
         //handling onViewportTapped evts
         viewport.getComponent().addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                if(!colorPicker.isPicking())
+                if (!colorPicker.isPicking())
                     eocvSim.pipelineManager.callViewportTapped();
             }
         });
@@ -259,7 +253,9 @@ public class Visualizer {
         eocvSim.pipelineManager.onPipelineChange.doPersistent(() -> colorPicker.stopPicking());
     }
 
-    public boolean hasFinishedInit() { return hasFinishedInitializing; }
+    public boolean hasFinishedInit() {
+        return hasFinishedInitializing;
+    }
 
     public void joinInit() {
         while (!hasFinishedInitializing) {
@@ -334,11 +330,11 @@ public class Visualizer {
     }
 
     public void asyncCompilePipelines() {
-        if(PipelineCompiler.Companion.getIS_USABLE()) {
+        if (PipelineCompiler.Companion.getIS_USABLE()) {
             menuBar.workspCompile.setEnabled(false);
             pipelineSelectorPanel.getButtonsPanel().getPipelineCompileBtt().setEnabled(false);
 
-            eocvSim.pipelineManager.compiledPipelineManager.asyncCompile((result) -> {
+            eocvSim.pipelineManager.compiledPipelineManager.asyncBuild((result) -> {
                 menuBar.workspCompile.setEnabled(true);
                 pipelineSelectorPanel.getButtonsPanel().getPipelineCompileBtt().setEnabled(true);
 
@@ -364,7 +360,7 @@ public class Visualizer {
                 frame, DialogFactory.FileChooser.Mode.DIRECTORY_SELECT
         ).addCloseListener((OPTION, selectedFile, selectedFileFilter) -> {
             if (OPTION == JFileChooser.APPROVE_OPTION) {
-                if(!selectedFile.exists()) selectedFile.mkdir();
+                if (!selectedFile.exists()) selectedFile.mkdir();
 
                 eocvSim.onMainUpdate.doOnce(() ->
                         eocvSim.workspaceManager.setWorkspaceFile(selectedFile)
@@ -375,40 +371,40 @@ public class Visualizer {
 
     public void createVSCodeWorkspace() {
         DialogFactory.createFileChooser(frame, DialogFactory.FileChooser.Mode.DIRECTORY_SELECT)
-        .addCloseListener((OPTION, selectedFile, selectedFileFilter) -> {
-            if(OPTION == JFileChooser.APPROVE_OPTION) {
-                if(!selectedFile.exists()) selectedFile.mkdir();
+                .addCloseListener((OPTION, selectedFile, selectedFileFilter) -> {
+                    if (OPTION == JFileChooser.APPROVE_OPTION) {
+                        if (!selectedFile.exists()) selectedFile.mkdir();
 
-                if(selectedFile.isDirectory() && selectedFile.listFiles().length == 0) {
-                    eocvSim.workspaceManager.createWorkspaceWithTemplateAsync(
-                            selectedFile, GradleWorkspaceTemplate.INSTANCE,
-                            () -> {
-                                askOpenVSCode();
-                                return Unit.INSTANCE; // weird kotlin interop
-                            }
-                    );
-                } else {
-                    asyncPleaseWaitDialog(
-                            "The selected directory must be empty", "Select an empty directory or create a new one",
-                            "Retry", new Dimension(320, 160), true, true
-                    ).onCancel(this::createVSCodeWorkspace);
-                }
-            }
-        });
+                        if (selectedFile.isDirectory() && Objects.requireNonNull(selectedFile.listFiles()).length == 0) {
+                            eocvSim.workspaceManager.createWorkspaceWithTemplateAsync(
+                                    selectedFile, GradleWorkspaceTemplate.INSTANCE,
+                                    () -> {
+                                        askOpenVSCode();
+                                        return Unit.INSTANCE; // weird kotlin interop
+                                    }
+                            );
+                        } else {
+                            asyncPleaseWaitDialog(
+                                    "The selected directory must be empty", "Select an empty directory or create a new one",
+                                    "Retry", new Dimension(320, 160), true, true
+                            ).onCancel(this::createVSCodeWorkspace);
+                        }
+                    }
+                });
     }
 
     public void askOpenVSCode() {
         DialogFactory.createYesOrNo(frame, "A new workspace was created. Do you want to open VS Code?", "",
-            (result) -> {
-                if(result == 0) {
-                    JOptionPane.showMessageDialog(
-                            frame,
-                            "After opening VS Code, you will need to install the Extension Pack for Java, for proper autocompletion support. Ensure you do so when asked by the editor!"
-                    );
+                (result) -> {
+                    if (result == 0) {
+                        JOptionPane.showMessageDialog(
+                                frame,
+                                "After opening VS Code, you will need to install the Extension Pack for Java, for proper autocompletion support. Ensure you do so when asked by the editor!"
+                        );
 
-                    VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile());
+                        VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile());
+                    }
                 }
-            }
         );
     }
 
@@ -472,7 +468,7 @@ public class Visualizer {
             apwd.cancelBtt = cancelBtt;
         }
 
-        if(size == null) size = new Dimension(400, 200);
+        if (size == null) size = new Dimension(400, 200);
         dialog.setSize(size);
 
         dialog.setLocationRelativeTo(null);

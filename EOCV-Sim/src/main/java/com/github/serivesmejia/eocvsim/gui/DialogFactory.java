@@ -198,7 +198,6 @@ public class DialogFactory {
     }
 
     public static class FileChooser {
-
         private final JFileChooser chooser;
         private final Component parent;
 
@@ -207,7 +206,6 @@ public class DialogFactory {
         private final ArrayList<FileChooserCloseListener> closeListeners = new ArrayList<>();
 
         public FileChooser(Component parent, Mode mode, String initialFileName, FileFilter... filters) {
-
             if (mode == null) mode = Mode.FILE_SELECT;
 
             chooser = new JFileChooser();
@@ -231,11 +229,9 @@ public class DialogFactory {
                     chooser.setFileFilter(filters[0]);
                 }
             }
-
         }
 
         protected void init() {
-
             int returnVal;
 
             if (mode == Mode.SAVE_FILE_SELECT) {
@@ -245,7 +241,6 @@ public class DialogFactory {
             }
 
             executeCloseListeners(returnVal, chooser.getSelectedFile(), chooser.getFileFilter());
-
         }
 
         public void addCloseListener(FileChooserCloseListener listener) {
@@ -268,7 +263,6 @@ public class DialogFactory {
         public interface FileChooserCloseListener {
             void onClose(int OPTION, File selectedFile, FileFilter selectedFileFilter);
         }
-
     }
 
 }

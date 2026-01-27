@@ -113,7 +113,6 @@ public abstract class TunableField<T> {
     public final int getGuiFieldAmount() {
         return guiFieldAmount;
     }
-
     public final void setGuiFieldAmount(int amount) {
         this.guiFieldAmount = amount;
     }
@@ -121,7 +120,6 @@ public abstract class TunableField<T> {
     public final int getGuiComboBoxAmount() {
         return guiComboBoxAmount;
     }
-
     public final void setGuiComboBoxAmount(int amount) {
         this.guiComboBoxAmount = amount;
     }
@@ -129,13 +127,16 @@ public abstract class TunableField<T> {
     public final String getFieldName() {
         return reflectionField.getName();
     }
-
     public final String getFieldTypeName() {
         return reflectionField.getType().getSimpleName();
     }
 
     public final AllowMode getAllowMode() {
         return allowMode;
+    }
+
+    public final VirtualField getReflectionField() {
+        return reflectionField;
     }
 
     public final boolean isOnlyNumbers() {
@@ -148,10 +149,6 @@ public abstract class TunableField<T> {
     }
 
     public abstract boolean hasChanged();
-
-    public final EOCVSim getEOCVSim() {
-        return eocvSim;
-    }
 
     public enum AllowMode {ONLY_NUMBERS, ONLY_NUMBERS_DECIMAL, TEXT}
 

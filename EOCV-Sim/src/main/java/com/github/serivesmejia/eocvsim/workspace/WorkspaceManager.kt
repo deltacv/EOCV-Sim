@@ -251,7 +251,7 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
     fun init() {
         onWorkspaceChange {
             fileWatcher.onChange {
-                eocvSim.pipelineManager.compiledPipelineManager.asyncCompile()
+                eocvSim.pipelineManager.compiledPipelineManager.asyncBuild()
             }
         }
 

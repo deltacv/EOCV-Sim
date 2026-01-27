@@ -32,14 +32,14 @@ class EventHandlerHookApiImpl(owner: EOCVSimPlugin, val eventHandler: EventHandl
         eventHandler.doPersistent(listener)
     }
 
-    override fun disable() {
+    override fun disableApi() {
         for(listenerRef in allOnceListeners) {
             val listener = listenerRef.get() ?: continue
             eventHandler.removeOnceListener(listener)
         }
         for(listenerRef in allPersistentListeners) {
             val listener = listenerRef.get() ?: continue
-            eventHandler.removeOnceListener(listener)
+            eventHandler.removePersistentListener(listener)
         }
     }
 }

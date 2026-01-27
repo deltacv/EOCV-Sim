@@ -23,7 +23,9 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer
 
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.firstinspires.ftc.robotcore.internal.opmode.EOCVSimTelemetryImpl
 import org.firstinspires.ftc.robotcore.internal.opmode.TelemetryTransmissionReceiver
 import java.awt.FlowLayout
 import java.awt.Font
@@ -36,7 +38,7 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.border.TitledBorder
 
-class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
+class TelemetryPanel(pipelineManager: PipelineManager? = null) : JPanel(), TelemetryTransmissionReceiver {
 
     val telemetryScroll = JScrollPane()
     val telemetryList  = JList<String>()
@@ -92,6 +94,15 @@ class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver {
             ipadx = 120
             ipady = 20
         })
+
+        if(pipelineManager != null) {
+            pipelineManager.onPipelineChange { // update telemetry receiver on pipeline change
+                val telemetry = pipelineManager.currentTelemetry
+                if (telemetry is EOCVSimTelemetryImpl) {
+                    telemetry.addTransmissionReceiver(this)
+                }
+            }
+        }
     }
 
     fun revalAndRepaint() {

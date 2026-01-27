@@ -30,10 +30,10 @@ import com.github.serivesmejia.eocvsim.util.serialization.PolymorphicAdapter
 import com.google.gson.GsonBuilder
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequest
+import io.github.deltacv.eocvsim.plugin.loader.PluginInfo
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager.Companion.GENERIC_LAWYER_YEET
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager.Companion.GENERIC_SUPERACCESS_WARN
-import io.github.deltacv.eocvsim.plugin.loader.PluginParser
 import io.github.deltacv.eocvsim.plugin.security.Authority
 import io.github.deltacv.eocvsim.plugin.security.AuthorityFetcher
 import io.github.deltacv.eocvsim.plugin.security.MutablePluginSignature
@@ -41,7 +41,6 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import java.io.File
 import java.lang.Exception
-import java.lang.Thread.sleep
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
@@ -88,7 +87,7 @@ object SuperAccessDaemon {
         }
 
         System.setProperty("sun.java2d.d3d", "false")
-        System.setProperty("apple.awt.UIElement", "true");
+        System.setProperty("apple.awt.UIElement", "true")
         System.setProperty("apple.awt.application.appearance", "system")
         System.setProperty("apple.awt.application.name", "EasyOpenCV Simulator - SuperAccess")
 
@@ -158,13 +157,13 @@ object SuperAccessDaemon {
                     }
                 }
             } else {
-                val fetch = AuthorityFetcher.fetchAuthority(parser.pluginAuthor)
+                val fetch = AuthorityFetcher.fetchAuthority(parser.author)
                 untrusted = fetch != null // the plugin is claiming to be made by the authority, but it's not signed by them
             }
 
             val reason = message.reason
 
-            val name = "${parser.pluginName} v${parser.pluginVersion} by ${parser.pluginAuthor}"
+            val name = parser.nameWithAuthorVersion
 
             var warning = "<html>$GENERIC_SUPERACCESS_WARN"
             if(reason.trim().isNotBlank()) {
@@ -180,7 +179,7 @@ object SuperAccessDaemon {
             warning += if(validAuthority != null) {
                 "<br><br>This plugin has been digitally signed by <b>${validAuthority.name}</b>.<br>It is a trusted authority in the EOCV-Sim ecosystem."
             } else if(untrusted) {
-                "<br><br>This plugin claims to be made by <b>${parser.pluginAuthor}</b>, but it has not been digitally signed by them.<br><h2>Beware of potential security risks.</h2>"
+                "<br><br>This plugin claims to be made by <b>${parser.author}</b>, but it has not been digitally signed by them.<br><h2>Beware of potential security risks.</h2>"
             } else {
                 GENERIC_LAWYER_YEET
             }
@@ -244,11 +243,11 @@ object SuperAccessDaemon {
         }
     }
 
-    private fun parsePlugin(file: File): PluginParser? {
+    private fun parsePlugin(file: File): PluginInfo? {
         ZipFile(file).use {
             val pluginToml = it.getEntry("plugin.toml")
             if(pluginToml != null) {
-                return PluginParser(Toml().read(it.getInputStream(pluginToml)))
+                return PluginInfo.fromToml(Toml().read(it.getInputStream(pluginToml)))
             }
         }
 
