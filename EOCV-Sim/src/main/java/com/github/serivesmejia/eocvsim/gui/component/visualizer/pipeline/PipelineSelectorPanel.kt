@@ -46,10 +46,8 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     var selectedIndex: Int
         get() = indexMap[pipelineSelector.selectedIndex] ?: -1
         set(value) {
-            runBlocking {
-                launch(Dispatchers.Swing) {
-                    pipelineSelector.selectedIndex = indexMap.entries.find { it.value == value }?.key ?: -1
-                }
+            SwingUtilities.invokeLater {
+                pipelineSelector.selectedIndex = indexMap.entries.find { it.value == value }?.key ?: -1
             }
         }
 
@@ -106,7 +104,7 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     }
 
     private fun registerListeners() {
-        pipelineSelector.addMouseListener(object: MouseAdapter() {
+        pipelineSelector.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 if (!isActive || !allowPipelineSwitching) return
 
@@ -151,36 +149,35 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         }
 
         val pauseListener = EventListener {
-            eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelinePauseBtt.isSelected = eocvSim.pipelineManager.paused
+            eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelinePauseBtt.isSelected =
+                eocvSim.pipelineManager.paused
         }
 
         eocvSim.pipelineManager.onPause(pauseListener)
         eocvSim.pipelineManager.onResume(pauseListener)
     }
 
-    fun updatePipelinesList() = runBlocking {
-        launch(Dispatchers.Swing) {
-            val listModel = DefaultListModel<String>()
-            var selectorIndex = Range.clip(listModel.size() - 1, 0, Int.MAX_VALUE)
+    fun updatePipelinesList() = SwingUtilities.invokeLater {
+        val listModel = DefaultListModel<String>()
+        var selectorIndex = Range.clip(listModel.size() - 1, 0, Int.MAX_VALUE)
 
-            indexMap.clear()
+        indexMap.clear()
 
-            pipelinesData = eocvSim.pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
+        pipelinesData = eocvSim.pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
 
-            for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
-                if (!ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java)) {
-                    listModel.addElement(pipeline.clazz.simpleName)
-                    indexMap[selectorIndex] = managerIndex
+        for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
+            if (!ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java) && !pipeline.hidden) {
+                listModel.addElement(pipeline.clazz.simpleName)
+                indexMap[selectorIndex] = managerIndex
 
-                    selectorIndex++
-                }
+                selectorIndex++
             }
-
-            pipelineSelector.fixedCellWidth = 240
-            pipelineSelector.model = listModel
-
-            revalAndRepaint()
         }
+
+        pipelineSelector.fixedCellWidth = 240
+        pipelineSelector.model = listModel
+
+        revalAndRepaint()
     }
 
     fun revalAndRepaint() {

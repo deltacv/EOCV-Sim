@@ -1,6 +1,7 @@
 package io.github.deltacv.eocvsim.plugin.api
 
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.api.exception.EOCVSimApiException
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -14,13 +15,13 @@ abstract class Api(val owner: EOCVSimPlugin){
 
     protected fun throwIfDisabled() {
         if(isDisabled) {
-            throw IllegalStateException("The API owned by $ownerName has been disabled and can no longer be used")
+            throw EOCVSimApiException("An API owned by $ownerName has been disabled and can no longer be used", this)
         }
     }
 
-    protected fun throwIfOwnerMismatch(other: Api){
-        if(other.owner != this@Api.owner) {
-            throw IllegalAccessException("The API is owned by a different plugin (${other.ownerName}) than $ownerName")
+    protected fun throwIfOwnerMismatch(other: Api) {
+        if(other.owner != owner) {
+            throw EOCVSimApiException("An API is owned by a different plugin (passed api is owned by ${other.ownerName}, must be $ownerName)", this)
         }
     }
 
@@ -50,12 +51,18 @@ abstract class Api(val owner: EOCVSimPlugin){
 
     /**
      * Helper to wrap API implementations that need to check for disabled state
-     * Meant to be used for every public API method implementation, for consistency
-     * @throws IllegalStateException if the API is disabled
+     *
+     * Meant to be used for every public API method implementation, for consistency.
+     * Pass any APIs that need to be checked before executing the block.
+     *
+     * @param passedApis APIs to check for validity before executing the block
+     * @param block The block of code representing the API implementation
+     * @throws EOCVSimApiException if any API has an invalidity
      */
     protected fun <R> apiImpl(vararg passedApis: Api, block: () -> R): R {
         for(api in passedApis) {
             throwIfOwnerMismatch(api)
+            api.throwIfDisabled()
         }
         throwIfDisabled()
 
@@ -66,6 +73,20 @@ abstract class Api(val owner: EOCVSimPlugin){
         }
 
         return returnedValue
+    }
+
+    /**
+     * Helper to wrap API implementations that need to check for disabled state,
+     * but can fail silently if any EOCVSimApiException is thrown.
+     * Meant to be used for public API methods that can fail silently.
+     */
+    protected fun <R> safeApiImpl(vararg passedApis: Api, block: () -> R?): R? {
+        return try {
+            apiImpl(*passedApis, block = block)
+        } catch(_: EOCVSimApiException) {
+            // ignore
+            null
+        }
     }
 
     companion object {

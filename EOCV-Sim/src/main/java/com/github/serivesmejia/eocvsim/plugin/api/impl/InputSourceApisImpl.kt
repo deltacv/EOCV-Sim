@@ -12,15 +12,18 @@ import io.github.deltacv.eocvsim.plugin.api.InputSourceManagerApi
 class InputSourceApiImpl(owner: EOCVSimPlugin, val internalInputSource: com.github.serivesmejia.eocvsim.input.InputSource) : InputSourceApi(owner) {
     override val isPaused by liveApiField { internalInputSource.paused }
 
-    override val type by apiField {
+    override val data by apiField {
         when(internalInputSource) {
-            is CameraSource -> Type.Camera(internalInputSource.webcamName, internalInputSource.size)
-            is ImageSource -> Type.Image(internalInputSource.imgPath, internalInputSource.size)
-            is VideoSource -> Type.Video(internalInputSource.videoPath, internalInputSource.size)
-            is HttpSource -> Type.Http(internalInputSource.url)
+            is CameraSource -> New.Camera(internalInputSource.webcamName, internalInputSource.size)
+            is ImageSource -> New.Image(internalInputSource.imgPath, internalInputSource.size)
+            is VideoSource -> New.Video(internalInputSource.videoPath, internalInputSource.size)
+            is HttpSource -> New.Http(internalInputSource.url)
             else -> throw IllegalStateException("Unknown input source type: ${internalInputSource::class.java}")
         }
     }
+
+    override val name: String by apiField { internalInputSource.name }
+    override val creationTime by apiField { internalInputSource.creationTime }
 
     override fun disableApi() { }
 }
@@ -35,12 +38,16 @@ class InputSourceManagerApiImpl(owner: EOCVSimPlugin, val internalInputSourceMan
         internalInputSourceManager.currentInputSource?.let { InputSourceApiImpl(owner, it) }
     }
 
-    override fun addInputSource(name: String, type: InputSourceApi.Type) = apiImpl {
-        val source = when(type) {
-            is InputSourceApi.Type.Camera -> CameraSource(type.cameraName, type.size)
-            is InputSourceApi.Type.Image -> ImageSource(type.filePath, type.size)
-            is InputSourceApi.Type.Video -> VideoSource(type.filePath, type.size)
-            is InputSourceApi.Type.Http -> HttpSource(type.url)
+    override fun setInputSource(name: String) = apiImpl {
+        internalInputSourceManager.setInputSource(name)
+    }
+
+    override fun addInputSource(name: String, aNew: InputSourceApi.New) = apiImpl {
+        val source = when(aNew) {
+            is InputSourceApi.New.Camera -> CameraSource(aNew.cameraName, aNew.size)
+            is InputSourceApi.New.Image -> ImageSource(aNew.filePath, aNew.size)
+            is InputSourceApi.New.Video -> VideoSource(aNew.filePath, aNew.size)
+            is InputSourceApi.New.Http -> HttpSource(aNew.url)
         }
 
         internalInputSourceManager.addInputSource(name, source)

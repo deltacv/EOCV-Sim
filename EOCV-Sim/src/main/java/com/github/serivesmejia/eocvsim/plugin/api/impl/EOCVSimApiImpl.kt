@@ -3,6 +3,7 @@ package com.github.serivesmejia.eocvsim.plugin.api.impl
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.api.ConfigApi
 import io.github.deltacv.eocvsim.plugin.api.EOCVSimApi
 import io.github.deltacv.eocvsim.plugin.api.InputSourceManagerApi
 import io.github.deltacv.eocvsim.plugin.api.PipelineManagerApi
@@ -18,6 +19,7 @@ class EOCVSimApiImpl(owner: EOCVSimPlugin, val internalEOCVSim: EOCVSim) : EOCVS
     override val inputSourceManagerApi: InputSourceManagerApi by apiField(InputSourceManagerApiImpl(owner, internalEOCVSim.inputSourceManager))
     override val pipelineManagerApi: PipelineManagerApi by apiField(PipelineManagerApiImpl(owner, internalEOCVSim.pipelineManager))
     override val variableTunerApi: VariableTunerApi by apiField(VariableTunerApiImpl(owner, internalEOCVSim.tunerManager))
+    override val configApi: ConfigApi by apiField(ConfigApiImpl(owner, internalEOCVSim.configManager))
 
     override fun disableApi() {
         logger.info("EOCV-Sim API for {} says: \"aight, time to check out\"", ownerName)

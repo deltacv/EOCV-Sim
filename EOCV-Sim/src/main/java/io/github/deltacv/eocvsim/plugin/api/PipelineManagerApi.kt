@@ -2,7 +2,23 @@ package io.github.deltacv.eocvsim.plugin.api
 
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
+import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.openftc.easyopencv.OpenCvPipeline
+
+abstract class PipelineInstantiatorApi(owner: EOCVSimPlugin) : Api(owner) {
+    abstract fun instantiatePipeline(
+        pipelineClass: Class<*>,
+        telemetry: Telemetry
+    ): OpenCvPipeline
+
+    abstract fun virtualReflectionFor(
+        pipeline: OpenCvPipeline
+    ): VirtualReflection
+
+    abstract fun variableTunerTargetFor(
+        pipeline: OpenCvPipeline
+    ): Any
+}
 
 abstract class PipelineManagerApi(owner: EOCVSimPlugin) : Api(owner) {
     typealias PipelineClass = Class<out OpenCvPipeline>
@@ -37,16 +53,19 @@ abstract class PipelineManagerApi(owner: EOCVSimPlugin) : Api(owner) {
     abstract fun pause(pauseReason: PipelinePauseReason)
     abstract fun resume()
 
-    abstract fun addPipelineClass(pipeline: PipelineClass, source: PipelineSource): Int
+    abstract fun addPipelineClass(pipeline: PipelineClass, source: PipelineSource, hidden: Boolean = false): Int?
     abstract fun removePipelineAt(pipelineIndex: Int)
+    abstract fun removePipeline(pipelineClass: PipelineClass, source: PipelineSource)
     abstract fun removeAllPipelinesFrom(source: PipelineSource)
 
     abstract fun getIndexOf(pipelineClass: PipelineClass, source: PipelineSource): Int?
     abstract fun getPipelineDataOf(source: PipelineSource): List<PipelineData>?
 
-    abstract fun changePipeline(pipelineIndex: Int)
+    abstract fun changePipeline(pipelineIndex: Int, force: Boolean = false)
 
     abstract fun reloadCurrentPipeline()
+
+    abstract fun addPipelineInstantiator(instantiatorFor: Class<*>, instantiator: PipelineInstantiatorApi)
 
     abstract fun pollStatistics(): Statistics
 
@@ -59,7 +78,8 @@ abstract class PipelineManagerApi(owner: EOCVSimPlugin) : Api(owner) {
 
     data class PipelineData(
         val source: PipelineSource,
-        val clazz: Class<*>
+        val clazz: Class<*>,
+        val hidden: Boolean
     )
 
     enum class PipelineSource {

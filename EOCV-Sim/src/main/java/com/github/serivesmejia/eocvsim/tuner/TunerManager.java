@@ -127,6 +127,7 @@ public class TunerManager {
         init();
     }
 
+    @SuppressWarnings("unchecked")
     public <T> TunableField<T> newTunableFieldInstanceFor(VirtualField field, Object pipeline) {
         Class<? extends TunableField> tunableFieldClass = getTunableFieldClassOf(field);
 
@@ -135,7 +136,7 @@ public class TunerManager {
             //now, lets do some more reflection to instantiate this TunableField
             try {
                 Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(Object.class, VirtualField.class, EOCVSim.class);
-                this.fields.add(constructor.newInstance(pipeline, field, eocvSim));
+                return (TunableField<T>) constructor.newInstance(pipeline, field, eocvSim);
             } catch(InvocationTargetException e) {
                 if(e.getCause() instanceof CancelTunableFieldAddingException) {
                     String message = e.getCause().getMessage();

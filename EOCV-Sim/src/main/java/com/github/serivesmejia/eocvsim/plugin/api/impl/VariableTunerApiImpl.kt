@@ -10,6 +10,10 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 class TunableFieldApiImpl(owner: EOCVSimPlugin, val internalTunableField: TunableField<*>) : TunableFieldApi(owner) {
     override val field: VirtualField by liveApiField { internalTunableField.reflectionField }
 
+    override fun setFieldValue(index: Int, value: Any) = apiImpl {
+        internalTunableField.setFieldValue(index, value)
+    }
+
     override fun disableApi() { }
 }
 
@@ -22,9 +26,10 @@ class VariableTunerApiImpl(owner: EOCVSimPlugin, val internalTunerManager: Tuner
         TunableFieldApiImpl(owner, tunableField)
     }
 
-    override fun getTunableFieldWithLabel(label: String): TunableFieldApi? {
-        val tunableField = internalTunerManager.getCurrentTunableFieldWithLabel(label) ?: return null
-        return TunableFieldApiImpl(owner, tunableField)
+    override fun getTunableFieldWithLabel(label: String): TunableFieldApi? = apiImpl {
+        val tunableField = internalTunerManager.getCurrentTunableFieldWithLabel(label) ?: return@apiImpl null
+
+        TunableFieldApiImpl(owner, tunableField)
     }
 
     override fun disableApi() { }

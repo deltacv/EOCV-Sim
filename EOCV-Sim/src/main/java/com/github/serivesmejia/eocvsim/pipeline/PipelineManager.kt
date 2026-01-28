@@ -450,10 +450,11 @@ class PipelineManager(
 
     fun requestAddPipelineClasses(classes: List<Class<*>>,
                                   source: PipelineSource = PipelineSource.CLASSPATH,
+                                  hidden: Boolean = false,
                                   refreshGui: Boolean = false) {
         onUpdate.doOnce {
             for(clazz in classes) {
-                addPipelineClass(clazz, source)
+                addPipelineClass(clazz, source, hidden)
             }
             if(refreshGui) onPipelineListRefresh.run()
         }
@@ -480,6 +481,8 @@ class PipelineManager(
                 instantiatorFor.classLoader
             )
 
+            if(!instantiator.isUsable) continue // discard unusable instantiators
+
             if(clazz == instantiatorFor) {
                 possibleInstantiator = instantiator
                 break
@@ -492,13 +495,15 @@ class PipelineManager(
     }
 
     @Suppress("UNCHECKED_CAST")
-    @JvmOverloads fun addPipelineClass(c: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH) {
+    @JvmOverloads fun addPipelineClass(c: Class<*>, source: PipelineSource = PipelineSource.CLASSPATH, hidden: Boolean = false): Int? {
         try {
-            pipelines.add(PipelineData(source, c))
+            pipelines.add(PipelineData(source, c, hidden))
+            return pipelines.size - 1
         } catch (ex: Exception) {
             logger.warn("Error while adding pipeline class", ex)
             updateExceptionTracker(ex)
         }
+        return null
     }
 
     @JvmOverloads fun removeAllPipelinesFrom(source: PipelineSource,
@@ -792,6 +797,6 @@ enum class PipelineFps(val fps: Int, val coolName: String) {
     }
 }
 
-data class PipelineData(val source: PipelineSource, val clazz: Class<*>)
+data class PipelineData(val source: PipelineSource, val clazz: Class<*>, val hidden: Boolean)
 
 enum class PipelineSource { CLASSPATH, COMPILED_ON_RUNTIME }

@@ -1,7 +1,7 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.SidebarTabJPanel
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.SidebarPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel
 import java.awt.Font
 import java.awt.GridBagConstraints
@@ -11,7 +11,7 @@ import javax.swing.JPanel
 import javax.swing.border.EmptyBorder
 import javax.swing.border.TitledBorder
 
-class SidebarPipelineTabPanel(eocvSim: EOCVSim) : SidebarTabJPanel() {
+class SidebarPipelineTabPanel(eocvSim: EOCVSim) : SidebarPanel.TabJPanel() {
 
     val pipelineSelectorPanel = PipelineSelectorPanel(eocvSim)
     val sourceSelectorPanel = SourceSelectorPanel(eocvSim)

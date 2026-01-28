@@ -44,7 +44,7 @@ class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
                 // Activate the first tab added by default
                 if (componentCount == 1) {
                     val firstPane = getComponentAt(0)
-                    if (firstPane is SidebarTabJPanel) {
+                    if (firstPane is TabJPanel) {
                         firstPane.isActive = true
                         previousActiveIndex = 0
                     }
@@ -57,7 +57,7 @@ class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
             // deactivate previous pane first
             val previousPane = if (previousActiveIndex != -1) this.getComponentAt(previousActiveIndex) else null
-            if (previousPane is SidebarTabJPanel && previousActiveIndex != index) {
+            if (previousPane is TabJPanel && previousActiveIndex != index) {
                 previousPane.isActive = false
 
                 val name = this.getTitleAt(previousActiveIndex)
@@ -66,7 +66,7 @@ class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
             // activate current pane
             val currentPane = this.getComponentAt(index)
-            if (currentPane is SidebarTabJPanel && previousActiveIndex != index) {
+            if (currentPane is TabJPanel && previousActiveIndex != index) {
                 currentPane.isActive = true
 
                 val name = this.getTitleAt(index)
@@ -76,26 +76,26 @@ class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
             previousActiveIndex = index
         }
     }
-}
 
-abstract class SidebarTabJPanel() : JPanel() {
-    constructor(layout: LayoutManager) : this() {
-        this.layout = layout
-    }
-
-    var isActive: Boolean = false
-        set(value) {
-            if (field != value) {
-                field = value
-
-                if (value) {
-                    onActivated()
-                } else {
-                    onDeactivated()
-                }
-            }
+    abstract class TabJPanel() : JPanel() {
+        constructor(layout: LayoutManager) : this() {
+            this.layout = layout
         }
 
-    abstract fun onActivated()
-    abstract fun onDeactivated()
+        var isActive: Boolean = false
+            set(value) {
+                if (field != value) {
+                    field = value
+
+                    if (value) {
+                        onActivated()
+                    } else {
+                        onDeactivated()
+                    }
+                }
+            }
+
+        abstract fun onActivated()
+        abstract fun onDeactivated()
+    }
 }

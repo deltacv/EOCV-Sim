@@ -29,6 +29,9 @@ import org.openftc.easyopencv.OpenCvPipeline
 
 interface PipelineInstantiator {
 
+    val isUsable: Boolean
+        get() = true
+
     fun instantiate(clazz: Class<*>, telemetry: Telemetry): OpenCvPipeline
 
     fun virtualReflectOf(pipeline: OpenCvPipeline): VirtualReflection

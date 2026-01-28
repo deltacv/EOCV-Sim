@@ -11,6 +11,8 @@ abstract class HookApi(owner: EOCVSimPlugin) : Api(owner) {
 
     operator fun invoke(hook: PersistentHook) = attach(hook)
 
+    abstract fun runListeners()
+
     fun interface Detacher {
         fun detach()
     }

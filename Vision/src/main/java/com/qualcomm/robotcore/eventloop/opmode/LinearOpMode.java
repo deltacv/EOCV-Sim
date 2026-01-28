@@ -186,11 +186,12 @@ public abstract class LinearOpMode extends OpMode {
 
         stopRequested = true;
 
-        helper.interrupt();
-
-        try {
-            if(helper != null) helper.join();
-        } catch (InterruptedException ignored) {
+        if(helper != null) {
+            helper.interrupt();
+            try {
+                helper.join();
+            } catch (InterruptedException ignored) {
+            }
         }
     }
 
@@ -202,7 +203,7 @@ public abstract class LinearOpMode extends OpMode {
         static Logger logger = LoggerFactory.getLogger(LinearOpModeHelperThread.class);
 
         public LinearOpModeHelperThread(LinearOpMode opMode, VisionSourceProvider provider) {
-            super("Thread-LinearOpModeHelper-" + opMode.getClass().getSimpleName());
+            super("LinearOpModeHelper-" + opMode.getClass().getSimpleName());
 
             this.opMode = opMode;
             this.provider = provider;

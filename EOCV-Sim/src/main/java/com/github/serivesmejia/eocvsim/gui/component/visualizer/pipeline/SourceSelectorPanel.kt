@@ -62,7 +62,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         sourceSelector.cellRenderer = SourcesListIconRenderer(eocvSim.inputSourceManager)
 
         sourceSelectorCreateBtt.addActionListener {
-            DialogFactory.createSourceDialogEx(eocvSim)
+            DialogFactory.createSourceExDialog(eocvSim)
         }
 
         sourceSelectorButtonsContainer = JPanel(FlowLayout(FlowLayout.CENTER))

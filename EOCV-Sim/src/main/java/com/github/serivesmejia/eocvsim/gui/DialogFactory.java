@@ -24,7 +24,6 @@
 package com.github.serivesmejia.eocvsim.gui;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
-import com.github.serivesmejia.eocvsim.config.Config;
 import com.github.serivesmejia.eocvsim.gui.dialog.*;
 import com.github.serivesmejia.eocvsim.gui.dialog.SplashScreen;
 import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmA;
@@ -32,10 +31,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmAPaperVision;
 import com.github.serivesmejia.eocvsim.gui.dialog.source.*;
 import com.github.serivesmejia.eocvsim.input.SourceType;
 import com.github.serivesmejia.eocvsim.util.event.EventHandler;
-import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport;
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager;
-
-
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -55,14 +51,13 @@ public class DialogFactory {
         JLabel label1 = new JLabel(message);
         panel.add(label1);
 
-        if (!submessage.trim().equals("")) {
+        if (!submessage.isBlank()) {
             JLabel label2 = new JLabel(submessage);
             panel.add(label2);
             panel.setLayout(new GridLayout(2, 1));
         }
 
         invokeLater(() -> result.accept(
-
                 JOptionPane.showConfirmDialog(parent, panel, "Confirm",
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.PLAIN_MESSAGE
@@ -97,7 +92,6 @@ public class DialogFactory {
     public static void createSourceDialog(EOCVSim eocvSim,
                                           SourceType type,
                                           File initialFile) {
-
         invokeLater(() -> {
             switch (type) {
                 case IMAGE:
@@ -124,7 +118,7 @@ public class DialogFactory {
         invokeLater(() -> new CreateSource(eocvSim.visualizer.frame, eocvSim));
     }
 
-    public static void createSourceDialogEx(EOCVSim eocvSim) {
+    public static void createSourceExDialog(EOCVSim eocvSim) {
         invokeLater(() -> new CreateSourceEx(eocvSim.visualizer.frame, eocvSim.visualizer));
     }
 
@@ -258,7 +252,7 @@ public class DialogFactory {
             executeCloseListeners(JFileChooser.CANCEL_OPTION, new File(""), new FileNameExtensionFilter("", ""));
         }
 
-        public enum Mode {FILE_SELECT, DIRECTORY_SELECT, SAVE_FILE_SELECT}
+        public enum Mode { FILE_SELECT, DIRECTORY_SELECT, SAVE_FILE_SELECT }
 
         public interface FileChooserCloseListener {
             void onClose(int OPTION, File selectedFile, FileFilter selectedFileFilter);

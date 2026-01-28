@@ -9,4 +9,5 @@ abstract class EOCVSimApi(owner: EOCVSimPlugin) : Api(owner) {
     abstract val inputSourceManagerApi: InputSourceManagerApi
     abstract val pipelineManagerApi: PipelineManagerApi
     abstract val variableTunerApi: VariableTunerApi
+    abstract val configApi: ConfigApi
 }

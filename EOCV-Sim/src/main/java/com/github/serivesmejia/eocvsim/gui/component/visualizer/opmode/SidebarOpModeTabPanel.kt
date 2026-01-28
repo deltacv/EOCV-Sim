@@ -1,7 +1,7 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.SidebarTabJPanel
+import com.github.serivesmejia.eocvsim.gui.component.visualizer.SidebarPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel
 import java.awt.Font
 import java.awt.GridLayout
@@ -9,7 +9,7 @@ import javax.swing.BoxLayout
 import javax.swing.JPanel
 import javax.swing.border.EmptyBorder
 
-class SidebarOpModeTabPanel(eocvSim: EOCVSim) : SidebarTabJPanel() {
+class SidebarOpModeTabPanel(eocvSim: EOCVSim) : SidebarPanel.TabJPanel() {
 
     val opModeControlsPanel = OpModeControlsPanel(eocvSim)
     val opModeSelectorPanel = OpModeSelectorPanel(eocvSim, opModeControlsPanel)

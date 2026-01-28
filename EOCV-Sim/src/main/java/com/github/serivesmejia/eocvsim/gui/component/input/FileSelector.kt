@@ -34,8 +34,6 @@ class FileSelector(columns: Int = 18,
                    mode: DialogFactory.FileChooser.Mode,
                    vararg fileFilters: FileFilter?) : JPanel(FlowLayout()) {
 
-    constructor(columns: Int) : this(columns, DialogFactory.FileChooser.Mode.FILE_SELECT)
-
     constructor(columns: Int, vararg fileFilters: FileFilter?) : this(columns, DialogFactory.FileChooser.Mode.FILE_SELECT, *fileFilters)
 
     constructor(columns: Int, mode: DialogFactory.FileChooser.Mode) : this(columns, mode, null)

@@ -242,7 +242,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
                 logger.trace("Added ${pipelineClass.simpleName} from jar")
             }
 
-            pipelineManager.requestAddPipelineClasses(pipelines, PipelineSource.COMPILED_ON_RUNTIME, false)
+            pipelineManager.requestAddPipelineClasses(pipelines, PipelineSource.COMPILED_ON_RUNTIME, refreshGui = false)
         } catch(e: Exception) {
             logger.error("Uncaught exception thrown while loading jar $PIPELINES_OUTPUT_JAR", e)
         }

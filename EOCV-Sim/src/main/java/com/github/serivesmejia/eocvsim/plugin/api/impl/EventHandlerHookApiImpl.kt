@@ -10,7 +10,7 @@ class EventHandlerHookApiImpl(owner: EOCVSimPlugin, val eventHandler: EventHandl
     private var allOnceListeners = mutableListOf<WeakReference<EventListener>>()
     private var allPersistentListeners = mutableListOf<WeakReference<EventListener>>()
 
-    override fun once(hook: OnceHook) {
+    override fun once(hook: OnceHook) = apiImpl {
         throwIfDisabled()
 
         val listener = EventListener {
@@ -21,7 +21,7 @@ class EventHandlerHookApiImpl(owner: EOCVSimPlugin, val eventHandler: EventHandl
         eventHandler.doOnce(listener)
     }
 
-    override fun attach(hook: PersistentHook) {
+    override fun attach(hook: PersistentHook) = apiImpl {
         throwIfDisabled()
 
         val listener = EventListener {
@@ -30,6 +30,11 @@ class EventHandlerHookApiImpl(owner: EOCVSimPlugin, val eventHandler: EventHandl
 
         allPersistentListeners.add(WeakReference(listener))
         eventHandler.doPersistent(listener)
+        Unit
+    }
+
+    override fun runListeners() = apiImpl {
+        eventHandler.run()
     }
 
     override fun disableApi() {

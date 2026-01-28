@@ -1,9 +1,13 @@
 package com.github.serivesmejia.eocvsim.plugin.api.impl
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.instantiator.PipelineInstantiator
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.api.PipelineInstantiatorApi
 import io.github.deltacv.eocvsim.plugin.api.PipelineManagerApi
 import io.github.deltacv.eocvsim.plugin.api.PipelineManagerApi.PipelineSource
+import org.firstinspires.ftc.robotcore.external.Telemetry
+import org.openftc.easyopencv.OpenCvPipeline
 
 class PipelineManagerApiImpl(owner: EOCVSimPlugin, val internalPipelineManager: PipelineManager) : PipelineManagerApi(owner) {
 
@@ -19,16 +23,15 @@ class PipelineManagerApiImpl(owner: EOCVSimPlugin, val internalPipelineManager: 
 
     override val pipelines: List<PipelineData> by liveApiField {
         internalPipelineManager.pipelines.map {
-            PipelineData(it.source.mapToApi(), it.clazz)
+            PipelineData(it.source.mapToApi(), it.clazz, it.hidden)
         }
     }
-
     override val previousPipelineInstance by liveApiField { internalPipelineManager.previousPipeline }
     override val currentPipelineInstance by liveApiField { internalPipelineManager.currentPipeline }
 
     override val currentPipelineData by liveApiField {
         internalPipelineManager.currentPipelineData?.let {
-            PipelineData(it.source.mapToApi(), it.clazz)
+            PipelineData(it.source.mapToApi(), it.clazz, it.hidden)
         }
     }
     override val currentPipelineName by liveApiField { internalPipelineManager.currentPipelineName }
@@ -52,15 +55,27 @@ class PipelineManagerApiImpl(owner: EOCVSimPlugin, val internalPipelineManager: 
 
     override fun addPipelineClass(
         pipeline: PipelineClass,
-        source: PipelineSource
-    ): Int = apiImpl {
-        internalPipelineManager.addPipelineClass(pipeline, source.mapToInternal())
-        internalPipelineManager.getIndexOf(pipeline, source.mapToInternal())!!
+        source: PipelineSource,
+        hidden: Boolean
+    ): Int? = apiImpl {
+        internalPipelineManager.addPipelineClass(pipeline, source.mapToInternal(), hidden)
     }
 
     override fun removePipelineAt(pipelineIndex: Int) = apiImpl {
         internalPipelineManager.pipelines.removeAt(pipelineIndex)
         Unit
+    }
+
+    override fun removePipeline(
+        pipelineClass: PipelineClass,
+        source: PipelineSource
+    ) = apiImpl {
+        for(i in internalPipelineManager.pipelines.indices.reversed()) {
+            val p = internalPipelineManager.pipelines[i]
+            if(p.clazz == pipelineClass && p.source == source.mapToInternal()) {
+                internalPipelineManager.pipelines.removeAt(i)
+            }
+        }
     }
 
     override fun removeAllPipelinesFrom(source: PipelineSource) = apiImpl {
@@ -77,16 +92,44 @@ class PipelineManagerApiImpl(owner: EOCVSimPlugin, val internalPipelineManager: 
 
     override fun getPipelineDataOf(source: PipelineSource) = apiImpl {
         internalPipelineManager.getPipelinesFrom(source.mapToInternal()).map {
-            PipelineData(it.source.mapToApi(), it.clazz)
+            PipelineData(it.source.mapToApi(), it.clazz, it.hidden)
         }
     }
 
-    override fun changePipeline(pipelineIndex: Int) = apiImpl {
-        internalPipelineManager.changePipeline(pipelineIndex)
+    override fun changePipeline(pipelineIndex: Int, force: Boolean) = apiImpl {
+        if(force) {
+            internalPipelineManager.forceChangePipeline(pipelineIndex)
+        } else {
+            internalPipelineManager.changePipeline(pipelineIndex)
+        }
     }
 
     override fun reloadCurrentPipeline() = apiImpl {
         internalPipelineManager.reloadPipelineByName()
+    }
+
+    override fun addPipelineInstantiator(instantiatorFor: Class<*>, instantiator: PipelineInstantiatorApi) = apiImpl(instantiator) {
+        val internalInstantiator = object: PipelineInstantiator {
+            override val isUsable = !instantiator.isDisabled
+
+            override fun instantiate(
+                clazz: Class<*>,
+                telemetry: Telemetry
+            ) = apiImpl(instantiator) {
+                instantiator.instantiatePipeline(clazz, telemetry)
+            }
+
+            override fun virtualReflectOf(pipeline: OpenCvPipeline) = apiImpl(instantiator) {
+                instantiator.virtualReflectionFor(pipeline)
+            }
+
+            override fun variableTunerTarget(pipeline: OpenCvPipeline) = apiImpl(instantiator) {
+                instantiator.variableTunerTargetFor(pipeline)
+            }
+        }
+
+        internalPipelineManager.addInstantiator(instantiatorFor, internalInstantiator)
+
     }
 
     override fun pollStatistics() = apiImpl {

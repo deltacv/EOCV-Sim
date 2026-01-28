@@ -8,19 +8,31 @@ abstract class VisualizerApi(owner: EOCVSimPlugin) : Api(owner) {
     abstract val frame: JFrame?
     abstract val creationHook: HookApi
 
-    abstract val sidebar: Sidebar
+    abstract val topMenuBarApi: VisualizerTopMenuBarApi
+    abstract val sidebarApi: VisualizerSidebarApi
+    abstract val dialogFactoryApi: DialogFactoryApi
+}
 
-    abstract class Sidebar(owner: EOCVSimPlugin) : Api(owner) {
-        abstract fun addTab(tab: Tab)
-        abstract fun removeTab(tab: Tab)
+abstract class VisualizerTopMenuBarApi(owner: EOCVSimPlugin) : Api(owner) {
+    abstract val fileMenuApi: JMenuApi
+    abstract val workspaceMenuApi: JMenuApi
+    abstract val helpMenuApi: JMenuApi
+}
 
-        abstract class Tab(owner: EOCVSimPlugin) {
-            abstract val title: String
+abstract class VisualizerSidebarApi(owner: EOCVSimPlugin) : Api(owner) {
+    abstract val tabChangeHook: HookApi
 
-            abstract fun onActivated()
-            abstract fun onDeactivated()
+    abstract fun addTab(tab: Tab)
+    abstract fun removeTab(tab: Tab)
 
-            abstract val contents: JPanel
-        }
+    abstract class Tab(owner: EOCVSimPlugin) : Api(owner) {
+        abstract val title: String
+
+        abstract fun onActivated()
+        abstract fun onDeactivated()
+
+        abstract fun create(target: JPanel)
+
+        override fun disableApi() { }
     }
 }
