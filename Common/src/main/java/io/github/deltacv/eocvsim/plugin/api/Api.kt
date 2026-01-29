@@ -68,7 +68,10 @@ abstract class Api(val owner: EOCVSimPlugin) {
      */
     protected fun throwIfDisabled() {
         if(isDisabled) {
-            throw EOCVSimApiException("An API owned by $ownerName has been disabled and can no longer be used", this)
+            throw EOCVSimApiException(
+                "The API owned by plugin '$ownerName' has been disabled and cannot be used anymore.",
+                this
+            )
         }
     }
 
@@ -79,7 +82,10 @@ abstract class Api(val owner: EOCVSimPlugin) {
      */
     protected fun throwIfOwnerMismatch(other: Api) {
         if(other.owner != owner) {
-            throw EOCVSimApiException("An API is owned by a different plugin (passed api is owned by ${other.ownerName}, must be $ownerName)", this)
+            throw EOCVSimApiException(
+                "Plugin '${ownerName}' attempted to use an API owned by a different plugin ('${other.ownerName}'). APIs cannot be shared across plugins.",
+                this
+            )
         }
     }
 
