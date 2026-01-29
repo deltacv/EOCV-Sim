@@ -25,6 +25,8 @@ abstract class VisualizerSidebarApi(owner: EOCVSimPlugin) : Api(owner) {
     abstract fun addTab(tab: Tab)
     abstract fun removeTab(tab: Tab)
 
+    abstract fun isActive(tab: Tab): Boolean
+
     abstract class Tab(owner: EOCVSimPlugin) : Api(owner) {
         abstract val title: String
 

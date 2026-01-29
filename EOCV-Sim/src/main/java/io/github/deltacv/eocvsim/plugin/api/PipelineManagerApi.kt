@@ -61,6 +61,7 @@ abstract class PipelineManagerApi(owner: EOCVSimPlugin) : Api(owner) {
     abstract fun getIndexOf(pipelineClass: PipelineClass, source: PipelineSource): Int?
     abstract fun getPipelineDataOf(source: PipelineSource): List<PipelineData>?
 
+    abstract fun changePipelineAnonymous(pipelineClass: PipelineClass, force: Boolean = false)
     abstract fun changePipeline(pipelineIndex: Int, force: Boolean = false)
 
     abstract fun reloadCurrentPipeline()
@@ -83,7 +84,7 @@ abstract class PipelineManagerApi(owner: EOCVSimPlugin) : Api(owner) {
     )
 
     enum class PipelineSource {
-        CLASSPATH, RUNTIME
+        CLASSPATH, RUNTIME, ANONYMOUS
     }
 
     enum class PipelinePauseReason {

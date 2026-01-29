@@ -32,14 +32,7 @@ private class VisualizerTopMenuBarApiImpl(owner: EOCVSimPlugin, internalTopMenuB
 private class VisualizerSidebarApiImpl(owner: EOCVSimPlugin, val internalSidebar: SidebarPanel) : VisualizerSidebarApi(owner) {
     val tabs = mutableMapOf<Tab, Int>()
 
-    override val tabChangeHook by apiField(SimpleHookApiImpl(owner))
-
-    init {
-        internalSidebar.addChangeListener {
-            if(isDisabled) return@addChangeListener
-            tabChangeHook.runListeners()
-        }
-    }
+    override val tabChangeHook by apiField(EventHandlerHookApiImpl(owner, internalSidebar.onTabChange))
 
     override fun addTab(tab: Tab) = apiImpl(tab) {
         // throw if sidebar already has a tab with the same title
@@ -67,6 +60,11 @@ private class VisualizerSidebarApiImpl(owner: EOCVSimPlugin, val internalSidebar
         val index = tabs[tab] ?: return@apiImpl
         internalSidebar.removeTabAt(index)
         tabs.remove(tab)
+    }
+
+    override fun isActive(tab: Tab) = apiImpl(tab) {
+        val index = internalSidebar.indexOfTab(tab.title)
+        index != -1 && index == internalSidebar.selectedIndex
     }
 
     override fun disableApi() {

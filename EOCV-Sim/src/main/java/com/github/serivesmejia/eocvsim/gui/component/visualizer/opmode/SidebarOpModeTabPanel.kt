@@ -39,6 +39,6 @@ class SidebarOpModeTabPanel(eocvSim: EOCVSim) : SidebarPanel.TabJPanel() {
 
     override fun onDeactivated() {
         opModeSelectorPanel.isActive = false
-        opModeSelectorPanel.reset(0)
+        opModeSelectorPanel.reset(-1)
     }
 }

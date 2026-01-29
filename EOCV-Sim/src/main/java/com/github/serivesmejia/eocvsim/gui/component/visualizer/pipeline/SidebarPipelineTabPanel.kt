@@ -11,7 +11,7 @@ import javax.swing.JPanel
 import javax.swing.border.EmptyBorder
 import javax.swing.border.TitledBorder
 
-class SidebarPipelineTabPanel(eocvSim: EOCVSim) : SidebarPanel.TabJPanel() {
+class SidebarPipelineTabPanel(private val eocvSim: EOCVSim) : SidebarPanel.TabJPanel() {
 
     val pipelineSelectorPanel = PipelineSelectorPanel(eocvSim)
     val sourceSelectorPanel = SourceSelectorPanel(eocvSim)
@@ -70,6 +70,9 @@ class SidebarPipelineTabPanel(eocvSim: EOCVSim) : SidebarPanel.TabJPanel() {
 
     override fun onActivated() {
         pipelineSelectorPanel.isActive = true
+        eocvSim.pipelineManager.onUpdate.doOnce {
+            eocvSim.pipelineManager.changePipeline(0)
+        }
     }
 
     override fun onDeactivated() {

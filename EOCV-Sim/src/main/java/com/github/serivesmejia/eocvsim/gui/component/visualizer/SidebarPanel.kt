@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.loggerForThis
 import java.awt.Font
 import java.awt.LayoutManager
@@ -33,6 +34,8 @@ import javax.swing.JTabbedPane
 class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
     private var previousActiveIndex = -1;
+
+    val onTabChange = EventHandler("SidebarPanel-OnTabChange")
 
     private val logger by loggerForThis()
 
@@ -74,6 +77,8 @@ class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
             }
 
             previousActiveIndex = index
+
+            onTabChange.run()
         }
     }
 

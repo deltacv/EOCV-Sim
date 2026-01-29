@@ -9,6 +9,21 @@ import io.github.deltacv.eocvsim.plugin.api.PipelineManagerApi.PipelineSource
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.openftc.easyopencv.OpenCvPipeline
 
+private class EOCVSimPipelineInstantiatorApiDelegate(val instantiator: PipelineInstantiatorApi) : PipelineInstantiator {
+    override val isUsable get() = !instantiator.isDisabled
+
+    override fun instantiate(
+        clazz: Class<*>,
+        telemetry: Telemetry
+    ): OpenCvPipeline {
+        return instantiator.instantiatePipeline(clazz, telemetry)
+    }
+
+    override fun virtualReflectOf(pipeline: OpenCvPipeline) = instantiator.virtualReflectionFor(pipeline)
+
+    override fun variableTunerTarget(pipeline: OpenCvPipeline) = instantiator.variableTunerTargetFor(pipeline)
+}
+
 class PipelineManagerApiImpl(owner: EOCVSimPlugin, val internalPipelineManager: PipelineManager) : PipelineManagerApi(owner) {
 
     override val onPipelineListRefreshHook by apiField { EventHandlerHookApiImpl(owner, internalPipelineManager.onPipelineListRefresh) }
@@ -96,6 +111,17 @@ class PipelineManagerApiImpl(owner: EOCVSimPlugin, val internalPipelineManager: 
         }
     }
 
+    override fun changePipelineAnonymous(
+        pipelineClass: PipelineClass,
+        force: Boolean
+    ) = apiImpl {
+        if(force) {
+            internalPipelineManager.forceChangePipelineAnonymous(pipelineClass)
+        } else {
+            internalPipelineManager.changePipelineAnonymous(pipelineClass)
+        }
+    }
+
     override fun changePipeline(pipelineIndex: Int, force: Boolean) = apiImpl {
         if(force) {
             internalPipelineManager.forceChangePipeline(pipelineIndex)
@@ -109,27 +135,7 @@ class PipelineManagerApiImpl(owner: EOCVSimPlugin, val internalPipelineManager: 
     }
 
     override fun addPipelineInstantiator(instantiatorFor: Class<*>, instantiator: PipelineInstantiatorApi) = apiImpl(instantiator) {
-        val internalInstantiator = object: PipelineInstantiator {
-            override val isUsable = !instantiator.isDisabled
-
-            override fun instantiate(
-                clazz: Class<*>,
-                telemetry: Telemetry
-            ) = apiImpl(instantiator) {
-                instantiator.instantiatePipeline(clazz, telemetry)
-            }
-
-            override fun virtualReflectOf(pipeline: OpenCvPipeline) = apiImpl(instantiator) {
-                instantiator.virtualReflectionFor(pipeline)
-            }
-
-            override fun variableTunerTarget(pipeline: OpenCvPipeline) = apiImpl(instantiator) {
-                instantiator.variableTunerTargetFor(pipeline)
-            }
-        }
-
-        internalPipelineManager.addInstantiator(instantiatorFor, internalInstantiator)
-
+        internalPipelineManager.addInstantiator(instantiatorFor, EOCVSimPipelineInstantiatorApiDelegate(instantiator))
     }
 
     override fun pollStatistics() = apiImpl {
@@ -149,10 +155,12 @@ class PipelineManagerApiImpl(owner: EOCVSimPlugin, val internalPipelineManager: 
 private fun PipelineSource.mapToInternal() = when(this) {
     PipelineSource.CLASSPATH -> com.github.serivesmejia.eocvsim.pipeline.PipelineSource.CLASSPATH
     PipelineSource.RUNTIME -> com.github.serivesmejia.eocvsim.pipeline.PipelineSource.COMPILED_ON_RUNTIME
+    PipelineSource.ANONYMOUS -> com.github.serivesmejia.eocvsim.pipeline.PipelineSource.COMPILED_ON_RUNTIME
 }
 private fun com.github.serivesmejia.eocvsim.pipeline.PipelineSource.mapToApi() = when(this) {
     com.github.serivesmejia.eocvsim.pipeline.PipelineSource.CLASSPATH -> PipelineSource.CLASSPATH
     com.github.serivesmejia.eocvsim.pipeline.PipelineSource.COMPILED_ON_RUNTIME -> PipelineSource.RUNTIME
+    com.github.serivesmejia.eocvsim.pipeline.PipelineSource.ANONYMOUS -> PipelineSource.ANONYMOUS
 }
 
 private fun PipelineManagerApi.PipelinePauseReason.mapToInternal() = when(this) {
