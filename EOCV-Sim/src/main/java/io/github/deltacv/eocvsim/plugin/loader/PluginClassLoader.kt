@@ -26,11 +26,11 @@ package io.github.deltacv.eocvsim.plugin.loader
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
 import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
-import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingExactMatchBlacklist
-import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingMethodBlacklist
-import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageAlwaysBlacklist
-import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageBlacklist
-import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicLoadingPackageWhitelist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicCodeExactMatchBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicCodeMethodBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicCodePackageAlwaysBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicCodePackageBlacklist
+import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicCodePackageWhitelist
 import java.io.ByteArrayOutputStream
 import java.lang.ref.WeakReference
 import java.io.File
@@ -44,13 +44,13 @@ import java.util.zip.ZipFile
  * ClassLoader for loading classes from a plugin jar file
  * @param pluginJar the jar file of the plugin
  * @param classpath additional classpath that the plugin may require
- * @param pluginContextProvider a function that provides the PluginContext for the plugin
+ * @param pluginLoader the plugin loader that is handling this plugin
  */
 class PluginClassLoader(
     private val pluginJar: File,
     val classpath: List<File>,
-    val pluginContextProvider: () -> PluginContext
-) : ClassLoader() {
+    val pluginLoader: PluginLoader
+) : ClassLoader(), PluginContextHolder {
 
     private var additionalZipFiles = mutableListOf<WeakReference<ZipFile>>()
 
@@ -75,8 +75,8 @@ class PluginClassLoader(
                 SysUtil.copyStream(inStream, outStream)
                 val bytes = outStream.toByteArray()
 
-                if (!pluginContextProvider().hasSuperAccess)
-                    MethodCallByteCodeChecker(bytes, dynamicLoadingMethodBlacklist)
+                if (!pluginLoader.hasSuperAccess)
+                    MethodCallByteCodeChecker(bytes, dynamicCodeMethodBlacklist)
 
                 val clazz = defineClass(name, bytes, 0, bytes.size)
                 loadedClasses[name] = clazz
@@ -102,22 +102,22 @@ class PluginClassLoader(
 
         try {
             if (clazz == null) {
-                if (!pluginContextProvider().hasSuperAccess) {
+                if (!pluginLoader.hasSuperAccess) {
                     var inWhitelist = false
 
-                    for (whiteListedPackage in dynamicLoadingPackageWhitelist) {
+                    for (whiteListedPackage in dynamicCodePackageWhitelist) {
                         if (name.contains(whiteListedPackage)) {
                             inWhitelist = true
                             break
                         }
                     }
 
-                    if (!inWhitelist && !pluginContextProvider().hasSuperAccess) {
+                    if (!inWhitelist && !pluginLoader.hasSuperAccess) {
                         throw IllegalAccessError("Plugins are not whitelisted to use $name")
                     }
 
                     blacklistLoop@
-                    for (blacklistedPackage in dynamicLoadingPackageBlacklist) {
+                    for (blacklistedPackage in dynamicCodePackageBlacklist) {
                         // If the class is whitelisted, skip the blacklist check
                         if (inWhitelist) continue@blacklistLoop
 
@@ -126,21 +126,18 @@ class PluginClassLoader(
                         }
                     }
 
-                    for (blacklistedClass in dynamicLoadingExactMatchBlacklist) {
+                    for (blacklistedClass in dynamicCodeExactMatchBlacklist) {
                         if (name == blacklistedClass) {
                             throw IllegalAccessError("Plugins are blacklisted to use $name")
                         }
                     }
                 }
 
-
-                blacklistLoop@
-                for (blacklistedPackage in dynamicLoadingPackageAlwaysBlacklist) {
+                for (blacklistedPackage in dynamicCodePackageAlwaysBlacklist) {
                     if (name.contains(blacklistedPackage)) {
                         throw IllegalAccessError("Plugins are always blacklisted to use $name")
                     }
                 }
-
 
                 clazz = Class.forName(name)
             }
@@ -207,8 +204,7 @@ class PluginClassLoader(
                 val zipFile = zipFiles[file] ?: ZipFile(file)
                 zipFiles[file] = zipFile
 
-                val entry = zipFile.getEntry(name)
-                if (entry == null) return null
+                zipFile.getEntry(name) ?: return null
 
                 val packages = name.split("/")
 
@@ -266,8 +262,7 @@ class PluginClassLoader(
                 val zipFile = zipFiles[file] ?: ZipFile(file)
                 zipFiles[file] = zipFile
 
-                val entry = zipFile.getEntry(className.replace('.', '/') + ".class")
-                if (entry == null) return null
+                val entry = zipFile.getEntry(className.replace('.', '/') + ".class") ?: return null
 
                 val packages = className.split(".")
 
@@ -321,4 +316,5 @@ class PluginClassLoader(
 
     override fun toString() = "PluginClassLoader@\"${pluginJar.name}\""
 
+    override val pluginContext by lazy { PluginContext(pluginLoader) }
 }

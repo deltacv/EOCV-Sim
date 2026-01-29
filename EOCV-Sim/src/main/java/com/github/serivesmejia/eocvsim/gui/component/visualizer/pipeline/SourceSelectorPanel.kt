@@ -1,9 +1,30 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.gui.component.PopupX
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.CreateSourcePanel
 import com.github.serivesmejia.eocvsim.gui.util.icon.SourcesListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
@@ -29,8 +50,6 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
     private var beforeSelectedSource = ""
     private var beforeSelectedSourceIndex = 0
-
-    private var lastCreateSourcePopup: PopupX? = null
 
     var allowSourceSwitching = false
 
@@ -66,19 +85,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         sourceSelector.cellRenderer = SourcesListIconRenderer(eocvSim.inputSourceManager)
 
         sourceSelectorCreateBtt.addActionListener {
-            /* lastCreateSourcePopup?.hide()
-
-            val panel = CreateSourcePanel(eocvSim)
-            val location = sourceSelectorCreateBtt.locationOnScreen
-
-            val frame = SwingUtilities.getWindowAncestor(this)
-
-            val popup = PopupX(frame, panel, location.x, location.y, true)
-            lastCreateSourcePopup = popup
-
-            popup.show() */
-
-            DialogFactory.createSourceDialogEx(eocvSim)
+            DialogFactory.createSourceExDialog(eocvSim)
         }
 
         sourceSelectorButtonsContainer = JPanel(FlowLayout(FlowLayout.CENTER))
@@ -177,14 +184,6 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         }
 
         return 0
-    }
-
-    fun revalAndRepaint() {
-        sourceSelector.revalidate()
-        sourceSelector.repaint()
-        sourceSelectorScroll.revalidate()
-        sourceSelectorScroll.repaint()
-        revalidate(); repaint()
     }
 
 }

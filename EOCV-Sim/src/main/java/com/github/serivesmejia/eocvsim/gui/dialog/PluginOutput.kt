@@ -27,7 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoader
+import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoaderImpl
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginSource
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
@@ -186,7 +186,7 @@ class PluginOutput(
                 pluginPanel.layout = GridBagLayout()
 
                 val pluginNameLabel = JLabel(
-                    "<html><h1>${loader.pluginName} v${loader.pluginVersion} by ${loader.pluginAuthor}</h1></html>",
+                    "<html><h1>${loader.pluginInfo.nameWithAuthorVersion}</h1></html>",
                     SwingConstants.CENTER
                 )
 
@@ -202,9 +202,9 @@ class PluginOutput(
                     "This plugin has been verified and was signed by ${loader.signature.authority!!.name}."
                 else "This plugin is not signed."
 
-                val authorEmail = if(loader.pluginAuthorEmail.isBlank())
+                val authorEmail = if(loader.pluginInfo.authorEmail.isBlank())
                     "The author did not provide contact information."
-                else "Contact the author at ${loader.pluginAuthorEmail}"
+                else "Contact the author at ${loader.pluginInfo.authorEmail}"
 
                 val source = when(loader.pluginSource) {
                     PluginSource.REPOSITORY -> "from a Maven repository"
@@ -219,7 +219,7 @@ class PluginOutput(
                 else "It does not have super access."
 
                 val wantsSuperAccess = when(loader) {
-                    is FilePluginLoader -> {
+                    is FilePluginLoaderImpl -> {
                         if(loader.pluginToml.getBoolean("super-access", false))
                             "It requests super access in its manifest."
                         else "It does not request super access in its manifest."
@@ -227,7 +227,7 @@ class PluginOutput(
                     else -> ""
                 }
 
-                val description = loader.pluginDescription.ifBlank { "No description available." }
+                val description = loader.pluginInfo.description.ifBlank { "No description available." }
 
                 val font = pluginNameLabel.font.deriveFont(13.0f)
 
@@ -305,7 +305,7 @@ class PluginOutput(
 
                 pluginPanel.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
-                tabbedPane.addTab(loader.pluginName, pluginPanel)
+                tabbedPane.addTab(loader.pluginInfo.name, pluginPanel)
             }
 
             pluginsPanel.add(tabbedPane, GridBagConstraints().apply {
@@ -445,7 +445,7 @@ class PluginOutput(
         return text == SPECIAL_OPEN || text == SPECIAL_CLOSE || text == SPECIAL_CONTINUE || text == SPECIAL_FREE
     }
 
-    override fun append(csq: CharSequence?): java.lang.Appendable? {
+    override fun append(csq: CharSequence?): java.lang.Appendable {
         val text = csq.toString()
 
         SwingUtilities.invokeLater {
@@ -458,7 +458,7 @@ class PluginOutput(
         return this
     }
 
-    override fun append(csq: CharSequence?, start: Int, end: Int): java.lang.Appendable? {
+    override fun append(csq: CharSequence?, start: Int, end: Int): java.lang.Appendable {
         val text = csq.toString().substring(start, end)
 
         SwingUtilities.invokeLater {
@@ -471,7 +471,7 @@ class PluginOutput(
         return this
     }
 
-    override fun append(c: Char): java.lang.Appendable? {
+    override fun append(c: Char): java.lang.Appendable {
         SwingUtilities.invokeLater {
             mavenOutputPanel.outputArea.text += c
             mavenOutputPanel.outputArea.revalidate()
@@ -533,17 +533,17 @@ class AppendDelegate {
 
     fun subscribe(appendable: (String) -> Unit) {
         appendables.add(object : Appendable {
-            override fun append(csq: CharSequence?): java.lang.Appendable? {
+            override fun append(csq: CharSequence?): java.lang.Appendable {
                 appendable(csq.toString())
                 return this
             }
 
-            override fun append(csq: CharSequence?, start: Int, end: Int): java.lang.Appendable? {
+            override fun append(csq: CharSequence?, start: Int, end: Int): java.lang.Appendable {
                 appendable(csq.toString().substring(start, end))
                 return this
             }
 
-            override fun append(c: Char): java.lang.Appendable? {
+            override fun append(c: Char): java.lang.Appendable {
                 appendable(c.toString())
                 return this
             }

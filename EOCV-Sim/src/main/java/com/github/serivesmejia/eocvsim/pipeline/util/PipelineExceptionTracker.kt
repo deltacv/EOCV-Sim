@@ -20,7 +20,7 @@
  * SOFTWARE.
  *
  */
-package com.github.serivesmejia.eocvsim.pipeline.util;
+package com.github.serivesmejia.eocvsim.pipeline.util
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
@@ -31,7 +31,7 @@ import com.github.serivesmejia.eocvsim.util.loggerForThis
 class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
 
     companion object {
-        const val millisExceptionExpire = 35000L
+        const val EXCEPTION_EXPIRE_MILLIS = 35000L
     }
 
     val logger by loggerForThis()
@@ -70,7 +70,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
                 )
 
                 logger.info("Note that to avoid spam, continuously equal thrown exceptions are only logged once.")
-                logger.info("It will be reported if the pipeline stops throwing the exception after $millisExceptionExpire ms")
+                logger.info("It will be reported if the pipeline stops throwing the exception after $EXCEPTION_EXPIRE_MILLIS ms")
 
                 exceptionsThrown[ex] = PipelineException(
                     0, exStr, System.currentTimeMillis()
@@ -87,7 +87,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
             }
 
             val timeElapsed = System.currentTimeMillis() - d.millisThrown
-            if(timeElapsed >= millisExceptionExpire) {
+            if(timeElapsed >= EXCEPTION_EXPIRE_MILLIS) {
                 exceptionsThrown.remove(e)
                 logger.info(
                     "Pipeline ${currentPipeline!!.clazz.simpleName} stopped throwing $e"
@@ -100,7 +100,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
 
         for((message, millisAdded) in messages.entries.toTypedArray()) {
             val timeElapsed = System.currentTimeMillis() - millisAdded
-            if(timeElapsed >= millisExceptionExpire) {
+            if(timeElapsed >= EXCEPTION_EXPIRE_MILLIS) {
                 messages.remove(message)
             }
         }
@@ -132,7 +132,7 @@ class PipelineExceptionTracker(private val pipelineManager: PipelineManager) {
         }
 
         for((_, data) in exceptionsThrown) {
-            val expiresIn = millisExceptionExpire - (System.currentTimeMillis() - data.millisThrown)
+            val expiresIn = EXCEPTION_EXPIRE_MILLIS - (System.currentTimeMillis() - data.millisThrown)
             val expiresInSecs = String.format("%.1f", expiresIn.toDouble() / 1000.0)
 
             messageBuilder

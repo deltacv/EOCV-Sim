@@ -23,9 +23,6 @@
 
 package com.github.serivesmejia.eocvsim
 
-import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme
-import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme.setup
-import com.github.serivesmejia.eocvsim.EOCVSim.Parameters
 import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
@@ -312,9 +309,9 @@ class EOCVSim(val params: Parameters = Parameters()) {
                 DialogFactory.createIAmAPaperVision(visualizer, false)
             } else if(config.flags["prefersPaperVision"] == true) {
                 // if the user prefers PaperVision, switch to it upon start up
-                val indexOfTab = visualizer.pipelineOpModeSwitchablePanel.indexOfTab("PaperVision")
+                val indexOfTab = visualizer.sidebarPanel.indexOfTab("PaperVision")
                 if(indexOfTab >= 0) {
-                    visualizer.pipelineOpModeSwitchablePanel.selectedIndex = indexOfTab
+                    visualizer.sidebarPanel.selectedIndex = indexOfTab
                 }
             }
 
@@ -352,12 +349,14 @@ class EOCVSim(val params: Parameters = Parameters()) {
         visualizer.sourceSelectorPanel.sourceSelector.selectedIndex = 0
         visualizer.sourceSelectorPanel.allowSourceSwitching = true
 
-        visualizer.pipelineOpModeSwitchablePanel.updateSelectorListsBlocking()
+        visualizer.opModeSelectorPanel.updateOpModesList()
+        visualizer.pipelineSelectorPanel.updatePipelinesList()
 
         visualizer.pipelineSelectorPanel.selectedIndex = 0 //update pipelines and pick first one (DefaultPipeline)
         visualizer.opModeSelectorPanel.selectedIndex = 0 //update opmodes and pick first one (DefaultPipeline)
 
-        visualizer.pipelineOpModeSwitchablePanel.enableSwitchingBlocking()
+        visualizer.pipelineSelectorPanel.allowPipelineSwitching = true
+        visualizer.opModeSelectorPanel.allowOpModeSwitching = true
 
         //post output mats from the pipeline to the visualizer viewport
         pipelineManager.pipelineOutputPosters.add(visualizer.viewport)

@@ -88,15 +88,15 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
     fun init() {
         logger.info("Initializing...")
-        asyncCompile()
+        asyncBuild()
 
         workspaceManager.onWorkspaceChange {
-            asyncCompile()
+            asyncBuild()
         }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    suspend fun uncheckedCompile(): PipelineCompileResult {
+    suspend fun uncheckedBuild(): PipelineCompileResult {
         if(isBuildRunning) return PipelineCompileResult(
             PipelineCompileStatus.FAILED, "A build is already running"
         )
@@ -152,7 +152,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
                 //delete jar if we had no sources, the most logical outcome in this case
                 deleteJarFile()
                 if(pipelineManager.eocvSim.visualizer.hasFinishedInit())
-                    pipelineManager.refreshGuiPipelineList()
+                    pipelineManager.onPipelineListRefresh.run()
 
                 "Build cancelled, no source files to compile $messageEnd"
             }
@@ -163,7 +163,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         }
 
         pipelineManager.onUpdate.doOnce {
-            pipelineManager.refreshGuiPipelineList()
+            pipelineManager.onPipelineListRefresh.run()
             pipelineManager.reloadPipelineByName()
         }
 
@@ -189,8 +189,8 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         return result
     }
 
-    fun compile() = try {
-        runBlocking { uncheckedCompile() }
+    fun build() = try {
+        runBlocking { uncheckedBuild() }
     } catch(e: Throwable) {
         isBuildRunning = false
         onBuildEnd.run()
@@ -216,10 +216,10 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
 
     @JvmOverloads
     @OptIn(DelicateCoroutinesApi::class)
-    fun asyncCompile(
+    fun asyncBuild(
         endCallback: (PipelineCompileResult) -> Unit = {}
     ) = GlobalScope.launch(Dispatchers.IO) {
-        endCallback(compile())
+        endCallback(build())
     }
 
     private fun deleteJarFile() {
@@ -242,7 +242,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
                 logger.trace("Added ${pipelineClass.simpleName} from jar")
             }
 
-            pipelineManager.requestAddPipelineClasses(pipelines, PipelineSource.COMPILED_ON_RUNTIME, false)
+            pipelineManager.requestAddPipelineClasses(pipelines, PipelineSource.COMPILED_ON_RUNTIME, refreshGui = false)
         } catch(e: Exception) {
             logger.error("Uncaught exception thrown while loading jar $PIPELINES_OUTPUT_JAR", e)
         }

@@ -1,5 +1,16 @@
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
+        languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+import org.gradle.plugins.signing.Sign
+
+tasks.withType(Sign).configureEach {
+    // Disable signing unless explicitly enabled AND not publishing to Maven Local
+    def releaseSigningEnabled =
+            project.findProperty("RELEASE_SIGNING_ENABLED")?.toBoolean() ?: false
+
+    enabled = releaseSigningEnabled &&
+            !gradle.startParameter.taskNames.any { it.contains("publishToMavenLocal") }
 }

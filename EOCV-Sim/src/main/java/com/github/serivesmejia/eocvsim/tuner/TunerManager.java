@@ -127,7 +127,33 @@ public class TunerManager {
         init();
     }
 
-    public Class<? extends TunableField> getTunableFieldOf(VirtualField field) {
+    @SuppressWarnings("unchecked")
+    public <T> TunableField<T> newTunableFieldInstanceFor(VirtualField field, Object pipeline) {
+        Class<? extends TunableField> tunableFieldClass = getTunableFieldClassOf(field);
+
+        if(tunableFieldClass != null) {
+            //yay we have a registered TunableField which handles this.
+            //now, lets do some more reflection to instantiate this TunableField
+            try {
+                Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(Object.class, VirtualField.class, EOCVSim.class);
+                return (TunableField<T>) constructor.newInstance(pipeline, field, eocvSim);
+            } catch(InvocationTargetException e) {
+                if(e.getCause() instanceof CancelTunableFieldAddingException) {
+                    String message = e.getCause().getMessage();
+                    logger.info("Field {} wasn't added due to \"{}\"", field.getName(), message);
+                } else {
+                    logger.error("Reflection error while processing field: {}", field.getName(), e);
+                }
+            } catch (Exception ex) {
+                //oops rip
+                logger.error("Reflection error while processing field: {}", field.getName(), ex);
+            }
+        }
+
+        return null;
+    }
+
+    public Class<? extends TunableField> getTunableFieldClassOf(VirtualField field) {
         //we only accept non-final fields
         if (field.isFinal()) return null;
 
@@ -143,8 +169,6 @@ public class TunerManager {
         } else {
             //if we don't have a class yet, use our acceptors
             if(acceptorManager != null) tunableFieldClass = acceptorManager.accept(type);
-            //still haven't got anything, give up here.
-            if(tunableFieldClass == null) return null;
         }
 
         return tunableFieldClass;
@@ -159,33 +183,16 @@ public class TunerManager {
         VirtualField[] fields = reflect.contextOf(pipeline).getFields();
 
         for (VirtualField field : fields) {
-            Class<? extends TunableField> tunableFieldClass = getTunableFieldOf(field);
+            // ...add it to the list
+            TunableField tunableField = newTunableFieldInstanceFor(field, pipeline);
 
-            // we can't handle this type
-            if(tunableFieldClass == null) continue;
-
-            //yay we have a registered TunableField which handles this.
-            //now, lets do some more reflection to instantiate this TunableField
-            //and add it to the list...
-            try {
-                Constructor<? extends TunableField> constructor = tunableFieldClass.getConstructor(Object.class, VirtualField.class, EOCVSim.class);
-                this.fields.add(constructor.newInstance(pipeline, field, eocvSim));
-            } catch(InvocationTargetException e) {
-                if(e.getCause() instanceof CancelTunableFieldAddingException) {
-                    String message = e.getCause().getMessage();
-                    logger.info("Field {} wasn't added due to \"{}\"", field.getName(), message);
-                } else {
-                    logger.error("Reflection error while processing field: {}", field.getName(), e.getCause());
-                }
-            } catch (Exception ex) {
-                //oops rip
-                logger.error("Reflection error while processing field: {}", field.getName(), ex);
+            if(tunableField != null) {
+                this.fields.add(tunableField);
             }
-
         }
     }
 
-    @Nullable public TunableField getTunableFieldWithLabel(String label) {
+    @Nullable public TunableField getCurrentTunableFieldWithLabel(String label) {
         TunableField labeledField = null;
 
         for(TunableField field : fields) {

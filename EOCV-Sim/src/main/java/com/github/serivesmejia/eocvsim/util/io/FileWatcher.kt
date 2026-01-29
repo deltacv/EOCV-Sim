@@ -1,33 +1,14 @@
-/*
- * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- */
-
 package com.github.serivesmejia.eocvsim.util.io
 
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.loggerOf
 import org.slf4j.Logger
 import java.io.File
+import java.nio.file.*
+import java.nio.file.StandardWatchEventKinds.*
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Class to watch for changes in files in a directory
@@ -50,70 +31,143 @@ class FileWatcher(
 
     val logger by loggerOf(TAG)
 
-    private val watcherThread = Thread(
-        Runner(watchingDirectories, watchingFileExtensions, onChange, logger),
-        TAG
+    // Executor owns the execution, not us
+    private val executor: Executor = Executors.newSingleThreadExecutor {
+        Thread(it, TAG).apply { isDaemon = true }
+    }
+
+    private val runner = Runner(
+        watchingDirectories,
+        watchingFileExtensions,
+        onChange,
+        logger
     )
 
     /**
-     * Start the file watcher
+     * Start the file watcher (async)
      */
     fun init() {
-        watcherThread.start()
+        executor.execute(runner)
     }
 
     /**
      * Stop the file watcher
      */
     fun stop() {
-        watcherThread.interrupt()
+        runner.stop()
     }
 
+    // ======================================================================
+
     private class Runner(
-        val watchingDirectories: List<File>,
-        val fileExts: List<String>?,
+        watchingDirectories: List<File>,
+        watchingFileExtensions: List<String>?,
         val onChange: EventHandler,
         val logger: Logger
     ) : Runnable {
 
-        private val lastModifyDates = mutableMapOf<String, Long>()
+        private val running = AtomicBoolean(true)
+        private val watchService = FileSystems.getDefault().newWatchService()
+
+        private val extensionSet = watchingFileExtensions
+            ?.map { it.lowercase() }
+            ?.toSet()
+
+        private val roots = watchingDirectories
+            .map { it.toPath().toAbsolutePath().normalize() }
 
         override fun run() {
-            val directoriesList = StringBuilder()
-            for(directory in watchingDirectories) {
-                directoriesList.appendLine(directory.absolutePath)
-            }
+            val dirList = roots.joinToString("\n") { it.toString() }
+            logger.info("Starting to watch directories in:\n$dirList")
 
-            logger.info("Starting to watch directories in:\n$directoriesList")
+            try {
+                roots.forEach { registerRecursively(it) }
 
-            while(!Thread.currentThread().isInterrupted) {
-                var changeDetected = false
+                while (running.get()) {
+                    val key = try {
+                        watchService.take()
+                    } catch (e: ClosedWatchServiceException) {
+                        break
+                    } catch (e: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                        break
+                    }
 
-                for(directory in watchingDirectories) {
-                    for(file in SysUtil.filesUnder(directory)) {
-                        if(fileExts != null && !fileExts.stream().anyMatch { file.name.endsWith(".$it") })
-                            continue
+                    val dir = key.watchable() as Path
+                    var changeDetected = false
 
-                        val path = file.absolutePath
-                        val lastModified = file.lastModified()
+                    for (event in key.pollEvents()) {
+                        val kind = event.kind()
+                        if (kind == OVERFLOW) continue
 
-                        if(lastModifyDates.containsKey(path) && lastModified > lastModifyDates[path]!! && !changeDetected) {
-                            logger.info("Change detected on ${directory.absolutePath}")
+                        val relative = event.context() as Path
+                        val fullPath = dir.resolve(relative)
 
+                        // Register new subdirectories on the fly
+                        if (kind == ENTRY_CREATE && Files.isDirectory(fullPath)) {
+                            registerRecursively(fullPath)
+                        }
+
+                        if (!matchesExtension(fullPath)) continue
+
+                        if (!changeDetected) {
+                            logger.info("Change detected in $fullPath")
                             onChange.run()
                             changeDetected = true
                         }
+                    }
 
-                        lastModifyDates[path] = lastModified
+                    if (!key.reset()) {
+                        logger.warn("WatchKey no longer valid for $dir")
                     }
                 }
+            } finally {
+                try {
+                    watchService.close()
+                } catch (_: Exception) {
+                }
 
-                Thread.sleep(1200) //check every 800 ms
+                logger.info("Stopped watching directories:\n$dirList")
             }
-
-            logger.info("Stopping watching directories:\n$directoriesList")
         }
 
-    }
+        fun stop() {
+            running.set(false)
+            try {
+                watchService.close()
+            } catch (_: Exception) {
+            }
+        }
 
+        // ------------------------------------------------------------------
+
+        private fun registerRecursively(root: Path) {
+            if (!Files.isDirectory(root)) return
+
+            Files.walk(root).use { stream ->
+                stream
+                    .filter { Files.isDirectory(it) }
+                    .forEach { dir ->
+                        try {
+                            dir.register(
+                                watchService,
+                                ENTRY_CREATE,
+                                ENTRY_MODIFY,
+                                ENTRY_DELETE
+                            )
+                        } catch (e: Exception) {
+                            logger.warn("Failed to register directory: $dir", e)
+                        }
+                    }
+            }
+        }
+
+        private fun matchesExtension(path: Path): Boolean {
+            val set = extensionSet ?: return true
+            val name = path.fileName?.toString() ?: return false
+            val dot = name.lastIndexOf('.')
+            if (dot == -1) return false
+            return name.substring(dot + 1).lowercase() in set
+        }
+    }
 }

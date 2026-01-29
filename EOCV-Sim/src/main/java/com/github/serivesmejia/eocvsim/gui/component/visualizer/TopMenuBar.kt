@@ -99,8 +99,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         if (desktop.isSupported(Desktop.Action.APP_PREFERENCES)) {
             desktop.setPreferencesHandler { DialogFactory.createConfigDialog(eocvSim) }
-        }
-        else {
+        } else {
             val editSettings = JMenuItem("Settings")
             editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
             mFileMenu.add(editSettings)

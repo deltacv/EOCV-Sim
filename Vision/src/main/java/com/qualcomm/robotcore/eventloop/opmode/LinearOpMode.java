@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public abstract class LinearOpMode extends OpMode {
 
     protected final Object lock = new Object();
-    private LinearOpModeHelperThread helper = new LinearOpModeHelperThread(this, ThreadVisionSourceProvider.getCurrentProvider());
+    private LinearOpModeHelperThread helper;
 
     public LinearOpMode() {
     }
@@ -159,6 +159,8 @@ public abstract class LinearOpMode extends OpMode {
         isStarted = false;
         stopRequested = false;
 
+        helper = new LinearOpModeHelperThread(this, ThreadVisionSourceProvider.getCurrentProvider());
+
         helper.start();
     }
 
@@ -184,11 +186,12 @@ public abstract class LinearOpMode extends OpMode {
 
         stopRequested = true;
 
-        helper.interrupt();
-
-        try {
-            helper.join();
-        } catch (InterruptedException ignored) {
+        if(helper != null) {
+            helper.interrupt();
+            try {
+                helper.join();
+            } catch (InterruptedException ignored) {
+            }
         }
     }
 
@@ -200,7 +203,7 @@ public abstract class LinearOpMode extends OpMode {
         static Logger logger = LoggerFactory.getLogger(LinearOpModeHelperThread.class);
 
         public LinearOpModeHelperThread(LinearOpMode opMode, VisionSourceProvider provider) {
-            super("Thread-LinearOpModeHelper-" + opMode.getClass().getSimpleName());
+            super("LinearOpModeHelper-" + opMode.getClass().getSimpleName());
 
             this.opMode = opMode;
             this.provider = provider;

@@ -4,7 +4,6 @@ on: [push, pull_request]
 
 jobs:
   test_linux:
-    if: false
     runs-on: ubuntu-latest
 
     steps:
@@ -13,7 +12,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '13'
+        java-version: '17'
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle
@@ -28,14 +27,14 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '13'
+        java-version: '17'
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle
       run: ./gradlew test
 
   test_mac:
-    runs-on: macos-13
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -43,7 +42,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '13'
+        java-version: '17'
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle

@@ -9,6 +9,14 @@ shadowJar {
     dependencies {
         exclude "nu/pattern/*"
     }
+
+    exclude "META-INF/*.SF"
+    exclude "META-INF/*.DSA"
+    exclude "META-INF/*.RSA"
+    exclude "android/"
+    exclude "androidx/"
+    exclude "dalvik/"
+    exclude "libcore/"
 }
 
 dependencies {

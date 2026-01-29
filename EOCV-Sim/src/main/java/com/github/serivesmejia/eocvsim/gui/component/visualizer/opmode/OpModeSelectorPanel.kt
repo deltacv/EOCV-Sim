@@ -57,6 +57,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
     // <Selector index, PipelineManager index>
     private val autonomousIndexMap = mutableMapOf<Int, Int>()
+
     // <Selector index, PipelineManager index>
     private val teleopIndexMap = mutableMapOf<Int, Int>()
 
@@ -75,13 +76,15 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
     val teleopButton = JButton()
 
     val autonomousSelector = JList<String>()
-    val teleopSelector     = JList<String>()
+    val teleopSelector = JList<String>()
 
     var isActive = false
         set(value) {
             opModeControlsPanel.isActive = value
             field = value
         }
+
+    var allowOpModeSwitching = false
 
     init {
         layout = GridBagLayout()
@@ -152,13 +155,14 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
     private fun registerListeners() {
         autonomousButton.addActionListener {
-            val popup = autonomousButton.popUpXOnThis(OpModePopupPanel(autonomousSelector), Corner.BOTTOM_LEFT, Corner.TOP_LEFT)
+            val popup =
+                autonomousButton.popUpXOnThis(OpModePopupPanel(autonomousSelector), Corner.BOTTOM_LEFT, Corner.TOP_LEFT)
 
             opModeControlsPanel.stopCurrentOpMode()
 
             val listSelectionListener = object : javax.swing.event.ListSelectionListener {
                 override fun valueChanged(e: javax.swing.event.ListSelectionEvent?) {
-                    if(!e!!.valueIsAdjusting) {
+                    if (!e!!.valueIsAdjusting) {
                         popup.hide()
                         autonomousSelector.removeListSelectionListener(this)
                     }
@@ -171,13 +175,14 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         }
 
         teleopButton.addActionListener {
-            val popup = teleopButton.popUpXOnThis(OpModePopupPanel(teleopSelector), Corner.BOTTOM_RIGHT, Corner.TOP_RIGHT)
+            val popup =
+                teleopButton.popUpXOnThis(OpModePopupPanel(teleopSelector), Corner.BOTTOM_RIGHT, Corner.TOP_RIGHT)
 
             opModeControlsPanel.stopCurrentOpMode()
 
             val listSelectionListener = object : javax.swing.event.ListSelectionListener {
                 override fun valueChanged(e: javax.swing.event.ListSelectionEvent?) {
-                    if(!e!!.valueIsAdjusting) {
+                    if (!e!!.valueIsAdjusting) {
                         popup.hide()
                         teleopSelector.removeListSelectionListener(this)
                     }
@@ -189,30 +194,30 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             popup.show()
         }
 
-        autonomousSelector.addMouseListener(object: MouseAdapter() {
+        autonomousSelector.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (!isActive) return
+                if (!isActive || !allowOpModeSwitching) return
 
                 val index = (e.source as JList<*>).locationToIndex(e.point)
-                if(index >= 0) {
+                if (index >= 0) {
                     autonomousSelected(index)
                 }
             }
         })
 
-        teleopSelector.addMouseListener(object: MouseAdapter() {
+        teleopSelector.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (!isActive) return
+                if (!isActive || !allowOpModeSwitching) return
 
                 val index = (e.source as JList<*>).locationToIndex(e.point)
-                if(index >= 0) {
+                if (index >= 0) {
                     teleOpSelected(index)
                 }
             }
         })
 
         eocvSim.pipelineManager.onPipelineChange {
-            if(!isActive) return@onPipelineChange
+            if (!isActive) return@onPipelineChange
 
             // we are doing this to detect external pipeline changes and reflect them
             // accordingly in the UI.
@@ -222,10 +227,10 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             // just to be able to check correctly and, if it was requested by
             // OpModeSelectorPanel, skip this message and not do anything.
             eocvSim.pipelineManager.onUpdate.doOnce {
-                if(isActive && opModeControlsPanel.currentOpMode != eocvSim.pipelineManager.currentPipeline && eocvSim.pipelineManager.currentPipeline != null) {
+                if (isActive && opModeControlsPanel.currentOpMode != eocvSim.pipelineManager.currentPipeline && eocvSim.pipelineManager.currentPipeline != null) {
                     val opMode = eocvSim.pipelineManager.currentPipeline
 
-                    if(opMode is OpMode) {
+                    if (opMode is OpMode) {
                         val name = if (opMode.opModeType == OpModeType.AUTONOMOUS)
                             opMode.autonomousAnnotation.name
                         else opMode.teleopAnnotation.name
@@ -233,11 +238,22 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
                         logger.info("External change detected \"$name\"")
 
                         opModeSelected(eocvSim.pipelineManager.currentPipelineIndex, name, false)
-                    } else if(isActive) {
+                    } else if (isActive) {
                         reset(-1)
                     }
                 }
             }
+        }
+
+        eocvSim.pipelineManager.onPipelineListRefresh {
+            updateOpModesList()
+        }
+
+        eocvSim.pipelineManager.onExternalSwitchingEnable {
+            allowOpModeSwitching = true
+        }
+        eocvSim.pipelineManager.onExternalSwitchingDisable {
+            allowOpModeSwitching = false
         }
     }
 
@@ -266,7 +282,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
     }
 
     private fun opModeSelected(managerIndex: Int, name: String, forceChangePipeline: Boolean = true) {
-        if(!isActive) return
+        if (!isActive) return
 
         opModeNameLabel.text = name
 
@@ -278,7 +294,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         opModeControlsPanel.opModeSelected(managerIndex, forceChangePipeline)
     }
 
-    fun updateOpModesList() {
+    fun updateOpModesList() = SwingUtilities.invokeLater {
         val autonomousListModel = DefaultListModel<String>()
         val teleopListModel = DefaultListModel<String>()
 
@@ -291,26 +307,22 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         teleopIndexMap.clear()
 
         for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
-            if(ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java)) {
+            if (ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java)) {
                 val type = pipeline.clazz.opModeType
 
-                if(type == OpModeType.AUTONOMOUS) {
+                if (type == OpModeType.AUTONOMOUS) {
                     val autonomousAnnotation = pipeline.clazz.autonomousAnnotation
 
                     autonomousListModel.addElement(
-                        if(autonomousAnnotation.name.isBlank())
-                            pipeline.clazz.simpleName
-                        else autonomousAnnotation.name
+                        autonomousAnnotation.name.ifBlank { pipeline.clazz.simpleName }
                     )
                     autonomousIndexMap[autonomousSelectorIndex] = managerIndex
                     autonomousSelectorIndex++
-                } else if(type == OpModeType.TELEOP) {
+                } else if (type == OpModeType.TELEOP) {
                     val teleopAnnotation = pipeline.clazz.teleopAnnotation
 
                     teleopListModel.addElement(
-                        if(teleopAnnotation.name.isBlank())
-                            pipeline.clazz.simpleName
-                        else teleopAnnotation.name
+                        teleopAnnotation.name.ifBlank { pipeline.clazz.simpleName }
                     )
                     teleopIndexMap[teleopSelectorIndex] = managerIndex
                     teleopSelectorIndex++
@@ -333,15 +345,15 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
         val opMode = opModeControlsPanel.currentOpMode
 
-        if(eocvSim.pipelineManager.currentPipeline == opMode && opMode != null && opMode.notifier.state != OpModeState.SELECTED) {
-            opMode.notifier?.onStateChange?.let {
+        if (eocvSim.pipelineManager.currentPipeline == opMode && opMode != null && opMode.notifier.state != OpModeState.SELECTED) {
+            opMode.notifier?.onStateChange?.let { it ->
                 it {
                     val state = opMode.notifier.state
 
-                    if(state == OpModeState.STOPPED) {
+                    if (state == OpModeState.STOPPED) {
                         it.removeThis()
 
-                        if(nextPipeline == null || nextPipeline >= 0) {
+                        if (nextPipeline == null || nextPipeline >= 0) {
                             eocvSim.pipelineManager.onUpdate.doOnce {
                                 eocvSim.pipelineManager.changePipeline(nextPipeline)
                             }
@@ -349,7 +361,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
                     }
                 }
             }
-        } else if(nextPipeline == null || nextPipeline >= 0) {
+        } else if (nextPipeline == null || nextPipeline >= 0) {
             eocvSim.pipelineManager.onUpdate.doOnce {
                 eocvSim.pipelineManager.requestChangePipeline(nextPipeline)
             }

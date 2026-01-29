@@ -70,7 +70,7 @@ public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenC
                     cameraOpenListener.onError(code);
                 }
             } catch (Exception e) {
-                logger.error("Error in camera open listener", e);
+                logger.error("Exception in camera open listener", e);
             }
         }).start();
     }
@@ -212,7 +212,7 @@ public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenC
     }
 
     //
-    // Inheritance from Sourced
+    // Inheritance from FrameReceiver
     //
     @Override
     public void consume(Mat frame, long timestamp) {

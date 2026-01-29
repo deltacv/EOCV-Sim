@@ -114,7 +114,7 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
         }
 
         colorPickButton.addActionListener {
-            val colorPicker = fieldPanel.tunableField.eocvSim.visualizer.colorPicker
+            val colorPicker = eocvSim.visualizer.colorPicker
 
             //start picking if global color picker is not being used by other panel
             if(!colorPicker.isPicking && colorPickButton.isSelected) {

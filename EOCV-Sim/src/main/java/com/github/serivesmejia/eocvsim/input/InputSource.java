@@ -54,6 +54,8 @@ public abstract class InputSource implements Comparable<InputSource> {
 
     public void setSize(Size size) {}
 
+    public Size getSize() { return new Size(); }
+
     public Mat update() {
         return null;
     }
@@ -80,6 +82,10 @@ public abstract class InputSource implements Comparable<InputSource> {
 
         beforeIsPaused = paused;
 
+    }
+
+    public boolean getPaused() {
+        return isPaused;
     }
 
     public final String getName() {

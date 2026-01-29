@@ -134,13 +134,11 @@ object Icons {
             val height = iconHeight
 
             return if (width > height) {
-                val newWidth = suggestedWidth
-                val newHeight = (height * newWidth) / width
-                resized(newWidth, newHeight)
+                val newHeight = (height * suggestedWidth) / width
+                resized(suggestedWidth, newHeight)
             } else {
-                val newHeight = suggestedHeight
-                val newWidth = (width * newHeight) / height
-                resized(newWidth, newHeight)
+                val newWidth = (width * suggestedHeight) / height
+                resized(newWidth, suggestedHeight)
             }
         }
     }

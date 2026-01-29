@@ -109,9 +109,18 @@ public class CameraSource extends InputSource {
         return camera.getPropertyControl();
     }
 
+    public String getWebcamName() {
+        return webcamName;
+    }
+
     @Override
     public void setSize(Size size) {
         this.size = size;
+    }
+
+    @Override
+    public Size getSize() {
+        return size;
     }
 
     @Override

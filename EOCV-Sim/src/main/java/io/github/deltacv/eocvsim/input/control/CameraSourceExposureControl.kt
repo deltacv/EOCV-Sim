@@ -38,6 +38,7 @@ class CameraSourceExposureControl(
         return TimeUnit.SECONDS.convert(control.getProperty(WebcamProperty.EXPOSURE).toLong(), resultUnit)
     }
 
+    @Deprecated("")
     override fun getCachedExposure(
         resultUnit: TimeUnit,
         refreshed: MutableReference<Boolean>,

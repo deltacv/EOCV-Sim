@@ -64,7 +64,6 @@ public class ConceptAprilTagEasy extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
         initAprilTag();
 
         // Wait for the DS start button to be touched.

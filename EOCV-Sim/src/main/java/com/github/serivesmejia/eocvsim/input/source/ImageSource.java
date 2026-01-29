@@ -152,6 +152,10 @@ public class ImageSource extends InputSource {
         return lastCloneTo;
     }
 
+    public String getImgPath() {
+        return imgPath;
+    }
+
     @Override
     public void cleanIfDirty() {
         readImage();
@@ -165,6 +169,11 @@ public class ImageSource extends InputSource {
     @Override
     public void setSize(Size size) {
         this.size = size;
+    }
+
+    @Override
+    public Size getSize() {
+        return size;
     }
 
     @Override
