@@ -115,6 +115,8 @@ class EmbeddedPluginLoader<T: EOCVSimPlugin>(
 
     override fun disable() {
         if (!enabled) return
+
+        plugin!!.eocvSimApi.internalDisableApi()
         plugin!!.enabled = false
         plugin!!.onDisable()
         kill()

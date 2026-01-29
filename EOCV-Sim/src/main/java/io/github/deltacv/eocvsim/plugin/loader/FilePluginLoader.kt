@@ -226,6 +226,7 @@ open class FilePluginLoader(
 
         appender.appendln("${PluginOutput.SPECIAL_SILENT}Disabling plugin ${pluginInfo.name} v${pluginInfo.version}")
 
+        plugin.eocvSimApi.internalDisableApi()
         plugin.enabled = false
         plugin.onDisable()
 
