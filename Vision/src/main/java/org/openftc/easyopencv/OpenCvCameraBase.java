@@ -21,13 +21,8 @@
 
 package org.openftc.easyopencv;
 
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.MovingStatistics;
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator;
 import io.github.deltacv.vision.external.PipelineRenderHook;
-import org.opencv.android.Utils;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 

@@ -18,7 +18,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 
 import java.awt.*;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

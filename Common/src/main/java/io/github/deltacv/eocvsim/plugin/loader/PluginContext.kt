@@ -20,37 +20,46 @@
  * SOFTWARE.
  *
  */
+@file:Suppress("unused")
 
 package io.github.deltacv.eocvsim.plugin.loader
 
-import com.github.serivesmejia.eocvsim.EOCVSim
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.EOCVSimApi
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
-import java.util.concurrent.ConcurrentHashMap
-
-fun interface EOCVSimApiProvider {
-    fun provideApiForPlugin(plugin: EOCVSimPlugin): EOCVSimApi
-}
 
 class PluginContext(
-    private val eocvSimApiProvider: EOCVSimApiProvider,
     val loader: PluginLoader
 ) {
     companion object {
-       internal val globalContextMap = ConcurrentHashMap<String, PluginContext>()
+        private val contextHolder = ThreadLocal<PluginContext?>()
 
-        @JvmStatic fun current(plugin: EOCVSimPlugin) = globalContextMap[plugin::class.java.name] ?:
-            (plugin.javaClass.classLoader as PluginClassLoader).pluginContextProvider()
+        @JvmStatic fun current(plugin: EOCVSimPlugin): PluginContext {
+            val ctx = contextHolder.get()
+
+            return if(ctx != null && ctx.loader.pluginClass == plugin::class.java) {
+                 ctx
+            } else {
+                (plugin.javaClass.classLoader as? PluginContextHolder)?.pluginContext
+                    ?: throw IllegalStateException("Could not find PluginContext for plugin ${plugin::class.java.name}. Make sure the plugin is loaded properly.")
+            }
+        }
+
+        fun pushContext(ctx: PluginContext) {
+            contextHolder.set(ctx)
+        }
+
+        fun popContext() {
+            contextHolder.remove()
+        }
     }
 
     val eocvSimApi by lazy {
-        eocvSimApiProvider.provideApiForPlugin(loader.plugin
-            ?: throw IllegalAccessException("Tried to access the EOCV-Sim API while plugin was being instantiated."))
+        loader.eocvSimApi ?: throw IllegalAccessException(
+            "Tried to access the EOCV-Sim API while the plugin was being instantiated. Try accessing it later in the plugin lifecycle."
+        )
     }
 
-    val fileSystem: SandboxFileSystem
-        get() = loader.fileSystem
+    val fileSystem: SandboxFileSystem get() = loader.fileSystem
 
     val plugin get() = loader.plugin
     val pluginSource get() = loader.pluginSource

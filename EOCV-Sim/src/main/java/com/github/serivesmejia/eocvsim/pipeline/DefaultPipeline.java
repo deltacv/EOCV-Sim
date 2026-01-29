@@ -23,8 +23,10 @@
 
 package com.github.serivesmejia.eocvsim.pipeline;
 
-import android.graphics.*;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.Typeface;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
@@ -74,7 +76,7 @@ public class DefaultPipeline extends OpenCvPipeline {
     }
 
     @Override
-    public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
+    public void onDrawFrame(android.graphics.Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
         canvas.drawRect(new Rect(0, 0, 345, 45), boxPaint);
         canvas.drawText("Default pipeline selected", 5, 33, textPaint);
     }

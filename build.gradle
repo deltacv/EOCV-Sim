@@ -12,6 +12,8 @@ buildscript {
         apriltag_plugin_version = "2.1.0-D"
         papervision_version = "1.0.10"
 
+        flatlaf_version = "3.5.1"
+        miglayout_version = "11.4.2"
         skiko_version = "0.8.15"
 
         classgraph_version = "4.8.112"

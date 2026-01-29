@@ -25,7 +25,7 @@ package com.github.serivesmejia.eocvsim.gui.component.input
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.util.ValidCharactersDocumentFilter
-import com.github.serivesmejia.eocvsim.gui.util.extension.SwingExt.documentFilter
+import com.github.serivesmejia.eocvsim.gui.util.extension.documentFilter
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import org.opencv.core.Size
 import java.awt.Color

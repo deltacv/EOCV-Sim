@@ -36,6 +36,8 @@ import com.moandjiezana.toml.Toml
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.EMBEDDED_PLUGIN_FOLDER
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.api.ApiDisabler
+import io.github.deltacv.eocvsim.plugin.api.EOCVSimApi
 import io.github.deltacv.eocvsim.plugin.security.PluginSignatureVerifier
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import net.lingala.zip4j.ZipFile
@@ -50,13 +52,13 @@ import java.nio.file.Path
  * @param pluginManager the plugin manager
  * @param appender the appender to use for logging
  */
-open class FilePluginLoader(
+open class FilePluginLoaderImpl(
     override val pluginFile: File,
     override val classpath: List<File>,
     override val pluginSource: PluginSource,
     val pluginManager: PluginManager,
     val appender: AppendDelegate
-) : PluginLoader() {
+) : FilePluginLoader() {
 
     val logger by loggerForThis()
 
@@ -67,11 +69,8 @@ open class FilePluginLoader(
         protected set
 
     val pluginClassLoader = PluginClassLoader(
-        pluginFile,
-        classpath
-    ) {
-        PluginContext(pluginManager.eocvSimApiProvider, this)
-    }
+        pluginFile, classpath, this
+    )
 
     override var shouldEnable: Boolean
         get() = pluginManager.isPluginEnabledInConfig(this)
@@ -105,7 +104,10 @@ open class FilePluginLoader(
     /**
      * Whether the plugin has super access (full system access)
      */
-    override val hasSuperAccess get() = pluginManager.hasSuperAccess(this)
+    override val hasSuperAccess get() = pluginManager.hasSuperAccess(pluginFile)
+
+    override var eocvSimApi: EOCVSimApi? = null
+        protected set
 
     /**
      * Fetch the plugin info from the plugin.toml file
@@ -186,6 +188,8 @@ open class FilePluginLoader(
             throw InvalidPluginException("Failed to instantiate plugin main class", e)
         }
 
+        eocvSimApi = pluginManager.eocvSimApiProvider.provideEOCVSimApiFor(plugin)
+
         plugin.onLoad()
 
         loaded = true
@@ -212,7 +216,6 @@ open class FilePluginLoader(
 
         appender.appendln("${PluginOutput.SPECIAL_SILENT}Enabling plugin ${pluginInfo.name} v${pluginInfo.version}")
 
-        plugin.enabled = true
         plugin.onEnable()
 
         enabled = true
@@ -226,9 +229,9 @@ open class FilePluginLoader(
 
         appender.appendln("${PluginOutput.SPECIAL_SILENT}Disabling plugin ${pluginInfo.name} v${pluginInfo.version}")
 
-        plugin.eocvSimApi.internalDisableApi()
-        plugin.enabled = false
         plugin.onDisable()
+
+        eocvSimApi?.let { ApiDisabler.disableApis(it) }
 
         kill()
     }
@@ -262,7 +265,7 @@ class EmbeddedFilePluginLoader(
     pluginSource: PluginSource,
     pluginManager: PluginManager,
     appender: AppendDelegate
-) : FilePluginLoader(
+) : FilePluginLoaderImpl(
     pluginFile = resourcePath.let {
         // extract to EMBEDDED_PLUGIN_FOLDER
         val hash = it.hashString

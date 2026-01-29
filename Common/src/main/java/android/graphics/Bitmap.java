@@ -27,7 +27,6 @@ import org.jetbrains.skia.ColorAlphaType;
 import org.jetbrains.skia.ColorType;
 import org.jetbrains.skia.ImageInfo;
 
-import java.io.Closeable;
 import java.io.IOException;
 
 public class Bitmap implements AutoCloseable {

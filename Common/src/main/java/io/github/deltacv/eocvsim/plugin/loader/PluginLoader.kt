@@ -23,10 +23,10 @@
 
 package io.github.deltacv.eocvsim.plugin.loader
 
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.api.EOCVSimApi
 import io.github.deltacv.eocvsim.plugin.security.PluginSignature
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import java.io.File
@@ -73,13 +73,11 @@ data class PluginInfo(
         }
     }
 
-    fun hash() = "$name${PluginOutput.SPECIAL}$author".hashString
+    fun hash() = "$name[13mck]$author".hashString
 }
 
 abstract class PluginLoader {
     abstract val pluginSource: PluginSource
-
-    abstract val pluginFile: File
 
     abstract val loaded: Boolean
     abstract val enabled: Boolean
@@ -95,6 +93,8 @@ abstract class PluginLoader {
     abstract val fileSystem: SandboxFileSystem
     abstract val signature: PluginSignature
     abstract val hasSuperAccess: Boolean
+
+    abstract val eocvSimApi: EOCVSimApi?
 
     /**
      * Loads the plugin into memory without enabling it.

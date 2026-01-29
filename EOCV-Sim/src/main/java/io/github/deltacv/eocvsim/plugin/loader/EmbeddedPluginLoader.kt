@@ -3,6 +3,8 @@ package io.github.deltacv.eocvsim.plugin.loader
 import com.github.serivesmejia.eocvsim.config.ConfigLoader
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
+import io.github.deltacv.eocvsim.plugin.api.ApiDisabler
+import io.github.deltacv.eocvsim.plugin.api.EOCVSimApi
 import io.github.deltacv.eocvsim.plugin.security.PluginSignature
 import io.github.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import net.lingala.zip4j.ZipFile
@@ -21,11 +23,6 @@ class EmbeddedPluginLoader<T: EOCVSimPlugin>(
 ) : PluginLoader() {
 
     override val pluginSource: PluginSource = PluginSource.EMBEDDED
-
-    override val pluginFile: File get() {
-        // find the jar where the plugin class is located
-        return pluginClass.protectionDomain.codeSource.location.file.let { File(it) }
-    }
 
     override var loaded: Boolean = false
         private set
@@ -60,6 +57,9 @@ class EmbeddedPluginLoader<T: EOCVSimPlugin>(
     val fileSystemZipPath: Path by lazy { fileSystemZip.toPath() }
 
     override val hasSuperAccess get() = pluginInfo.superAccess
+
+    override var eocvSimApi: EOCVSimApi? =  null
+        private set
 
     constructor(
         pluginInfo: PluginInfo,
@@ -96,19 +96,22 @@ class EmbeddedPluginLoader<T: EOCVSimPlugin>(
     override fun load() {
         setupFs()
 
-        val ctx = PluginContext(pluginApiProvider, this)
+        val ctx = PluginContext(this)
 
-        PluginContext.globalContextMap[pluginClass.name] = ctx
+        PluginContext.pushContext(ctx)
         plugin = pluginInstantiator()
+        PluginContext.popContext()
 
         if (loaded) return
+
+        eocvSimApi = pluginApiProvider.provideEOCVSimApiFor(plugin ?: throw IllegalStateException("Plugin instance is null during load"))
         plugin!!.onLoad()
         loaded = true
     }
 
     override fun enable() {
         if (!loaded || enabled) return
-        plugin!!.enabled = true
+
         plugin!!.onEnable()
         enabled = true
     }
@@ -116,9 +119,11 @@ class EmbeddedPluginLoader<T: EOCVSimPlugin>(
     override fun disable() {
         if (!enabled) return
 
-        plugin!!.eocvSimApi.internalDisableApi()
-        plugin!!.enabled = false
         plugin!!.onDisable()
+
+        plugin!!.eocvSimApi.let { ApiDisabler.disableApis(it) }
+        enabled = false
+
         kill()
     }
 

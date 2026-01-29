@@ -185,7 +185,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         for (pluginFile in pluginFiles) {
             try {
-                val loader = FilePluginLoader(
+                val loader = FilePluginLoaderImpl(
                     pluginFile,
                     repositoryManager.resolvedFiles,
                     if (pluginFile in repositoryManager.resolvedFiles)
@@ -344,7 +344,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         appender.appendln(PluginOutput.SPECIAL_SILENT + "Requesting super access for ${loader.pluginInfo.name} v${loader.pluginInfo.version}")
 
-        if (loader is FilePluginLoader) {
+        if (loader is FilePluginLoaderImpl) {
             var access = false
 
             superAccessDaemonClient.sendRequest(
@@ -376,7 +376,7 @@ class PluginManager(val eocvSim: EOCVSim) {
         }
     }
 
-    fun hasSuperAccess(loader: PluginLoader) = superAccessDaemonClient.checkAccess(loader.pluginFile)
+    fun hasSuperAccess(pluginFile: File) = superAccessDaemonClient.checkAccess(pluginFile)
 
     fun isPluginEnabledInConfig(loader: PluginLoader) = eocvSim.config.flags.getOrDefault(loader.hash(), true)
 

@@ -25,9 +25,7 @@ package android.graphics;
 
 import org.jetbrains.skia.Data;
 import org.jetbrains.skia.FontMgr;
-import org.jetbrains.skia.FontStyle;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class Typeface {
@@ -50,7 +48,7 @@ public class Typeface {
         theTypeface = typeface;
     }
 
-    public Rect getBounds() {
+    public android.graphics.Rect getBounds() {
         return new Rect(
                 (int) theTypeface.getBounds().getLeft(),
                 (int) theTypeface.getBounds().getTop(),

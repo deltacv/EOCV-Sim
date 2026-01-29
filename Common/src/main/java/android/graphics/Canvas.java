@@ -116,7 +116,7 @@ public class Canvas {
         theCanvas.drawLines(points, paint.thePaint);
     }
 
-    public void drawRect(Rect rect, Paint paint) {
+    public void drawRect(android.graphics.Rect rect, Paint paint) {
         theCanvas.drawRect(rect.toSkijaRect(), paint.thePaint);
     }
 

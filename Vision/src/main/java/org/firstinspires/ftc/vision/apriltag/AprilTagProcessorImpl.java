@@ -36,7 +36,6 @@ package org.firstinspires.ftc.vision.apriltag;
 import android.graphics.Canvas;
 
 import com.qualcomm.robotcore.util.MovingStatistics;
-import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.matrices.GeneralMatrixF;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;

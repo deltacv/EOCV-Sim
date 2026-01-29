@@ -23,7 +23,6 @@
 
 package com.github.serivesmejia.eocvsim.gui.util
 
-import javax.swing.JTextField
 import javax.swing.text.AttributeSet
 import javax.swing.text.BadLocationException
 import javax.swing.text.DocumentFilter

@@ -44,13 +44,13 @@ import java.util.zip.ZipFile
  * ClassLoader for loading classes from a plugin jar file
  * @param pluginJar the jar file of the plugin
  * @param classpath additional classpath that the plugin may require
- * @param pluginContextProvider a function that provides the PluginContext for the plugin
+ * @param pluginLoader the plugin loader that is handling this plugin
  */
 class PluginClassLoader(
     private val pluginJar: File,
     val classpath: List<File>,
-    val pluginContextProvider: () -> PluginContext
-) : ClassLoader() {
+    val pluginLoader: PluginLoader
+) : ClassLoader(), PluginContextHolder {
 
     private var additionalZipFiles = mutableListOf<WeakReference<ZipFile>>()
 
@@ -75,7 +75,7 @@ class PluginClassLoader(
                 SysUtil.copyStream(inStream, outStream)
                 val bytes = outStream.toByteArray()
 
-                if (!pluginContextProvider().hasSuperAccess)
+                if (!pluginLoader.hasSuperAccess)
                     MethodCallByteCodeChecker(bytes, dynamicCodeMethodBlacklist)
 
                 val clazz = defineClass(name, bytes, 0, bytes.size)
@@ -102,7 +102,7 @@ class PluginClassLoader(
 
         try {
             if (clazz == null) {
-                if (!pluginContextProvider().hasSuperAccess) {
+                if (!pluginLoader.hasSuperAccess) {
                     var inWhitelist = false
 
                     for (whiteListedPackage in dynamicCodePackageWhitelist) {
@@ -112,7 +112,7 @@ class PluginClassLoader(
                         }
                     }
 
-                    if (!inWhitelist && !pluginContextProvider().hasSuperAccess) {
+                    if (!inWhitelist && !pluginLoader.hasSuperAccess) {
                         throw IllegalAccessError("Plugins are not whitelisted to use $name")
                     }
 
@@ -316,4 +316,5 @@ class PluginClassLoader(
 
     override fun toString() = "PluginClassLoader@\"${pluginJar.name}\""
 
+    override val pluginContext by lazy { PluginContext(pluginLoader) }
 }

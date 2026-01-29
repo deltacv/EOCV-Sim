@@ -23,10 +23,8 @@
 
 package com.github.serivesmejia.eocvsim.util;
 
-import java.awt.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.UUID;
 import java.util.regex.Matcher;

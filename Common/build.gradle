@@ -28,4 +28,17 @@ dependencies {
     implementation "info.picocli:picocli:$picocli_version"
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+
+    implementation "com.formdev:flatlaf:$flatlaf_version"
+    implementation "com.miglayout:miglayout-swing:$miglayout_version"
+
+    // Compatibility: Skiko supports many platforms but we will only be adding
+    // those that are supported by AprilTagDesktop as well
+
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-arm64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:$skiko_version")
+    implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:$skiko_version")
 }

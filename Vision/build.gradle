@@ -18,6 +18,7 @@ dependencies {
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 
+
     // Compatibility: Skiko supports many platforms but we will only be adding
     // those that are supported by AprilTagDesktop as well
 

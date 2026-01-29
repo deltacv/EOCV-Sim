@@ -27,7 +27,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import com.github.serivesmejia.eocvsim.util.loggerForThis
-import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoader
+import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoaderImpl
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginSource
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
@@ -219,7 +219,7 @@ class PluginOutput(
                 else "It does not have super access."
 
                 val wantsSuperAccess = when(loader) {
-                    is FilePluginLoader -> {
+                    is FilePluginLoaderImpl -> {
                         if(loader.pluginToml.getBoolean("super-access", false))
                             "It requests super access in its manifest."
                         else "It does not request super access in its manifest."

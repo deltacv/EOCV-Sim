@@ -29,13 +29,10 @@ import java.awt.AWTEvent
 import java.awt.Point
 import java.awt.Toolkit
 import java.awt.Window
-import java.awt.event.AWTEventListener
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
-import java.awt.event.WindowEvent
-import java.awt.event.WindowFocusListener
 import javax.swing.*
 
 class PopupX @JvmOverloads constructor(private val windowAncestor: Window,

@@ -5,7 +5,7 @@ import io.github.deltacv.eocvsim.plugin.api.exception.EOCVSimApiException
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
-abstract class Api(val owner: EOCVSimPlugin){
+abstract class Api(val owner: EOCVSimPlugin) {
     val ownerName: String get() = owner::class.java.simpleName
 
     var isDisabled: Boolean = false

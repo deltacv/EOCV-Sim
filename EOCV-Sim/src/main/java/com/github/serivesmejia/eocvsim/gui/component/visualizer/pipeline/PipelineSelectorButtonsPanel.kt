@@ -29,7 +29,6 @@ import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
-import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.JButton
 import javax.swing.JPanel

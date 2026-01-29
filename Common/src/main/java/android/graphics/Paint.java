@@ -30,7 +30,6 @@
 package android.graphics;
 
 import org.jetbrains.skia.Font;
-import org.jetbrains.skia.FontMetrics;
 import org.jetbrains.skia.PaintStrokeCap;
 import org.jetbrains.skia.PaintStrokeJoin;
 
@@ -170,7 +169,7 @@ public class Paint {
      */
     public org.jetbrains.skia.Paint thePaint;
 
-    private Typeface typeface;
+    private android.graphics.Typeface typeface;
     private float textSize;
 
     public Paint() {
