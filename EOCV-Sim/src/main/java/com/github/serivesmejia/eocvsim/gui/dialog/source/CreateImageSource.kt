@@ -162,7 +162,7 @@ class CreateImageSource(
     }
 
     private fun createSource(sourceName: String, imgPath: String, size: Size) {
-        eocvSim.onMainUpdate.doOnce {
+        eocvSim.onMainUpdate.once {
             eocvSim.inputSourceManager.addInputSource(
                 sourceName,
                 ImageSource(imgPath, size),

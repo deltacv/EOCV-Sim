@@ -158,7 +158,7 @@ class EventHandler(val name: String) : Runnable {
     fun attach(once: Boolean = false, runnable: Runnable): EventListenerId =
         attach(once, listener = { runnable.run() })
 
-    fun once(listener: EventListener): EventListenerId =
+    fun once(listener: OnceEventListener): EventListenerId =
         attach(once = true, listener)
 
     @JvmName("once")
@@ -170,7 +170,7 @@ class EventHandler(val name: String) : Runnable {
         attach(false, listener)
 
     @Deprecated("Use once instead", ReplaceWith("once(listener)"))
-    fun doOnce(listener: EventListener): EventListenerId =
+    fun doOnce(listener: OnceEventListener): EventListenerId =
         attach(true, listener)
 
     // ----------------------------------------------------------------

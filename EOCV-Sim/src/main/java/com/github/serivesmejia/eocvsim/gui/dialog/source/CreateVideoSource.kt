@@ -148,7 +148,7 @@ class CreateVideoSource(
     }
 
     private fun createSource(sourceName: String, videoPath: String, size: Size) {
-        eocvsim.onMainUpdate.doOnce {
+        eocvsim.onMainUpdate.once {
             eocvsim.inputSourceManager.addInputSource(
                 sourceName,
                 VideoSource(videoPath, size),

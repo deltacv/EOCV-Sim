@@ -50,7 +50,7 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
     init {
         //listener for changing pause state
         pipelinePauseBtt.addActionListener {
-            eocvSim.onMainUpdate.doOnce { eocvSim.pipelineManager.setPaused(pipelinePauseBtt.isSelected) }
+            eocvSim.onMainUpdate.once { eocvSim.pipelineManager.setPaused(pipelinePauseBtt.isSelected) }
         }
         pipelinePauseBtt.addChangeListener {
             pipelinePauseBtt.text = if(pipelinePauseBtt.isSelected) "Resume" else "Pause"
@@ -61,7 +61,7 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
         })
 
         pipelineRecordBtt.addActionListener {
-            eocvSim.onMainUpdate.doOnce {
+            eocvSim.onMainUpdate.once {
                 if (pipelineRecordBtt.isSelected) {
                     if (!eocvSim.isCurrentlyRecording()) eocvSim.startRecordingSession()
                 } else {

@@ -34,7 +34,7 @@ import javax.swing.SwingUtilities
 class SplashScreen(closeHandler: EventHandler? = null) : JDialog() {
 
     init {
-        closeHandler?.doOnce {
+        closeHandler?.once {
             SwingUtilities.invokeLater {
                 isVisible = false
                 dispose()

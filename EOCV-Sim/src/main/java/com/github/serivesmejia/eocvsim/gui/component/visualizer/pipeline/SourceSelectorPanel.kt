@@ -150,7 +150,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
             val index = sourceSelector.selectedIndex
             val source = sourceSelector.model.getElementAt(index)
 
-            eocvSim.onMainUpdate.doOnce {
+            eocvSim.onMainUpdate.once {
                 eocvSim.inputSourceManager.deleteInputSource(source)
                 updateSourcesList()
 
