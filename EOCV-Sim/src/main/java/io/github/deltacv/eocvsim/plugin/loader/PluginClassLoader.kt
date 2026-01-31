@@ -102,40 +102,41 @@ class PluginClassLoader(
 
         try {
             if (clazz == null) {
-                if (!pluginLoader.hasSuperAccess) {
-                    var inWhitelist = false
+                // 1) ALWAYS deny (no exceptions)
+                for (pkg in dynamicCodePackageAlwaysBlacklist) {
+                    if (name.startsWith(pkg)) {
+                        throw IllegalAccessError("Usage of $name is always forbidden for plugins")
+                    }
+                }
 
-                    for (whiteListedPackage in dynamicCodePackageWhitelist) {
-                        if (name.contains(whiteListedPackage)) {
-                            inWhitelist = true
+                // 2) Super access skips everything else
+                if (!pluginLoader.hasSuperAccess) {
+
+                    // 3) Exact class deny (precision kill)
+                    for (cls in dynamicCodeExactMatchBlacklist) {
+                        if (name == cls) {
+                            throw IllegalAccessError("Usage of $name is forbidden for plugins")
+                        }
+                    }
+
+                    // 4) Whitelist gate
+                    var whitelisted = false
+                    for (pkg in dynamicCodePackageWhitelist) {
+                        if (inPackage(name, pkg)) {
+                            whitelisted = true
                             break
                         }
                     }
 
-                    if (!inWhitelist && !pluginLoader.hasSuperAccess) {
+                    if (!whitelisted) {
                         throw IllegalAccessError("Plugins are not whitelisted to use $name")
                     }
 
-                    blacklistLoop@
-                    for (blacklistedPackage in dynamicCodePackageBlacklist) {
-                        // If the class is whitelisted, skip the blacklist check
-                        if (inWhitelist) continue@blacklistLoop
-
-                        if (name.contains(blacklistedPackage)) {
-                            throw IllegalAccessError("Plugins are blacklisted to use $name")
+                    // 5) Sub-package blacklist (overrides whitelist)
+                    for (pkg in dynamicCodePackageBlacklist) {
+                        if (inPackage(name, pkg)) {
+                            throw IllegalAccessError("Plugins are blacklisted from using $name")
                         }
-                    }
-
-                    for (blacklistedClass in dynamicCodeExactMatchBlacklist) {
-                        if (name == blacklistedClass) {
-                            throw IllegalAccessError("Plugins are blacklisted to use $name")
-                        }
-                    }
-                }
-
-                for (blacklistedPackage in dynamicCodePackageAlwaysBlacklist) {
-                    if (name.contains(blacklistedPackage)) {
-                        throw IllegalAccessError("Plugins are always blacklisted to use $name")
                     }
                 }
 
@@ -146,13 +147,16 @@ class PluginClassLoader(
                 loadClassStrict(name)
             } catch (_: Throwable) {
                 val classpathClass = classFromClasspath(name)
-
                 classpathClass ?: throw e
             }
         }
 
         if (resolve) resolveClass(clazz)
         return clazz!!
+    }
+
+    private fun inPackage(className: String, pkg: String): Boolean {
+        return className == pkg || className.startsWith("$pkg.")
     }
 
     override fun getResourceAsStream(name: String): InputStream? {

@@ -121,21 +121,20 @@ class EventHandler(val name: String) : Runnable {
         val lock: Any
         val listeners: MutableMap<EventListenerId, EventListener>
         val pending: MutableList<PendingOp>
-        val running: Boolean
 
         if (once) {
             lock = onceLock
             listeners = onceListeners
             pending = pendingOnce
-            running = runningOnce
         } else {
             lock = persistentLock
             listeners = persistentListeners
             pending = pendingPersistent
-            running = runningPersistent
         }
 
         synchronized(lock) {
+            val running = if (once) runningOnce else runningPersistent
+
             if (running) {
                 pending += Add(id, listener)
             } else {

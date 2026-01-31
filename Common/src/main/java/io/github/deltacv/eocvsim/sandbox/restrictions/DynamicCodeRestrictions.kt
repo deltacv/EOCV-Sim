@@ -30,7 +30,6 @@ package io.github.deltacv.eocvsim.sandbox.restrictions
  *
  * - If a class name does NOT match ANY entry in this list, loading is denied
  *   (unless the plugin has super access).
- * - Matching is performed using substring checks (String.contains).
  *
  * NOTE:
  * This is not a strict package whitelist; any class whose name contains a

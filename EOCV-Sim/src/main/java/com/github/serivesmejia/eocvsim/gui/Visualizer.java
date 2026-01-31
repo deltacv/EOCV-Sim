@@ -250,7 +250,7 @@ public class Visualizer {
         });
 
         // stop color-picking mode when changing pipeline
-        eocvSim.pipelineManager.onPipelineChange.once(() -> colorPicker.stopPicking());
+        eocvSim.pipelineManager.onPipelineChange.attach(() -> colorPicker.stopPicking());
     }
 
     public boolean hasFinishedInit() {
