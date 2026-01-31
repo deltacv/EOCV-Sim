@@ -77,6 +77,6 @@ class OpModeNotifier(maxNotificationsQueueSize: Int = 100) {
         return notifications.poll() ?: OpModeNotification.NOTHING
     }
 
-    fun pollException() = exceptionQueue.poll() ?: null
+    fun pollException(): Throwable? = exceptionQueue.poll()
 
 }

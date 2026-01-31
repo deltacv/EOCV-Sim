@@ -25,7 +25,7 @@ package io.github.deltacv.eocvsim.plugin.security
 
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.LockFile
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.eocvsim.plugin.PLUGIN_CACHING_FOLDER
 import java.io.File
 import java.net.URL

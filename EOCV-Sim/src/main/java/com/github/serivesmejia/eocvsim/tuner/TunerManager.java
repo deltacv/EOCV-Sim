@@ -84,7 +84,7 @@ public class TunerManager {
             acceptorManager = new TunableFieldAcceptorManager(tunableFieldAcceptors);
 
         if (firstInit) {
-            eocvSim.pipelineManager.onPipelineChange.doPersistent(this::reset);
+            eocvSim.pipelineManager.onPipelineChange.attach(this::reset);
             firstInit = false;
         }
 

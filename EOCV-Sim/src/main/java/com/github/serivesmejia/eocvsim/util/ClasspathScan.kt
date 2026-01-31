@@ -31,6 +31,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.classgraph.ClassGraph
+import io.github.deltacv.common.util.loggerForThis
 import kotlinx.coroutines.*
 import org.firstinspires.ftc.vision.VisionProcessor
 import org.openftc.easyopencv.OpenCvPipeline

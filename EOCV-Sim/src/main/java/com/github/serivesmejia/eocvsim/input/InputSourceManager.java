@@ -183,7 +183,7 @@ public class InputSourceManager {
 
                     requestSetInputSource(name);
 
-                    eocvSim.onMainUpdate.doOnce(() -> {
+                    eocvSim.onMainUpdate.once(() -> {
                         eocvSim.pipelineManager.requestSetPaused(false);
                         pauseIfImageTwoFrames();
                     });
@@ -289,7 +289,7 @@ public class InputSourceManager {
         //if the new input source is an image, we will pause the next frame
         //to execute one shot analysis on images and save resources.
         if (SourceType.fromClass(currentInputSource.getClass()) == SourceType.IMAGE) {
-            eocvSim.onMainUpdate.doOnce(() ->
+            eocvSim.onMainUpdate.once(() ->
                     eocvSim.pipelineManager.setPaused(
                             true,
                             PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS
@@ -301,13 +301,13 @@ public class InputSourceManager {
     public void pauseIfImageTwoFrames() {
         //if the new input source is an image, we will pause the next frame
         //to execute one shot analysis on images and save resources.
-        eocvSim.onMainUpdate.doOnce(this::pauseIfImage);
+        eocvSim.onMainUpdate.once(this::pauseIfImage);
     }
 
     public void requestSetInputSource(String name) {
         SysUtil.debugLogCalled("requestSetInputSource");
 
-        eocvSim.onMainUpdate.doOnce(() -> setInputSource(name));
+        eocvSim.onMainUpdate.once(() -> setInputSource(name));
     }
 
     public Visualizer.AsyncPleaseWaitDialog showApwdIfNeeded(String sourceName, Job job) {

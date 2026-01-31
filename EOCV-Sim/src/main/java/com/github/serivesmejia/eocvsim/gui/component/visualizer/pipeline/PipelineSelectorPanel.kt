@@ -148,7 +148,7 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
             allowPipelineSwitching = false
         }
 
-        val pauseListener = EventListener {
+        val pauseListener: EventListener = {
             eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelinePauseBtt.isSelected =
                 eocvSim.pipelineManager.paused
         }

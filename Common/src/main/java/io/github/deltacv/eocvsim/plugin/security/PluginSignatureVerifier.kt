@@ -24,7 +24,7 @@
 package io.github.deltacv.eocvsim.plugin.security
 
 import com.github.serivesmejia.eocvsim.util.extension.hashString
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.eocvsim.plugin.loader.InvalidPluginException
 import java.io.File

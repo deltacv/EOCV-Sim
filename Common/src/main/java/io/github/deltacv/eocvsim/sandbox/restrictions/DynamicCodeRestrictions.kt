@@ -260,9 +260,6 @@ val dynamicCodePackageBlacklist = setOf(
 )
 
 val dynamicCodePackageAlwaysBlacklist = setOf(
-    // Entire EOCV-Sim internal implementation (hard block)
-    "com.github.serivesmejia.eocvsim",
-
     // Embedded PaperVision (avoid duplicate / unsafe classloading)
     "io.github.deltacv.papervision",
 

@@ -2,8 +2,7 @@ package com.github.serivesmejia.eocvsim.util.exception.handling
 
 import com.github.serivesmejia.eocvsim.currentMainThread
 import com.github.serivesmejia.eocvsim.util.JavaProcess
-import com.github.serivesmejia.eocvsim.util.SysUtil
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import java.lang.Thread.sleep
 import javax.swing.SwingUtilities
 import kotlin.system.exitProcess

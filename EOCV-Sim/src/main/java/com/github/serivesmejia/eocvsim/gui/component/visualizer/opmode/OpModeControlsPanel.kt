@@ -97,7 +97,7 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
                     opModeSelected(currentManagerIndex!!)
                 }
 
-                it.removeThis()
+                removeListener()
             }
         }
 

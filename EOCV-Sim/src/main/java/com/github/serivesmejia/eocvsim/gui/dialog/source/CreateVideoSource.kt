@@ -71,7 +71,9 @@ class CreateVideoSource(
 
         // Size fields
         sizeFields = SizeFields().apply {
-            onChange.doPersistent(::updateCreateButton)
+            onChange.attach {
+                updateCreateButton()
+            }
         }
         contentsPanel.add(sizeFields)
 

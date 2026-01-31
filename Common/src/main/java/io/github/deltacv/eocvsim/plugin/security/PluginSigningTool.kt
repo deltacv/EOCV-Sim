@@ -168,7 +168,7 @@ class PluginSigningTool : Runnable {
                     }
 
                     // Write each existing entry to the new JAR
-                    zipOut.putNextEntry(ZipEntry(entry!!.name))
+                    zipOut.putNextEntry(ZipEntry(entry.name))
                     jarInput.copyTo(zipOut)
                     zipOut.closeEntry()
                 }

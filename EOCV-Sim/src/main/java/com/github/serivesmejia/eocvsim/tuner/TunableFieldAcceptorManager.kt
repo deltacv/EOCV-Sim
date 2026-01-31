@@ -1,6 +1,6 @@
 package com.github.serivesmejia.eocvsim.tuner
 
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import java.util.HashMap
 
 class TunableFieldAcceptorManager(private val acceptors: HashMap<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>) {

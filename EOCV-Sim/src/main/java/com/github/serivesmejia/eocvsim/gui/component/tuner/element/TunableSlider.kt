@@ -43,20 +43,16 @@ class TunableSlider(val index: Int,
 
     constructor(i: Int, tunableField: TunableField<Any>, eocvSim: EOCVSim) : this(i, tunableField, eocvSim, null, 0.0, 255.0)
 
-    private val changeFieldValue = EventListener {
-        if(tunableField.shouldIgnoreGuiUpdates()) return@EventListener
-
-        if(inControl) {
-            tunableField.setFieldValueFromGui(index, scaledValue.toString())
-
-            if (eocvSim.pipelineManager.paused)
-                eocvSim.pipelineManager.setPaused(false)
-        }
-    }
-
     init {
         addChangeListener {
-            eocvSim.onMainUpdate.doOnce(changeFieldValue)
+            eocvSim.onMainUpdate.attach(once = true) {
+                if(!tunableField.shouldIgnoreGuiUpdates() && inControl) {
+                    tunableField.setFieldValueFromGui(index, scaledValue.toString())
+
+                    if (eocvSim.pipelineManager.paused)
+                        eocvSim.pipelineManager.setPaused(false)
+                }
+            }
 
             valueLabel?.text = if (tunableField.allowMode == TunableField.AllowMode.ONLY_NUMBERS_DECIMAL) {
                 scaledValue.toString()

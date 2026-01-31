@@ -2,9 +2,8 @@ package io.github.deltacv.eocvsim.input
 
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.input.source.CameraSource
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.eocvsim.input.control.CameraSourceControlMap
-import io.github.deltacv.vision.external.source.CameraControlMap
 import io.github.deltacv.vision.external.source.VisionSourceBase
 import io.github.deltacv.vision.external.util.ThrowableHandler
 import io.github.deltacv.vision.external.util.Timestamped

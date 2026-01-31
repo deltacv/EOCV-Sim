@@ -111,7 +111,7 @@ class Output @JvmOverloads constructor(
 
        pipelineExceptionTracker.onUpdate {
             if(!output.isVisible) {
-                it.removeThis()
+                removeListener()
             } else {
                 updatePipelineOutput()
             }
@@ -119,7 +119,7 @@ class Output @JvmOverloads constructor(
 
         compiledPipelineManager.onBuildStart {
             if(!output.isVisible) {
-                it.removeThis()
+                removeListener()
             } else {
                 buildRunning()
             }
@@ -127,7 +127,7 @@ class Output @JvmOverloads constructor(
 
         compiledPipelineManager.onBuildEnd {
             if(!output.isVisible) {
-                it.removeThis()
+                removeListener()
             } else {
                 buildEnded()
                 tabbedPane.selectedIndex = 1
@@ -136,7 +136,7 @@ class Output @JvmOverloads constructor(
 
         eocvSim.pipelineManager.onPause {
             if(!output.isVisible) {
-                it.removeThis()
+                removeListener()
             } else {
                 pipelinePaused()
             }
@@ -144,7 +144,7 @@ class Output @JvmOverloads constructor(
 
         eocvSim.pipelineManager.onResume {
             if(!output.isVisible) {
-                it.removeThis()
+                removeListener()
             } else {
                 pipelineResumed()
             }

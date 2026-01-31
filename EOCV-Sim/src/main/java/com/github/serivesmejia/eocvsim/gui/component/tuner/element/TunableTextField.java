@@ -69,7 +69,7 @@ public class TunableTextField extends JTextField {
         int plusW = Math.round(getText().length() / 5f) * 10;
         this.setPreferredSize(new Dimension(40 + plusW, getPreferredSize().height));
 
-        tunableField.onValueChange.doPersistent(() -> {
+        tunableField.onValueChange.attach(() -> {
             if(!inControl) {
                 setText(tunableField.getGuiFieldValue(index).toString());
             }
@@ -144,7 +144,7 @@ public class TunableTextField extends JTextField {
             public void changedUpdate(DocumentEvent e) { change(); }
 
             public void change() {
-                eocvSim.onMainUpdate.doOnce(changeFieldValue);
+                eocvSim.onMainUpdate.once(changeFieldValue);
             }
         });
 

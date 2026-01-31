@@ -23,37 +23,27 @@
 
 package com.github.serivesmejia.eocvsim.util.event
 
-/**
- * Functional interface to be used as an event listener
- */
-fun interface EventListener {
-    /**
-     * Function to be called when the event is emitted
-     * @param remover the remover object to remove the listener
-     */
-    fun run(remover: EventListenerRemover)
-}
+@JvmInline
+value class EventListenerId(val value: Int)
+
+typealias OnceEventListener = () -> Unit
+typealias EventListener = EventListenerRemover.() -> Unit
 
 /**
- * Class to remove an event listener
+ * Class to remove an event listener using its ID
  * @param handler the event handler
- * @param listener the event listener
+ * @param id the listener ID
  * @param isOnceListener whether the listener is a once listener
  */
 class EventListenerRemover(
-    val handler: EventHandler,
-    val listener: EventListener,
-    val isOnceListener: Boolean
+    private val handler: EventHandler,
+    private val id: EventListenerId,
 ) {
 
     /**
      * Removes the listener from the event handler
      */
-    fun removeThis() {
-        if(isOnceListener)
-            handler.removeOnceListener(listener)
-        else
-            handler.removePersistentListener(listener)
+    fun removeListener() {
+        handler.removeListener(id)
     }
-
 }

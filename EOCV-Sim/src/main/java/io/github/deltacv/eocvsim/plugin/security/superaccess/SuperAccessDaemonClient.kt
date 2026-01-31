@@ -24,7 +24,7 @@
 package io.github.deltacv.eocvsim.plugin.security.superaccess
 
 import com.github.serivesmejia.eocvsim.util.JavaProcess
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer

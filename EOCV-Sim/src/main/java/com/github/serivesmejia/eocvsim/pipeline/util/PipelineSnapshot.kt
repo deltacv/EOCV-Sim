@@ -23,7 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.util
 
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflectContext

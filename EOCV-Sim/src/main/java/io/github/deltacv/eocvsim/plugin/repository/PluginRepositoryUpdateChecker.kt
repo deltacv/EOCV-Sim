@@ -23,7 +23,7 @@
 
 package io.github.deltacv.eocvsim.plugin.repository
 
-import com.github.serivesmejia.eocvsim.util.loggerOf
+import io.github.deltacv.common.util.loggerOf
 import io.github.deltacv.common.util.ParsedVersion
 import java.net.URL
 import javax.xml.parsers.DocumentBuilderFactory

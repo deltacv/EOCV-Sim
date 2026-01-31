@@ -25,34 +25,26 @@ package com.github.serivesmejia.eocvsim.plugin.api.impl
 
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.event.EventListener
+import com.github.serivesmejia.eocvsim.util.event.EventListenerId
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.plugin.api.HookApi
 import java.lang.ref.WeakReference
 
 class EventHandlerHookApiImpl(owner: EOCVSimPlugin, val eventHandler: EventHandler) : HookApi(owner) {
-    private var allOnceListeners = mutableListOf<WeakReference<EventListener>>()
-    private var allPersistentListeners = mutableListOf<WeakReference<EventListener>>()
+    private var listeners = mutableListOf<EventListenerId>()
 
     override fun once(hook: OnceHook) = apiImpl {
-        throwIfDisabled()
-
-        val listener = EventListener {
-            hook()
-        }
-
-        allOnceListeners.add(WeakReference(listener))
-        eventHandler.doOnce(listener)
+        val id = eventHandler.attach { hook() }
+        listeners.add(id)
+        Unit
     }
 
     override fun attach(hook: PersistentHook) = apiImpl {
-        throwIfDisabled()
-
-        val listener = EventListener {
-            hook.invoke(it::removeThis) // pass remover function to hook
+        val id = eventHandler {
+            hook { removeListener() }
         }
 
-        allPersistentListeners.add(WeakReference(listener))
-        eventHandler.doPersistent(listener)
+        listeners.add(id)
         Unit
     }
 
@@ -61,13 +53,8 @@ class EventHandlerHookApiImpl(owner: EOCVSimPlugin, val eventHandler: EventHandl
     }
 
     override fun disableApi() {
-        for(listenerRef in allOnceListeners) {
-            val listener = listenerRef.get() ?: continue
-            eventHandler.removeOnceListener(listener)
-        }
-        for(listenerRef in allPersistentListeners) {
-            val listener = listenerRef.get() ?: continue
-            eventHandler.removePersistentListener(listener)
+        for(id in listeners) {
+            eventHandler.removeListener(id)
         }
     }
 }

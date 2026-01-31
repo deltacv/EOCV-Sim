@@ -26,7 +26,7 @@ package com.github.serivesmejia.eocvsim.gui.dialog
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoaderImpl
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginSource

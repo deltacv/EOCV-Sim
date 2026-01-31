@@ -139,7 +139,10 @@ class Configuration(parent: JFrame, private val eocvSim: EOCVSim) {
         }
 
         acceptButton.addActionListener {
-            eocvSim.onMainUpdate.doOnce(::applyChanges)
+            eocvSim.onMainUpdate.once {
+                applyChanges()
+            }
+
             close()
         }
 

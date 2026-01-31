@@ -61,7 +61,7 @@ class VisionInputSourceProvider(
             when(notifier.state) {
                 OpModeState.STOPPED -> {
                     source.stop()
-                    it.removeThis()
+                    removeListener()
                 }
                 else -> {}
             }

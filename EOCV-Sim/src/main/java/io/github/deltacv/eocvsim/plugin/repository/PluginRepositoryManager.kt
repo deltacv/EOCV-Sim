@@ -29,13 +29,12 @@ import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem
 import org.jboss.shrinkwrap.resolver.api.maven.Maven
-import org.jboss.shrinkwrap.resolver.impl.maven.MavenWorkingSessionContainer
 import java.io.File
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.Condition
@@ -156,7 +155,7 @@ class PluginRepositoryManager(
                             "Plugin \"${plugin.key}\" is outdated. Latest version is ${latest.version}."
                 )
 
-                eocvSim.onMainUpdate.doOnce {
+                eocvSim.onMainUpdate.once {
                     promptUpdateAndRestart(plugin.key, pluginDep, latest)
                 }
             } else {
