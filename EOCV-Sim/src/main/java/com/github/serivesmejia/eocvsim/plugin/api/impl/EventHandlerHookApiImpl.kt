@@ -34,7 +34,7 @@ class EventHandlerHookApiImpl(owner: EOCVSimPlugin, val eventHandler: EventHandl
     private var listeners = mutableListOf<EventListenerId>()
 
     override fun once(hook: OnceHook) = apiImpl {
-        val id = eventHandler.attach { hook() }
+        val id = eventHandler.once { hook() }
         listeners.add(id)
         Unit
     }
