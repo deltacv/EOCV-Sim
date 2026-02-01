@@ -111,7 +111,7 @@ class CreateHttpSource(parent: JFrame, private val eocvSim: EOCVSim) {
     }
 
     private fun createSource(sourceName: String, url: String) {
-        eocvSim.onMainUpdate.doOnce {
+        eocvSim.onMainUpdate.once {
             eocvSim.inputSourceManager.addInputSource(
                 sourceName,
                 HttpSource(url),

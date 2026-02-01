@@ -55,8 +55,8 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
         controlButton.icon = EOCVSimIconLibrary.icoFlag
 
         controlButton.addActionListener {
-            eocvSim.pipelineManager.onUpdate.doOnce {
-                if(eocvSim.pipelineManager.currentPipeline !is OpMode) return@doOnce
+            eocvSim.pipelineManager.onUpdate.once {
+                if(eocvSim.pipelineManager.currentPipeline !is OpMode) return@once
 
                 eocvSim.pipelineManager.setPaused(false, PipelineManager.PauseReason.NOT_PAUSED)
 
@@ -97,7 +97,7 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
                     opModeSelected(currentManagerIndex!!)
                 }
 
-                it.removeThis()
+                removeListener()
             }
         }
 
@@ -131,7 +131,7 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
 
         upcomingIndex = managerIndex
 
-        eocvSim.pipelineManager.onUpdate.doOnce {
+        eocvSim.pipelineManager.onUpdate.once {
             currentManagerIndex = managerIndex
             notifySelected()
         }

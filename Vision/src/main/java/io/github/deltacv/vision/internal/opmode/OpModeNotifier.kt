@@ -41,6 +41,8 @@ class OpModeNotifier(maxNotificationsQueueSize: Int = 100) {
             }
         }
 
+    private var previousState: OpModeState? = null
+
     val onStateChange = EventHandler("OpModeNotifier-onStateChange")
 
     fun notify(notification: OpModeNotification) {
@@ -52,7 +54,11 @@ class OpModeNotifier(maxNotificationsQueueSize: Int = 100) {
             this.state = state
         }
 
-        onStateChange.run()
+        if(previousState != state) {
+            onStateChange.run()
+        }
+
+        this.previousState = state
     }
 
     fun notify(notification: OpModeNotification, state: OpModeState) {
@@ -61,7 +67,10 @@ class OpModeNotifier(maxNotificationsQueueSize: Int = 100) {
         synchronized(stateLock) {
             this.state = state
         }
-        onStateChange.run()
+
+        if(previousState != state) {
+            onStateChange.run()
+        }
     }
 
     fun notify(e: Throwable){
@@ -77,6 +86,6 @@ class OpModeNotifier(maxNotificationsQueueSize: Int = 100) {
         return notifications.poll() ?: OpModeNotification.NOTHING
     }
 
-    fun pollException() = exceptionQueue.poll() ?: null
+    fun pollException(): Throwable? = exceptionQueue.poll()
 
 }

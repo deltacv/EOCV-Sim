@@ -23,7 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.workspace.util
 
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import java.io.File
 
 abstract class WorkspaceTemplate {

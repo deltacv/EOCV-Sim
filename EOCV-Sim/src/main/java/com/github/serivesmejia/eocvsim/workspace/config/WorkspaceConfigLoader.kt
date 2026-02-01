@@ -2,7 +2,7 @@ package com.github.serivesmejia.eocvsim.workspace.config
 
 import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import com.google.gson.GsonBuilder
 import java.io.File
 

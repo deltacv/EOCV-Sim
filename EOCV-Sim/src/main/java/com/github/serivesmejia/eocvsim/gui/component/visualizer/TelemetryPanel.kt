@@ -99,7 +99,7 @@ class TelemetryPanel(pipelineManager: PipelineManager? = null) : JPanel(), Telem
             pipelineManager.onPipelineChange { // update telemetry receiver on pipeline change
                 val telemetry = pipelineManager.currentTelemetry
                 if (telemetry is EOCVSimTelemetryImpl) {
-                    telemetry.addTransmissionReceiver(this)
+                    telemetry.addTransmissionReceiver(this@TelemetryPanel)
                 }
             }
         }

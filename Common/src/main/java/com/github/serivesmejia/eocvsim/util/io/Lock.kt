@@ -1,6 +1,6 @@
 package com.github.serivesmejia.eocvsim.util.io
 
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.channels.FileLock

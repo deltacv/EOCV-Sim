@@ -1,4 +1,4 @@
-package com.github.serivesmejia.eocvsim.util
+package io.github.deltacv.common.util
 
 import org.slf4j.LoggerFactory
 import kotlin.reflect.KClass

@@ -28,7 +28,7 @@ import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.io.FileWatcher
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfig
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfigLoader
 import com.github.serivesmejia.eocvsim.workspace.util.WorkspaceTemplate
@@ -234,7 +234,7 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
         if(!folder.isDirectory) return@launch
         if(!template.extractToIfEmpty(folder)) return@launch
 
-        eocvSim.onMainUpdate.doOnce {
+        eocvSim.onMainUpdate.once {
             workspaceFile = folder
             if(finishCallback != null) finishCallback()
 

@@ -1,5 +1,6 @@
 package io.github.deltacv.eocvsim.plugin
 
+import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.eocvsim.plugin.loader.PluginContext
 
 /**
@@ -80,6 +81,11 @@ abstract class EOCVSimPlugin {
      * invoked and before [onDisable] is called.
      */
     val enabled get() = context.loader.enabled
+
+    /**
+     * Logger to be used for logging within this plugin.
+     */
+    val logger by loggerForThis()
 
     /**
      * Called when the plugin is loaded by the plugin loader.

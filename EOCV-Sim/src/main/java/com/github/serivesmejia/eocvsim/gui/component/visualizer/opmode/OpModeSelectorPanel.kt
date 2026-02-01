@@ -30,7 +30,7 @@ import com.github.serivesmejia.eocvsim.gui.util.Corner
 import com.github.serivesmejia.eocvsim.gui.util.icon.PipelineListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import com.qualcomm.robotcore.eventloop.opmode.*
 import com.qualcomm.robotcore.util.Range
 import io.github.deltacv.vision.internal.opmode.OpModeState
@@ -226,7 +226,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             // we need to hold on a cycle so that the state has been fully updated,
             // just to be able to check correctly and, if it was requested by
             // OpModeSelectorPanel, skip this message and not do anything.
-            eocvSim.pipelineManager.onUpdate.doOnce {
+            eocvSim.pipelineManager.onUpdate.once {
                 if (isActive && opModeControlsPanel.currentOpMode != eocvSim.pipelineManager.currentPipeline && eocvSim.pipelineManager.currentPipeline != null) {
                     val opMode = eocvSim.pipelineManager.currentPipeline
 
@@ -351,10 +351,10 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
                     val state = opMode.notifier.state
 
                     if (state == OpModeState.STOPPED) {
-                        it.removeThis()
+                        removeListener()
 
                         if (nextPipeline == null || nextPipeline >= 0) {
-                            eocvSim.pipelineManager.onUpdate.doOnce {
+                            eocvSim.pipelineManager.onUpdate.once {
                                 eocvSim.pipelineManager.changePipeline(nextPipeline)
                             }
                         }
@@ -362,7 +362,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
                 }
             }
         } else if (nextPipeline == null || nextPipeline >= 0) {
-            eocvSim.pipelineManager.onUpdate.doOnce {
+            eocvSim.pipelineManager.onUpdate.once {
                 eocvSim.pipelineManager.requestChangePipeline(nextPipeline)
             }
         }

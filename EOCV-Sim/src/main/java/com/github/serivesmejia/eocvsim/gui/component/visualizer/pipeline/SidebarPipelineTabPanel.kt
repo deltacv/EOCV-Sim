@@ -93,7 +93,7 @@ class SidebarPipelineTabPanel(private val eocvSim: EOCVSim) : SidebarPanel.TabJP
 
     override fun onActivated() {
         pipelineSelectorPanel.isActive = true
-        eocvSim.pipelineManager.onUpdate.doOnce {
+        eocvSim.pipelineManager.onUpdate.once {
             eocvSim.pipelineManager.changePipeline(0)
         }
     }

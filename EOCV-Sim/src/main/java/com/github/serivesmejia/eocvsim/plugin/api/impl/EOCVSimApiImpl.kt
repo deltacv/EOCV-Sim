@@ -24,7 +24,7 @@
 package com.github.serivesmejia.eocvsim.plugin.api.impl
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.plugin.api.ConfigApi
 import io.github.deltacv.eocvsim.plugin.api.EOCVSimApi

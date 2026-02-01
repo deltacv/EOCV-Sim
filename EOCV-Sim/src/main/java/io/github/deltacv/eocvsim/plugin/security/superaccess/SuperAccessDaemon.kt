@@ -25,7 +25,7 @@ package io.github.deltacv.eocvsim.plugin.security.superaccess
 
 import com.github.serivesmejia.eocvsim.util.extension.fileHash
 import com.github.serivesmejia.eocvsim.util.extension.plus
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import com.github.serivesmejia.eocvsim.util.serialization.PolymorphicAdapter
 import com.google.gson.GsonBuilder
 import com.moandjiezana.toml.Toml

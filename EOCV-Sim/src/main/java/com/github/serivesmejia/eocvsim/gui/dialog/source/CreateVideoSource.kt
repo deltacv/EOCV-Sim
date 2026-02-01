@@ -62,7 +62,7 @@ class CreateVideoSource(
 
         // File selector
         fileSelector = FileSelector(18, FileFilters.videoMediaFilter).apply {
-            onFileSelect.doPersistent { videoFileSelected(lastSelectedFile ?: return@doPersistent) }
+            onFileSelect.attach { videoFileSelected(lastSelectedFile ?: return@attach) }
         }
         initialFile?.let { file ->
             SwingUtilities.invokeLater { fileSelector.lastSelectedFile = file }
@@ -71,7 +71,9 @@ class CreateVideoSource(
 
         // Size fields
         sizeFields = SizeFields().apply {
-            onChange.doPersistent(::updateCreateButton)
+            onChange.attach {
+                updateCreateButton()
+            }
         }
         contentsPanel.add(sizeFields)
 
@@ -146,7 +148,7 @@ class CreateVideoSource(
     }
 
     private fun createSource(sourceName: String, videoPath: String, size: Size) {
-        eocvsim.onMainUpdate.doOnce {
+        eocvsim.onMainUpdate.once {
             eocvsim.inputSourceManager.addInputSource(
                 sourceName,
                 VideoSource(videoPath, size),

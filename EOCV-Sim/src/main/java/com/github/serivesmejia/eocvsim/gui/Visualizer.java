@@ -237,7 +237,7 @@ public class Visualizer {
 
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
-                eocvSim.onMainUpdate.doOnce((Runnable) eocvSim::destroy);
+                eocvSim.onMainUpdate.once(eocvSim::destroy);
             }
         });
 
@@ -250,7 +250,7 @@ public class Visualizer {
         });
 
         // stop color-picking mode when changing pipeline
-        eocvSim.pipelineManager.onPipelineChange.doPersistent(() -> colorPicker.stopPicking());
+        eocvSim.pipelineManager.onPipelineChange.attach(() -> colorPicker.stopPicking());
     }
 
     public boolean hasFinishedInit() {
@@ -362,7 +362,7 @@ public class Visualizer {
             if (OPTION == JFileChooser.APPROVE_OPTION) {
                 if (!selectedFile.exists()) selectedFile.mkdir();
 
-                eocvSim.onMainUpdate.doOnce(() ->
+                eocvSim.onMainUpdate.once(() ->
                         eocvSim.workspaceManager.setWorkspaceFile(selectedFile)
                 );
             }

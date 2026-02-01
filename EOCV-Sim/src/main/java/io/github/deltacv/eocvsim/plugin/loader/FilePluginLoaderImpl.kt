@@ -31,7 +31,7 @@ import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.common.util.ParsedVersion
 import io.github.deltacv.eocvsim.plugin.EMBEDDED_PLUGIN_FOLDER
@@ -245,7 +245,6 @@ open class FilePluginLoaderImpl(
         if(!loaded) return
         fileSystem.close()
         enabled = false
-        EventHandler.banClassLoader(pluginClassLoader)
 
         pluginClassLoader.close()
     }

@@ -23,7 +23,7 @@
 
 package io.github.deltacv.eocvsim.sandbox.nio
 
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import java.nio.file.*
 import java.nio.file.attribute.FileAttribute
 

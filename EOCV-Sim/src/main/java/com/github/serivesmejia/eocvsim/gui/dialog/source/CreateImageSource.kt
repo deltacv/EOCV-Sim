@@ -61,7 +61,7 @@ class CreateImageSource(
         val contentsPanel = JPanel(GridLayout(4, 1))
 
         // File select part
-        imageFileSelector.onFileSelect.doPersistent {
+        imageFileSelector.onFileSelect.attach {
             imageFileSelector.lastSelectedFile?.let { file ->
                 imageFileSelected(file)
             }
@@ -76,7 +76,7 @@ class CreateImageSource(
         contentsPanel.add(imageFileSelector)
 
         // Size fields
-        sizeFieldsInput.onChange.doPersistent { updateCreateBtt() }
+        sizeFieldsInput.onChange.attach { updateCreateBtt() }
         contentsPanel.add(sizeFieldsInput)
         contentsPanel.border = BorderFactory.createEmptyBorder(15, 0, 0, 0)
 
@@ -162,7 +162,7 @@ class CreateImageSource(
     }
 
     private fun createSource(sourceName: String, imgPath: String, size: Size) {
-        eocvSim.onMainUpdate.doOnce {
+        eocvSim.onMainUpdate.once {
             eocvSim.inputSourceManager.addInputSource(
                 sourceName,
                 ImageSource(imgPath, size),

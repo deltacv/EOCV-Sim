@@ -100,8 +100,8 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
             val window = SwingUtilities.getWindowAncestor(this)
             val popup  = PopupX(window, configPanel, configLocation.x, configLocation.y - buttonHeight)
 
-            popup.onShow.doOnce { configPanel.panelShow() }
-            popup.onHide.doOnce { configPanel.panelHide() }
+            popup.onShow.once { configPanel.panelShow() }
+            popup.onHide.once { configPanel.panelHide() }
 
             //make sure we hide last config so
             //that we don't get a "stuck" popup
@@ -141,7 +141,7 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
 
     private fun startPicking(colorPicker: ColorPicker) {
         //when user picks a color
-        colorPicker.onPick.doOnce {
+        colorPicker.onPick.once {
             val colorScalar = colorPicker.colorRgb.cvtColor(configPanel.localConfig.pickerColorSpace.cvtCode)
 
             //setting the scalar value in order from first to fourth field
@@ -157,7 +157,7 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
         }
 
         //handles cancel cases, mostly when passing control to another panel
-        colorPicker.onCancel.doOnce { colorPickButton.isSelected = false }
+        colorPicker.onCancel.once { colorPickButton.isSelected = false }
 
         //might want to start picking to this panel here...
         colorPicker.startPicking()

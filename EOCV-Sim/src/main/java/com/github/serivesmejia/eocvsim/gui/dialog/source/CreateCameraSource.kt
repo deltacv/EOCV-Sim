@@ -324,11 +324,11 @@ class CreateCameraSource(
     }
 
     private fun createSource(name: String, camName: String, size: Size, rotation: WebcamRotation) {
-        eocvSim.onMainUpdate.doOnce { eocvSim.inputSourceManager.addInputSource(name, CameraSource(camName, size, rotation), true) }
+        eocvSim.onMainUpdate.once { eocvSim.inputSourceManager.addInputSource(name, CameraSource(camName, size, rotation), true) }
     }
 
     private fun createSource(name: String, camIndex: Int, size: Size, rotation: WebcamRotation) {
-        eocvSim.onMainUpdate.doOnce { eocvSim.inputSourceManager.addInputSource(name, CameraSource(camIndex, size, rotation), true) }
+        eocvSim.onMainUpdate.once { eocvSim.inputSourceManager.addInputSource(name, CameraSource(camIndex, size, rotation), true) }
     }
 
     private fun updateCreateButton() {

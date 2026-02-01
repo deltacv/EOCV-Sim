@@ -37,7 +37,7 @@ import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
-import com.github.serivesmejia.eocvsim.util.loggerForThis
+import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.common.image.MatPoster
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
@@ -201,9 +201,11 @@ class PipelineManager(
         addInstantiator(VisionProcessor::class.java, ProcessorInstantiator)
 
         // changing to initial pipeline
-        onUpdate.doOnce {
+        onUpdate.once {
             if (compiledPipelineManager.isBuildRunning && staticSnapshot != null)
-                compiledPipelineManager.onBuildEnd.doOnce(::applyStaticSnapOrDef)
+                compiledPipelineManager.onBuildEnd.once {
+                    applyStaticSnapOrDef()
+                }
             else
                 applyStaticSnapOrDef()
         }
@@ -261,7 +263,7 @@ class PipelineManager(
     }
 
     private fun applyStaticSnapOrDef() {
-        onUpdate.doOnce {
+        onUpdate.once {
             if (!applyStaticSnapshot()) {
                 val params = eocvSim.params
 
@@ -478,7 +480,7 @@ class PipelineManager(
         hidden: Boolean = false,
         refreshGui: Boolean = false
     ) {
-        onUpdate.doOnce {
+        onUpdate.once {
             for (clazz in classes) {
                 addPipelineClass(clazz, source, hidden)
             }
@@ -563,7 +565,7 @@ class PipelineManager(
         refreshGuiPipelineList: Boolean = true,
         changeToDefaultIfRemoved: Boolean = true
     ) {
-        onUpdate.doOnce {
+        onUpdate.once {
             removeAllPipelinesFrom(source, refreshGuiPipelineList, changeToDefaultIfRemoved)
         }
     }
@@ -715,7 +717,7 @@ class PipelineManager(
     }
 
     fun requestChangePipeline(index: Int?) {
-        onUpdate.doOnce {
+        onUpdate.once {
             changePipeline(index)
         }
     }
@@ -723,7 +725,7 @@ class PipelineManager(
     fun requestForceChangePipeline(index: Int) {
         SysUtil.debugLogCalled("requestForceChangePipeline")
 
-        onUpdate.doOnce { forceChangePipeline(index) }
+        onUpdate.once { forceChangePipeline(index) }
     }
 
     fun applyLatestSnapshot() {
@@ -746,7 +748,7 @@ class PipelineManager(
 
     fun applyStaticSnapshot(): Boolean {
         staticSnapshot?.let { snap ->
-            onUpdate.doOnce {
+            onUpdate.once {
                 val index = getIndexOf(snap.pipelineClass)
 
                 if (index != null) {
@@ -798,7 +800,7 @@ class PipelineManager(
 
     @JvmOverloads
     fun requestSetPaused(paused: Boolean, pauseReason: PauseReason = PauseReason.USER_REQUESTED) {
-        eocvSim.onMainUpdate.doOnce { setPaused(paused, pauseReason) }
+        eocvSim.onMainUpdate.once { setPaused(paused, pauseReason) }
     }
 
     fun reloadPipelineByName() {

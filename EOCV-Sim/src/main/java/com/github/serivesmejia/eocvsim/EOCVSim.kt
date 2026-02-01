@@ -42,7 +42,7 @@ import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
-import com.github.serivesmejia.eocvsim.util.loggerFor
+import io.github.deltacv.common.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
@@ -550,7 +550,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             DialogFactory.createFileChooser(
                 visualizer.frame, DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT, FileFilters.recordedVideoFilter
             ).addCloseListener { _: Int, file: File?, selectedFileFilter: FileFilter? ->
-                onMainUpdate.doOnce {
+                onMainUpdate.once {
                     if (file != null) {
                         var correctedFile = file
                         val extension = SysUtil.getExtensionByStringHandling(file.name)
@@ -568,8 +568,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
                         if (correctedFile.exists()) {
                             SwingUtilities.invokeLater {
-                                if (DialogFactory.createFileAlreadyExistsDialog(this) == FileAlreadyExists.UserChoice.REPLACE) {
-                                    onMainUpdate.doOnce { itVideo.saveTo(correctedFile) }
+                                if (DialogFactory.createFileAlreadyExistsDialog(this@EOCVSim) == FileAlreadyExists.UserChoice.REPLACE) {
+                                    onMainUpdate.once { itVideo.saveTo(correctedFile) }
                                 }
                             }
                         } else {

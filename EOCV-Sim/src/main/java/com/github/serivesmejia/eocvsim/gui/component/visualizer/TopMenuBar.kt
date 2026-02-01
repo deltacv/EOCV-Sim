@@ -114,7 +114,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val fileRestart = JMenuItem("Restart")
 
-        fileRestart.addActionListener { eocvSim.onMainUpdate.doOnce { eocvSim.restart() } }
+        fileRestart.addActionListener { eocvSim.onMainUpdate.once { eocvSim.restart() } }
         mFileMenu.add(fileRestart)
 
         add(mFileMenu)
@@ -129,7 +129,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         val workspClose = JMenuItem("Close Current Workspace")
 
         workspClose.addActionListener {
-            eocvSim.onMainUpdate.doOnce {
+            eocvSim.onMainUpdate.once {
                 eocvSim.workspaceManager.workspaceFile = CompiledPipelineManager.DEF_WORKSPACE_FOLDER
             }
         }

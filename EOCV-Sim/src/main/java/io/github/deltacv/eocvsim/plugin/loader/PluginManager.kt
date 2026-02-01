@@ -29,8 +29,8 @@ import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput.Companion.trimSpecials
 import com.github.serivesmejia.eocvsim.plugin.api.impl.EOCVSimApiImpl
-import com.github.serivesmejia.eocvsim.util.loggerForThis
-import com.github.serivesmejia.eocvsim.util.loggerOf
+import io.github.deltacv.common.util.loggerForThis
+import io.github.deltacv.common.util.loggerOf
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
 import io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemon
