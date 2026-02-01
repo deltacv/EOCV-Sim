@@ -550,7 +550,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             DialogFactory.createFileChooser(
                 visualizer.frame, DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT, FileFilters.recordedVideoFilter
             ).addCloseListener { _: Int, file: File?, selectedFileFilter: FileFilter? ->
-                onMainUpdate.attach(once = true) {
+                onMainUpdate.once {
                     if (file != null) {
                         var correctedFile = file
                         val extension = SysUtil.getExtensionByStringHandling(file.name)

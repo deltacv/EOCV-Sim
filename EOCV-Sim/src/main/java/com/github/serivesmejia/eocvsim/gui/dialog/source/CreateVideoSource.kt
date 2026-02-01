@@ -62,7 +62,7 @@ class CreateVideoSource(
 
         // File selector
         fileSelector = FileSelector(18, FileFilters.videoMediaFilter).apply {
-            onFileSelect.doPersistent { videoFileSelected(lastSelectedFile ?: return@doPersistent) }
+            onFileSelect.attach { videoFileSelected(lastSelectedFile ?: return@attach) }
         }
         initialFile?.let { file ->
             SwingUtilities.invokeLater { fileSelector.lastSelectedFile = file }

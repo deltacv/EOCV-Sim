@@ -203,7 +203,7 @@ class PipelineManager(
         // changing to initial pipeline
         onUpdate.once {
             if (compiledPipelineManager.isBuildRunning && staticSnapshot != null)
-                compiledPipelineManager.onBuildEnd.attach(once = true) {
+                compiledPipelineManager.onBuildEnd.once {
                     applyStaticSnapOrDef()
                 }
             else

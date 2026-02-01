@@ -27,15 +27,16 @@ package com.github.serivesmejia.eocvsim.util.event
 value class EventListenerId(val value: Int)
 
 typealias OnceEventListener = () -> Unit
-typealias EventListener = EventListenerRemover.() -> Unit
+typealias EventListener = EventListenerContext.() -> Unit
 
 /**
- * Class to remove an event listener using its ID
+ * Class to provide context to an event listener, mainly
+ * to allow removing itself from the event handler
  * @param handler the event handler
  * @param id the listener ID
  * @param isOnceListener whether the listener is a once listener
  */
-class EventListenerRemover(
+class EventListenerContext(
     private val handler: EventHandler,
     private val id: EventListenerId,
 ) {

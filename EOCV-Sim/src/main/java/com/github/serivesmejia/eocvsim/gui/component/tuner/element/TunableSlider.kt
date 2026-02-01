@@ -45,7 +45,7 @@ class TunableSlider(val index: Int,
 
     init {
         addChangeListener {
-            eocvSim.onMainUpdate.attach(once = true) {
+            eocvSim.onMainUpdate.once {
                 if(!tunableField.shouldIgnoreGuiUpdates() && inControl) {
                     tunableField.setFieldValueFromGui(index, scaledValue.toString())
 

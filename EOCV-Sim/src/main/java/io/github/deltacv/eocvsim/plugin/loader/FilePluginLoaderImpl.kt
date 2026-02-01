@@ -245,7 +245,6 @@ open class FilePluginLoaderImpl(
         if(!loaded) return
         fileSystem.close()
         enabled = false
-        EventHandler.banClassLoader(pluginClassLoader)
 
         pluginClassLoader.close()
     }

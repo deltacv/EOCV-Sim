@@ -1,242 +1,177 @@
 package com.github.serivesmejia.eocvsim.util.event
 
 import io.github.deltacv.common.util.loggerOf
-import java.lang.ref.WeakReference
+import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Event handler class to manage event listeners using unique listener IDs
- * without per-run allocations and without CME risk.
+ * Event handler with:
+ * - Persistent listeners (ID-based, queue-based adding)
+ * - Once listeners (double buffered queue-based, deferred)
  */
 class EventHandler(val name: String) : Runnable {
 
-    companion object {
-        private val bannedClassLoaders = mutableListOf<WeakReference<ClassLoader>>()
+    // ------------------------------------------------------------
+    // config
+    // ------------------------------------------------------------
 
-        fun banClassLoader(loader: ClassLoader) {
-            bannedClassLoaders.add(WeakReference(loader))
-        }
-
-        fun isBanned(classLoader: ClassLoader): Boolean {
-            for (ref in bannedClassLoaders) {
-                if (ref.get() === classLoader) return true
-            }
-            return false
-        }
-    }
-
-    val logger by loggerOf("${name}-EventHandler")
-
-    private val persistentLock = Any()
-    private val onceLock = Any()
-
-    private val idCounter = AtomicInteger(-1)
-
-    private val persistentListeners = HashMap<EventListenerId, EventListener>()
-    private val onceListeners = HashMap<EventListenerId, EventListener>()
-
-    private var runningPersistent = false
-    private var runningOnce = false
-
-    private val pendingPersistent = ArrayList<PendingOp>()
-    private val pendingOnce = ArrayList<PendingOp>()
+    private val logger by loggerOf("EventHandler-$name")
 
     var callRightAway = false
 
-    // ----------------------------------------------------------------
-    // core
-    // ----------------------------------------------------------------
+    // ------------------------------------------------------------
+    // ids
+    // ------------------------------------------------------------
+
+    private val idCounter = AtomicInteger(Int.MIN_VALUE)
+
+    // ------------------------------------------------------------
+    // persistent listeners (stable + queues)
+    // ------------------------------------------------------------
+
+    private val persistentListeners = HashMap<EventListenerId, EventListener>()
+
+    private val persistentAddQueue = ArrayDeque<Pair<EventListenerId, EventListener>>()
+    private val persistentRemoveQueue = ArrayDeque<EventListenerId>()
+
+    private val persistentQueueLock = Any()
+
+    private val removerCache = HashMap<EventListenerId, EventListenerContext>()
+
+    // ------------------------------------------------------------
+    // once listeners (double buffer)
+    // ------------------------------------------------------------
+
+    private val onceRead = HashMap<EventListenerId, OnceEventListener>()
+    private val onceWrite = HashMap<EventListenerId, OnceEventListener>()
+
+    private val onceSwapLock = Any()
+    private val onceWriteLock = Any()
+
+    // ------------------------------------------------------------
+    // run
+    // ------------------------------------------------------------
 
     override fun run() {
-        runListeners(
-            lock = persistentLock,
-            listeners = persistentListeners,
-            pending = pendingPersistent,
-            setRunning = { runningPersistent = it },
-            isOnce = false
-        )
-
-        runListeners(
-            lock = onceLock,
-            listeners = onceListeners,
-            pending = pendingOnce,
-            setRunning = { runningOnce = it },
-            isOnce = true
-        )
+        runPersistentListeners()
+        runOnceListeners()
     }
 
-    private inline fun runListeners(
-        lock: Any,
-        listeners: MutableMap<EventListenerId, EventListener>,
-        pending: MutableList<PendingOp>,
-        setRunning: (Boolean) -> Unit,
-        isOnce: Boolean
-    ) {
-        synchronized(lock) {
-            setRunning(true)
+    // ------------------------------------------------------------
+    // persistent execution
+    // ------------------------------------------------------------
 
-            val iterator = listeners.entries.iterator()
-            while (iterator.hasNext()) {
-                val (id, listener) = iterator.next()
-
-                if (isBanned(listener.javaClass.classLoader)) {
-                    iterator.remove()
-                    logger.warn("Removed banned listener from ${listener.javaClass.classLoader}")
-                    continue
-                }
-
-                try {
-                    listener.invoke(EventListenerRemover(this, id))
-                } catch (ex: Exception) {
-                    if (ex is InterruptedException) throw ex
-                    logger.error(
-                        "Error while running${if (isOnce) " \"once\"" else ""} listener ${listener.javaClass.name}",
-                        ex
-                    )
-                }
-
-                if (isOnce) {
-                    iterator.remove()
-                }
+    fun runPersistentListeners() {
+        // apply pending adds/removes
+        synchronized(persistentQueueLock) {
+            while (persistentAddQueue.isNotEmpty()) {
+                val (id, listener) = persistentAddQueue.removeFirst()
+                persistentListeners[id] = listener
             }
+            while (persistentRemoveQueue.isNotEmpty()) {
+                val id = persistentRemoveQueue.removeFirst()
+                persistentListeners.remove(id)
+            }
+        }
 
-            setRunning(false)
-            applyPending(listeners, pending)
+        // execute
+        for ((id, listener) in persistentListeners) {
+            try {
+                val remover = removerCache.getOrPut(id) { EventListenerContext(this, id) }
+                listener(remover)
+            } catch (e: Exception) {
+                if (e is InterruptedException) throw e
+                logger.error("Exception while running persistent listener", e)
+            }
         }
     }
 
-    operator fun invoke(listener: EventListener) = attach(false, listener)
+    // ------------------------------------------------------------
+    // once execution
+    // ------------------------------------------------------------
 
-    // ----------------------------------------------------------------
-    // attach (unified)
-    // ----------------------------------------------------------------
-
-    fun attach(
-        once: Boolean = false,
-        listener: EventListener,
-    ): EventListenerId {
-
-        val id = EventListenerId(idCounter.getAndDecrement())
-
-        val lock: Any
-        val listeners: MutableMap<EventListenerId, EventListener>
-        val pending: MutableList<PendingOp>
-
-        if (once) {
-            lock = onceLock
-            listeners = onceListeners
-            pending = pendingOnce
-        } else {
-            lock = persistentLock
-            listeners = persistentListeners
-            pending = pendingPersistent
+    fun runOnceListeners() {
+        synchronized(onceSwapLock) {
+            onceRead.clear()
+            onceRead.putAll(onceWrite)
+            onceWrite.clear()
         }
 
-        synchronized(lock) {
-            val running = if (once) runningOnce else runningPersistent
-
-            if (running) {
-                pending += Add(id, listener)
-            } else {
-                listeners[id] = listener
+        for (listener in onceRead.values) {
+            try {
+                listener()
+            } catch (e: Exception) {
+                if (e is InterruptedException) throw e
+                logger.error("Exception in once listener of EventHandler '$name':", e)
             }
+        }
+
+        onceRead.clear()
+    }
+
+    // ------------------------------------------------------------
+    // attach
+    // ------------------------------------------------------------
+
+    operator fun invoke(listener: EventListener): EventListenerId = attach(listener)
+
+    fun attach(listener: EventListener): EventListenerId {
+        val id = EventListenerId(idCounter.getAndIncrement())
+
+        synchronized(persistentQueueLock) {
+            persistentAddQueue.addLast(id to listener)
         }
 
         if (callRightAway) {
-            listener.invoke(EventListenerRemover(this, id))
-            if (once) {
-                removeListener(id)
-            }
+            listener(EventListenerContext(this, id))
+        }
+
+        return id
+    }
+
+    fun once(listener: OnceEventListener): EventListenerId {
+        val id = EventListenerId(idCounter.getAndIncrement())
+
+        synchronized(onceWriteLock) {
+            onceWrite[id] = listener
+        }
+
+        if (callRightAway) {
+            listener()
+            removeListener(id)
         }
 
         return id
     }
 
     @JvmName("attach")
-    @JvmOverloads
-    fun attach(once: Boolean = false, runnable: Runnable): EventListenerId =
-        attach(once, listener = { runnable.run() })
-
-    fun once(listener: OnceEventListener): EventListenerId =
-        attach(once = true, listener)
+    fun attach(runnable: Runnable): EventListenerId = attach{ runnable.run() }
 
     @JvmName("once")
-    fun once(runnable: Runnable): EventListenerId = attach(once = true, runnable)
+    fun once(runnable: Runnable): EventListenerId = once { runnable.run() }
 
-    // Optional compatibility wrappers (safe to delete)
-    @Deprecated("Use attach instead", ReplaceWith("attach(once = false, listener)"))
-    fun doPersistent(listener: EventListener): EventListenerId =
-        attach(false, listener)
+    // ------------------------------------------------------------
+    // remove
+    // ------------------------------------------------------------
 
-    @Deprecated("Use once instead", ReplaceWith("once(listener)"))
-    fun doOnce(listener: OnceEventListener): EventListenerId =
-        attach(true, listener)
-
-    // ----------------------------------------------------------------
-    // remove (unified)
-    // ----------------------------------------------------------------
-
+    @JvmName("removeListener")
     fun removeListener(id: EventListenerId) {
-        synchronized(persistentLock) {
-            if (runningPersistent) {
-                pendingPersistent += Remove(id)
-            } else {
-                persistentListeners.remove(id)
-            }
+        synchronized(persistentQueueLock) {
+            persistentRemoveQueue.addLast(id)
         }
-
-        synchronized(onceLock) {
-            if (runningOnce) {
-                pendingOnce += Remove(id)
-            } else {
-                onceListeners.remove(id)
-            }
+        synchronized(onceWriteLock) {
+            onceWrite.remove(id)
         }
     }
 
     fun removeAllListeners() {
-        synchronized(persistentLock) {
+        synchronized(persistentQueueLock) {
             persistentListeners.clear()
-            pendingPersistent.clear()
+            persistentAddQueue.clear()
+            persistentRemoveQueue.clear()
         }
-        synchronized(onceLock) {
-            onceListeners.clear()
-            pendingOnce.clear()
+        synchronized(onceWriteLock) {
+            onceWrite.clear()
         }
-    }
-
-    // ----------------------------------------------------------------
-    // pending ops
-    // ----------------------------------------------------------------
-
-    private sealed interface PendingOp {
-        fun apply(target: MutableMap<EventListenerId, EventListener>)
-    }
-
-    private class Add(
-        val id: EventListenerId,
-        val listener: EventListener
-    ) : PendingOp {
-        override fun apply(target: MutableMap<EventListenerId, EventListener>) {
-            target[id] = listener
-        }
-    }
-
-    private class Remove(
-        val id: EventListenerId
-    ) : PendingOp {
-        override fun apply(target: MutableMap<EventListenerId, EventListener>) {
-            target.remove(id)
-        }
-    }
-
-    private fun applyPending(
-        target: MutableMap<EventListenerId, EventListener>,
-        pending: MutableList<PendingOp>
-    ) {
-        for (op in pending) {
-            op.apply(target)
-        }
-        pending.clear()
     }
 }

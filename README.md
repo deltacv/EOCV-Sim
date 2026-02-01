@@ -101,6 +101,13 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v4.1.1 - Major Plugin API Update](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.1.1)
+- This is the 34th release for EOCV-Sim
+    - Major update to the plugin API, implementing a stable interface that abstracts away EOCV-Sim's internal workings and allows for better compatibility across versions
+    - Moves some APIs and utilities into the Common module, including the plugin API
+        - Plugin developers are now expected to depend on the Common module instead of EOCV-Sim directly, as EOCV-Sim's internal APIs may change without notice
+    - PaperVision is still absent in this release and will be added in the next patch, awaiting for Maven Central publication
+
 ## [v4.1.0 - Major Plugin API Update](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.1.0)
 - This is the 34th release for EOCV-Sim
     - Major update to the plugin API, implementing a stable interface that abstracts away EOCV-Sim's internal workings and allows for better compatibility across versions

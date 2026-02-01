@@ -54,7 +54,7 @@ public class TunableComboBox extends JComboBox<String> {
         addItemListener(evt -> eocvSim.onMainUpdate.once(() -> {
             try {
                 tunableField.setComboBoxValueFromGui(index, Objects.requireNonNull(getSelectedItem()).toString());
-            } catch (IllegalAccessException ex) { }
+            } catch (IllegalAccessException ignored) {}
 
             if (eocvSim.pipelineManager.getPaused()) {
                 eocvSim.pipelineManager.requestSetPaused(false);

@@ -115,7 +115,7 @@ class Configuration(parent: JFrame, private val eocvSim: EOCVSim) {
             config.videoRecordingSize,
             false,
             "Video Recording Size: "
-        ).apply { onChange.doPersistent { acceptButton.isEnabled = valid } }
+        ).apply { onChange.attach { acceptButton.isEnabled = valid } }
 
         videoRecordingFpsComboBox = EnumComboBox(
             "Video Recording FPS: ",
