@@ -83,7 +83,7 @@ class EventHandler(val name: String) : Runnable {
                 listener(remover)
             } catch (e: Exception) {
                 if (e is InterruptedException) throw e
-                logger.error("Exception while running persistent listener", e)
+                logger.error("Exception in listener", e)
             }
         }
     }
@@ -116,7 +116,7 @@ class EventHandler(val name: String) : Runnable {
                 listener()
             } catch (e: Exception) {
                 if (e is InterruptedException) throw e
-                logger.error("Exception in once listener of EventHandler '$name':", e)
+                logger.error("Exception in once listener", e)
             }
         }
 
