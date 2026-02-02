@@ -22,7 +22,7 @@ class EventHandler(val name: String) : Runnable {
     // ids
     // ------------------------------------------------------------
 
-    private val idCounter = AtomicLong(0L)
+    private val idCounter = AtomicLong(Long.MIN_VALUE)
 
     // ------------------------------------------------------------
     // persistent listeners (stable + queues)
@@ -35,7 +35,7 @@ class EventHandler(val name: String) : Runnable {
 
     private val persistentQueueLock = Any()
 
-    private val contextCache = HashMap<EventListenerId, EventListenerContext>()
+    private val persistentContextCache = HashMap<EventListenerId, EventListenerContext>()
 
     // ------------------------------------------------------------
     // once listeners (swappable double buffer)
@@ -72,13 +72,14 @@ class EventHandler(val name: String) : Runnable {
             while (persistentRemoveQueue.isNotEmpty()) {
                 val id = persistentRemoveQueue.removeFirst()
                 persistentListeners.remove(id)
+                persistentContextCache.remove(id)
             }
         }
 
         // execute
         for ((id, listener) in persistentListeners) {
             try {
-                val remover = contextCache.getOrPut(id) { EventListenerContext(this, id) }
+                val remover = persistentContextCache.getOrPut(id) { EventListenerContext(this, id) }
                 listener(remover)
             } catch (e: Exception) {
                 if (e is InterruptedException) throw e
@@ -146,14 +147,13 @@ class EventHandler(val name: String) : Runnable {
     fun once(listener: OnceEventListener): EventListenerId {
         val id = EventListenerId(idCounter.getAndIncrement())
 
-        synchronized(onceLock) {
-            onceListenersQueue.addLast(listener)
-            onceIdsQueue.addLast(id)
-        }
-
         if (callRightAway) {
             listener()
-            removeListener(id)
+        } else {
+            synchronized(onceLock) {
+                onceListenersQueue.addLast(listener)
+                onceIdsQueue.addLast(id)
+            }
         }
 
         return id
@@ -176,6 +176,7 @@ class EventHandler(val name: String) : Runnable {
             if (index >= 0) {
                 onceIdsQueue.removeAt(index)
                 onceListenersQueue.removeAt(index)
+
                 return@removeListener // removed from once queue, no need to check persistent
             }
         }
@@ -190,8 +191,11 @@ class EventHandler(val name: String) : Runnable {
             persistentListeners.clear()
             persistentAddQueue.clear()
             persistentRemoveQueue.clear()
+            persistentContextCache.clear()
         }
         synchronized(onceLock) {
+            onceListenersCurrent.clear()
+            onceIdsCurrent.clear()
             onceListenersQueue.clear()
             onceIdsQueue.clear()
         }
