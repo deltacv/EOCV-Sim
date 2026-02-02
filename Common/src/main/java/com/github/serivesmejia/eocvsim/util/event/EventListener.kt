@@ -24,7 +24,7 @@
 package com.github.serivesmejia.eocvsim.util.event
 
 @JvmInline
-value class EventListenerId(val value: Int)
+value class EventListenerId(val value: Long)
 
 typealias OnceEventListener = () -> Unit
 typealias EventListener = EventListenerContext.() -> Unit

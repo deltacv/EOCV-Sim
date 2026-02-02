@@ -1,8 +1,7 @@
 package com.github.serivesmejia.eocvsim.util.event
 
 import io.github.deltacv.common.util.loggerOf
-import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Event handler with:
@@ -23,7 +22,7 @@ class EventHandler(val name: String) : Runnable {
     // ids
     // ------------------------------------------------------------
 
-    private val idCounter = AtomicInteger(Int.MIN_VALUE)
+    private val idCounter = AtomicLong(0L)
 
     // ------------------------------------------------------------
     // persistent listeners (stable + queues)
@@ -36,17 +35,19 @@ class EventHandler(val name: String) : Runnable {
 
     private val persistentQueueLock = Any()
 
-    private val removerCache = HashMap<EventListenerId, EventListenerContext>()
+    private val contextCache = HashMap<EventListenerId, EventListenerContext>()
 
     // ------------------------------------------------------------
-    // once listeners (double buffer)
+    // once listeners (swappable double buffer)
     // ------------------------------------------------------------
 
-    private val onceRead = HashMap<EventListenerId, OnceEventListener>()
-    private val onceWrite = HashMap<EventListenerId, OnceEventListener>()
+    private var onceListenersCurrent = ArrayDeque<OnceEventListener>()
+    private var onceIdsCurrent = ArrayDeque<EventListenerId>()
 
-    private val onceSwapLock = Any()
-    private val onceWriteLock = Any()
+    private var onceListenersQueue = ArrayDeque<OnceEventListener>()
+    private var onceIdsQueue = ArrayDeque<EventListenerId>()
+
+    private val onceLock = Any()
 
     // ------------------------------------------------------------
     // run
@@ -77,7 +78,7 @@ class EventHandler(val name: String) : Runnable {
         // execute
         for ((id, listener) in persistentListeners) {
             try {
-                val remover = removerCache.getOrPut(id) { EventListenerContext(this, id) }
+                val remover = contextCache.getOrPut(id) { EventListenerContext(this, id) }
                 listener(remover)
             } catch (e: Exception) {
                 if (e is InterruptedException) throw e
@@ -91,13 +92,25 @@ class EventHandler(val name: String) : Runnable {
     // ------------------------------------------------------------
 
     fun runOnceListeners() {
-        synchronized(onceSwapLock) {
-            onceRead.clear()
-            onceRead.putAll(onceWrite)
-            onceWrite.clear()
+        val toRunListeners: ArrayDeque<OnceEventListener>
+        val toRunIds: ArrayDeque<EventListenerId>
+
+        synchronized(onceLock) {
+            // swap
+            toRunListeners = onceListenersQueue
+            toRunIds = onceIdsQueue
+
+            onceListenersQueue = onceListenersCurrent
+            onceIdsQueue = onceIdsCurrent
+
+            onceListenersCurrent = toRunListeners
+            onceIdsCurrent = toRunIds
         }
 
-        for (listener in onceRead.values) {
+        while (toRunListeners.isNotEmpty()) {
+            val listener = toRunListeners.removeFirst()
+            toRunIds.removeFirst() // keep in sync
+
             try {
                 listener()
             } catch (e: Exception) {
@@ -106,7 +119,8 @@ class EventHandler(val name: String) : Runnable {
             }
         }
 
-        onceRead.clear()
+        toRunListeners.clear()
+        toRunIds.clear()
     }
 
     // ------------------------------------------------------------
@@ -132,8 +146,9 @@ class EventHandler(val name: String) : Runnable {
     fun once(listener: OnceEventListener): EventListenerId {
         val id = EventListenerId(idCounter.getAndIncrement())
 
-        synchronized(onceWriteLock) {
-            onceWrite[id] = listener
+        synchronized(onceLock) {
+            onceListenersQueue.addLast(listener)
+            onceIdsQueue.addLast(id)
         }
 
         if (callRightAway) {
@@ -156,11 +171,17 @@ class EventHandler(val name: String) : Runnable {
 
     @JvmName("removeListener")
     fun removeListener(id: EventListenerId) {
+        synchronized(onceLock) {
+            val index = onceIdsQueue.indexOf(id)
+            if (index >= 0) {
+                onceIdsQueue.removeAt(index)
+                onceListenersQueue.removeAt(index)
+                return@removeListener // removed from once queue, no need to check persistent
+            }
+        }
+
         synchronized(persistentQueueLock) {
             persistentRemoveQueue.addLast(id)
-        }
-        synchronized(onceWriteLock) {
-            onceWrite.remove(id)
         }
     }
 
@@ -170,8 +191,9 @@ class EventHandler(val name: String) : Runnable {
             persistentAddQueue.clear()
             persistentRemoveQueue.clear()
         }
-        synchronized(onceWriteLock) {
-            onceWrite.clear()
+        synchronized(onceLock) {
+            onceListenersQueue.clear()
+            onceIdsQueue.clear()
         }
     }
 }

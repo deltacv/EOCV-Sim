@@ -29,6 +29,7 @@ import com.github.serivesmejia.eocvsim.gui.util.icon.SourcesListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
@@ -40,11 +41,11 @@ import javax.swing.*
 
 class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
-    val sourceSelector                 = JList<String>()
-    val sourceSelectorScroll           = JScrollPane()
+    val sourceSelector = JList<String>()
+    val sourceSelectorScroll = JScrollPane()
     var sourceSelectorButtonsContainer = JPanel()
-    val sourceSelectorCreateBtt        = JButton("Create")
-    val sourceSelectorDeleteBtt        = JButton("Delete")
+    val sourceSelectorCreateBtt = JButton("Create")
+    val sourceSelectorDeleteBtt = JButton("Delete")
 
     val sourceSelectorLabel = JLabel("Sources")
 
@@ -104,19 +105,20 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
     private fun registerListeners() {
         //listener for changing input sources
-        sourceSelector.addMouseListener(object: MouseAdapter() {
+        sourceSelector.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: java.awt.event.MouseEvent) {
                 val index = (e.source as JList<*>).locationToIndex(e.point)
 
                 if (index != -1) {
-                    if(allowSourceSwitching) {
+                    if (allowSourceSwitching) {
                         try {
                             if (sourceSelector.selectedIndex != -1) {
                                 val model = sourceSelector.model
                                 val source = model.getElementAt(sourceSelector.selectedIndex)
 
                                 //enable or disable source delete button depending if source is default or not
-                                sourceSelectorDeleteBtt.isEnabled = eocvSim.inputSourceManager.sources[source]?.isDefault == false
+                                sourceSelectorDeleteBtt.isEnabled =
+                                    eocvSim.inputSourceManager.sources[source]?.isDefault == false
 
                                 if (source != beforeSelectedSource) {
                                     if (!eocvSim.pipelineManager.paused) {
@@ -159,8 +161,8 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         }
     }
 
-    fun updateSourcesList() = runBlocking {
-        launch(Dispatchers.Swing) {
+    fun updateSourcesList(): Job {
+        SwingUtilities.invokeLater {
             val listModel = DefaultListModel<String>()
 
             for (source in eocvSim.inputSourceManager.sortedInputSources) {
@@ -175,11 +177,13 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
             sourceSelector.selectedIndex = 0
         }
+
+        return Job() // we can't break ABI here, so we return a dummy Job
     }
 
     fun getIndexOf(name: String): Int {
-        for(i in 0..sourceSelector.model.size) {
-            if(sourceSelector.model.getElementAt(i) == name)
+        for (i in 0..sourceSelector.model.size) {
+            if (sourceSelector.model.getElementAt(i) == name)
                 return i
         }
 
