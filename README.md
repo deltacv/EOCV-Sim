@@ -101,7 +101,7 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
-## [v4.1.1 - PaperVision Stable Release](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.1.1)
+## [v4.1.2 - PaperVision Stable Release](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.1.2)
 - This is the 36th release for EOCV-Sim
     - Adds [PaperVision v1.1.0](https://github.com/deltacv/PaperVision/releases/tag/v1.1.0)
     - Bugfixes:
