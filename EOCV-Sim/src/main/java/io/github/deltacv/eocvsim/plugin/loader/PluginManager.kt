@@ -66,8 +66,7 @@ class PluginManager(val eocvSim: EOCVSim) {
         )
     }
 
-    private val _loadedPluginHashes = mutableListOf<String>()
-    val loadedPluginHashes get() = _loadedPluginHashes.toList()
+    private val loadedPluginHashes = mutableListOf<String>()
 
     private val haltLock = ReentrantLock()
     private val haltCondition = haltLock.newCondition()
@@ -91,7 +90,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             }
         }
 
-        appender
+        appender!!
     }
 
     val repositoryManager by lazy {
@@ -207,15 +206,14 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         if (_loaders.find { it.pluginInfo.name == "PaperVision" && it.pluginInfo.author == "deltacv" } == null) {
             if (PluginManager::class.java.getResourceAsStream("/embedded_plugins/PaperVisionPlugin.jar") != null) {
-                /*_loaders.add(
+                _loaders.add(
                     EmbeddedFilePluginLoader(
                         "/embedded_plugins/PaperVisionPlugin.jar",
                         listOf(),
-                        PluginSource.FILE,
-                        eocvSim,
+                        this,
                         appender
                     )
-                )*/
+                )
 
                 logger.info("Loaded embedded PaperVision from resources")
             } else {
@@ -266,7 +264,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             try {
                 val hash = loader.hash()
 
-                if (hash in _loadedPluginHashes) {
+                if (hash in loadedPluginHashes) {
                     val source = when (loader.pluginSource) {
                         PluginSource.FILE -> "plugins folder"
                         PluginSource.REPOSITORY -> "repository"
@@ -278,7 +276,7 @@ class PluginManager(val eocvSim: EOCVSim) {
                 }
 
                 loader.load()
-                _loadedPluginHashes.add(hash)
+                loadedPluginHashes.add(hash)
             } catch (e: Throwable) {
                 appender.appendln("Failure loading ${loader.pluginInfo.name} v${loader.pluginInfo.version}:")
                 appender.appendln(e.message ?: "Unknown error")
@@ -378,7 +376,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
     fun hasSuperAccess(pluginFile: File) = superAccessDaemonClient.checkAccess(pluginFile)
 
-    fun isPluginEnabledInConfig(loader: PluginLoader) = eocvSim.config.flags.getOrDefault(loader.hash(), true)
+    fun isPluginEnabledInConfig(loader: PluginLoader) = eocvSim.config.flags.getOrDefault(loader.hash(), true)!!
 
     fun setPluginEnabledInConfig(loader: PluginLoader, enabled: Boolean) {
         eocvSim.config.flags[loader.hash()] = enabled
