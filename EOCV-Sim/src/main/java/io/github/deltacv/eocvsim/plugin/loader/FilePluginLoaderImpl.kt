@@ -261,7 +261,6 @@ open class FilePluginLoaderImpl(
 class EmbeddedFilePluginLoader(
     resourcePath: String,
     classpath: List<File>,
-    pluginSource: PluginSource,
     pluginManager: PluginManager,
     appender: AppendDelegate
 ) : FilePluginLoaderImpl(
@@ -285,7 +284,7 @@ class EmbeddedFilePluginLoader(
 
         classpath + file
     },
-    pluginSource = pluginSource,
+    pluginSource = PluginSource.FILE,
     pluginManager = pluginManager,
     appender = appender
 ) {

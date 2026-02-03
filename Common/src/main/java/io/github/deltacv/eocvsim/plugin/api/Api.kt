@@ -106,12 +106,12 @@ abstract class Api(val owner: EOCVSimPlugin) {
     internal fun internalDisableApi() {
         if(isDisabled) return
 
-        isDisabled = true
-        disableApi()
-
         for(api in childrenApis) {
             api.internalDisableApi()
         }
+
+        disableApi()
+        isDisabled = true
     }
 
     /**

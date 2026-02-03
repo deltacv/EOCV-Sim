@@ -34,7 +34,6 @@ typealias EventListener = EventListenerContext.() -> Unit
  * to allow removing itself from the event handler
  * @param handler the event handler
  * @param id the listener ID
- * @param isOnceListener whether the listener is a once listener
  */
 class EventListenerContext(
     private val handler: EventHandler,
