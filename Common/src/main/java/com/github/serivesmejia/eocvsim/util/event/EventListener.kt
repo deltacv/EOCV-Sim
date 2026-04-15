@@ -39,7 +39,6 @@ class EventListenerContext(
     private val handler: EventHandler,
     private val id: EventListenerId,
 ) {
-
     /**
      * Removes the listener from the event handler
      */

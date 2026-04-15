@@ -111,7 +111,7 @@ class PluginOutput(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    private fun registerListeners() = GlobalScope.launch(Dispatchers.Swing) {
+    private fun registerListeners() = (eocvSim?.scope ?: GlobalScope).launch(Dispatchers.Swing) {
         output.addWindowListener(object : java.awt.event.WindowAdapter() {
             override fun windowClosing(e: java.awt.event.WindowEvent?) {
                 if(mavenBottomButtonsPanel.continueButton.isEnabled) {

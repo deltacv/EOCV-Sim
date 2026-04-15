@@ -48,12 +48,17 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.common.util.ParsedVersion
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
-import io.github.deltacv.vision.external.PipelineRenderHook
+import org.openftc.easyopencv.OpenCvViewport
 import nu.pattern.OpenCV
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.openftc.easyopencv.TimestampedPipelineHandler
+import android.graphics.Canvas
 import java.awt.Dimension
 import java.io.File
 import java.lang.Thread.sleep
@@ -170,6 +175,12 @@ class EOCVSim(val params: Parameters = Parameters()) {
     @JvmField val inputSourceManager = InputSourceManager(this)
 
     /**
+     * Manager in charge of loading and managing plugins
+     * @see PluginManager
+     */
+    @JvmField val pluginManager = PluginManager(this)
+
+    /**
      * The pipeline statistics calculator instance in charge of
      * calculating the average FPS, pipeline time and overhead time
      * of the current pipeline
@@ -223,14 +234,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
      */
     val fpsLimiter = FpsLimiter(30.0)
 
-    /**
-     * Manager in charge of loading and managing plugins
-     * @see PluginManager
-     */
-    val pluginManager = PluginManager(this)
-
     lateinit var eocvSimThread: Thread
         private set
+
+    @JvmField val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     private val hexCode = Integer.toHexString(hashCode())
 
@@ -246,6 +253,14 @@ class EOCVSim(val params: Parameters = Parameters()) {
     enum class DestroyReason {
         USER_REQUESTED, THREAD_EXIT, RESTART, CRASH
     }
+
+    private val pipelineRenderHook =
+        OpenCvViewport.RenderHook {
+            canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity, userContext ->
+            if (pipelineManager.hasInitCurrentPipeline) {
+                pipelineManager.currentPipeline?.onDrawFrame(canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity, userContext)
+            }
+        }
 
     /**
      * Initializes the simulator
@@ -284,7 +299,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         loadOpenCvLib(params.opencvNativeLibrary)
 
         if (!hasScanned) {
-            classpathScan.asyncScan()
+            classpathScan.asyncScan(scope)
             hasScanned = true
         }
 
@@ -370,7 +385,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
             if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
                 visualizer.viewport.activate()
-                visualizer.viewport.setRenderHook(PipelineRenderHook) // calls OpenCvPipeline#onDrawFrame on the viewport (UI) thread
+                visualizer.viewport.setRenderHook(pipelineRenderHook) // calls OpenCvPipeline#onDrawFrame on the viewport (UI) thread
             } else {
                 // opmodes are on their own, lol
                 visualizer.viewport.deactivate()
@@ -446,11 +461,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
             inputSourceManager.update(pipelineManager.paused)
             tunerManager.update()
 
-            pipelineManager.update(
-                if (inputSourceManager.lastMatFromSource != null && !inputSourceManager.lastMatFromSource.empty()) {
-                    inputSourceManager.lastMatFromSource
-                } else null
-            )
+            val lastMat = inputSourceManager.lastMatFromSource
+            pipelineManager.update(lastMat)
 
             //limit FPS
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
@@ -485,6 +497,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         visualizer.close()
 
         destroying = true
+        scope.cancel()
 
         if(reason == DestroyReason.THREAD_EXIT) {
             exitProcess(0)

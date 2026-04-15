@@ -206,8 +206,8 @@ class ClasspathScan {
      * and store the result in [scanResult]
      */
     @OptIn(DelicateCoroutinesApi::class)
-    fun asyncScan() {
-        scanResultJob = GlobalScope.launch(Dispatchers.IO) {
+    fun asyncScan(scope: CoroutineScope = GlobalScope) {
+        scanResultJob = scope.launch(Dispatchers.IO) {
             scan()
         }
     }

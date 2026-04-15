@@ -176,6 +176,6 @@ class CreateImageSource(
             nameTextField.text.trim().isNotEmpty() &&
                     sizeFieldsInput.valid &&
                     selectedValidImage &&
-                    !eocvSim.inputSourceManager.isNameOnUse(nameTextField.text)
+                    !eocvSim.inputSourceManager.isNameInUse(nameTextField.text)
     }
 }

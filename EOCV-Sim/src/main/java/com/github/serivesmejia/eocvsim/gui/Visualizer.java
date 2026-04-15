@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.gui;
 
 import com.formdev.flatlaf.FlatLaf;
+import kotlinx.coroutines.CoroutineScope;
 import com.github.serivesmejia.eocvsim.Build;
 import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.CollapsiblePanelX;
@@ -329,21 +330,6 @@ public class Visualizer {
         tunerCollapsible.setVisible(!fields.isEmpty());
     }
 
-    public void asyncCompilePipelines() {
-        if (PipelineCompiler.Companion.getIS_USABLE()) {
-            menuBar.workspCompile.setEnabled(false);
-            pipelineSelectorPanel.getButtonsPanel().getPipelineCompileBtt().setEnabled(false);
-
-            eocvSim.pipelineManager.compiledPipelineManager.asyncBuild((result) -> {
-                menuBar.workspCompile.setEnabled(true);
-                pipelineSelectorPanel.getButtonsPanel().getPipelineCompileBtt().setEnabled(true);
-
-                return Unit.INSTANCE;
-            });
-        } else {
-            compilerUnsupported();
-        }
-    }
 
     public void compilerUnsupported() {
         asyncPleaseWaitDialog(
@@ -402,7 +388,7 @@ public class Visualizer {
                                 "After opening VS Code, you will need to install the Extension Pack for Java, for proper autocompletion support. Ensure you do so when asked by the editor!"
                         );
 
-                        VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile());
+                        VSCodeLauncher.INSTANCE.asyncLaunch(eocvSim.workspaceManager.getWorkspaceFile(), eocvSim.scope);
                     }
                 }
         );

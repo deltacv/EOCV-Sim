@@ -230,7 +230,7 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
         folder: File,
         template: WorkspaceTemplate,
         finishCallback: (() -> Unit)? = null
-    ) = GlobalScope.launch(Dispatchers.IO) {
+    ) = eocvSim.scope.launch(Dispatchers.IO) {
         if(!folder.isDirectory) return@launch
         if(!template.extractToIfEmpty(folder)) return@launch
 
@@ -238,7 +238,7 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
             workspaceFile = folder
             if(finishCallback != null) finishCallback()
 
-            eocvSim.visualizer.asyncCompilePipelines()
+            eocvSim.pipelineManager.compiledPipelineManager.asyncBuild()
         }
     }
 

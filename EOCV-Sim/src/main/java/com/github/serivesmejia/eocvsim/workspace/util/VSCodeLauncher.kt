@@ -24,7 +24,7 @@
 package com.github.serivesmejia.eocvsim.workspace.util
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 import com.github.serivesmejia.eocvsim.util.SysUtil
@@ -64,6 +64,6 @@ object VSCodeLauncher {
      * Runs in a coroutine in the IO dispatcher context
      */
     @OptIn(DelicateCoroutinesApi::class)
-    fun asyncLaunch(workspace: File) = GlobalScope.launch(Dispatchers.IO) { launch(workspace) }
+    fun asyncLaunch(workspace: File, scope: CoroutineScope) = scope.launch(Dispatchers.IO) { launch(workspace) }
 
 }

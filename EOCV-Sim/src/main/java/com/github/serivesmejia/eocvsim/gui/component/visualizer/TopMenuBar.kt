@@ -137,7 +137,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         mWorkspMenu.addSeparator()
 
-        workspCompile.addActionListener { visualizer.asyncCompilePipelines() }
+        workspCompile.addActionListener { eocvSim.pipelineManager.compiledPipelineManager.asyncBuild() }
         mWorkspMenu.add(workspCompile)
 
         val workspBuildOutput = JMenuItem("Output")
@@ -162,7 +162,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         val workspVSCodeOpen = JMenuItem("Open VS Code Here")
 
         workspVSCodeOpen.addActionListener {
-            VSCodeLauncher.asyncLaunch(eocvSim.workspaceManager.workspaceFile)
+            VSCodeLauncher.asyncLaunch(eocvSim.workspaceManager.workspaceFile, eocvSim.scope)
         }
         workspVSCode.add(workspVSCodeOpen)
 

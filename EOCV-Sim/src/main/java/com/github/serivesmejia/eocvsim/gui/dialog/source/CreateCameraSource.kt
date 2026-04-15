@@ -333,7 +333,7 @@ class CreateCameraSource(
 
     private fun updateCreateButton() {
         createButton.isEnabled = nameTextField.text.trim().isNotEmpty() &&
-                !eocvSim.inputSourceManager.isNameOnUse(nameTextField.text)
+                !eocvSim.inputSourceManager.isNameInUse(nameTextField.text)
     }
 
     private fun getSelectedIndex() = indexes[camerasComboBox.selectedItem] ?: 0

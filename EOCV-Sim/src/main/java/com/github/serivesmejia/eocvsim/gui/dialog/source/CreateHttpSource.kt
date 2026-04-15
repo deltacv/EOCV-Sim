@@ -122,7 +122,7 @@ class CreateHttpSource(parent: JFrame, private val eocvSim: EOCVSim) {
 
     private fun updateCreateButton() {
         val isNameValid = nameTextField.text.isNotBlank() &&
-                !eocvSim.inputSourceManager.isNameOnUse(nameTextField.text)
+                !eocvSim.inputSourceManager.isNameInUse(nameTextField.text)
         val isUrlValid = urlField.text.isNotBlank()
         createButton.isEnabled = isNameValid && isUrlValid
     }

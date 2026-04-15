@@ -45,6 +45,6 @@ class EOCVSimApiImpl(owner: EOCVSimPlugin, val internalEOCVSim: EOCVSim) : EOCVS
     override val configApi: ConfigApi by apiField(ConfigApiImpl(owner, internalEOCVSim.configManager))
 
     override fun disableApi() {
-        logger.info("EOCV-Sim API for {} says: \"aight, time to check out\"", ownerName)
+        logger.info("EOCV-Sim API for {} says: \"ight, imma head out\"", ownerName)
     }
 }

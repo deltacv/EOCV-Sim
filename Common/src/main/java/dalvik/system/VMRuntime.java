@@ -16,7 +16,7 @@ public class VMRuntime {
     }
 
     public Object newUnpaddedArray(Class<?> componentType, int length) {
-        return Array.newInstance(componentType, length); // we do a little bit of trolling -SEM
+        return Array.newInstance(componentType, length); // we do a little bit of trolling
     }
 
 }

@@ -159,7 +159,7 @@ class CreateVideoSource(
 
     private fun updateCreateButton() {
         val isNameValid = nameTextField.text.isNotBlank() &&
-                !eocvsim.inputSourceManager.isNameOnUse(nameTextField.text)
+                !eocvsim.inputSourceManager.isNameInUse(nameTextField.text)
 
         createButton.isEnabled = isNameValid && sizeFields.valid && selectedValidVideo
     }

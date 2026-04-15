@@ -23,6 +23,9 @@
 
 package io.github.deltacv.eocvsim.virtualreflect
 
+/**
+ * Represents a field of a class, but is not necessarily backed by an actual Java Field.
+ */
 interface VirtualField {
 
     val name: String

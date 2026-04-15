@@ -25,4 +25,4 @@ package io.github.deltacv.eocvsim.plugin.api.exception
 
 import io.github.deltacv.eocvsim.plugin.api.Api
 
-class EOCVSimApiException(message: String, api: Api) : RuntimeException(message)
+class EOCVSimApiException(message: String, val api: Api) : RuntimeException("Exception thrown by API ${api::class.simpleName} $message")

@@ -159,13 +159,17 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
                 sourceSelector.selectedIndex = (index - 1).clipUpperZero()
             }
         }
+
+        eocvSim.inputSourceManager.onSourcesListChange {
+            updateSourcesList()
+        }
     }
 
     fun updateSourcesList(): Job {
         SwingUtilities.invokeLater {
             val listModel = DefaultListModel<String>()
 
-            for (source in eocvSim.inputSourceManager.sortedInputSources) {
+            eocvSim.inputSourceManager.sortedInputSources.forEach { source ->
                 listModel.addElement(source.name)
             }
 

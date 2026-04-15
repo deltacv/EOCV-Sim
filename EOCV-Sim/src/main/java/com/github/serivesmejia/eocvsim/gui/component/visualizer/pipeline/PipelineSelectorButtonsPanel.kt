@@ -114,7 +114,7 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
             gridy = 0
         })
 
-        pipelineCompileBtt.addActionListener { eocvSim.visualizer.asyncCompilePipelines() }
+        pipelineCompileBtt.addActionListener { eocvSim.pipelineManager.compiledPipelineManager.asyncBuild() }
         workspaceButtonsPanel.add(pipelineCompileBtt, GridBagConstraints().apply {
             gridx = 2
             gridy = 0

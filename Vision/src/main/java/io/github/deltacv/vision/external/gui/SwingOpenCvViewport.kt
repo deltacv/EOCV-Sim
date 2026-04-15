@@ -68,7 +68,8 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
         PAUSED
     }
 
-    private val visionPreviewFrameQueue = EvictingBlockingQueue(ArrayBlockingQueue<MatRecycler.RecyclableMat>(VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 1))
+    private val visionPreviewFrameQueue =
+        EvictingBlockingQueue(ArrayBlockingQueue<MatRecycler.RecyclableMat>(VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 1))
     private var framebufferRecycler: MatRecycler? = null
 
     @Volatile
@@ -93,11 +94,11 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
             framebufferRecycler!!.returnMat(value)
         }
 
-        skiaLayer.renderDelegate = SkiaLayerRenderDelegate(skiaLayer, object: SkikoRenderDelegate {
+        skiaLayer.renderDelegate = SkiaLayerRenderDelegate(skiaLayer, object : SkikoRenderDelegate {
             override fun onRender(canvas: org.jetbrains.skia.Canvas, width: Int, height: Int, nanoTime: Long) {
                 renderCanvas(Canvas(canvas, width, height))
 
-                if(outputPosters.isNotEmpty()) {
+                if (outputPosters.isNotEmpty()) {
                     synchronized(outputPosters) {
                         skiaLayer.screenshot().use { bmp ->
                             framebufferRecycler?.takeMatOrNull().let { mat ->
@@ -206,12 +207,6 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
 
     override fun post(mat: Mat, userContext: Any) {
         synchronized(syncObj) {
-            //did they give us null?
-            requireNotNull(mat) {
-                //ugh, they did
-                "cannot post null mat!"
-            }
-
             //Are we actually rendering to the display right now? If not,
             //no need to waste time doing a memcpy
             if (internalRenderingState == RenderingState.ACTIVE) {
@@ -276,7 +271,8 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
             /*
              * We only need to start the render thread if it's
              * stopped.
-             */if (internalRenderingState == RenderingState.STOPPED) {
+             */
+            if (internalRenderingState == RenderingState.STOPPED) {
                 logger.info("CheckState(): activating viewport")
                 internalRenderingState = RenderingState.PAUSED
                 internalRenderingState = if (userRequestedPause) {
@@ -290,7 +286,8 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
         }
         if (internalRenderingState != RenderingState.STOPPED) {
             if (userRequestedPause && internalRenderingState != RenderingState.PAUSED
-                    || !userRequestedPause && internalRenderingState != RenderingState.ACTIVE) {
+                || !userRequestedPause && internalRenderingState != RenderingState.ACTIVE
+            ) {
                 internalRenderingState = if (userRequestedPause) {
                     logger.info("CheckState(): pausing viewport")
                     RenderingState.PAUSED
@@ -312,12 +309,12 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
     private lateinit var lastFrame: MatRecycler.RecyclableMat
 
     private fun renderCanvas(canvas: Canvas) {
-        if(!::lastFrame.isInitialized) {
+        if (!::lastFrame.isInitialized) {
             lastFrame = framebufferRecycler!!.takeMatOrNull()
         }
 
         synchronized(canvasLock) {
-            if(dark) {
+            if (dark) {
                 canvas.drawColor(Color.BLACK)
             } else {
                 canvas.drawColor(Color.WHITE)
@@ -355,11 +352,7 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
                     * destroyed, calls checkState(), which *SHOULD* block until we die. This
                     * works most of the time, but not always? We don't yet understand...
                     */
-                    if (canvas != null) {
-                        renderer.render(mat, canvas, renderHook, mat.context)
-                    } else {
-                        logger.info("Canvas was null")
-                    }
+                    renderer.render(mat, canvas, renderHook, mat.context)
 
                     //We're done with that Mat object; return it to the Mat recycler so it can be used again later
                     if (mat !== lastFrame) {
@@ -370,17 +363,7 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
                 RenderingState.PAUSED -> {
                     if (shouldPaintOrange) {
                         shouldPaintOrange = false
-
-                        /*
-                     * For some reason, the canvas will very occasionally be null upon closing.
-                     * Stack Overflow seems to suggest this means the canvas has been destroyed.
-                     * However, surfaceDestroyed(), which is called right before the surface is
-                     * destroyed, calls checkState(), which *SHOULD* block until we die. This
-                     * works most of the time, but not always? We don't yet understand...
-                     */
-                        if (canvas != null) {
-                            renderer.renderPaused(canvas)
-                        }
+                        renderer.renderPaused(canvas)
                     }
                 }
 
@@ -410,6 +393,7 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
 
     companion object {
         private const val VISION_PREVIEW_FRAME_QUEUE_CAPACITY = 2
-        private const val FRAMEBUFFER_RECYCLER_CAPACITY = VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 4 //So that the evicting queue can be full, and the render thread has one checked out (+1) and post() can still take one (+1).
+        private const val FRAMEBUFFER_RECYCLER_CAPACITY =
+            VISION_PREVIEW_FRAME_QUEUE_CAPACITY + 4 //So that the evicting queue can be full, and the render thread has one checked out (+1) and post() can still take one (+1).
     }
 }

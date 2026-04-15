@@ -102,7 +102,7 @@ class Output @JvmOverloads constructor(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    private fun registerListeners() = GlobalScope.launch(Dispatchers.Swing) {
+    private fun registerListeners() = eocvSim.scope.launch(Dispatchers.Swing) {
         output.addWindowListener(object: WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
                 close()
@@ -165,7 +165,7 @@ class Output @JvmOverloads constructor(
         }
 
         buildBottomButtonsPanel.buildAgainButton.addActionListener {
-            eocvSim.visualizer.asyncCompilePipelines()
+            eocvSim.pipelineManager.compiledPipelineManager.asyncBuild()
         }
     }
 

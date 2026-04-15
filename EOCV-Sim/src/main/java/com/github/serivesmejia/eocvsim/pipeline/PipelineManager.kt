@@ -91,7 +91,8 @@ class PipelineManager(
     val pipelineOutputPosters = ArrayList<MatPoster>()
     val pipelineFpsCounter = FpsCounter()
 
-    private var hasInitCurrentPipeline = false
+    var hasInitCurrentPipeline = false
+        private set
     var lastPipelineAction = "processFrame"
         private set
 
@@ -325,7 +326,7 @@ class PipelineManager(
         pipelineStatisticsCalculator.newPipelineFrameStart()
 
         //run our pipeline in the background until it finishes or gets cancelled
-        val pipelineJob = GlobalScope.launch(currentPipelineContext!!) {
+        val pipelineJob = eocvSim.scope.launch(currentPipelineContext!!) {
             try {
                 //if we have a pipeline, we run it right here, passing the input mat
                 //given to us. we'll post the frame the pipeline returns as long
@@ -451,7 +452,7 @@ class PipelineManager(
 
         //similar to pipeline processFrame, call the user function in the background
         //and wait for some X timeout for the user to finisih doing what it has to do.
-        val viewportTappedJob = GlobalScope.launch(currentPipelineContext ?: EmptyCoroutineContext) {
+        val viewportTappedJob = eocvSim.scope.launch(currentPipelineContext ?: EmptyCoroutineContext) {
             pipeline.onViewportTapped()
         }
 

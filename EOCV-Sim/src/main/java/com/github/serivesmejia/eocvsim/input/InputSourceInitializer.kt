@@ -18,7 +18,9 @@ object InputSourceInitializer {
     fun initializeWithTimeout(inputSource: InputSource, manager: InputSourceManager? = null): Boolean {
         var result = false
 
-        val job = GlobalScope.launch {
+        val scope = manager?.eocvSim?.scope ?: GlobalScope
+
+        val job = scope.launch {
             try {
                 result = inputSource.init()
             } catch (e: Exception) {
@@ -50,7 +52,9 @@ object InputSourceInitializer {
     fun runWithTimeout(sourceName: String, manager: InputSourceManager? = null, callback: () -> Boolean): Boolean {
         var result = false
 
-        val job = GlobalScope.launch {
+        val scope = manager?.eocvSim?.scope ?: GlobalScope
+
+        val job = scope.launch {
             try {
                 result = callback()
             } catch (e: Exception) {

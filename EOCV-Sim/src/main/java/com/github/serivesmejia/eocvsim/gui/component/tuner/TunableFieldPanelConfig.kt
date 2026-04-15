@@ -159,7 +159,7 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
                         it.closeOnFocusLost = true
 
                         //launch the waiting in the background
-                        GlobalScope.launch {
+                        eocvSim.scope.launch {
                             delay(100)
                             //close config popup if still hasn't focused after a bit
                             launch(Dispatchers.Swing) {

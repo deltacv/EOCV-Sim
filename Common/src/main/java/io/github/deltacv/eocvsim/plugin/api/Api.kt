@@ -51,7 +51,7 @@ abstract class Api(val owner: EOCVSimPlugin) {
     /**
      * Simple name of the owning plugin class, for error messages
      */
-    val ownerName: String get() = owner::class.java.simpleName
+    val ownerName: String get() = owner::class.simpleName ?: "UnknownPlugin"
 
     /**
      * Whether this API has been disabled.

@@ -85,9 +85,25 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         private set
 
     val workspaceManager get() = pipelineManager.eocvSim.workspaceManager
+    val eocvSim get() = pipelineManager.eocvSim
 
     fun init() {
         logger.info("Initializing...")
+
+        onBuildStart {
+            eocvSim.onMainUpdate.once {
+                eocvSim.visualizer.menuBar.workspCompile.isEnabled = false
+                eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelineCompileBtt.isEnabled = false
+            }
+        }
+
+        onBuildEnd {
+            eocvSim.onMainUpdate.once {
+                eocvSim.visualizer.menuBar.workspCompile.isEnabled = true
+                eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelineCompileBtt.isEnabled = true
+            }
+        }
+
         asyncBuild()
 
         workspaceManager.onWorkspaceChange {
@@ -179,7 +195,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         onBuildEnd.callRightAway = true
         onBuildEnd.run()
 
-        GlobalScope.launch {
+        eocvSim.scope.launch {
             delay(1000)
             onBuildEnd.callRightAway = false
         }
@@ -218,9 +234,18 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     @OptIn(DelicateCoroutinesApi::class)
     fun asyncBuild(
         endCallback: (PipelineCompileResult) -> Unit = {}
-    ) = GlobalScope.launch(Dispatchers.IO) {
-        endCallback(build())
+    ) = eocvSim.scope.launch(Dispatchers.IO) {
+        if(PipelineCompiler.IS_USABLE) {
+            endCallback(build())
+        } else {
+            eocvSim.onMainUpdate.once {
+                eocvSim.visualizer.compilerUnsupported()
+            }
+        }
     }
+
+    val isCompilerSupported get() = PipelineCompiler.IS_USABLE
+
 
     private fun deleteJarFile() {
         if(PIPELINES_OUTPUT_JAR.exists()) PIPELINES_OUTPUT_JAR.delete()
