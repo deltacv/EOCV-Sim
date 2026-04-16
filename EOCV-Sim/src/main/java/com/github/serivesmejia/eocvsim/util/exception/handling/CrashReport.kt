@@ -87,13 +87,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             "Don't do that.",
             "Ouch. That hurt :(",
             "This is a token for 1 free hug. Redeem at your nearest local team: [~~HUG~~]",
-            "But it works on my machine!",
-            "Y a través de las estrellas ella viaja...",
-            "Tras el extraño silencio del sol ausente",
-            "no lo pienses demasiado, todo estará bien,",
-            "encontrarás otro desastre que hacer,",
-            "¿qué será de sentarse bajo la tumba del sol sin nunca hacer un desastre?",
-            "y por una ultima noche juntos,"
+            "But it works on my machine!"
         )
 
         @JvmStatic val defaultCrashFileName get() = "crashreport-$defaultFileName"
