@@ -25,88 +25,52 @@ package com.github.serivesmejia.eocvsim.tuner.field.cv
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.tuner.TunableField
-import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
-import io.github.deltacv.eocvsim.virtualreflect.VirtualField
+import com.github.serivesmejia.eocvsim.tuner.TunableNumber
 import org.opencv.core.Rect
-import javax.swing.SwingUtilities
+import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 
-@RegisterTunableField
 class RectField(instance: Any, reflectionField: VirtualField, eocvSim: EOCVSim) :
     TunableField<Rect>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
 
     private var rect = arrayOf(0.0, 0.0, 0.0, 0.0)
-    private var lastRect = arrayOf(0.0, 0.0, 0.0, 0.0)
-
-    @Volatile private var hasChanged = false
 
     private var initialRect = if(initialFieldValue != null)
         (initialFieldValue as Rect).clone()
     else Rect(0, 0, 0, 0)
+
+    private val xValue by lazy { TunableNumber(rect[0], { rect[0] }, { updateRect(0, it) }) }
+    private val yValue by lazy { TunableNumber(rect[1], { rect[1] }, { updateRect(1, it) }) }
+    private val wValue by lazy { TunableNumber(rect[2], { rect[2] }, { updateRect(2, it) }) }
+    private val hValue by lazy { TunableNumber(rect[3], { rect[3] }, { updateRect(3, it) }) }
+
+    private fun updateRect(index: Int, newValue: Double) {
+        rect[index] = newValue
+        initialRect.set(rect.toDoubleArray())
+        setPipelineFieldValue(initialRect)
+    }
+
+    override val tunableValues by lazy { listOf(xValue, yValue, wValue, hValue) }
 
     init {
         rect[0] = initialRect.x.toDouble()
         rect[1] = initialRect.y.toDouble()
         rect[2] = initialRect.width.toDouble()
         rect[3] = initialRect.height.toDouble()
-
-        guiFieldAmount = 4
     }
 
     override fun init() {
         reflectionField.set(initialRect)
     }
 
-    override fun update() {
-        if(hasChanged()){
-            initialRect = reflectionField.get() as Rect
+    override fun refreshPipelineObject() {
+        initialRect = reflectionField.get() as Rect
 
-            rect[0] = initialRect.x.toDouble()
-            rect[1] = initialRect.y.toDouble()
-            rect[2] = initialRect.width.toDouble()
-            rect[3] = initialRect.height.toDouble()
-
-            updateGuiFieldValues()
-        }
+        rect[0] = initialRect.x.toDouble()
+        rect[1] = initialRect.y.toDouble()
+        rect[2] = initialRect.width.toDouble()
+        rect[3] = initialRect.height.toDouble()
     }
 
-    override fun setFieldValue(index: Int, newValue: Any) {
-        try {
-            rect[index] = if(newValue is String)
-                newValue.toDouble()
-            else (newValue as Number).toDouble()
-        } catch (e: Exception) {
-            throw IllegalArgumentException("Parameter should be a valid numeric value", e)
-        }
-
-        initialRect.set(rect.toDoubleArray())
-        setPipelineFieldValue(initialRect)
-
-        lastRect[0] = initialRect.x.toDouble()
-        lastRect[1] = initialRect.y.toDouble()
-        lastRect[2] = initialRect.width.toDouble()
-        lastRect[3] = initialRect.height.toDouble()
-    }
-
-    override fun updateGuiFieldValues() {
-        SwingUtilities.invokeLater {
-            for((i, value) in rect.withIndex()) {
-                fieldPanel.setFieldValue(i, value)
-            }
-        }
-    }
-
-    override fun setFieldValueFromGui(index: Int, newValue: String) {
-        setFieldValue(index, newValue)
-    }
-
-    override fun getValue(): Rect = Rect(rect.toDoubleArray())
-
-    override fun getGuiFieldValue(index: Int): Any = rect[index]
-
-    override fun hasChanged(): Boolean {
-        hasChanged = rect[0] != lastRect[0] || rect[1] != lastRect[1]
-                || rect[2] != lastRect[2] || rect[3] != lastRect[3]
-        return hasChanged
-    }
-
-}
+    override val value: Rect
+        get() = Rect(rect.toDoubleArray())
+}

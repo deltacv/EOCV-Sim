@@ -149,8 +149,9 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
                 //if we're still in range of the scalar values amount
                 if(i < colorScalar.`val`.size) {
                     val colorVal = colorScalar.`val`[i]
-                    fieldPanel.setFieldValue(i, colorVal)
-                    fieldPanel.tunableField.setFieldValueFromGui(i, colorVal.toString())
+                    
+                    val tv = fieldPanel.tunableField.tunableValues.getOrNull(i) as? com.github.serivesmejia.eocvsim.tuner.TunableNumber
+                    tv?.setFromGui(colorVal)
                 } else { break } //keep looping until we write the entire scalar value
             }
             colorPickButton.isSelected = false

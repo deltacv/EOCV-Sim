@@ -27,11 +27,12 @@ import com.github.serivesmejia.eocvsim.EOCVSim;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.element.TunableComboBox;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.element.TunableSlider;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.element.TunableTextField;
-import com.github.serivesmejia.eocvsim.tuner.TunableField;
+import com.github.serivesmejia.eocvsim.tuner.*;
 
 import javax.swing.*;
 import javax.swing.border.SoftBevelBorder;
 import java.awt.*;
+import java.util.List;
 
 @SuppressWarnings("unchecked")
 public class TunableFieldPanel extends JPanel {
@@ -68,12 +69,21 @@ public class TunableFieldPanel extends JPanel {
     }
 
     private void init() {
-        //nice look
         setBorder(new SoftBevelBorder(SoftBevelBorder.RAISED));
 
         panelOptions = new TunableFieldPanelOptions(this, eocvSim);
 
-        if(tunableField.getGuiFieldAmount() > 0) {
+        List<TunableValue<?>> values = tunableField.getTunableValues();
+        
+        boolean hasFieldsOrSliders = false;
+        for (TunableValue<?> val : values) {
+            if (val instanceof TunableNumber || val instanceof TunableString) {
+                hasFieldsOrSliders = true;
+                break;
+            }
+        }
+
+        if(hasFieldsOrSliders) {
             add(panelOptions);
         }
 
@@ -82,67 +92,69 @@ public class TunableFieldPanel extends JPanel {
 
         add(fieldNameLabel);
 
-        int fieldAmount = tunableField.getGuiFieldAmount();
-
-        fields = new TunableTextField[fieldAmount];
-        sliders = new TunableSlider[fieldAmount];
+        fields = new TunableTextField[values.size()];
+        sliders = new TunableSlider[values.size()];
+        comboBoxes = new JComboBox[values.size()];
 
         fieldsPanel = new JPanel();
         slidersPanel = new JPanel(new GridBagLayout());
+        
+        for (int i = 0 ; i < values.size() ; i++) {
+            TunableValue<?> value = values.get(i);
+            
+            if (value instanceof TunableNumber || value instanceof TunableString) {
+                TunableTextField field = new TunableTextField(value, eocvSim);
+                fields[i] = field;
+                field.setEditable(true);
+                fieldsPanel.add(field);
+                
+                if (value instanceof TunableNumber) {
+                    JLabel sliderLabel = new JLabel("0");
+                    TunableSlider slider = new TunableSlider((TunableNumber) value, eocvSim, sliderLabel);
+                    sliders[i] = slider;
 
-        for (int i = 0 ; i < tunableField.getGuiFieldAmount() ; i++) {
-            //add the tunable field as a field
-            TunableTextField field = new TunableTextField(i, tunableField, eocvSim);
-            fields[i] = field;
+                    GridBagConstraints cSlider = new GridBagConstraints();
+                    cSlider.gridx = 0;
+                    cSlider.gridy = i;
 
-            field.setEditable(true);
-            fieldsPanel.add(field);
+                    GridBagConstraints cLabel = new GridBagConstraints();
+                    cLabel.gridx = 1;
+                    cLabel.gridy = i;
 
-            //add the tunable field as a slider
-            JLabel sliderLabel = new JLabel("0");
-            TunableSlider slider = new TunableSlider(i, tunableField, eocvSim, sliderLabel);
-            sliders[i] = slider;
-
-            GridBagConstraints cSlider = new GridBagConstraints();
-            cSlider.gridx = 0;
-            cSlider.gridy = i;
-
-            GridBagConstraints cLabel = new GridBagConstraints();
-            cLabel.gridy = 1;
-            cLabel.gridy = i;
-
-            slidersPanel.add(slider, cSlider);
-            slidersPanel.add(sliderLabel, cLabel);
+                    slidersPanel.add(slider, cSlider);
+                    slidersPanel.add(sliderLabel, cLabel);
+                }
+            } else if (value instanceof TunableEnum) {
+                TunableComboBox comboBox = new TunableComboBox((TunableEnum<?>) value, eocvSim);
+                add(comboBox);
+                comboBoxes[i] = comboBox;
+            }
         }
 
         setMode(Mode.TEXTBOXES);
-
-        comboBoxes = new JComboBox[tunableField.getGuiComboBoxAmount()];
-
-        for (int i = 0; i < comboBoxes.length; i++) {
-            TunableComboBox comboBox = new TunableComboBox(i, tunableField, eocvSim);
-            add(comboBox);
-
-            comboBoxes[i] = comboBox;
-        }
     }
 
-    //method that should be called when this panel is added to the visualizer gui
     public void showFieldPanel() {
         if(hasBeenShown) return;
         hasBeenShown = true;
 
-        //updates the slider ranges from config
         panelOptions.getConfigPanel().updateFieldGuiFromConfig();
-        tunableField.evalRecommendedPanelMode();
+        if (!tunableField.isOnlyNumbers()) {
+            setMode(Mode.SLIDERS);
+        }
     }
 
     public void setFieldValue(int index, Object value) {
         if(index >= fields.length) return;
-        if(fields[index].isFocusOwner() || sliders[index].isFocusOwner()) return; // don't update if the field is being edited
+        if(fields[index] == null) return;
+        
+        if(fields[index].isFocusOwner()) return;
+        if(sliders[index] != null && sliders[index].isFocusOwner()) return;
 
         String text;
-        if(tunableField.getAllowMode() == TunableField.AllowMode.ONLY_NUMBERS) {
+        TunableValue<?> tv = (TunableValue<?>) tunableField.getTunableValues().get(index);
+        
+        if(tv instanceof TunableNumber && ((TunableNumber)tv).isOnlyNumbers()) {
             text = String.valueOf((int) Math.round(Double.parseDouble(value.toString())));
         } else {
             text = value.toString();
@@ -151,12 +163,14 @@ public class TunableFieldPanel extends JPanel {
         fields[index].setText(text);
 
         try {
-            sliders[index].setScaledValue(Double.parseDouble(value.toString()));
+            if (sliders[index] != null) sliders[index].setScaledValue(Double.parseDouble(value.toString()));
         } catch(NumberFormatException ignored) {}
     }
 
     public void setComboBoxSelection(int index, Object selection) {
-        comboBoxes[index].setSelectedItem(selection.toString());
+        if (comboBoxes[index] != null) {
+            comboBoxes[index].setSelectedItem(selection.toString());
+        }
     }
 
     protected void requestAllConfigReeval() {
@@ -170,10 +184,10 @@ public class TunableFieldPanel extends JPanel {
                     remove(slidersPanel);
                 }
 
-                for(int i = 0 ; i < tunableField.getGuiFieldAmount() ; i++) {
-                    fields[i].setInControl(true);
-                    sliders[i].setInControl(false);
-                    setFieldValue(i, tunableField.getGuiFieldValue(i));
+                for(int i = 0 ; i < fields.length ; i++) {
+                    if (fields[i] != null) fields[i].setInControl(true);
+                    if (sliders[i] != null) sliders[i].setInControl(false);
+                    if (fields[i] != null) setFieldValue(i, ((TunableValue<?>) tunableField.getTunableValues().get(i)).getValue());
                 }
 
                 add(fieldsPanel);
@@ -183,10 +197,10 @@ public class TunableFieldPanel extends JPanel {
                     remove(fieldsPanel);
                 }
 
-                for(int i = 0 ; i < tunableField.getGuiFieldAmount() ; i++) {
-                    fields[i].setInControl(false);
-                    sliders[i].setInControl(true);
-                    setFieldValue(i, tunableField.getGuiFieldValue(i));
+                for(int i = 0 ; i < fields.length ; i++) {
+                    if (fields[i] != null) fields[i].setInControl(false);
+                    if (sliders[i] != null) sliders[i].setInControl(true);
+                    if (fields[i] != null) setFieldValue(i, ((TunableValue<?>) tunableField.getTunableValues().get(i)).getValue());
                 }
 
                 add(slidersPanel);
@@ -205,7 +219,7 @@ public class TunableFieldPanel extends JPanel {
     public void setSlidersRange(double min, double max) {
         if(sliders == null) return;
         for(TunableSlider slider : sliders) {
-            slider.setScaledBounds(min, max);
+            if (slider != null) slider.setScaledBounds(min, max);
         }
     }
 

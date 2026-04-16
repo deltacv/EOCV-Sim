@@ -32,6 +32,7 @@ import com.github.serivesmejia.eocvsim.pipeline.instantiator.PipelineInstantiato
 import com.github.serivesmejia.eocvsim.pipeline.instantiator.processor.ProcessorInstantiator
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
+import com.github.serivesmejia.eocvsim.tuner.TunableFieldRegistry
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
@@ -111,10 +112,6 @@ class PipelineManager(
     var previousPipelineIndex = 0
 
     var virtualReflect: VirtualReflection = JvmVirtualReflection
-        set(value) {
-            eocvSim.tunerManager.setVirtualReflection(value)
-            field = value
-        }
 
     var reflectTarget: Any? = null
         private set
@@ -160,7 +157,7 @@ class PipelineManager(
         // when getTunableFieldOf returns null, it means that
         // it wasn't able to find a suitable TunableField for
         // the passed Field type.
-        eocvSim.tunerManager.getTunableFieldClassOf(it) != null
+        TunableFieldRegistry.hasTunableFieldFor(it.type)
     }
 
     //manages and builds pipelines in runtime

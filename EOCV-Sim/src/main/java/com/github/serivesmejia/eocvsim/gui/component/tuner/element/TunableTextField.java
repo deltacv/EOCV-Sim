@@ -24,7 +24,9 @@
 package com.github.serivesmejia.eocvsim.gui.component.tuner.element;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
-import com.github.serivesmejia.eocvsim.tuner.TunableField;
+import com.github.serivesmejia.eocvsim.tuner.TunableNumber;
+import com.github.serivesmejia.eocvsim.tuner.TunableString;
+import com.github.serivesmejia.eocvsim.tuner.TunableValue;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -45,8 +47,7 @@ public class TunableTextField extends JTextField {
 
     private final ArrayList<Character> validCharsIfNumber = new ArrayList<>();
 
-    private final TunableField tunableField;
-    private final int index;
+    private final TunableValue<?> tunableValue;
     private final EOCVSim eocvSim;
 
     private final Border initialBorder;
@@ -55,33 +56,35 @@ public class TunableTextField extends JTextField {
 
     private boolean inControl = false;
 
-    public TunableTextField(int index, TunableField tunableField, EOCVSim eocvSim) {
+    public TunableTextField(TunableValue<?> tunableValue, EOCVSim eocvSim) {
         super();
 
         this.initialBorder = this.getBorder();
 
-        this.tunableField = tunableField;
-        this.index = index;
+        this.tunableValue = tunableValue;
         this.eocvSim = eocvSim;
 
-        setText(tunableField.getGuiFieldValue(index).toString());
+        setText(tunableValue.getValue().toString());
 
         int plusW = Math.round(getText().length() / 5f) * 10;
         this.setPreferredSize(new Dimension(40 + plusW, getPreferredSize().height));
 
-        tunableField.onValueChange.attach(() -> {
+        tunableValue.getOnValueChange().attach(() -> {
             if(!inControl) {
-                setText(tunableField.getGuiFieldValue(index).toString());
+                setText(tunableValue.getValue().toString());
             }
         });
 
-        if (tunableField.isOnlyNumbers()) {
+        boolean isNumber = tunableValue instanceof TunableNumber;
+
+        if (isNumber) {
+            TunableNumber numValue = (TunableNumber) tunableValue;
 
             //add all valid characters for non decimal numeric fields
             Collections.addAll(validCharsIfNumber, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-');
 
             //allow dots for decimal numeric fields
-            if (tunableField.getAllowMode() == TunableField.AllowMode.ONLY_NUMBERS_DECIMAL) {
+            if (!numValue.isOnlyNumbers()) {
                 validCharsIfNumber.add('.');
             }
 
@@ -121,13 +124,15 @@ public class TunableTextField extends JTextField {
         getDocument().addDocumentListener(new DocumentListener() {
 
             Runnable changeFieldValue = () -> {
-                if(tunableField.shouldIgnoreGuiUpdates()) return;
-
                 String text = getText();
 
-                if ((!hasValidText || !tunableField.isOnlyNumbers() || (text != null && !getText().trim().equals("")))) {
+                if ((!hasValidText || !isNumber || (text != null && !getText().trim().equals("")))) {
                     try {
-                        tunableField.setFieldValueFromGui(index, getText());
+                        if (isNumber) {
+                            ((TunableNumber) tunableValue).setFromGui(Double.parseDouble(text));
+                        } else if (tunableValue instanceof TunableString) {
+                            ((TunableString) tunableValue).setFromGui(text);
+                        }
                     } catch (Exception e) {
                         setRedBorder();
                     }

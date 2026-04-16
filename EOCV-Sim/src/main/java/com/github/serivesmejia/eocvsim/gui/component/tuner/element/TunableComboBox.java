@@ -24,40 +24,53 @@
 package com.github.serivesmejia.eocvsim.gui.component.tuner.element;
 
 import com.github.serivesmejia.eocvsim.EOCVSim;
+import com.github.serivesmejia.eocvsim.tuner.TunableEnum;
 import com.github.serivesmejia.eocvsim.tuner.TunableField;
 
 import javax.swing.*;
 import java.util.Objects;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class TunableComboBox extends JComboBox<String> {
 
-    private final TunableField tunableField;
-    private final int index;
+    private final TunableEnum<?> tunableValue;
 
     private final EOCVSim eocvSim;
 
-    public TunableComboBox(int index, TunableField tunableField, EOCVSim eocvSim) {
+    public TunableComboBox(TunableEnum<?> tunableValue, EOCVSim eocvSim) {
         super();
 
-        this.tunableField = tunableField;
-        this.index = index;
+        this.tunableValue = tunableValue;
         this.eocvSim = eocvSim;
 
         init();
     }
 
     private void init() {
-        for (Object obj : tunableField.getGuiComboBoxValues(index)) {
+        for (Object obj : tunableValue.getEnumValues()) {
             this.addItem(obj.toString());
         }
 
         addItemListener(evt -> eocvSim.onMainUpdate.once(() -> {
-            try {
-                tunableField.setComboBoxValueFromGui(index, Objects.requireNonNull(getSelectedItem()).toString());
-            } catch (IllegalAccessException ignored) {}
+            if (evt.getStateChange() == java.awt.event.ItemEvent.SELECTED) {
+                Object[] values = tunableValue.getEnumValues();
+                Object selected = null;
+                String selectedStr = Objects.requireNonNull(getSelectedItem()).toString();
+                
+                for (Object val : values) {
+                    if (val.toString().equals(selectedStr)) {
+                        selected = val;
+                        break;
+                    }
+                }
+                
+                if (selected != null) {
+                    ((TunableEnum) tunableValue).setFromGui((Enum) selected);
+                }
 
-            if (eocvSim.pipelineManager.getPaused()) {
-                eocvSim.pipelineManager.requestSetPaused(false);
+                if (eocvSim.pipelineManager.getPaused()) {
+                    eocvSim.pipelineManager.requestSetPaused(false);
+                }
             }
         }));
     }

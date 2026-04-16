@@ -25,13 +25,11 @@ package com.github.serivesmejia.eocvsim.gui.component.tuner.element
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.component.SliderX
-import com.github.serivesmejia.eocvsim.tuner.TunableField
-import com.github.serivesmejia.eocvsim.util.event.EventListener
+import com.github.serivesmejia.eocvsim.tuner.TunableNumber
 import javax.swing.JLabel
 import kotlin.math.roundToInt
 
-class TunableSlider(val index: Int,
-                    val tunableField: TunableField<*>,
+class TunableSlider(val tunableValue: TunableNumber,
                     val eocvSim: EOCVSim,
                     val valueLabel: JLabel? = null,
                     minBound: Double = 0.0,
@@ -39,33 +37,31 @@ class TunableSlider(val index: Int,
 
     var inControl = false
 
-    constructor(i: Int, tunableField: TunableField<Any>, eocvSim: EOCVSim, valueLabel: JLabel) : this(i, tunableField, eocvSim, valueLabel, 0.0, 255.0)
+    constructor(tunableValue: TunableNumber, eocvSim: EOCVSim, valueLabel: JLabel) : this(tunableValue, eocvSim, valueLabel, 0.0, 255.0)
 
-    constructor(i: Int, tunableField: TunableField<Any>, eocvSim: EOCVSim) : this(i, tunableField, eocvSim, null, 0.0, 255.0)
+    constructor(tunableValue: TunableNumber, eocvSim: EOCVSim) : this(tunableValue, eocvSim, null, 0.0, 255.0)
 
     init {
         addChangeListener {
             eocvSim.onMainUpdate.once {
-                if(!tunableField.shouldIgnoreGuiUpdates() && inControl) {
-                    tunableField.setFieldValueFromGui(index, scaledValue.toString())
+                if(inControl) {
+                    tunableValue.setFromGui(scaledValue)
 
                     if (eocvSim.pipelineManager.paused)
                         eocvSim.pipelineManager.setPaused(false)
                 }
             }
 
-            valueLabel?.text = if (tunableField.allowMode == TunableField.AllowMode.ONLY_NUMBERS_DECIMAL) {
+            valueLabel?.text = if (!tunableValue.isOnlyNumbers) {
                 scaledValue.toString()
             } else {
                 scaledValue.roundToInt().toString()
             }
         }
 
-        tunableField.onValueChange {
+        tunableValue.onValueChange {
             if (!inControl) {
-                scaledValue = try {
-                    tunableField.getGuiFieldValue(index).toString().toDouble()
-                } catch(_: NumberFormatException) { 0.0 }
+                scaledValue = tunableValue.value
             }
         }
     }

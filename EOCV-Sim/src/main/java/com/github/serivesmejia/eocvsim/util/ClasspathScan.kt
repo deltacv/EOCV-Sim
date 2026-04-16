@@ -23,10 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.util
 
-import com.github.serivesmejia.eocvsim.tuner.TunableField
-import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
-import com.github.serivesmejia.eocvsim.tuner.scanner.RegisterTunableField
-import com.qualcomm.robotcore.eventloop.opmode.Disabled
+        import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
@@ -100,7 +97,6 @@ class ClasspathScan {
 
         logger.info("ClassGraph finished scanning (took ${timer.seconds()}s)")
         
-        val tunableFieldClassesInfo = scanResult.getClassesWithAnnotation(RegisterTunableField::class.java.name)
 
         val pipelineClasses = mutableListOf<Class<*>>()
 
@@ -164,38 +160,10 @@ class ClasspathScan {
 
         logger.info("Found ${pipelineClasses.size} pipelines")
 
-        val tunableFieldClasses = mutableListOf<Class<out TunableField<*>>>()
-        val tunableFieldAcceptorClasses = mutableMapOf<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>()
-
-        for(tunableFieldClassInfo in tunableFieldClassesInfo) {
-            val clazz = if(classLoader != null) {
-                classLoader.loadClass(tunableFieldClassInfo.name)
-            } else Class.forName(tunableFieldClassInfo.name)
-
-            if(ReflectUtil.hasSuperclass(clazz, TunableField::class.java)) {
-                val tunableFieldClass = clazz as Class<out TunableField<*>>
-
-                tunableFieldClasses.add(tunableFieldClass)
-                logger.trace("Found tunable field ${clazz.typeName}")
-
-                for(subclass in clazz.declaredClasses) {
-                    if(ReflectUtil.hasSuperclass(subclass, TunableFieldAcceptor::class.java)) {
-                        tunableFieldAcceptorClasses[tunableFieldClass] = subclass as Class<out TunableFieldAcceptor>
-                        logger.trace("Found acceptor for this tunable field, ${clazz.typeName}")
-                        break
-                    }
-                }
-            }
-        }
-
-        logger.trace("Found ${tunableFieldClasses.size} tunable fields and ${tunableFieldAcceptorClasses.size} acceptors")
-
         logger.info("Finished scanning (took ${timer.seconds()}s)")
 
         this.scanResult = ScanResult(
-            pipelineClasses.toTypedArray(),
-            tunableFieldClasses.toTypedArray(),
-            tunableFieldAcceptorClasses.toMap()
+            pipelineClasses.toTypedArray()
         )
 
         return this.scanResult
@@ -225,11 +193,7 @@ class ClasspathScan {
 /**
  * Result of the classpath scan
  * @param pipelineClasses the found OpenCvPipelines
- * @param tunableFieldClasses the found TunableFields
- * @param tunableFieldAcceptorClasses the found TunableFieldAcceptors
  */
 data class ScanResult(
-    val pipelineClasses: Array<Class<*>>,
-    val tunableFieldClasses: Array<Class<out TunableField<*>>>,
-    val tunableFieldAcceptorClasses: Map<Class<out TunableField<*>>, Class<out TunableFieldAcceptor>>
+    val pipelineClasses: Array<Class<*>>
 )
