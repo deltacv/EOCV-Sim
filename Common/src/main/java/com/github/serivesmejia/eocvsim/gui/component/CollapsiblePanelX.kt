@@ -24,78 +24,58 @@
 
 package com.github.serivesmejia.eocvsim.gui.component
 
+import java.awt.BorderLayout
 import java.awt.Color
+import java.awt.FlowLayout
 import java.awt.Font
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import javax.swing.BorderFactory
-import javax.swing.JLabel
+import javax.swing.JButton
 import javax.swing.JPanel
-import javax.swing.border.TitledBorder
 
 class CollapsiblePanelX @JvmOverloads constructor(
-        title: String?,
+        var titleText: String?,
         titleCol: Color?,
         borderCol: Color? = Color.white
-) : JPanel() {
-    private val border: TitledBorder
+) : JPanel(BorderLayout()) {
     private var collapsible = true
 
     var isHidden = false
         private set
 
+    val contentPanel = JPanel()
+
+    private val toggleButton = JButton("Hide $titleText").apply {
+        isFocusable = false
+        if (titleCol != null) foreground = titleCol
+        
+        addActionListener {
+            if (!collapsible) return@addActionListener
+            isHidden = !isHidden
+            contentPanel.isVisible = !isHidden
+            text = if (isHidden) "Show $titleText" else "Hide $titleText"
+            this@CollapsiblePanelX.revalidate()
+        }
+    }
+
     init {
-        val titleAndDescriptor = if(isHidden) {
-            "$title (click here to expand)"
-        } else {
-            "$title (click here to hide)"
+        border = BorderFactory.createMatteBorder(1, 1, 1, 1, borderCol)
+
+        val headerPanel = JPanel(FlowLayout(FlowLayout.LEFT, 5, 0)).apply {
+            border = BorderFactory.createEmptyBorder(2, 2, 2, 5)
+            add(toggleButton)
         }
 
-        border = TitledBorder(titleAndDescriptor)
-
-        border.titleColor = titleCol
-        border.titleFont = border.titleFont.deriveFont(Font.BOLD)
-        border.border = BorderFactory.createMatteBorder(1, 1, 1, 1, borderCol)
-
-        setBorder(border)
-
-        // as Titleborder has no access to the Label we fake the size data ;)
-        val l = JLabel(titleAndDescriptor)
-        val size = l.getPreferredSize()
-
-        addMouseListener(object : MouseAdapter() {
-            override fun mouseClicked(e: MouseEvent) {
-                if (!collapsible) {
-                    return
-                }
-
-                val i = getBorder().getBorderInsets(this@CollapsiblePanelX)
-                if (e.x < i.left + size.width && e.y < i.bottom + size.height) {
-
-                    for(c in components) {
-                        c.isVisible = !isHidden
-
-                        border.title = if(isHidden) {
-                            "$title (click here to expand)"
-                        } else {
-                            "$title (click here to hide)"
-                        }
-
-                        isHidden = !isHidden
-                    }
-
-                    revalidate()
-                    e.consume()
-                }
-            }
-        })
+        super.add(headerPanel, BorderLayout.NORTH)
+        super.add(contentPanel, BorderLayout.CENTER)
     }
 
     fun setCollapsible(collapsible: Boolean) {
         this.collapsible = collapsible
+        toggleButton.isVisible = collapsible
     }
 
     fun setTitle(title: String?) {
-        border.title = title
+        titleText = title
+        toggleButton.text = if (isHidden) "Show $titleText" else "Hide $titleText"
     }
 }

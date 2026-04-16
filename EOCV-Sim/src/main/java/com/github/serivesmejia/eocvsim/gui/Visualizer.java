@@ -85,7 +85,7 @@ public class Visualizer {
 
     public OpModeSelectorPanel opModeSelectorPanel = null;
 
-    public JPanel tunerCollapsible;
+    public CollapsiblePanelX tunerCollapsible;
 
     private String title = "EasyOpenCV Simulator v" + Build.standardVersionString;
     private String titleMsg = "No pipeline";
@@ -183,14 +183,14 @@ public class Visualizer {
         frame.getContentPane().setDropTarget(new InputSourceDropTarget(eocvSim));
 
         tunerCollapsible = new CollapsiblePanelX("Variable Tuner", null, null);
-        tunerCollapsible.setLayout(new BoxLayout(tunerCollapsible, BoxLayout.LINE_AXIS));
+        tunerCollapsible.getContentPanel().setLayout(new BoxLayout(tunerCollapsible.getContentPanel(), BoxLayout.LINE_AXIS));
         tunerCollapsible.setVisible(false);
 
         JScrollPane tunerScrollPane = new JScrollPane(tunerMenuPanel);
         tunerScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
         tunerScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
 
-        tunerCollapsible.add(tunerScrollPane);
+        tunerCollapsible.getContentPanel().add(tunerScrollPane);
 
         onPluginGuiAttachment.run();
         onPluginGuiAttachment.setCallRightAway(true);
