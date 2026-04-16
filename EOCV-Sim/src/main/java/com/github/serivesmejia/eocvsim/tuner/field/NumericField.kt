@@ -13,6 +13,7 @@ abstract class NumericField<T : Number>(
     allowMode: AllowMode
 ) : TunableField<T>(target, reflectionField, eocvSim, allowMode) {
 
+    @Suppress("UNCHECKED_CAST")
     protected var _value: T? = initialFieldValue as T?
 
     protected val tunableValue by lazy { TunableNumber(_value?.toDouble() ?: 0.0, { _value?.toDouble() ?: 0.0 }, { updateNumber(it) }) }

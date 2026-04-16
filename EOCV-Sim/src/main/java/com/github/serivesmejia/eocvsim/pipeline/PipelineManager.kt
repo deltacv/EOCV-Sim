@@ -502,7 +502,7 @@ class PipelineManager(
 
         for ((instantiatorFor, instantiator) in pipelineInstantiators) {
             logger.debug(
-                " - Checking against instantiator for {} {}",
+                " - Checking against instantiator for {} loaded by {}",
                 instantiatorFor.name,
                 instantiatorFor.classLoader
             )

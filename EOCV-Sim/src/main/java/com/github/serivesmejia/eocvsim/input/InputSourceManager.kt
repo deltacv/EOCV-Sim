@@ -40,6 +40,7 @@ import org.opencv.imgproc.Imgproc
 import java.awt.Dimension
 import java.io.File
 import java.io.IOException
+import org.openftc.easyopencv.MatRecycler
 import java.util.concurrent.CancellationException
 import javax.swing.SwingUtilities
 
@@ -55,6 +56,7 @@ class InputSourceManager(val eocvSim: EOCVSim) {
     val sources = mutableMapOf<String, InputSource>()
 
     val inputSourceLoader = InputSourceLoader()
+    private lateinit var matRecycler: MatRecycler
 
     val onSourcesListChange = EventHandler("InputSourceManager-OnSourcesListChange")
 
@@ -64,6 +66,8 @@ class InputSourceManager(val eocvSim: EOCVSim) {
 
     fun init() {
         logger.info("Initializing...")
+
+        matRecycler = MatRecycler(4)
 
         if (lastMatFromSource == null) {
             lastMatFromSource = Mat(Size(640.0, 480.0), 24) // 24 is CV_8UC4 (RGBA)
@@ -111,7 +115,7 @@ class InputSourceManager(val eocvSim: EOCVSim) {
             logger.error("Error while creating default image input source", e)
         }
     }
-
+    
     fun update(isPaused: Boolean) {
         val currentSource = currentInputSource ?: return
 
@@ -121,12 +125,20 @@ class InputSourceManager(val eocvSim: EOCVSim) {
             val m = currentSource.update()
 
             if (m != null && !m.empty()) {
-                lastMatFromSource?.apply {
-                    setTo(BLACK) // clear previous mat
-                    m.copyTo(this)
-                    // add an extra alpha channel because that's what eocv returns for some reason... (more realistic simulation lol)
-                    Imgproc.cvtColor(this, this, Imgproc.COLOR_RGB2RGBA)
+                val nextMat = matRecycler.takeMatOrNull() ?: matRecycler.takeMatOrInterrupt()
+                
+                // Directly convert from the source 'm' (RGB) into our properly sized 'nextMat' (RGBA)
+                // This avoids allocating native buffers once nextMat is initialized natively for the first few frames
+                Imgproc.cvtColor(m, nextMat, Imgproc.COLOR_RGB2RGBA)
+                
+                val prev = lastMatFromSource
+                if (prev is MatRecycler.RecyclableMat) {
+                    prev.returnMat()
+                } else {
+                    prev?.release()
                 }
+                
+                lastMatFromSource = nextMat
             }
         } catch (ex: Exception) {
             logger.error("Error while processing current source", ex)
