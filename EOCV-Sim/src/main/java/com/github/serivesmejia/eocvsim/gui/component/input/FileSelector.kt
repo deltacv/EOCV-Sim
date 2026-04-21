@@ -58,7 +58,7 @@ class FileSelector(columns: Int = 18,
 
         selectDirButton.addActionListener {
             val frame = SwingUtilities.getWindowAncestor(this)
-            DialogFactory.createFileChooser(frame, mode, *fileFilters).addCloseListener { returnVal: Int, selectedFile: File?, selectedFileFilter: FileFilter? ->
+            DialogFactory.createFileChooser(frame, mode, "", *fileFilters).addCloseListener { returnVal: Int, selectedFile: File?, selectedFileFilter: FileFilter? ->
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     lastSelectedFileFilter = selectedFileFilter
                     lastSelectedFile = selectedFile

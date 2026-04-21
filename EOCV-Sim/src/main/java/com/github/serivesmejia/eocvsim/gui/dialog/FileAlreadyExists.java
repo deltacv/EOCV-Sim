@@ -41,9 +41,6 @@ public class FileAlreadyExists {
         fileAlreadyExists = new JDialog(parent);
 
         this.eocvSim = eocvSim;
-
-        eocvSim.visualizer.childDialogs.add(fileAlreadyExists);
-
     }
 
     public UserChoice run() {

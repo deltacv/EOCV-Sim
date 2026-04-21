@@ -197,7 +197,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
                 CrashReport.defaultCrashFileName, FileFilters.logFileFilter
             ).addCloseListener { OPTION, selectedFile, _ ->
                     if(OPTION == JFileChooser.APPROVE_OPTION) {
-                        var path = selectedFile.absolutePath
+                        var path = selectedFile?.absolutePath ?: return@addCloseListener
                         if (path.endsWith(File.separator))
                             path = path.removeSuffix(File.separator)
 

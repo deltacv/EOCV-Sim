@@ -7,6 +7,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import javax.swing.JDialog
 
 object InputSourceInitializer {
 
@@ -39,7 +40,7 @@ object InputSourceInitializer {
                 logger.error("InputSource initialization timed out after $TIMEOUT ms", e)
             } finally {
                 job.cancel()
-                dialog?.destroyDialog()
+                dialog?.dispose()
             }
         }
 
@@ -73,7 +74,7 @@ object InputSourceInitializer {
                 logger.error("InputSource run timed out after $TIMEOUT ms", e)
             } finally {
                 job.cancel()
-                dialog?.destroyDialog()
+                dialog?.dispose()
             }
         }
 

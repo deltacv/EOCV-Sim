@@ -124,10 +124,14 @@ class JMenuItemApiImpl(owner: EOCVSimPlugin, val internalMenuItem: JMenuItem) : 
 class JFileChooserApiImpl(owner: EOCVSimPlugin, val internalFileChooser: DialogFactory.FileChooser) : JFileChooserApi(owner) {
     override fun addCloseListener(listener: (Result, File, FileFilter) -> Unit) {
         internalFileChooser.addCloseListener { i, file, filter ->
+            val dummyFilter = javax.swing.filechooser.FileNameExtensionFilter("", "")
+            val finalFile = file ?: File("")
+            val finalFilter = filter ?: dummyFilter
+
             when(i) {
-                JFileChooser.APPROVE_OPTION -> listener(Result.APPROVE, file, filter)
-                JFileChooser.CANCEL_OPTION -> listener(Result.CANCEL, file, filter)
-                else -> listener(Result.ERROR, file, filter)
+                JFileChooser.APPROVE_OPTION -> listener(Result.APPROVE, finalFile, finalFilter)
+                JFileChooser.CANCEL_OPTION -> listener(Result.CANCEL, finalFile, finalFilter)
+                else -> listener(Result.ERROR, finalFile, finalFilter)
             }
         }
     }

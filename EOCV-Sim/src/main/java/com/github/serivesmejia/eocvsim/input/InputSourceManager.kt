@@ -40,8 +40,10 @@ import org.opencv.imgproc.Imgproc
 import java.awt.Dimension
 import java.io.File
 import java.io.IOException
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import org.openftc.easyopencv.MatRecycler
 import java.util.concurrent.CancellationException
+import javax.swing.JDialog
 import javax.swing.SwingUtilities
 
 class InputSourceManager(val eocvSim: EOCVSim) {
@@ -58,7 +60,13 @@ class InputSourceManager(val eocvSim: EOCVSim) {
     val inputSourceLoader = InputSourceLoader()
     private lateinit var matRecycler: MatRecycler
 
-    val onSourcesListChange = EventHandler("InputSourceManager-OnSourcesListChange")
+    val onInputSourceAdded = EventHandler("InputSourceManager-OnInputSourceAdded")
+    val onInputSourceRemoved = EventHandler("InputSourceManager-OnInputSourceRemoved")
+
+    var lastAddedSourceName = ""
+        private set
+    var wasLastSourceAddedByUser = false
+        private set
 
     private var defaultSource = ""
 
@@ -156,8 +164,6 @@ class InputSourceManager(val eocvSim: EOCVSim) {
 
         inputSource.eocvSim = eocvSim
 
-        eocvSim.visualizer.sourceSelectorPanel?.allowSourceSwitching = false
-
         inputSource.name = name
         sources[name] = inputSource
 
@@ -170,32 +176,10 @@ class InputSourceManager(val eocvSim: EOCVSim) {
             inputSourceLoader.saveInputSourcesToFile()
         }
 
-        onSourcesListChange.run()
+        lastAddedSourceName = name
+        wasLastSourceAddedByUser = dispatchedByUser
 
-        eocvSim.visualizer.sourceSelectorPanel?.let { panel ->
-            SwingUtilities.invokeLater {
-                val sourceSelector = panel.sourceSelector
-
-                val currentSourceIndex = sourceSelector.selectedIndex
-
-                if (dispatchedByUser) {
-                    val index = panel.getIndexOf(name)
-
-                    sourceSelector.selectedIndex = index
-
-                    requestSetInputSource(name)
-
-                    eocvSim.onMainUpdate.once {
-                        eocvSim.pipelineManager.requestSetPaused(false)
-                        pauseIfImageTwoFrames()
-                    }
-                } else {
-                    sourceSelector.selectedIndex = currentSourceIndex
-                }
-
-                panel.allowSourceSwitching = true
-            }
-        }
+        onInputSourceAdded.run()
 
         logger.info("Adding InputSource $inputSource (${inputSource.javaClass.simpleName})")
     }
@@ -208,6 +192,8 @@ class InputSourceManager(val eocvSim: EOCVSim) {
 
         inputSourceLoader.deleteInputSource(sourceName)
         inputSourceLoader.saveInputSourcesToFile()
+
+        onInputSourceRemoved.run()
     }
 
     fun setInputSource(sourceName: String?, makeDefault: Boolean): Boolean {
@@ -220,6 +206,8 @@ class InputSourceManager(val eocvSim: EOCVSim) {
         return result
     }
 
+    val onInputSourceInitError = EventHandler("InputSourceManager-OnInputSourceInitError")
+
     fun setInputSource(sourceName: String?): Boolean {
         val src = if (sourceName == null) {
             NullSource()
@@ -231,10 +219,7 @@ class InputSourceManager(val eocvSim: EOCVSim) {
 
         if (src != null) {
             if (!InputSourceInitializer.initializeWithTimeout(src, this)) {
-                eocvSim.visualizer.asyncPleaseWaitDialog(
-                    "Error while loading requested source", "Falling back to previous source",
-                    "Close", Dimension(300, 150), true, true
-                )
+                onInputSourceInitError.run()
 
                 logger.error("Error while loading requested source ($sourceName) reported by itself (init method returned false)")
 
@@ -298,18 +283,15 @@ class InputSourceManager(val eocvSim: EOCVSim) {
         eocvSim.onMainUpdate.once { setInputSource(name) }
     }
 
-    fun showApwdIfNeeded(sourceName: String?, job: Job?): Visualizer.AsyncPleaseWaitDialog? {
+    fun showApwdIfNeeded(sourceName: String?, job: Job?): JDialog? {
         val type = getSourceType(sourceName)
         if (type == SourceType.CAMERA || type == SourceType.VIDEO || type == SourceType.HTTP) {
-            val apwd = eocvSim.visualizer.asyncPleaseWaitDialog(
-                "Opening source...", null, "Cancel",
-                Dimension(300, 150), true
-            )
-
-            apwd.onCancel {
+            return DialogFactory.createInformation(
+                eocvSim.visualizer.frame,
+                "Opening source...", null, "Information", "Cancel"
+            ) {
                 job?.cancel(CancellationException())
             }
-            return apwd
         }
 
         return null

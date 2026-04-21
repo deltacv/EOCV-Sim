@@ -83,13 +83,11 @@ class TunableBoolean(initialValue: Boolean, supplier: () -> Boolean, consumer: (
 }
 class TunableEnum<T: Enum<*>>(initialValue: T, val enumValues: Array<Any>, supplier: () -> T, consumer: (T) -> Unit) : TunableValue<T>(initialValue, supplier, consumer) {
     override fun setAnyFromGui(guiValue: Any) {
-        if (value != null) {
-            if (value!!::class.java.isInstance(guiValue)) {
-                @Suppress("UNCHECKED_CAST")
-                setFromGui(guiValue as T)
-            } else {
-                throw IllegalArgumentException("Expected ${value!!::class.java.name} but got ${guiValue::class.java.name}")
-            }
+        if (value::class.java.isInstance(guiValue)) {
+            @Suppress("UNCHECKED_CAST")
+            setFromGui(guiValue as T)
+        } else {
+            throw IllegalArgumentException("Expected ${value::class.qualifiedName} but got ${guiValue::class.qualifiedName}")
         }
     }
 }

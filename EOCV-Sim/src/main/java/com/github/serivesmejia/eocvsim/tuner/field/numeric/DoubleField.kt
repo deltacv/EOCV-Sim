@@ -9,11 +9,7 @@ class DoubleField(
     instance: Any,
     reflectionField: VirtualField,
     eocvSim: EOCVSim
-) : NumericField<Double>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
-
-    init {
-        _value = initialFieldValue as? Double ?: 0.0
-    }
+) : NumericField<Double>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL, reflectionField.get() as? Double ?: 0.0) {
 
     override fun createNumber(value: Double): Double = value
 

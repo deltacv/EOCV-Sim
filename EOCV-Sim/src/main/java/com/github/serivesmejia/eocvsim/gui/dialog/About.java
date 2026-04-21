@@ -54,12 +54,8 @@ public class About {
     }
 
     public About(JFrame parent, EOCVSim eocvSim) {
-
         about = new JDialog(parent);
-
-        eocvSim.visualizer.childDialogs.add(about);
         initAbout();
-
     }
 
     private void initAbout() {

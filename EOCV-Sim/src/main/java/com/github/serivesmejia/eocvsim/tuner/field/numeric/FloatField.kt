@@ -9,11 +9,7 @@ class FloatField(
     instance: Any,
     reflectionField: VirtualField,
     eocvSim: EOCVSim
-) : NumericField<Float>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
-
-    init {
-        _value = initialFieldValue as? Float ?: 0.0f
-    }
+) : NumericField<Float>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL, reflectionField.get() as? Float ?: 0.0f) {
 
     override fun createNumber(value: Double): Float = value.toFloat()
 

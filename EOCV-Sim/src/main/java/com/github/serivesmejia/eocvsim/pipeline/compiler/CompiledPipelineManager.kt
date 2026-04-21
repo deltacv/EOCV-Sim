@@ -167,7 +167,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             PipelineCompileStatus.NO_SOURCE -> {
                 //delete jar if we had no sources, the most logical outcome in this case
                 deleteJarFile()
-                if(pipelineManager.eocvSim.visualizer.hasFinishedInit())
+                if(pipelineManager.eocvSim.visualizer.hasFinishedInitializing)
                     pipelineManager.onPipelineListRefresh.run()
 
                 "Build cancelled, no source files to compile $messageEnd"

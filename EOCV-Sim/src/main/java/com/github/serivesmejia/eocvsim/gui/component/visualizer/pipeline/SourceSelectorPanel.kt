@@ -160,8 +160,35 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
             }
         }
 
-        eocvSim.inputSourceManager.onSourcesListChange {
+        eocvSim.inputSourceManager.onInputSourceRemoved {
             updateSourcesList()
+        }
+
+        eocvSim.inputSourceManager.onInputSourceAdded {
+            val name = eocvSim.inputSourceManager.lastAddedSourceName
+            val dispatchedByUser = eocvSim.inputSourceManager.wasLastSourceAddedByUser
+
+            updateSourcesList()
+            
+            SwingUtilities.invokeLater {
+                val currentIndex = sourceSelector.selectedIndex
+                
+                if (dispatchedByUser) {
+                    val index = getIndexOf(name)
+                    sourceSelector.selectedIndex = index
+
+                    eocvSim.inputSourceManager.requestSetInputSource(name)
+
+                    eocvSim.onMainUpdate.once {
+                        eocvSim.pipelineManager.requestSetPaused(false)
+                        eocvSim.inputSourceManager.pauseIfImageTwoFrames()
+                    }
+                } else {
+                    sourceSelector.selectedIndex = currentIndex
+                }
+                
+                allowSourceSwitching = true
+            }
         }
     }
 
@@ -186,7 +213,7 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     }
 
     fun getIndexOf(name: String): Int {
-        for (i in 0..sourceSelector.model.size) {
+        for (i in 0 until sourceSelector.model.size) {
             if (sourceSelector.model.getElementAt(i) == name)
                 return i
         }

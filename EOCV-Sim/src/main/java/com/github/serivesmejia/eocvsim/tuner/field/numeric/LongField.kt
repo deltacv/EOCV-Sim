@@ -9,11 +9,7 @@ class LongField(
     instance: Any,
     reflectionField: VirtualField,
     eocvSim: EOCVSim
-) : NumericField<Long>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS) {
-
-    init {
-        _value = initialFieldValue as? Long ?: 0L
-    }
+) : NumericField<Long>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS, reflectionField.get() as? Long ?: 0L) {
 
     override fun createNumber(value: Double): Long = value.toLong()
 

@@ -45,7 +45,10 @@ import java.util.concurrent.TimeUnit
 import javax.swing.JComponent
 import javax.swing.SwingUtilities
 
-class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Vision") : OpenCvViewport, MatPoster {
+class SwingOpenCvViewport(
+    private val size: Size,
+    fpsMeterDescriptor: String = "deltacv Vision"
+) : OpenCvViewport, MatPoster {
 
     private val syncObj = Any()
 
@@ -59,6 +62,8 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
 
     @Volatile
     private var useGpuCanvas = false
+
+    private var isInitialized = false
 
     var dark = false
 
@@ -85,7 +90,12 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
 
     private var renderHook: RenderHook? = null
 
-    init {
+    fun init() {
+        if(isInitialized) {
+            logger.warn("init() called on SwingOpenCvViewport, but it was already initialized! Ignoring redundant call.")
+            return
+        }
+
         visionPreviewFrameQueue.setEvictAction { value: MatRecycler.RecyclableMat? ->
             /*
              * If a Mat is evicted from the queue, we need
@@ -115,6 +125,9 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
                 }
             }
         })
+
+
+        isInitialized = true
 
         setSize(size.width.toInt(), size.height.toInt())
     }
@@ -163,6 +176,7 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
     }
 
     override fun setFpsMeterEnabled(enabled: Boolean) {}
+
     override fun resume() {
         synchronized(syncObj) {
             userRequestedPause = false
@@ -235,6 +249,10 @@ class SwingOpenCvViewport(size: Size, fpsMeterDescriptor: String = "deltacv Visi
      * Called with syncObj held
      */
     fun checkState() {
+        if(!isInitialized) {
+            throw IllegalStateException("checkState() called before SwingOpenCvViewport was initialized! Call init() first.")
+        }
+
         /*
          * If the surface isn't ready, don't do anything
          */

@@ -42,31 +42,28 @@ import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
-import io.github.deltacv.common.util.loggerFor
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.common.util.ParsedVersion
+import io.github.deltacv.common.util.loggerFor
+import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import io.github.deltacv.eocvsim.plugin.loader.PluginManager
-import org.openftc.easyopencv.OpenCvViewport
 import nu.pattern.OpenCV
 import org.opencv.core.Mat
 import org.opencv.core.Size
+import org.openftc.easyopencv.OpenCvViewport
 import org.openftc.easyopencv.TimestampedPipelineHandler
-import android.graphics.Canvas
-import java.awt.Dimension
 import java.io.File
 import java.lang.Thread.sleep
 import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
-import kotlin.jvm.Throws
 import kotlin.system.exitProcess
 
 /**
@@ -97,7 +94,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         val logger by loggerFor(EOCVSim::class)
 
         init {
-            EOCVSimFolder // mkdir needed folders
+            EOCVSimFolder.mkdir() // mkdir needed folders
         }
 
         private var isNativeLibLoaded = false
@@ -157,7 +154,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
      * and the viewport where the pipeline output is shown
      * @see Visualizer
      */
-    @JvmField val visualizer = Visualizer(this)
+    val visualizer = Visualizer(this)
 
     /**
      * The configuration manager instance in charge of managing
@@ -343,13 +340,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         //shows a warning when a pipeline gets "stuck"
         pipelineManager.onPipelineTimeout {
-            visualizer.asyncPleaseWaitDialog(
+            DialogFactory.createInformation(
+                visualizer.frame,
                 "Current pipeline took too long to ${pipelineManager.lastPipelineAction}",
                 "Falling back to DefaultPipeline",
-                "Close",
-                Dimension(310, 150),
-                true,
-                true
+                "Operation failed"
             )
         }
 
@@ -468,7 +463,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
             try {
                 fpsLimiter.sync()
-            } catch (e: InterruptedException) {
+            } catch (_: InterruptedException) {
                 break
             }
         }
@@ -561,7 +556,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             logger.info("Recording session stopped")
 
             DialogFactory.createFileChooser(
-                visualizer.frame, DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT, FileFilters.recordedVideoFilter
+                visualizer.frame, DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT, "", FileFilters.recordedVideoFilter
             ).addCloseListener { _: Int, file: File?, selectedFileFilter: FileFilter? ->
                 onMainUpdate.once {
                     if (file != null) {

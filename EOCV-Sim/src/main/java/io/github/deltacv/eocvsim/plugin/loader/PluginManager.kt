@@ -90,7 +90,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             }
         }
 
-        appender!!
+        appender
     }
 
     val repositoryManager by lazy {

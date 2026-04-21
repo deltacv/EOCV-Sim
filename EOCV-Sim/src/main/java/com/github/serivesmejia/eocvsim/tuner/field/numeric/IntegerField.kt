@@ -9,11 +9,7 @@ class IntegerField(
     instance: Any,
     reflectionField: VirtualField,
     eocvSim: EOCVSim
-) : NumericField<Int>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS) {
-
-    init {
-        _value = initialFieldValue as? Int ?: 0
-    }
+) : NumericField<Int>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS, reflectionField.get() as? Int ?: 0) {
 
     override fun createNumber(value: Double): Int = value.toInt()
 

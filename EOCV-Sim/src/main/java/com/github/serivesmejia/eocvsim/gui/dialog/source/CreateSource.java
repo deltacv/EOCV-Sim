@@ -40,16 +40,12 @@ public class CreateSource {
     private volatile JFrame parent = null;
 
     public CreateSource(JFrame parent, EOCVSim eocvSim) {
-
         chooseSource = new JDialog(parent);
-
 
         this.parent = parent;
         this.eocvSim = eocvSim;
 
-        eocvSim.visualizer.childDialogs.add(chooseSource);
         initChooseSource();
-
     }
 
     private void initChooseSource() {

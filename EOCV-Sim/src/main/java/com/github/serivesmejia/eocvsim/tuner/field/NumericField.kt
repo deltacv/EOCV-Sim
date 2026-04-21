@@ -10,13 +10,13 @@ abstract class NumericField<T : Number>(
     target: Any,
     reflectionField: VirtualField,
     eocvSim: EOCVSim,
-    allowMode: AllowMode
+    allowMode: AllowMode,
+    initialValue: T
 ) : TunableField<T>(target, reflectionField, eocvSim, allowMode) {
 
-    @Suppress("UNCHECKED_CAST")
-    protected var _value: T? = initialFieldValue as T?
+    protected var _value: T = initialValue
 
-    protected val tunableValue by lazy { TunableNumber(_value?.toDouble() ?: 0.0, { _value?.toDouble() ?: 0.0 }, { updateNumber(it) }) }
+    protected val tunableValue by lazy { TunableNumber(_value.toDouble(), { _value.toDouble() }, { updateNumber(it) }) }
 
     override val tunableValues by lazy { listOf(tunableValue) }
 
@@ -24,7 +24,7 @@ abstract class NumericField<T : Number>(
 
     private fun updateNumber(newValue: Double) {
         _value = createNumber(newValue)
-        setPipelineFieldValue(_value!!)
+        setPipelineFieldValue(_value)
     }
 
     override fun init() {
@@ -32,11 +32,9 @@ abstract class NumericField<T : Number>(
     }
 
     override fun refreshPipelineObject() {
-        @Suppress("UNCHECKED_CAST")
-        val current = reflectionField.get() as T
-        _value = current
+        _value = createNumber((reflectionField.get() as? Number)?.toDouble() ?: 0.0)
     }
 
     override val value: T
-        get() = _value!!
+        get() = _value
 }
