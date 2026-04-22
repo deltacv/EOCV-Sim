@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.gui
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.dialog.*
 import com.github.serivesmejia.eocvsim.gui.dialog.SplashScreen // Explicit import to resolve reference
 import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmA
@@ -32,6 +33,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.source.*
 import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import kotlinx.coroutines.CoroutineScope
 import java.awt.*
 import java.io.File
 import java.util.*
@@ -39,9 +41,18 @@ import javax.swing.*
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
 
-object DialogFactory {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
-    @JvmStatic
+class DialogFactory : KoinComponent {
+
+    val visualizer: Visualizer by inject()
+    val pluginManager: PluginManager by inject()
+    val configManager: ConfigManager by inject()
+    val onRestartRequested: EventHandler by inject(named("onRestartRequested"))
+    val scope: CoroutineScope by inject()
+
     fun createYesOrNo(parent: Component?, message: String, submessage: String, result: (Int) -> Unit) {
         val panel = JPanel()
         val label1 = JLabel(message)
@@ -64,7 +75,6 @@ object DialogFactory {
         }
     }
 
-    @JvmStatic
     @JvmOverloads
     fun createInformation(
         parent: Component?,
@@ -101,7 +111,6 @@ object DialogFactory {
         return dialog
     }
 
-    @JvmStatic
     fun createFileChooser(
         parent: Component?,
         mode: FileChooser.Mode?,
@@ -113,109 +122,92 @@ object DialogFactory {
         return fileChooser
     }
 
-    @JvmStatic
     fun createFileChooser(
         parent: Component?,
         mode: FileChooser.Mode?,
         vararg filters: FileFilter?
     ): FileChooser = createFileChooser(parent, mode, "", *filters)
 
-    @JvmStatic
     fun createFileChooser(parent: Component?, vararg filters: FileFilter?): FileChooser =
         createFileChooser(parent, null, "", *filters)
 
-    @JvmStatic
-    @JvmOverloads
-    fun createSourceDialog(eocvSim: EOCVSim, type: SourceType, initialFile: File? = null) {
+    fun createSourceDialog(type: SourceType, initialFile: File? = null) {
         invokeLater {
             when (type) {
-                SourceType.IMAGE -> CreateImageSource(eocvSim.visualizer.frame, eocvSim, initialFile)
-                SourceType.CAMERA -> CreateCameraSource(eocvSim.visualizer.frame, eocvSim)
-                SourceType.VIDEO -> CreateVideoSource(eocvSim.visualizer.frame, eocvSim, initialFile)
-                SourceType.HTTP -> CreateHttpSource(eocvSim.visualizer.frame, eocvSim)
+                SourceType.IMAGE -> CreateImageSource(initialFile)
+                SourceType.CAMERA -> CreateCameraSource()
+                SourceType.VIDEO -> CreateVideoSource(initialFile)
+                SourceType.HTTP -> CreateHttpSource()
                 else -> {}
             }
         }
     }
 
-    @JvmStatic
-    fun createSourceExDialog(eocvSim: EOCVSim) {
-        invokeLater { CreateSourceEx(eocvSim.visualizer.frame, eocvSim.visualizer) }
+    fun createSourceExDialog() {
+        invokeLater { CreateSourceEx() }
     }
 
-    @JvmStatic
-    fun createConfigDialog(eocvSim: EOCVSim) {
-        invokeLater { Configuration(eocvSim.visualizer.frame, eocvSim) }
+    fun createConfigDialog() {
+        invokeLater { Configuration() }
     }
 
-    @JvmStatic
-    fun createAboutDialog(eocvSim: EOCVSim) {
-        invokeLater { About(eocvSim.visualizer.frame, eocvSim) }
+    fun createAboutDialog() {
+        invokeLater { About() }
     }
 
-    @JvmStatic
-    @JvmOverloads
-    fun createOutput(eocvSim: EOCVSim, wasManuallyOpened: Boolean = false) {
+    fun createOutput(wasManuallyOpened: Boolean = false) {
         invokeLater {
             if (!Output.isAlreadyOpened) {
-                Output(eocvSim.visualizer.frame, eocvSim, Output.latestIndex, wasManuallyOpened)
+                Output(Output.latestIndex, wasManuallyOpened)
             }
         }
     }
 
-    @JvmStatic
-    fun createBuildOutput(eocvSim: EOCVSim) {
+    fun createBuildOutput() {
         invokeLater {
             if (!Output.isAlreadyOpened) {
-                Output(eocvSim.visualizer.frame, eocvSim, 1)
+                Output(1)
             }
         }
     }
 
-    @JvmStatic
-    fun createPipelineOutput(eocvSim: EOCVSim) {
+    fun createPipelineOutput() {
         invokeLater {
             if (!Output.isAlreadyOpened) {
-                Output(eocvSim.visualizer.frame, eocvSim, 0)
+                Output(0)
             }
         }
     }
 
-    @JvmStatic
-    fun createMavenOutput(manager: PluginManager, onContinue: Runnable?): AppendDelegate {
+    fun createMavenOutput(onContinue: Runnable?): AppendDelegate {
         val delegate = AppendDelegate()
-        invokeLater { PluginOutput(delegate, manager, manager.eocvSim, onContinue ?: Runnable { }) }
+        invokeLater { PluginOutput(delegate, pluginManager, onRestartRequested, configManager, scope, onContinue ?: Runnable { }) }
+
         return delegate
     }
 
-    @JvmStatic
     fun createSplashScreen(closeHandler: EventHandler?) {
         invokeLater { SplashScreen(closeHandler) }
     }
 
-    @JvmStatic
-    fun createIAmA(visualizer: Visualizer) {
-        invokeLater { IAmA(visualizer.frame, visualizer) }
+    fun createIAmA() {
+        invokeLater { IAmA() }
     }
 
-    @JvmStatic
-    fun createIAmAPaperVision(visualizer: Visualizer, showWorkspacesButton: Boolean) {
-        invokeLater { IAmAPaperVision(visualizer.frame, visualizer, false, showWorkspacesButton) }
+    fun createIAmAPaperVision(showWorkspacesButton: Boolean) {
+        invokeLater { IAmAPaperVision(false, showWorkspacesButton) }
     }
 
-    @JvmStatic
-    fun createWorkspace(visualizer: Visualizer) {
-        invokeLater { CreateWorkspace(visualizer.frame, visualizer) }
+    fun createWorkspace() {
+        invokeLater { CreateWorkspace() }
     }
 
-    @JvmStatic
-    fun createCrashReport(visualizer: Visualizer?, crash: String?) {
-        invokeLater { CrashReportOutput(visualizer?.frame, crash ?: "") }
+    fun createCrashReport(crash: String?) {
+        invokeLater { CrashReportOutput(visualizer.frame, crash ?: "") }
     }
 
-    @JvmStatic
-    fun createFileAlreadyExistsDialog(eocvSim: EOCVSim): FileAlreadyExists.UserChoice {
-        return FileAlreadyExists(eocvSim.visualizer.frame, eocvSim).run()
+    fun createFileAlreadyExistsDialog(): FileAlreadyExists.UserChoice {
+        return FileAlreadyExists().run()
     }
 
     private fun invokeLater(runn: Runnable) {

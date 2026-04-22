@@ -1,6 +1,5 @@
 package com.github.serivesmejia.eocvsim.tuner
 
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel
 import com.github.serivesmejia.eocvsim.tuner.exception.CancelTunableFieldAddingException
 import io.github.deltacv.common.util.loggerForThis
@@ -8,7 +7,17 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
 
-class TunerManager(private val eocvSim: EOCVSim) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.gui.Visualizer
+
+class TunerManager : KoinComponent {
+
+    val pipelineManager: PipelineManager by inject()
+
+    val visualizer: Visualizer by inject()
+
 
     val logger by loggerForThis()
 
@@ -20,13 +29,13 @@ class TunerManager(private val eocvSim: EOCVSim) {
 
     fun init() {
         if (firstInit) {
-            eocvSim.pipelineManager.onPipelineChange.attach { reset() }
+            pipelineManager.onPipelineChange.attach { reset() }
             firstInit = false
         }
 
-        eocvSim.pipelineManager.reflectTarget?.let { target ->
+        pipelineManager.reflectTarget?.let { target ->
             addFieldsFrom(target)
-            eocvSim.visualizer.updateTunerFields(createTunableFieldPanels())
+            visualizer.updateTunerFields(createTunableFieldPanels())
 
             val iterator = fields.iterator()
             while (iterator.hasNext()) {
@@ -63,7 +72,7 @@ class TunerManager(private val eocvSim: EOCVSim) {
     }
 
     fun newTunableFieldInstanceFor(field: VirtualField, pipeline: Any): TunableField<*>? {
-        return TunableFieldRegistry.getTunableFieldFor(field, pipeline, eocvSim)
+        return TunableFieldRegistry.getTunableFieldFor(field, pipeline)
     }
 
     fun addFieldsFrom(pipeline: Any) {
@@ -91,6 +100,7 @@ class TunerManager(private val eocvSim: EOCVSim) {
     }
 
     private fun createTunableFieldPanels(): List<TunableFieldPanel> {
-        return fields.map { TunableFieldPanel(it, eocvSim) }
+        return fields.map { TunableFieldPanel(it) }
     }
+
 }

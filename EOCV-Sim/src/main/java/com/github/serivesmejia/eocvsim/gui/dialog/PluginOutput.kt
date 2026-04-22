@@ -23,7 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import io.github.deltacv.common.util.loggerForThis
@@ -31,10 +31,8 @@ import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoaderImpl
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginSource
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import java.awt.Dimension
 import java.awt.GridBagConstraints
@@ -49,7 +47,9 @@ import javax.swing.event.ChangeListener
 class PluginOutput(
     appendDelegate: AppendDelegate,
     val pluginManager: PluginManager,
-    val eocvSim: EOCVSim? = null,
+    val onRestartRequested: EventHandler,
+    val configManager: ConfigManager,
+    val scope: CoroutineScope,
     val onContinue: Runnable
 ) : Appendable {
 
@@ -111,7 +111,8 @@ class PluginOutput(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    private fun registerListeners() = (eocvSim?.scope ?: GlobalScope).launch(Dispatchers.Swing) {
+    private fun registerListeners() = scope.launch(Dispatchers.Swing) {
+
         output.addWindowListener(object : java.awt.event.WindowAdapter() {
             override fun windowClosing(e: java.awt.event.WindowEvent?) {
                 if(mavenBottomButtonsPanel.continueButton.isEnabled) {
@@ -140,19 +141,19 @@ class PluginOutput(
     }
 
     private fun checkShouldAskForRestart() {
-        if(shouldAskForRestart && eocvSim != null) {
+        if(shouldAskForRestart) {
             val dialogResult = JOptionPane.showConfirmDialog(
                 output,
                 "You need to restart the application to apply the changes. Do you want to restart now?",
                 "Restart required",
                 JOptionPane.YES_NO_OPTION
             )
-
+ 
             if(dialogResult == JOptionPane.YES_OPTION) {
                 output.isVisible = false
-                eocvSim.restart()
+                onRestartRequested.run()
             }
-
+ 
             shouldAskForRestart = false
         }
     }
@@ -360,14 +361,15 @@ class PluginOutput(
             )
 
             if(dialogResult == JOptionPane.YES_OPTION) {
-                eocvSim?.config?.flags?.set("startFresh", true)
-
+                configManager.config.flags["startFresh"] = true
+ 
                 PluginRepositoryManager.REPOSITORY_FILE.delete()
                 PluginRepositoryManager.CACHE_FILE.delete()
-
+ 
                 shouldAskForRestart = true
                 checkShouldAskForRestart()
             }
+
         }
 
         val closeButton = JButton("Close")

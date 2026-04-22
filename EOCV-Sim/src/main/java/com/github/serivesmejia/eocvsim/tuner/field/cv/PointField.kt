@@ -8,9 +8,9 @@ import org.opencv.core.Point
 
 class PointField(
     instance: Any,
-    reflectionField: VirtualField,
-    eocvSim: EOCVSim
-) : TunableField<Point>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
+    reflectionField: VirtualField
+) : TunableField<Point>(instance, reflectionField, AllowMode.ONLY_NUMBERS_DECIMAL) {
+
 
     private var point: Point = if (initialFieldValue != null) {
         val p = initialFieldValue as Point

@@ -27,15 +27,19 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.input.SourceType
 import io.github.deltacv.common.util.loggerForThis
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.awt.datatransfer.DataFlavor
 import java.awt.dnd.DnDConstants
 import java.awt.dnd.DropTarget
 import java.awt.dnd.DropTargetDropEvent
 import java.io.File
 
-class InputSourceDropTarget(val eocvSim: EOCVSim) : DropTarget() {
+class InputSourceDropTarget : DropTarget(), KoinComponent {
 
     val logger by loggerForThis()
+
+    private val dialogFactory: DialogFactory by inject()
 
     @Suppress("UNCHECKED_CAST")
     override fun drop(evt: DropTargetDropEvent) {
@@ -49,7 +53,7 @@ class InputSourceDropTarget(val eocvSim: EOCVSim) : DropTarget() {
                 val sourceType = SourceType.isFileUsableForSource(file)
 
                 if(sourceType != SourceType.UNKNOWN) {
-                    DialogFactory.createSourceDialog(eocvSim, sourceType, file)
+                    dialogFactory.createSourceDialog(sourceType, file)
                     break
                 }
             }

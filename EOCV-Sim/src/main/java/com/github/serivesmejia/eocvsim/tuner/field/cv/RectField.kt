@@ -29,8 +29,9 @@ import com.github.serivesmejia.eocvsim.tuner.TunableNumber
 import org.opencv.core.Rect
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 
-class RectField(instance: Any, reflectionField: VirtualField, eocvSim: EOCVSim) :
-    TunableField<Rect>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
+class RectField(instance: Any, reflectionField: VirtualField) :
+    TunableField<Rect>(instance, reflectionField, AllowMode.ONLY_NUMBERS_DECIMAL) {
+
 
     private var rect = arrayOf(0.0, 0.0, 0.0, 0.0)
 

@@ -23,8 +23,10 @@
 
 package com.github.serivesmejia.eocvsim.pipeline
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
+import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.handler.PipelineHandler
 import com.github.serivesmejia.eocvsim.pipeline.instantiator.DefaultPipelineInstantiator
@@ -33,11 +35,13 @@ import com.github.serivesmejia.eocvsim.pipeline.instantiator.processor.Processor
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
 import com.github.serivesmejia.eocvsim.tuner.TunableFieldRegistry
+import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
+import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.common.image.MatPoster
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
@@ -48,6 +52,10 @@ import kotlinx.coroutines.*
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.firstinspires.ftc.robotcore.internal.opmode.EOCVSimTelemetryImpl
 import org.firstinspires.ftc.vision.VisionProcessor
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
+import com.github.serivesmejia.eocvsim.EOCVSim
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport
@@ -57,13 +65,22 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong
 
 @OptIn(DelicateCoroutinesApi::class)
-class PipelineManager(
-    var eocvSim: EOCVSim,
-    val pipelineStatisticsCalculator: PipelineStatisticsCalculator
-) {
+class PipelineManager : KoinComponent {
+
+    val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+    val params: EOCVSim.Parameters by inject()
+
+    val dialogFactory: DialogFactory by inject()
+    val configManager: ConfigManager by inject()
+    val inputSourceManager: InputSourceManager by inject()
+    val pipelineStatisticsCalculator: PipelineStatisticsCalculator by inject()
+    val visualizer: Visualizer by inject()
+    val classpathScan: ClasspathScan by inject()
+    val scope: CoroutineScope by inject()
+
+    val compiledPipelineManager: CompiledPipelineManager by inject()
 
     companion object {
-
         var staticSnapshot: PipelineSnapshot? = null
             private set
     }
@@ -160,10 +177,6 @@ class PipelineManager(
         TunableFieldRegistry.hasTunableFieldFor(it.type)
     }
 
-    //manages and builds pipelines in runtime
-    @JvmField
-    val compiledPipelineManager = CompiledPipelineManager(this)
-
     private val pipelineHandlers = mutableListOf<PipelineHandler>()
     private val pipelineInstantiators = mutableMapOf<Class<*>, PipelineInstantiator>()
 
@@ -184,10 +197,10 @@ class PipelineManager(
 
         compiledPipelineManager.init()
 
-        eocvSim.classpathScan.join()
+        classpathScan.join()
 
         //scan for pipelines
-        for (pipelineClass in eocvSim.classpathScan.scanResult.pipelineClasses) {
+        for (pipelineClass in classpathScan.scanResult!!.pipelineClasses) {
             addPipelineClass(pipelineClass)
         }
 
@@ -212,7 +225,7 @@ class PipelineManager(
             val telemetry = currentTelemetry
 
             if (openedPipelineOutputCount <= 3) {
-                DialogFactory.createPipelineOutput(eocvSim)
+                dialogFactory.createPipelineOutput()
                 openedPipelineOutputCount++
             }
 
@@ -236,7 +249,7 @@ class PipelineManager(
         onUpdate {
             if (currentPipeline != null) {
                 for (pipelineHandler in pipelineHandlers) {
-                    pipelineHandler.processFrame(eocvSim.inputSourceManager.currentInputSource)
+                    pipelineHandler.processFrame(inputSourceManager.currentInputSource)
                 }
             }
         }
@@ -263,7 +276,7 @@ class PipelineManager(
     private fun applyStaticSnapOrDef() {
         onUpdate.once {
             if (!applyStaticSnapshot()) {
-                val params = eocvSim.params
+                val params = this.params
 
                 // changing to the initial pipeline, defined by the eocv sim parameters or the default pipeline
                 if (params.initialPipelineName != null) {
@@ -323,7 +336,7 @@ class PipelineManager(
         pipelineStatisticsCalculator.newPipelineFrameStart()
 
         //run our pipeline in the background until it finishes or gets cancelled
-        val pipelineJob = eocvSim.scope.launch(currentPipelineContext!!) {
+        val pipelineJob = scope.launch(currentPipelineContext!!) {
             try {
                 //if we have a pipeline, we run it right here, passing the input mat
                 //given to us. we'll post the frame the pipeline returns as long
@@ -406,7 +419,7 @@ class PipelineManager(
         }
 
         runBlocking {
-            val configTimeout = eocvSim.config.pipelineTimeout
+            val configTimeout = configManager.config.pipelineTimeout
 
             //allow double timeout if we haven't initialized the pipeline
             val timeout = if (hasInitCurrentPipeline) {
@@ -449,11 +462,11 @@ class PipelineManager(
 
         //similar to pipeline processFrame, call the user function in the background
         //and wait for some X timeout for the user to finisih doing what it has to do.
-        val viewportTappedJob = eocvSim.scope.launch(currentPipelineContext ?: EmptyCoroutineContext) {
+        val viewportTappedJob = scope.launch(currentPipelineContext ?: EmptyCoroutineContext) {
             pipeline.onViewportTapped()
         }
 
-        val configTimeoutMs = eocvSim.config.pipelineTimeout.ms
+        val configTimeoutMs = configManager.config.pipelineTimeout.ms
 
         try {
             //perform the timeout here (we'll block for a bit
@@ -633,8 +646,8 @@ class PipelineManager(
 
         setPaused(false)
 
-        if (eocvSim.configManager.config.pauseOnImages && pauseOnImages) {
-            eocvSim.inputSourceManager.pauseIfImageTwoFrames()
+        if (configManager.config.pauseOnImages && pauseOnImages) {
+            inputSourceManager.pauseIfImageTwoFrames()
         }
 
         onPipelineChange.run()
@@ -686,14 +699,14 @@ class PipelineManager(
         currentPipelineIndex = index
         currentPipelineData = data
 
-        forceChangePipeline(
-            clazz = data.clazz,
-            applyLatestSnapshot = applyLatestSnapshot,
-            applyStaticSnapshot = applyStaticSnapshot
-        )
-
-        eocvSim.visualizer.pipelineSelectorPanel.selectedIndex = index
-    }
+            forceChangePipeline(
+                clazz = data.clazz,
+                applyLatestSnapshot = applyLatestSnapshot,
+                applyStaticSnapshot = applyStaticSnapshot
+            )
+    
+            visualizer.pipelineSelectorPanel.selectedIndex = index
+        }
 
     /**
      * Change to the requested pipeline only if we're
@@ -798,7 +811,8 @@ class PipelineManager(
 
     @JvmOverloads
     fun requestSetPaused(paused: Boolean, pauseReason: PauseReason = PauseReason.USER_REQUESTED) {
-        eocvSim.onMainUpdate.once { setPaused(paused, pauseReason) }
+        onMainUpdate.once { setPaused(paused, pauseReason) }
+
     }
 
     fun reloadPipelineByName() {

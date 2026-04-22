@@ -23,7 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import io.github.deltacv.common.util.loggerForThis
 import java.awt.Font
@@ -31,7 +31,13 @@ import java.awt.LayoutManager
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
 
-class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class SidebarPanel : JTabbedPane(), KoinComponent {
+
+
+
 
     private var previousActiveIndex = -1;
 

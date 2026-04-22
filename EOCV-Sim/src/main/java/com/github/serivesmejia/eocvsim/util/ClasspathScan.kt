@@ -59,7 +59,10 @@ class ClasspathScan {
 
     val logger by loggerForThis()
 
-    lateinit var scanResult: ScanResult
+    var scanResult: ScanResult? = null
+        private set
+
+    var hasScanned = false
         private set
 
     private lateinit var scanResultJob: Job
@@ -166,7 +169,7 @@ class ClasspathScan {
             pipelineClasses.toTypedArray()
         )
 
-        return this.scanResult
+        return this.scanResult!!
     }
 
     /**
@@ -175,6 +178,9 @@ class ClasspathScan {
      */
     @OptIn(DelicateCoroutinesApi::class)
     fun asyncScan(scope: CoroutineScope = GlobalScope) {
+        if(hasScanned) return
+        hasScanned = true
+
         scanResultJob = scope.launch(Dispatchers.IO) {
             scan()
         }
@@ -185,7 +191,9 @@ class ClasspathScan {
      * @see asyncScan
      */
     fun join() = runBlocking {
-        scanResultJob.join()
+        if(::scanResultJob.isInitialized) {
+            scanResultJob.join()
+        }
     }
 
 }

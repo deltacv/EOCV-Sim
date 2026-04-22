@@ -23,34 +23,44 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.tuner.element
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.gui.component.SliderX
+import org.koin.core.qualifier.named
 import com.github.serivesmejia.eocvsim.tuner.TunableNumber
 import javax.swing.JLabel
 import kotlin.math.roundToInt
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
 class TunableSlider(val tunableValue: TunableNumber,
-                    val eocvSim: EOCVSim,
                     val valueLabel: JLabel? = null,
                     minBound: Double = 0.0,
-                    maxBound: Double = 255.0) : SliderX(minBound, maxBound, 10) {
+                    maxBound: Double = 255.0) : SliderX(minBound, maxBound, 10), KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+
+
 
     var inControl = false
 
-    constructor(tunableValue: TunableNumber, eocvSim: EOCVSim, valueLabel: JLabel) : this(tunableValue, eocvSim, valueLabel, 0.0, 255.0)
+    constructor(tunableValue: TunableNumber, valueLabel: JLabel) : this(tunableValue, valueLabel, 0.0, 255.0)
 
-    constructor(tunableValue: TunableNumber, eocvSim: EOCVSim) : this(tunableValue, eocvSim, null, 0.0, 255.0)
+    constructor(tunableValue: TunableNumber) : this(tunableValue, null, 0.0, 255.0)
 
     init {
         addChangeListener {
-            eocvSim.onMainUpdate.once {
+            onMainUpdate.once {
                 if(inControl) {
                     tunableValue.setFromGui(scaledValue)
 
-                    if (eocvSim.pipelineManager.paused)
-                        eocvSim.pipelineManager.setPaused(false)
+                    if (pipelineManager.paused)
+                        pipelineManager.setPaused(false)
                 }
             }
+
 
             valueLabel?.text = if (!tunableValue.isOnlyNumbers) {
                 scaledValue.toString()

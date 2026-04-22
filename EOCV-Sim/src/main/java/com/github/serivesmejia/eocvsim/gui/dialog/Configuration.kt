@@ -25,24 +25,36 @@ package com.github.serivesmejia.eocvsim.gui.dialog
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.config.Config
+import com.github.serivesmejia.eocvsim.config.ConfigManager
+import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields
 import com.github.serivesmejia.eocvsim.gui.theme.Theme
 import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver
 import com.github.serivesmejia.eocvsim.pipeline.PipelineFps
 import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.GridLayout
 import javax.swing.*
 
-class Configuration(parent: JFrame, private val eocvSim: EOCVSim) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
-    private val dialog = JDialog(parent)
-    private val config: Config = eocvSim.configManager.config
+class Configuration : KoinComponent {
 
-    // Declaring the components as 'val'
+    private val visualizer: Visualizer by inject()
+    private val configManager: ConfigManager by inject()
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
+
+    private val config get() = configManager.config
+
+    private val dialog = JDialog(visualizer.frame)
+
+
     private val themeComboBox: JComboBox<String>
     private val superAccessCheckBox: JCheckBox
     private val prefersPaperVisionCheckbox: JCheckBox
@@ -55,8 +67,6 @@ class Configuration(parent: JFrame, private val eocvSim: EOCVSim) {
     private val acceptButton: JButton
 
     init {
-        eocvSim.visualizer.childDialogs.add(dialog)
-
         // --- Interface Tab ---
         themeComboBox = JComboBox<String>().apply {
             Theme.entries.forEach { addItem(it.name.replace("_", " ")) }
@@ -139,7 +149,7 @@ class Configuration(parent: JFrame, private val eocvSim: EOCVSim) {
         }
 
         acceptButton.addActionListener {
-            eocvSim.onMainUpdate.once {
+            onMainLoop.once {
                 applyChanges()
             }
 
@@ -183,10 +193,11 @@ class Configuration(parent: JFrame, private val eocvSim: EOCVSim) {
         config.autoAcceptSuperAccessOnTrusted = superAccessCheckBox.isSelected
         config.flags["prefersPaperVision"] = prefersPaperVisionCheckbox.isSelected
 
-        eocvSim.configManager.saveToFile()
+        configManager.saveToFile()
 
         if (userSelectedTheme != previousTheme) {
-            eocvSim.restart()
+            // TODO: Implement restart()
+            // eocvSim.restart()
         }
     }
 

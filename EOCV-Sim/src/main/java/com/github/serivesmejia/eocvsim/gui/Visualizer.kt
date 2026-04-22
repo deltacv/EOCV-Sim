@@ -26,6 +26,7 @@ package com.github.serivesmejia.eocvsim.gui
 import com.formdev.flatlaf.FlatLaf
 import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.component.CollapsiblePanelX
 import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel
@@ -38,6 +39,7 @@ import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.Pipelin
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SidebarPipelineTabPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel
 import com.github.serivesmejia.eocvsim.gui.theme.Theme
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompiler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
@@ -53,20 +55,32 @@ import java.awt.event.MouseEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
+import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import org.koin.core.qualifier.named
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import kotlinx.coroutines.CoroutineScope
 
-class Visualizer(val eocvSim: EOCVSim) {
+class Visualizer : KoinComponent {
+
+    val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+    val onDestroyRequested: EventHandler by inject(named("onDestroyRequested"))
+    val pipelineManager: PipelineManager by inject()
+    val inputSourceManager: InputSourceManager by inject()
+    val configManager: ConfigManager by inject()
+    val workspaceManager: WorkspaceManager by inject()
+    val dialogFactory: DialogFactory by inject()
+    val scope: CoroutineScope by inject()
 
     val onInitFinished = EventHandler("OnVisualizerInitFinish")
     val onPluginGuiAttachment = EventHandler("OnPluginGuiAttachment")
-
-    val childFrames = ArrayList<JFrame>()
-    val childDialogs = ArrayList<JDialog>()
 
     lateinit var frame: JFrame
         private set
 
     private val fpsMeterDescriptor: String
-         get() = "deltacv EOCV-Sim v" + Build.standardVersionString + if (Build.isDev) "-dev" else ""
+        get() = "deltacv EOCV-Sim v" + Build.standardVersionString + if (Build.isDev) "-dev" else ""
 
     @JvmField
     val viewport = SwingOpenCvViewport(Size(1080.0, 720.0), fpsMeterDescriptor)
@@ -114,16 +128,6 @@ class Visualizer(val eocvSim: EOCVSim) {
     private val logger by loggerForThis()
 
     fun init(theme: Theme) {
-        if (Taskbar.isTaskbarSupported()) {
-            try {
-                Taskbar.getTaskbar().iconImage = EOCVSimIconLibrary.icoEOCVSim128.image
-            } catch (_: UnsupportedOperationException) {
-                logger.warn("Setting the Taskbar icon image is not supported on this platform")
-            } catch (e: SecurityException) {
-                logger.error("Security exception while setting TaskBar icon", e)
-            }
-        }
-
         try {
             theme.install()
         } catch (e: Exception) {
@@ -148,16 +152,16 @@ class Visualizer(val eocvSim: EOCVSim) {
 
         frame.add(skiaPanel)
 
-        menuBar = TopMenuBar(this, eocvSim)
+        menuBar = TopMenuBar()
         tunerMenuPanel = JPanel()
 
-        sidebarPanel = SidebarPanel(eocvSim)
+        sidebarPanel = SidebarPanel()
 
-        sidebarPipelineTabPanel = SidebarPipelineTabPanel(eocvSim)
+        sidebarPipelineTabPanel = SidebarPipelineTabPanel()
         pipelineSelectorPanel = sidebarPipelineTabPanel.pipelineSelectorPanel
         sourceSelectorPanel = sidebarPipelineTabPanel.sourceSelectorPanel
 
-        sidebarOpModeTabPanel = SidebarOpModeTabPanel(eocvSim)
+        sidebarOpModeTabPanel = SidebarOpModeTabPanel()
         opModeSelectorPanel = sidebarOpModeTabPanel.opModeSelectorPanel
 
         sidebarPanel.add("Pipeline", sidebarPipelineTabPanel)
@@ -171,7 +175,7 @@ class Visualizer(val eocvSim: EOCVSim) {
 
         frame.jMenuBar = menuBar
 
-        frame.contentPane.dropTarget = InputSourceDropTarget(eocvSim)
+        frame.contentPane.dropTarget = InputSourceDropTarget()
 
         tunerCollapsible = CollapsiblePanelX("Variable Tuner", null, null).apply {
             contentPanel.layout = BoxLayout(contentPanel, BoxLayout.LINE_AXIS)
@@ -204,6 +208,17 @@ class Visualizer(val eocvSim: EOCVSim) {
             EOCVSimIconLibrary.icoEOCVSim16.image
         )
 
+        if (Taskbar.isTaskbarSupported()) {
+            val taskbar = Taskbar.getTaskbar()
+            try {
+                taskbar.iconImage = EOCVSimIconLibrary.icoEOCVSim128.image
+            } catch (e: UnsupportedOperationException) {
+                logger.warn("Setting the Taskbar icon image is not supported on this platform")
+            } catch (e: SecurityException) {
+                logger.warn("Setting the Taskbar icon image was not allowed by the security manager")
+            }
+        }
+
         frame.setLocationRelativeTo(null)
         frame.extendedState = JFrame.MAXIMIZED_BOTH
         frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
@@ -215,8 +230,8 @@ class Visualizer(val eocvSim: EOCVSim) {
 
         registerListeners()
 
-        eocvSim.inputSourceManager.onInputSourceInitError {
-            DialogFactory.createInformation(
+        inputSourceManager.onInputSourceInitError {
+            dialogFactory.createInformation(
                 frame,
                 "Error while loading requested source", "Falling back to previous source",
                 "Operation failed"
@@ -237,19 +252,20 @@ class Visualizer(val eocvSim: EOCVSim) {
     private fun registerListeners() {
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                eocvSim.onMainUpdate.once { eocvSim.destroy() }
+                onMainUpdate.once { onDestroyRequested.run() }
+
             }
         })
 
         viewport.component.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
                 if (!colorPicker.isPicking) {
-                    eocvSim.pipelineManager.callViewportTapped()
+                    pipelineManager.callViewportTapped()
                 }
             }
         })
 
-        eocvSim.pipelineManager.onPipelineChange.attach { colorPicker.stopPicking() }
+        pipelineManager.onPipelineChange.attach { colorPicker.stopPicking() }
     }
 
     fun joinInit() {
@@ -262,19 +278,6 @@ class Visualizer(val eocvSim: EOCVSim) {
         SwingUtilities.invokeLater {
             frame.isVisible = false
             viewport.deactivate()
-
-            for (child in childFrames) {
-                child.isVisible = false
-                child.dispose()
-            }
-            childFrames.clear()
-
-            for (dialog in childDialogs) {
-                dialog.isVisible = false
-                dialog.dispose()
-            }
-            childDialogs.clear()
-
             frame.dispose()
         }
     }
@@ -308,7 +311,7 @@ class Visualizer(val eocvSim: EOCVSim) {
     }
 
     fun compilerUnsupported() {
-        DialogFactory.createInformation(
+        dialogFactory.createInformation(
             frame,
             "Runtime pipeline builds are not supported on this JVM",
             "For further info, check the EOCV-Sim docs",
@@ -316,48 +319,55 @@ class Visualizer(val eocvSim: EOCVSim) {
         )
     }
 
+
     fun selectPipelinesWorkspace() {
-        DialogFactory.createFileChooser(frame, DialogFactory.FileChooser.Mode.DIRECTORY_SELECT)
+        dialogFactory.createFileChooser(frame, DialogFactory.FileChooser.Mode.DIRECTORY_SELECT)
             .addCloseListener { option, selectedFile, _ ->
                 if (option == JFileChooser.APPROVE_OPTION && selectedFile != null) {
                     if (!selectedFile.exists()) selectedFile.mkdir()
-                    eocvSim.onMainUpdate.once {
-                        eocvSim.workspaceManager.workspaceFile = selectedFile
+                    onMainUpdate.once {
+
+                        workspaceManager.workspaceFile = selectedFile
                     }
                 }
             }
     }
 
+
     fun createVSCodeWorkspace() {
-        DialogFactory.createFileChooser(frame, DialogFactory.FileChooser.Mode.DIRECTORY_SELECT)
+        dialogFactory.createFileChooser(frame, DialogFactory.FileChooser.Mode.DIRECTORY_SELECT)
             .addCloseListener { option, selectedFile, _ ->
                 if (option == JFileChooser.APPROVE_OPTION && selectedFile != null) {
                     if (!selectedFile.exists()) selectedFile.mkdir()
 
                     if (selectedFile.isDirectory && (selectedFile.listFiles()?.size ?: 0) == 0) {
-                        eocvSim.workspaceManager.createWorkspaceWithTemplateAsync(selectedFile, GradleWorkspaceTemplate) {
+                        workspaceManager.createWorkspaceWithTemplateAsync(selectedFile, GradleWorkspaceTemplate) {
                             askOpenVSCode()
                         }
                     } else {
-                        DialogFactory.createInformation(
+                        dialogFactory.createYesOrNo(
                             frame,
-                            "The selected directory must be empty",
-                            "Select an empty directory or create a new one",
-                            "Operation failed"
-                        )
+                            "Open Workspace",
+                            "The workspace has been successfully created. Do you want to open it?",
+                        ) { result ->
+                            if (result == JOptionPane.YES_OPTION) {
+                                VSCodeLauncher.launch(selectedFile)
+                            }
+                        }
                     }
                 }
             }
     }
 
     fun askOpenVSCode() {
-        DialogFactory.createYesOrNo(frame, "A new workspace was created. Do you want to open VS Code?", "") { result ->
+        dialogFactory.createYesOrNo(frame, "A new workspace was created. Do you want to open VS Code?", "") { result ->
             if (result == 0) {
                 JOptionPane.showMessageDialog(
                     frame,
                     "After opening VS Code, you will need to install the Extension Pack for Java, for proper autocompletion support. Ensure you do so when asked by the editor!"
                 )
-                VSCodeLauncher.asyncLaunch(eocvSim.workspaceManager.workspaceFile, eocvSim.scope)
+                VSCodeLauncher.asyncLaunch(workspaceManager.workspaceFile, scope)
+
             }
         }
     }

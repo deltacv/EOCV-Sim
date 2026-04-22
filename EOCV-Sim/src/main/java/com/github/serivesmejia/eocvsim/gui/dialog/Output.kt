@@ -24,8 +24,12 @@
 package com.github.serivesmejia.eocvsim.gui.dialog
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompileStatus
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -36,12 +40,15 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
 class Output @JvmOverloads constructor(
-    parent: JFrame,
-    private val eocvSim: EOCVSim,
     private val tabbedPaneIndex: Int = latestIndex,
     private val wasManuallyOpened: Boolean = false
-) {
+) : KoinComponent {
+
+    private val visualizer: Visualizer by inject()
 
     companion object {
         var isAlreadyOpened = false
@@ -51,7 +58,7 @@ class Output @JvmOverloads constructor(
             private set
     }
 
-    private val output = JDialog(parent)
+    private val output = JDialog(visualizer.frame)
 
     private val buildBottomButtonsPanel = BuildOutputBottomButtonsPanel(::close)
     private val buildOutputPanel = OutputPanel(buildBottomButtonsPanel)
@@ -61,13 +68,12 @@ class Output @JvmOverloads constructor(
 
     private val tabbedPane = JTabbedPane()
 
-    private val compiledPipelineManager  = eocvSim.pipelineManager.compiledPipelineManager
-    private val pipelineExceptionTracker = eocvSim.pipelineManager.pipelineExceptionTracker
+    private val pipelineManager: PipelineManager by inject()
+    private val compiledPipelineManager: CompiledPipelineManager by inject()
+    private val scope: CoroutineScope by inject()
 
     init {
         isAlreadyOpened = true
-
-        eocvSim.visualizer.childDialogs.add(output)
 
         output.isModal = true
         output.title = "Output"
@@ -81,7 +87,7 @@ class Output @JvmOverloads constructor(
 
         updatePipelineOutput()
 
-        if(eocvSim.pipelineManager.paused) {
+        if(pipelineManager.paused) {
             pipelinePaused()
         } else {
             pipelineResumed()
@@ -102,14 +108,14 @@ class Output @JvmOverloads constructor(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    private fun registerListeners() = eocvSim.scope.launch(Dispatchers.Swing) {
+    private fun registerListeners() = scope.launch(Dispatchers.Swing) {
         output.addWindowListener(object: WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
                 close()
             }
         })
 
-       pipelineExceptionTracker.onUpdate {
+       pipelineManager.pipelineExceptionTracker.onUpdate {
             if(!output.isVisible) {
                 removeListener()
             } else {
@@ -134,7 +140,7 @@ class Output @JvmOverloads constructor(
             }
         }
 
-        eocvSim.pipelineManager.onPause {
+        pipelineManager.onPause {
             if(!output.isVisible) {
                 removeListener()
             } else {
@@ -142,7 +148,7 @@ class Output @JvmOverloads constructor(
             }
         }
 
-        eocvSim.pipelineManager.onResume {
+        pipelineManager.onResume {
             if(!output.isVisible) {
                 removeListener()
             } else {
@@ -151,7 +157,7 @@ class Output @JvmOverloads constructor(
         }
 
         pipelineBottomButtonsPanel.pauseButton.addActionListener {
-            eocvSim.pipelineManager.setPaused(pipelineBottomButtonsPanel.pauseButton.isSelected)
+            pipelineManager.setPaused(pipelineBottomButtonsPanel.pauseButton.isSelected)
 
             if(pipelineBottomButtonsPanel.pauseButton.isSelected) {
                 pipelinePaused()
@@ -161,16 +167,16 @@ class Output @JvmOverloads constructor(
         }
 
         pipelineBottomButtonsPanel.clearButton.addActionListener {
-            eocvSim.pipelineManager.pipelineExceptionTracker.clear()
+            pipelineManager.pipelineExceptionTracker.clear()
         }
 
         buildBottomButtonsPanel.buildAgainButton.addActionListener {
-            eocvSim.pipelineManager.compiledPipelineManager.asyncBuild()
+            pipelineManager.compiledPipelineManager.asyncBuild()
         }
     }
 
     private fun updatePipelineOutput() {
-        pipelineOutputPanel.outputArea.text = pipelineExceptionTracker.message
+        pipelineOutputPanel.outputArea.text = pipelineManager.pipelineExceptionTracker.message
     }
 
     private fun buildRunning() {

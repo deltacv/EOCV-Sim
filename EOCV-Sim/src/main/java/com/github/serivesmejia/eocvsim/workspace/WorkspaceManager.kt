@@ -24,19 +24,25 @@
 package com.github.serivesmejia.eocvsim.workspace
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.config.ConfigManager
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.io.FileWatcher
-import com.github.serivesmejia.eocvsim.util.SysUtil
-import io.github.deltacv.common.util.loggerForThis
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfig
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfigLoader
 import com.github.serivesmejia.eocvsim.workspace.util.WorkspaceTemplate
+import io.github.deltacv.common.util.loggerForThis
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import java.io.File
+import java.nio.file.Path
 import java.nio.file.Paths
 
 /**
@@ -52,11 +58,16 @@ import java.nio.file.Paths
  * excluded paths and file extensions, and the source files themselves
  * which are built using an embedded compiler and loaded with a custom
  * classloader.
- *
- * @param eocvSim the EOCVSim instance to manage the workspace for
  */
 @OptIn(DelicateCoroutinesApi::class)
-class WorkspaceManager(val eocvSim: EOCVSim) {
+class WorkspaceManager : KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+    private val compiledPipelineManager: CompiledPipelineManager by inject()
+    private val configManager: ConfigManager by inject()
+    private val params: EOCVSim.Parameters by inject()
+    private val scope: CoroutineScope by inject()
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
     val logger by loggerForThis()
 
@@ -70,17 +81,17 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
      */
     var workspaceFile = File(".")
         set(value) {
-            if(value != workspaceFile) {
+            if (value != workspaceFile) {
                 workspaceConfigLoader.workspaceFile = value
 
-                eocvSim.config.workspacePath = value.absolutePath
-                eocvSim.configManager.saveToFile()
+                configManager.config.workspacePath = value.absolutePath
+                configManager.saveToFile()
 
                 field = value
 
                 logger.info("Set current workspace to ${value.absolutePath}")
 
-                if(::fileWatcher.isInitialized)
+                if (::fileWatcher.isInitialized)
                     fileWatcher.stop()
 
                 fileWatcher = FileWatcher(
@@ -96,10 +107,10 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
 
             cachedWorkspConfig = workspaceConfigLoader.loadWorkspaceConfig()
 
-            if(cachedWorkspConfig == null) {
+            if (cachedWorkspConfig == null) {
                 cachedWorkspConfig = WorkspaceConfig()
 
-                if(workspaceConfigLoader.workspaceConfigFile.exists())
+                if (workspaceConfigLoader.workspaceConfigFile.exists())
                     logger.warn("Recreating workspace config file, old one failed to parse")
                 else
                     logger.info("Creating workspace config file...")
@@ -122,7 +133,7 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
             cachedWorkspConfig = value
         }
         get() {
-            if(cachedWorkspConfig == null)
+            if (cachedWorkspConfig == null)
                 ::workspaceFile.set(workspaceFile)
 
             return cachedWorkspConfig!!
@@ -132,57 +143,63 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
      * The relative path to the sources folder specified in the workspace configuration
      */
     val sourcesRelativePath get() = workspaceConfig.sourcesPath!!
+
     /**
      * The absolute path to the sources folder specified in the workspace configuration
      */
-    val sourcesAbsolutePath get() = Paths.get(workspaceFile.absolutePath, sourcesRelativePath).normalize()!!
+    val sourcesAbsolutePath: Path get() = Paths.get(workspaceFile.absolutePath, sourcesRelativePath).normalize()
 
     /**
      * The relative path to the resources folder specified in the workspace configuration
      */
     val resourcesRelativePath get() = workspaceConfig.resourcesPath!!
+
     /**
      * The absolute path to the resources folder specified in the workspace configuration
      */
-    val resourcesAbsolutePath get() = Paths.get(workspaceFile.absolutePath, resourcesRelativePath).normalize()!!
+    val resourcesAbsolutePath: Path get() = Paths.get(workspaceFile.absolutePath, resourcesRelativePath).normalize()
 
     /**
      * The relative paths to the excluded paths specified in the workspace configuration
      */
-    val excludedRelativePaths get() = workspaceConfig.excludedPaths
+    val excludedRelativePaths: List<String> get() = workspaceConfig.excludedPaths
+
     /**
      * The absolute paths to the excluded paths specified in the workspace configuration
      */
-    val excludedAbsolutePaths get() = excludedRelativePaths.map {
-        Paths.get(workspaceFile.absolutePath, it).normalize()!!
-    }
+    val excludedAbsolutePaths
+        get() = excludedRelativePaths.map {
+            Paths.get(workspaceFile.absolutePath, it).normalize()
+        }
 
     /**
      * The file extensions to exclude from the workspace
      */
-    val excludedFileExtensions get() = workspaceConfig.excludedFileExtensions
+    val excludedFileExtensions: ArrayList<String> get() = workspaceConfig.excludedFileExtensions
 
     /**
      * The source files in the workspace, excluding the excluded paths and file extensions
      */
-    val sourceFiles get() = SysUtil.filesUnder(sourcesAbsolutePath.toFile()) { file ->
-        file.name.endsWith(".java") && excludedAbsolutePaths.stream().noneMatch {
-            file.startsWith(it.toFile().absolutePath)
+    val sourceFiles: List<File>
+        get() = SysUtil.filesUnder(sourcesAbsolutePath.toFile()) { file ->
+            file.name.endsWith(".java") && excludedAbsolutePaths.stream().noneMatch {
+                file.startsWith(it.toFile().absolutePath)
+            }
         }
-    }
 
     /**
      * The resource files in the workspace, excluding the excluded paths and file extensions
      */
-    val resourceFiles get() = SysUtil.filesUnder(resourcesAbsolutePath.toFile()) { file ->
-        file.name.run {
-            !endsWith(".java") && !endsWith(".class") && this != "eocvsim_workspace.json"
-        } && excludedAbsolutePaths.stream().noneMatch {
-            file.startsWith(it.toFile().absolutePath)
-        } && excludedFileExtensions.stream().noneMatch {
-            file.name.endsWith(".$it")
+    val resourceFiles: List<File>
+        get() = SysUtil.filesUnder(resourcesAbsolutePath.toFile()) { file ->
+            file.name.run {
+                !endsWith(".java") && !endsWith(".class") && this != "eocvsim_workspace.json"
+            } && excludedAbsolutePaths.stream().noneMatch {
+                file.startsWith(it.toFile().absolutePath)
+            } && excludedFileExtensions.stream().noneMatch {
+                file.name.endsWith(".$it")
+            }
         }
-    }
 
     /**
      * Event handler to run code when the workspace changes
@@ -199,7 +216,7 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
      * Stops the current file watcher, if initialized
      */
     fun stopFileWatcher() {
-        if(::fileWatcher.isInitialized) {
+        if (::fileWatcher.isInitialized) {
             fileWatcher.stop()
         }
     }
@@ -213,8 +230,8 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
      * @return true if the workspace was created successfully, false otherwise
      */
     fun createWorkspaceWithTemplate(folder: File, template: WorkspaceTemplate): Boolean {
-        if(!folder.isDirectory) return false
-        if(!template.extractToIfEmpty(folder)) return false
+        if (!folder.isDirectory) return false
+        if (!template.extractToIfEmpty(folder)) return false
 
         workspaceFile = folder
         return true
@@ -226,19 +243,20 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
      * Runs asynchronously on a coroutine
      * @param folder the folder to create the workspace in
      */
-    @JvmOverloads fun createWorkspaceWithTemplateAsync(
+    @JvmOverloads
+    fun createWorkspaceWithTemplateAsync(
         folder: File,
         template: WorkspaceTemplate,
         finishCallback: (() -> Unit)? = null
-    ) = eocvSim.scope.launch(Dispatchers.IO) {
-        if(!folder.isDirectory) return@launch
-        if(!template.extractToIfEmpty(folder)) return@launch
+    ) = scope.launch(Dispatchers.IO) {
+        if (!folder.isDirectory) return@launch
+        if (!template.extractToIfEmpty(folder)) return@launch
 
-        eocvSim.onMainUpdate.once {
+        onMainLoop.once {
             workspaceFile = folder
-            if(finishCallback != null) finishCallback()
+            if (finishCallback != null) finishCallback()
 
-            eocvSim.pipelineManager.compiledPipelineManager.asyncBuild()
+            compiledPipelineManager.asyncBuild()
         }
     }
 
@@ -251,13 +269,13 @@ class WorkspaceManager(val eocvSim: EOCVSim) {
     fun init() {
         onWorkspaceChange {
             fileWatcher.onChange {
-                eocvSim.pipelineManager.compiledPipelineManager.asyncBuild()
+                pipelineManager.compiledPipelineManager.asyncBuild()
             }
         }
 
-        val file = eocvSim.params.initialWorkspace ?: File(eocvSim.config.workspacePath)
+        val file = params.initialWorkspace ?: File(configManager.config.workspacePath)
 
-        workspaceFile = if(file.exists())
+        workspaceFile = if (file.exists())
             file
         else
             CompiledPipelineManager.DEF_WORKSPACE_FOLDER

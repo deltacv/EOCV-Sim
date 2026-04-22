@@ -23,7 +23,6 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode
 
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.SidebarPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel
 import java.awt.Font
@@ -32,12 +31,17 @@ import javax.swing.BoxLayout
 import javax.swing.JPanel
 import javax.swing.border.EmptyBorder
 
-class SidebarOpModeTabPanel(eocvSim: EOCVSim) : SidebarPanel.TabJPanel() {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-    val opModeControlsPanel = OpModeControlsPanel(eocvSim)
-    val opModeSelectorPanel = OpModeSelectorPanel(eocvSim, opModeControlsPanel)
+class SidebarOpModeTabPanel : SidebarPanel.TabJPanel(), KoinComponent {
 
-    val telemetryPanel = TelemetryPanel(eocvSim.pipelineManager)
+    val opModeControlsPanel = OpModeControlsPanel()
+    val opModeSelectorPanel = OpModeSelectorPanel(opModeControlsPanel)
+
+
+    val telemetryPanel = TelemetryPanel()
+
 
     init {
         font = font.deriveFont(Font.PLAIN, 14f)

@@ -38,7 +38,13 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.border.TitledBorder
 
-class TelemetryPanel(pipelineManager: PipelineManager? = null) : JPanel(), TelemetryTransmissionReceiver {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver, KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+
 
     val telemetryScroll = JScrollPane()
     val telemetryList  = JList<String>()
@@ -95,14 +101,13 @@ class TelemetryPanel(pipelineManager: PipelineManager? = null) : JPanel(), Telem
             ipady = 20
         })
 
-        if(pipelineManager != null) {
-            pipelineManager.onPipelineChange { // update telemetry receiver on pipeline change
-                val telemetry = pipelineManager.currentTelemetry
-                if (telemetry is EOCVSimTelemetryImpl) {
-                    telemetry.addTransmissionReceiver(this@TelemetryPanel)
-                }
+        pipelineManager.onPipelineChange { // update telemetry receiver on pipeline change
+            val telemetry = pipelineManager.currentTelemetry
+            if (telemetry is EOCVSimTelemetryImpl) {
+                telemetry.addTransmissionReceiver(this@TelemetryPanel)
             }
         }
+
     }
 
     fun revalAndRepaint() {

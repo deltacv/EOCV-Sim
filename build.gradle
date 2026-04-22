@@ -6,6 +6,7 @@ buildscript {
     ext {
         kotlin_version = "2.3.0"
         kotlinx_coroutines_version = "1.10.2"
+        koin_version = "4.2.0"
         slf4j_version = "2.0.16"
         log4j_version = "2.24.1"
         opencv_version = "4.7.0-0"

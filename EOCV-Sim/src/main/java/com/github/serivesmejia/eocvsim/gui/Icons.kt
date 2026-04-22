@@ -28,9 +28,16 @@ import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.vision.external.gui.util.ImgUtil
 import java.awt.image.BufferedImage
 import java.util.NoSuchElementException
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import javax.swing.ImageIcon
 
-object Icons {
+
+object Icons : KoinComponent {
+
+    private val visualizer: Visualizer by inject()
+
+
 
     private val bufferedImages = HashMap<String, Image>()
 
@@ -94,6 +101,8 @@ object Icons {
             GuiUtil.invertBufferedImageColors(buffImg)
         }
 
+
+
         bufferedImages[name] = Image(buffImg, allowInvert)
         icons[name] = NamedImageIcon(name, buffImg)
     }
@@ -119,6 +128,8 @@ object Icons {
             }
         }
     }
+
+
 
     data class Image(val img: BufferedImage, val allowInvert: Boolean)
 

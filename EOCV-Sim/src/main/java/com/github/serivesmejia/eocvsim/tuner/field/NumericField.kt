@@ -9,10 +9,10 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 abstract class NumericField<T : Number>(
     target: Any,
     reflectionField: VirtualField,
-    eocvSim: EOCVSim,
     allowMode: AllowMode,
     initialValue: T
-) : TunableField<T>(target, reflectionField, eocvSim, allowMode) {
+) : TunableField<T>(target, reflectionField, allowMode) {
+
 
     protected var _value: T = initialValue
 

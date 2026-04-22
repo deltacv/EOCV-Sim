@@ -22,7 +22,11 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog.source
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.config.ConfigManager
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.gui.Visualizer
+import org.koin.core.qualifier.named
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox
 import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver
 import com.github.serivesmejia.eocvsim.input.source.CameraSource
@@ -39,28 +43,35 @@ import org.opencv.core.Mat
 import org.opencv.core.Size
 import java.awt.*
 import javax.swing.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class CreateCameraSource(
-    parent: JFrame,
-    private val eocvSim: EOCVSim
-) {
+class CreateCameraSource : KoinComponent {
+
+    private val inputSourceManager: InputSourceManager by inject()
+    private val configManager: ConfigManager by inject()
+    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+
+    private val visualizer: Visualizer by inject()
 
     companion object {
         const val VISIBLE_CHARACTERS_COMBO_BOX = 22
         private val sizes = mutableMapOf<String, List<Size>>()
     }
 
-    val createCameraSource = JDialog(parent)
+    val createCameraSource = JDialog(visualizer.frame)
     private val statusLabel = JLabel("", SwingConstants.CENTER)
 
     private val camerasComboBox = JComboBox<String>()
     private val dimensionsComboBox = JComboBox<String>()
+
     private val rotationComboBox = EnumComboBox(
         "",
         WebcamRotation::class.java,
-        WebcamRotation.entries.toTypedArray(), // Correction: Using .entries
+        WebcamRotation.entries.toTypedArray(),
         WebcamRotation::displayName
-    ) { WebcamRotation.fromDisplayName(it) ?: WebcamRotation.UPRIGHT } // Correction: Lambda moved out
+    ) { WebcamRotation.fromDisplayName(it) ?: WebcamRotation.UPRIGHT }
+
     private val nameTextField = JTextField(15)
     private val createButton = JButton()
     private var wasCancelled = false
@@ -73,13 +84,12 @@ class CreateCameraSource(
     private enum class State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED, NO_WEBCAMS, UNSUPPORTED }
 
     init {
-        eocvSim.visualizer.childDialogs.add(createCameraSource)
-
         // Force preferred driver fallback
-        if (eocvSim.config.preferredWebcamDriver == WebcamDriver.OpenIMAJ)
-            eocvSim.config.preferredWebcamDriver = WebcamDriver.OpenPnp
+        if (configManager.config.preferredWebcamDriver == WebcamDriver.OpenIMAJ)
+            configManager.config.preferredWebcamDriver = WebcamDriver.OpenPnp
 
-        val preferredDriver = eocvSim.config.preferredWebcamDriver
+        val preferredDriver = configManager.config.preferredWebcamDriver
+
 
         when (preferredDriver) {
             WebcamDriver.OpenPnp -> {
@@ -151,7 +161,8 @@ class CreateCameraSource(
             gbc.gridx = 0; gbc.gridy = 1
             add(JLabel("Source name: ", JLabel.RIGHT), gbc)
             gbc.gridx = 1
-            nameTextField.text = "CameraSource-${eocvSim.inputSourceManager.sources.size + 1}"
+            nameTextField.text = "CameraSource-${inputSourceManager.sources.size + 1}"
+
             add(nameTextField, gbc)
 
             // Suggested resolution
@@ -247,7 +258,8 @@ class CreateCameraSource(
             return
         }
 
-        nameTextField.text = eocvSim.inputSourceManager.tryName(webcam.name)
+        nameTextField.text = inputSourceManager.tryName(webcam.name)
+
         dimensionsComboBox.removeAllItems()
 
         CoroutineScope(Dispatchers.IO).launch {
@@ -324,17 +336,20 @@ class CreateCameraSource(
     }
 
     private fun createSource(name: String, camName: String, size: Size, rotation: WebcamRotation) {
-        eocvSim.onMainUpdate.once { eocvSim.inputSourceManager.addInputSource(name, CameraSource(camName, size, rotation), true) }
+        onMainUpdate.once { inputSourceManager.addInputSource(name, CameraSource(camName, size, rotation), true) }
     }
 
+
     private fun createSource(name: String, camIndex: Int, size: Size, rotation: WebcamRotation) {
-        eocvSim.onMainUpdate.once { eocvSim.inputSourceManager.addInputSource(name, CameraSource(camIndex, size, rotation), true) }
+        onMainUpdate.once { inputSourceManager.addInputSource(name, CameraSource(camIndex, size, rotation), true) }
     }
+
 
     private fun updateCreateButton() {
         createButton.isEnabled = nameTextField.text.trim().isNotEmpty() &&
-                !eocvSim.inputSourceManager.isNameInUse(nameTextField.text)
+                !inputSourceManager.isNameInUse(nameTextField.text)
     }
+
 
     private fun getSelectedIndex() = indexes[camerasComboBox.selectedItem] ?: 0
 

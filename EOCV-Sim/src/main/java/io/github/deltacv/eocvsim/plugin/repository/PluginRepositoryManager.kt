@@ -43,9 +43,12 @@ import javax.swing.JOptionPane
 import kotlin.concurrent.withLock
 
 
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+
 class PluginRepositoryManager(
     val appender: AppendDelegate,
-    val eocvSim: EOCVSim,
+    val onMainUpdate: EventHandler,
+    val restart: () -> Unit,
     val haltLock: ReentrantLock,
     val haltCondition: Condition
 ) {
@@ -155,7 +158,7 @@ class PluginRepositoryManager(
                             "Plugin \"${plugin.key}\" is outdated. Latest version is ${latest.version}."
                 )
 
-                eocvSim.onMainUpdate.once {
+                onMainUpdate.once {
                     promptUpdateAndRestart(plugin.key, pluginDep, latest)
                 }
             } else {
@@ -211,7 +214,7 @@ class PluginRepositoryManager(
             tomlFile.writeText(tomlLines.joinToString("\n"))
 
             appender.appendln(PluginOutput.SPECIAL_SILENT +"Successfully updated \"$pluginName\" to version ${latest.version}. Restarting...")
-            eocvSim.restart()
+            restart()
         }
     }
 

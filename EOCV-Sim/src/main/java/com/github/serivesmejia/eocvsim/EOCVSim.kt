@@ -29,9 +29,12 @@ import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
+import com.github.serivesmejia.eocvsim.output.RecordingManager
 import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
+
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
+import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.FileFilters
@@ -54,6 +57,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import nu.pattern.OpenCV
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.openftc.easyopencv.OpenCvViewport
@@ -74,7 +80,7 @@ import kotlin.system.exitProcess
  * @param params the parameters to initialize the simulator with
  * @see Parameters
  */
-class EOCVSim(val params: Parameters = Parameters()) {
+class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
 
     companion object {
         const val VERSION = Build.versionString
@@ -88,8 +94,6 @@ class EOCVSim(val params: Parameters = Parameters()) {
         @JvmField
         val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
 
-        private var hasScanned = false
-        private val classpathScan = ClasspathScan()
 
         val logger by loggerFor(EOCVSim::class)
 
@@ -147,35 +151,25 @@ class EOCVSim(val params: Parameters = Parameters()) {
      * posted by the different components of the simulator
      * @see EventHandler
      */
-    @JvmField val onMainUpdate = EventHandler("OnMainUpdate")
+    val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+    val onRestartRequested: EventHandler by inject(named("onRestartRequested"))
+    val onDestroyRequested: EventHandler by inject(named("onDestroyRequested"))
+
 
     /**
      * The visualizer instance in charge of managing the GUI
      * and the viewport where the pipeline output is shown
      * @see Visualizer
      */
-    val visualizer = Visualizer(this)
+    val visualizer: Visualizer by inject()
 
-    /**
-     * The configuration manager instance in charge of managing
-     * the configuration of the simulator from the config json file
-     */
-    @JvmField val configManager = ConfigManager()
+    val configManager: ConfigManager by inject()
+    val inputSourceManager: InputSourceManager by inject()
+    val pluginManager: PluginManager by inject()
 
-    /**
-     * The input source manager instance in charge of managing input sources
-     * and their loading, as well as the current input source.
-     * Input Sources are the sources of the frames that the pipeline processes
-     * they can be from a webcam, a video or image file, etc.
-     * @see InputSourceManager
-     */
-    @JvmField val inputSourceManager = InputSourceManager(this)
+    val recordingManager: RecordingManager by inject()
+    val dialogFactory: DialogFactory by inject()
 
-    /**
-     * Manager in charge of loading and managing plugins
-     * @see PluginManager
-     */
-    @JvmField val pluginManager = PluginManager(this)
 
     /**
      * The pipeline statistics calculator instance in charge of
@@ -183,25 +177,25 @@ class EOCVSim(val params: Parameters = Parameters()) {
      * of the current pipeline
      * @see PipelineStatisticsCalculator
      */
-    @JvmField val pipelineStatisticsCalculator = PipelineStatisticsCalculator()
+    val pipelineStatisticsCalculator: PipelineStatisticsCalculator by inject()
 
     /**
      * The pipeline manager instance in charge of managing pipelines
      * and their execution, as well as making sure the pipeline
      * does not take too long to process a frame
      */
-    @JvmField val pipelineManager = PipelineManager(this, pipelineStatisticsCalculator)
+    val pipelineManager: PipelineManager by inject()
 
     /**
      * The tuner manager instance in charge of managing pipeline and processor
      * tunable variables and their values that can be changed in runtime
      */
-    @JvmField val tunerManager = TunerManager(this)
+    val tunerManager: TunerManager by inject()
 
     /**
      * The workspace manager instance in charge of managing user workspaces
      */
-    @JvmField val workspaceManager = WorkspaceManager(this)
+    val workspaceManager: WorkspaceManager by inject()
 
     /**
      * The current configuration of the simulator
@@ -210,20 +204,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
      */
     val config: Config get() = configManager.config
 
-    /**
-     * The classpath scanner instance containing all the scanned classes
-     * From OpenCvPipeline, VisionProcessor, TunableField and OpMode classes
-     * @see ClasspathScan
-     */
-    val classpathScan get() = Companion.classpathScan
-
-    /**
-     * The current recording session of the simulator
-     * This allows the user to record the output of the pipeline
-     * and save it to a file
-     * @see VideoRecordingSession
-     */
-    var currentRecordingSession: VideoRecordingSession? = null
+    val classpathScan: ClasspathScan by inject()
 
     /**
      * Utility in charge of limiting the FPS of the simulator
@@ -268,6 +249,10 @@ class EOCVSim(val params: Parameters = Parameters()) {
     fun init() {
         eocvSimThread = Thread.currentThread()
 
+        // Wire up lifecycle events so components can trigger restart/destroy without injecting EOCVSim
+        onRestartRequested { restart() }
+        onDestroyRequested { destroy() }
+
         if (!EOCVSimFolder.couldLock) {
             logger.error(
                 "Couldn't finally claim lock file in \"${EOCVSimFolder.absolutePath}\"! " + "Is the folder opened by another EOCV-Sim instance?"
@@ -286,7 +271,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
             logger.info("Confirmed claiming of the lock file in ${EOCVSimFolder.absolutePath}")
         }
 
-        DialogFactory.createSplashScreen(visualizer.onInitFinished)
+        dialogFactory.createSplashScreen(visualizer.onInitFinished)
 
         logger.info("-- Initializing EasyOpenCV Simulator v$VERSION ($hexCode) --")
 
@@ -295,10 +280,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
         //loading native lib only once in the app runtime
         loadOpenCvLib(params.opencvNativeLibrary)
 
-        if (!hasScanned) {
-            classpathScan.asyncScan(scope)
-            hasScanned = true
-        }
+        classpathScan.asyncScan(scope)
 
         configManager.init()
 
@@ -314,11 +296,11 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
             if(!config.flags.contains("hasShownIamA") || config.flags["hasShownIamA"] == false) {
                 // Initial dialog to introduce our cool stuff to the user
-                DialogFactory.createIAmA(visualizer)
+                dialogFactory.createIAmA()
             } else if(!config.flags.contains("hasShownIamPaperVision") || config.flags["hasShownIamPaperVision"] == false) {
                 // sometimes the users might miss the PaperVision dialog after the IAmA dialog
                 // so we show it here if the user hasn't seen it yet
-                DialogFactory.createIAmAPaperVision(visualizer, false)
+                dialogFactory.createIAmAPaperVision(false)
             } else if(config.flags["prefersPaperVision"] == true) {
                 // if the user prefers PaperVision, switch to it upon start up
                 val indexOfTab = visualizer.sidebarPanel.indexOfTab("PaperVision")
@@ -340,7 +322,7 @@ class EOCVSim(val params: Parameters = Parameters()) {
 
         //shows a warning when a pipeline gets "stuck"
         pipelineManager.onPipelineTimeout {
-            DialogFactory.createInformation(
+            dialogFactory.createInformation(
                 visualizer.frame,
                 "Current pipeline took too long to ${pipelineManager.lastPipelineAction}",
                 "Falling back to DefaultPipeline",
@@ -481,8 +463,8 @@ class EOCVSim(val params: Parameters = Parameters()) {
         pluginManager.disablePlugins()
 
         //stop recording session if there's currently an ongoing one
-        currentRecordingSession?.stopRecordingSession()
-        currentRecordingSession?.discardVideo()
+        recordingManager.stopRecordingSession()
+
 
         logger.info("Trying to save config file...")
 
@@ -523,82 +505,14 @@ class EOCVSim(val params: Parameters = Parameters()) {
         destroy(DestroyReason.RESTART)
     }
 
-    /**
-     * Starts a recording session to record the output of the pipeline
-     * to a video file in real-time which will be prompted to the user
-     * to save it to a file after stopping the recording session.
-     */
-    fun startRecordingSession() {
-        if (currentRecordingSession == null) {
-            currentRecordingSession = VideoRecordingSession(
-                config.videoRecordingFps.fps.toDouble(), config.videoRecordingSize
-            )
 
-            currentRecordingSession!!.startRecordingSession()
-
-            logger.info("Recording session started")
-
-            pipelineManager.pipelineOutputPosters.add(currentRecordingSession!!.matPoster)
-        }
-    }
-
-    /**
-     * Stops the current recording session and prompts the user to save the recorded video
-     */
-    fun stopRecordingSession() {
-        currentRecordingSession?.let { itVideo ->
-
-            visualizer.pipelineSelectorPanel.buttonsPanel.pipelineRecordBtt.isEnabled = false
-
-            itVideo.stopRecordingSession()
-            pipelineManager.pipelineOutputPosters.remove(itVideo.matPoster)
-
-            logger.info("Recording session stopped")
-
-            DialogFactory.createFileChooser(
-                visualizer.frame, DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT, "", FileFilters.recordedVideoFilter
-            ).addCloseListener { _: Int, file: File?, selectedFileFilter: FileFilter? ->
-                onMainUpdate.once {
-                    if (file != null) {
-                        var correctedFile = file
-                        val extension = SysUtil.getExtensionByStringHandling(file.name)
-
-                        if (selectedFileFilter is FileNameExtensionFilter) { //if user selected an extension
-                            //get selected extension
-                            correctedFile = File(file.absolutePath + "." + selectedFileFilter.extensions[0])
-                        } else if (extension.isPresent) {
-                            if (!extension.get().equals("avi", true)) {
-                                correctedFile = File(file.absolutePath + ".avi")
-                            }
-                        } else {
-                            correctedFile = File(file.absolutePath + ".avi")
-                        }
-
-                        if (correctedFile.exists()) {
-                            SwingUtilities.invokeLater {
-                                if (DialogFactory.createFileAlreadyExistsDialog(this@EOCVSim) == FileAlreadyExists.UserChoice.REPLACE) {
-                                    onMainUpdate.once { itVideo.saveTo(correctedFile) }
-                                }
-                            }
-                        } else {
-                            itVideo.saveTo(correctedFile)
-                        }
-                    } else {
-                        itVideo.discardVideo()
-                    }
-
-                    currentRecordingSession = null
-                    visualizer.pipelineSelectorPanel.buttonsPanel.pipelineRecordBtt.isEnabled = true
-                }
-            }
-        }
-    }
 
     /**
      * Checks if the simulator is currently recording
      * @return true if the simulator is currently recording, false otherwise
      */
-    fun isCurrentlyRecording() = currentRecordingSession?.isRecording == true
+    fun isCurrentlyRecording() = recordingManager.isCurrentlyRecording()
+
 
     /**
      * Updates the visualizer title message

@@ -38,7 +38,21 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import kotlinx.coroutines.*
 import java.io.File
 
-class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.util.ClasspathScan
+import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
+import org.koin.core.qualifier.named
+
+class CompiledPipelineManager : KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+    private val visualizer: Visualizer by inject()
+    private val dialogFactory: DialogFactory by inject()
+    private val scope: CoroutineScope by inject()
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
     companion object {
         val logger by loggerForThis()
@@ -84,23 +98,22 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     var isBuildRunning = false
         private set
 
-    val workspaceManager get() = pipelineManager.eocvSim.workspaceManager
-    val eocvSim get() = pipelineManager.eocvSim
+    val workspaceManager: WorkspaceManager by inject()
 
     fun init() {
         logger.info("Initializing...")
 
         onBuildStart {
-            eocvSim.onMainUpdate.once {
-                eocvSim.visualizer.menuBar.workspCompile.isEnabled = false
-                eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelineCompileBtt.isEnabled = false
+            onMainLoop.once {
+                visualizer.menuBar.workspCompile.isEnabled = false
+                visualizer.pipelineSelectorPanel.buttonsPanel.pipelineCompileBtt.isEnabled = false
             }
         }
 
         onBuildEnd {
-            eocvSim.onMainUpdate.once {
-                eocvSim.visualizer.menuBar.workspCompile.isEnabled = true
-                eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelineCompileBtt.isEnabled = true
+            onMainLoop.once {
+                visualizer.menuBar.workspCompile.isEnabled = true
+                visualizer.pipelineSelectorPanel.buttonsPanel.pipelineCompileBtt.isEnabled = true
             }
         }
 
@@ -167,8 +180,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             PipelineCompileStatus.NO_SOURCE -> {
                 //delete jar if we had no sources, the most logical outcome in this case
                 deleteJarFile()
-                if(pipelineManager.eocvSim.visualizer.hasFinishedInitializing)
-                    pipelineManager.onPipelineListRefresh.run()
+                pipelineManager.onPipelineListRefresh.run()
 
                 "Build cancelled, no source files to compile $messageEnd"
             }
@@ -189,13 +201,15 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
             logger.warn("$lastBuildOutputMessage\n")
 
             if(result.status == PipelineCompileStatus.FAILED && !Output.isAlreadyOpened)
-                DialogFactory.createBuildOutput(pipelineManager.eocvSim)
+                withContext(Dispatchers.Main) {
+                    dialogFactory.createBuildOutput()
+                }
         }
 
         onBuildEnd.callRightAway = true
         onBuildEnd.run()
 
-        eocvSim.scope.launch {
+        scope.launch {
             delay(1000)
             onBuildEnd.callRightAway = false
         }
@@ -225,7 +239,7 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
         lastBuildResult = PipelineCompileResult(PipelineCompileStatus.FAILED, lastBuildOutputMessage!!)
 
         if(!Output.isAlreadyOpened)
-            DialogFactory.createBuildOutput(pipelineManager.eocvSim)
+            dialogFactory.createBuildOutput()
 
         lastBuildResult!!
     }
@@ -234,12 +248,12 @@ class CompiledPipelineManager(private val pipelineManager: PipelineManager) {
     @OptIn(DelicateCoroutinesApi::class)
     fun asyncBuild(
         endCallback: (PipelineCompileResult) -> Unit = {}
-    ) = eocvSim.scope.launch(Dispatchers.IO) {
+    ) = scope.launch(Dispatchers.IO) {
         if(PipelineCompiler.IS_USABLE) {
             endCallback(build())
         } else {
-            eocvSim.onMainUpdate.once {
-                eocvSim.visualizer.compilerUnsupported()
+            onMainLoop.once {
+                visualizer.compilerUnsupported()
             }
         }
     }

@@ -25,7 +25,7 @@ package com.github.serivesmejia.eocvsim.tuner
 
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 
-sealed class TunableValue<T>(
+sealed class TunableValue<T: Any>(
     initialValue: T,
     val supplier: () -> T,
     val consumer: (T) -> Unit

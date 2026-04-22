@@ -7,8 +7,8 @@ import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 
 class EnumField(instance: Any,
-                reflectionField: VirtualField,
-                eocvSim: EOCVSim) : TunableField<Enum<*>>(instance, reflectionField, eocvSim, AllowMode.TEXT) {
+                reflectionField: VirtualField) : TunableField<Enum<*>>(instance, reflectionField, AllowMode.TEXT) {
+
 
     val values = reflectionField.type.enumConstants
 

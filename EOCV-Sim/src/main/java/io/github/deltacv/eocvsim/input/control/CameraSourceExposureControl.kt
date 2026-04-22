@@ -10,7 +10,7 @@ class CameraSourceExposureControl(
     cameraSource: CameraSource
 ) : ExposureControl {
 
-    val control = cameraSource.webcamPropertyControl
+    val control = cameraSource.getWebcamPropertyControl()!!
 
     override fun getMode() = if(control.getPropertyAuto(WebcamProperty.EXPOSURE)) {
         ExposureControl.Mode.Auto

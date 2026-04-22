@@ -9,9 +9,9 @@ import org.opencv.core.Scalar
 
 class ScalarField(
     instance: Any,
-    reflectionField: VirtualField,
-    eocvSim: EOCVSim
-) : TunableField<Scalar>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL) {
+    reflectionField: VirtualField
+) : TunableField<Scalar>(instance, reflectionField, AllowMode.ONLY_NUMBERS_DECIMAL) {
+
 
     private var scalar: Scalar = if (initialFieldValue == null) {
         Scalar(0.0, 0.0, 0.0)

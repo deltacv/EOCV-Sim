@@ -43,9 +43,9 @@ class VisionInputSourceProvider(
     override fun get(name: String): VisionSource {
         val source = VisionInputSource(if(File(name).exists()) {
             if(isImage(name)) {
-                ImageSource(name)
+                ImageSource(name, Size())
             } else if(isVideo(name)) {
-                VideoSource(name, null)
+                VideoSource(name, Size())
             } else throw IllegalArgumentException("File $name is neither an image nor a video")
         } else {
             val index = name.toIntOrNull()
@@ -53,7 +53,7 @@ class VisionInputSourceProvider(
                     else null
 
             if(index == null) {
-                inputSourceManager.sources.get(name) ?: throw IllegalArgumentException("Input source $name not found")
+                inputSourceManager.sources[name] ?: throw IllegalArgumentException("Input source $name not found")
             } else CameraSource(index, Size(640.0, 480.0))
         }, RedirectToOpModeThrowableHandler(notifier))
 

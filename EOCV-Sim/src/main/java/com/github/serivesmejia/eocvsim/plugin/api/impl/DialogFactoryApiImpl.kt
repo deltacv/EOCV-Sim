@@ -32,16 +32,21 @@ import io.github.deltacv.eocvsim.plugin.api.DialogFactoryApi
 import io.github.deltacv.eocvsim.plugin.api.HookApi
 import io.github.deltacv.eocvsim.plugin.api.InputSourceApi
 import io.github.deltacv.eocvsim.plugin.api.JFileChooserApi
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import javax.swing.filechooser.FileFilter
 
-class DialogFactoryApiImpl(owner: EOCVSimPlugin, val internalVisualizer: Visualizer) : DialogFactoryApi(owner) {
+class DialogFactoryApiImpl(owner: EOCVSimPlugin, val internalVisualizer: Visualizer) : DialogFactoryApi(owner), KoinComponent {
+
+    val dialogFactory: DialogFactory by inject()
+
     override fun createYesOrNo(
         message: String,
         subMessage: String,
         result: (Boolean) -> Unit
     ) = apiImpl {
-        DialogFactory.createYesOrNo(internalVisualizer.frame, message, subMessage) {
+        dialogFactory.createYesOrNo(internalVisualizer.frame, message, subMessage) {
             result(it == 0)
         }
     }
@@ -57,7 +62,7 @@ class DialogFactoryApiImpl(owner: EOCVSimPlugin, val internalVisualizer: Visuali
             JFileChooserApi.Mode.SAVE_FILE -> DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT
         }
 
-        val fileChooser = DialogFactory.createFileChooser(
+        val fileChooser = dialogFactory.createFileChooser(
             internalVisualizer.frame,
             internalMode,
             initialFileName,
@@ -78,31 +83,31 @@ class DialogFactoryApiImpl(owner: EOCVSimPlugin, val internalVisualizer: Visuali
             InputSourceApi.Type.HTTP -> SourceType.HTTP
         }
 
-        DialogFactory.createSourceDialog(internalVisualizer.eocvSim, type, initialFile)
+        dialogFactory.createSourceDialog(type, initialFile)
     }
 
     override fun createSourceDialog() = apiImpl {
-        DialogFactory.createSourceExDialog(internalVisualizer.eocvSim)
+        dialogFactory.createSourceExDialog()
     }
 
     override fun createConfigDialog() = apiImpl {
-        DialogFactory.createConfigDialog(internalVisualizer.eocvSim)
+        dialogFactory.createConfigDialog()
     }
 
     override fun createAboutDialog() = apiImpl {
-        DialogFactory.createAboutDialog(internalVisualizer.eocvSim)
+        dialogFactory.createAboutDialog()
     }
 
     override fun createOutputDialog(wasManuallyOpened: Boolean) = apiImpl {
-        DialogFactory.createOutput(internalVisualizer.eocvSim, wasManuallyOpened)
+        dialogFactory.createOutput(wasManuallyOpened)
     }
 
     override fun createBuildOutputDialog() = apiImpl {
-        DialogFactory.createBuildOutput(internalVisualizer.eocvSim)
+        dialogFactory.createBuildOutput()
     }
 
     override fun createPipelineOutputDialog() = apiImpl {
-        DialogFactory.createPipelineOutput(internalVisualizer.eocvSim)
+        dialogFactory.createPipelineOutput()
     }
 
     override fun createSplashScreen(closeHook: HookApi) = apiImpl {
@@ -111,23 +116,23 @@ class DialogFactoryApiImpl(owner: EOCVSimPlugin, val internalVisualizer: Visuali
             internalCloseHandler.run()
         }
 
-        DialogFactory.createSplashScreen(internalCloseHandler)
+        dialogFactory.createSplashScreen(internalCloseHandler)
     }
 
     override fun createIAmADialog() = apiImpl {
-        DialogFactory.createIAmA(internalVisualizer)
+        dialogFactory.createIAmA()
     }
 
     override fun createIAmAPaperVisionDialog(showWorkspacesButton: Boolean) = apiImpl {
-        DialogFactory.createIAmAPaperVision(internalVisualizer, showWorkspacesButton)
+        dialogFactory.createIAmAPaperVision(showWorkspacesButton)
     }
 
     override fun createWorkspaceDialog() = apiImpl {
-        DialogFactory.createWorkspace(internalVisualizer)
+        dialogFactory.createWorkspace()
     }
 
     override fun createCrashReportDialog(report: String) = apiImpl {
-        DialogFactory.createCrashReport(internalVisualizer, report)
+        dialogFactory.createCrashReport(report)
     }
 
     override fun disableApi() { }

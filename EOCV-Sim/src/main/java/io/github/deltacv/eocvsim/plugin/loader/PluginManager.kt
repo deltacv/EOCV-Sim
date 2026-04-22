@@ -41,11 +41,23 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.properties.Delegates
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import com.github.serivesmejia.eocvsim.config.ConfigManager
+import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import org.koin.core.qualifier.named
+
 /**
  * Manages the loading, enabling and disabling of plugins
- * @param eocvSim the EOCV-Sim instance
  */
-class PluginManager(val eocvSim: EOCVSim) {
+class PluginManager : KoinComponent {
+
+    private val configManager: ConfigManager by inject()
+    private val visualizer: Visualizer by inject()
+    private val dialogFactory: DialogFactory by inject()
+    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+    private val onRestartRequested: EventHandler by inject(named("onRestartRequested"))
 
     companion object {
         val PLUGIN_FOLDER = io.github.deltacv.eocvsim.plugin.PLUGIN_FOLDER
@@ -62,7 +74,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
     val superAccessDaemonClient by lazy {
         SuperAccessDaemonClient(
-            autoacceptOnTrusted = eocvSim.config.autoAcceptSuperAccessOnTrusted
+            autoacceptOnTrusted = configManager.config.autoAcceptSuperAccessOnTrusted
         )
     }
 
@@ -72,7 +84,7 @@ class PluginManager(val eocvSim: EOCVSim) {
     private val haltCondition = haltLock.newCondition()
 
     val appender by lazy {
-        val appender = DialogFactory.createMavenOutput(this) {
+        val appender = dialogFactory.createMavenOutput {
             haltLock.withLock {
                 haltCondition.signalAll()
             }
@@ -94,7 +106,7 @@ class PluginManager(val eocvSim: EOCVSim) {
     }
 
     val repositoryManager by lazy {
-        PluginRepositoryManager(appender, eocvSim, haltLock, haltCondition)
+        PluginRepositoryManager(appender, onMainUpdate, { onRestartRequested.run() }, haltLock, haltCondition)
     }
 
     private val _pluginFiles = mutableListOf<File>()
@@ -113,7 +125,7 @@ class PluginManager(val eocvSim: EOCVSim) {
     /**
      * Provides EOCV-Sim API instances for plugins
      */
-    val eocvSimApiProvider = EOCVSimApiProvider { plugin -> EOCVSimApiImpl(plugin, eocvSim) }
+    val eocvSimApiProvider = EOCVSimApiProvider { plugin -> EOCVSimApiImpl(plugin) }
 
     /**
      * Initializes the plugin manager
@@ -123,7 +135,7 @@ class PluginManager(val eocvSim: EOCVSim) {
      * @see PluginLoader
      */
     fun init() {
-        eocvSim.visualizer.onInitFinished {
+        visualizer.onInitFinished {
             appender.append(PluginOutput.SPECIAL_FREE)
         }
 
@@ -133,7 +145,7 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         // replace papervision line
 
-        if (!eocvSim.config.flags.getOrDefault("hasDiscardedPaperVisionRepository", false)) {
+        if (!configManager.config.flags.getOrDefault("hasDiscardedPaperVisionRepository", false)) {
             try {
                 val repositoriesStr = PluginRepositoryManager.REPOSITORY_FILE.readText()
                 for (line in repositoriesStr.lines()) {
@@ -154,7 +166,7 @@ class PluginManager(val eocvSim: EOCVSim) {
             } catch (_: Exception) {
             }
 
-            eocvSim.config.flags["hasDiscardedPaperVisionRepository"] = true
+            configManager.config.flags["hasDiscardedPaperVisionRepository"] = true
         }
 
         repositoryManager.init()
@@ -165,15 +177,15 @@ class PluginManager(val eocvSim: EOCVSim) {
 
         _pluginFiles.addAll(repositoryManager.resolveAll())
 
-        if (eocvSim.config.flags.getOrDefault("startFresh", false)) {
+        if (configManager.config.flags.getOrDefault("startFresh", false)) {
             logger.warn("startFresh = true, deleting all plugins in the plugins folder")
 
             for (file in pluginFilesInFolder) {
                 file.delete()
             }
 
-            eocvSim.config.flags["startFresh"] = false
-            eocvSim.configManager.saveToFile()
+            configManager.config.flags["startFresh"] = false
+            configManager.saveToFile()
         } else {
             _pluginFiles.addAll(pluginFilesInFolder)
         }
@@ -260,7 +272,6 @@ class PluginManager(val eocvSim: EOCVSim) {
      */
     fun loadPlugins() {
         for (loader in _loaders.toTypedArray()) {
-
             try {
                 val hash = loader.hash()
 
@@ -376,10 +387,10 @@ class PluginManager(val eocvSim: EOCVSim) {
 
     fun hasSuperAccess(pluginFile: File) = superAccessDaemonClient.checkAccess(pluginFile)
 
-    fun isPluginEnabledInConfig(loader: PluginLoader) = eocvSim.config.flags.getOrDefault(loader.hash(), true)!!
+    fun isPluginEnabledInConfig(loader: PluginLoader) = configManager.config.flags.getOrDefault(loader.hash(), true)!!
 
     fun setPluginEnabledInConfig(loader: PluginLoader, enabled: Boolean) {
-        eocvSim.config.flags[loader.hash()] = enabled
-        eocvSim.configManager.saveToFile()
+        configManager.config.flags[loader.hash()] = enabled
+        configManager.saveToFile()
     }
 }

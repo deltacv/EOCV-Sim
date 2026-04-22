@@ -36,34 +36,34 @@ import com.github.serivesmejia.eocvsim.tuner.field.cv.*
  */
 object TunableFieldRegistry {
 
-    private val exactFields = mutableMapOf<Class<*>, (Any, VirtualField, EOCVSim) -> TunableField<*>>()
-    private val acceptors = mutableListOf<Pair<TunableFieldAcceptor, (Any, VirtualField, EOCVSim) -> TunableField<*>>>()
+    private val exactFields = mutableMapOf<Class<*>, (Any, VirtualField) -> TunableField<*>>()
+    private val acceptors = mutableListOf<Pair<TunableFieldAcceptor, (Any, VirtualField) -> TunableField<*>>>()
 
     init {
-        registerField(Int::class.javaObjectType) { target, f, sim -> IntegerField(target, f, sim) }
-        registerField(Double::class.javaObjectType) { target, f, sim -> DoubleField(target, f, sim) }
-        registerField(Float::class.javaObjectType) { target, f, sim -> FloatField(target, f, sim) }
-        registerField(Long::class.javaObjectType) { target, f, sim -> LongField(target, f, sim) }
+        registerField(Int::class.javaObjectType) { target, f -> IntegerField(target, f) }
+        registerField(Double::class.javaObjectType) { target, f -> DoubleField(target, f) }
+        registerField(Float::class.javaObjectType) { target, f -> FloatField(target, f) }
+        registerField(Long::class.javaObjectType) { target, f -> LongField(target, f) }
 
-        registerField(String::class.java) { target, f, sim -> StringField(target, f, sim) }
-        registerField(Boolean::class.javaObjectType) { target, f, sim -> BooleanField(target, f, sim) }
+        registerField(String::class.java) { target, f -> StringField(target, f) }
+        registerField(Boolean::class.javaObjectType) { target, f -> BooleanField(target, f) }
 
-        registerField(org.opencv.core.Scalar::class.java) { target, f, sim -> ScalarField(target, f, sim) }
-        registerField(org.opencv.core.Point::class.java) { target, f, sim -> PointField(target, f, sim) }
-        registerField(org.opencv.core.Rect::class.java) { target, f, sim -> RectField(target, f, sim) }
+        registerField(org.opencv.core.Scalar::class.java) { target, f -> ScalarField(target, f) }
+        registerField(org.opencv.core.Point::class.java) { target, f -> PointField(target, f) }
+        registerField(org.opencv.core.Rect::class.java) { target, f -> RectField(target, f) }
 
-        registerAcceptor(EnumField.Acceptor()) { target, f, sim -> EnumField(target, f, sim) }
+        registerAcceptor(EnumField.Acceptor()) { target, f -> EnumField(target, f) }
     }
 
-    fun registerField(type: Class<*>, constructor: (Any, VirtualField, EOCVSim) -> TunableField<*>) {
+    fun registerField(type: Class<*>, constructor: (Any, VirtualField) -> TunableField<*>) {
         exactFields[type] = constructor
     }
 
-    fun registerAcceptor(acceptor: TunableFieldAcceptor, constructor: (Any, VirtualField, EOCVSim) -> TunableField<*>) {
+    fun registerAcceptor(acceptor: TunableFieldAcceptor, constructor: (Any, VirtualField) -> TunableField<*>) {
         acceptors.add(acceptor to constructor)
     }
 
-    fun getTunableFieldFor(field: VirtualField, pipeline: Any, eocvSim: EOCVSim): TunableField<*>? {
+    fun getTunableFieldFor(field: VirtualField, pipeline: Any): TunableField<*>? {
         if (field.isFinal) return null
 
         var type = field.type
@@ -76,8 +76,9 @@ object TunableFieldRegistry {
             constructor = acceptors.find { it.first.accept(type) }?.second
         }
 
-        return constructor?.invoke(pipeline, field, eocvSim)
+        return constructor?.invoke(pipeline, field)
     }
+
 
     fun hasTunableFieldFor(type: Class<*>): Boolean {
         var t = type

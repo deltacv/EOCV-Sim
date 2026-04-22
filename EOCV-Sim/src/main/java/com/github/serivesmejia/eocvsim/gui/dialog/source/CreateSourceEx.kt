@@ -41,12 +41,16 @@ import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-class CreateSourceEx(
-    val parent: JFrame,
-    val visualizer: Visualizer
-) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-    val dialog = JDialog(parent)
+class CreateSourceEx : KoinComponent {
+
+    private val visualizer: Visualizer by inject()
+    private val dialogFactory: DialogFactory by inject()
+
+    val dialog = JDialog(visualizer.frame)
+
 
     init {
         dialog.isModal = true
@@ -67,7 +71,7 @@ class CreateSourceEx(
 
             addActionListener {
                 dialog.dispose()
-                DialogFactory.createSourceDialog(visualizer.eocvSim, SourceType.CAMERA)
+                dialogFactory.createSourceDialog(SourceType.CAMERA)
             }
         })
 
@@ -81,7 +85,7 @@ class CreateSourceEx(
 
             addActionListener {
                 dialog.dispose()
-                DialogFactory.createSourceDialog(visualizer.eocvSim, SourceType.IMAGE)
+                dialogFactory.createSourceDialog(SourceType.IMAGE)
             }
         })
 
@@ -95,7 +99,7 @@ class CreateSourceEx(
 
             addActionListener {
                 dialog.dispose()
-                DialogFactory.createSourceDialog(visualizer.eocvSim, SourceType.VIDEO)
+                dialogFactory.createSourceDialog(SourceType.VIDEO)
             }
         })
 
@@ -109,7 +113,7 @@ class CreateSourceEx(
 
             addActionListener {
                 dialog.dispose()
-                DialogFactory.createSourceDialog(visualizer.eocvSim, SourceType.HTTP)
+                dialogFactory.createSourceDialog(SourceType.HTTP)
             }
         })
 

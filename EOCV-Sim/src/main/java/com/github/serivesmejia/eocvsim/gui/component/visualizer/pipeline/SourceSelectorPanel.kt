@@ -24,7 +24,10 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
+import org.koin.core.qualifier.named
 import com.github.serivesmejia.eocvsim.gui.util.icon.SourcesListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
@@ -39,7 +42,15 @@ import java.awt.GridBagLayout
 import java.awt.event.MouseAdapter
 import javax.swing.*
 
-class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class SourceSelectorPanel : JPanel(), KoinComponent {
+
+    private val inputSourceManager: InputSourceManager by inject()
+    private val pipelineManager: PipelineManager by inject()
+    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+    private val dialogFactory: DialogFactory by inject()
 
     val sourceSelector = JList<String>()
     val sourceSelectorScroll = JScrollPane()
@@ -83,10 +94,11 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         })
 
         //different icons
-        sourceSelector.cellRenderer = SourcesListIconRenderer(eocvSim.inputSourceManager)
+        sourceSelector.cellRenderer = SourcesListIconRenderer(inputSourceManager)
+
 
         sourceSelectorCreateBtt.addActionListener {
-            DialogFactory.createSourceExDialog(eocvSim)
+            dialogFactory.createSourceExDialog()
         }
 
         sourceSelectorButtonsContainer = JPanel(FlowLayout(FlowLayout.CENTER))
@@ -118,24 +130,26 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
                                 //enable or disable source delete button depending if source is default or not
                                 sourceSelectorDeleteBtt.isEnabled =
-                                    eocvSim.inputSourceManager.sources[source]?.isDefault == false
+                                    inputSourceManager.sources[source]?.isDefault == false
 
                                 if (source != beforeSelectedSource) {
-                                    if (!eocvSim.pipelineManager.paused) {
-                                        eocvSim.inputSourceManager.requestSetInputSource(source)
+                                    if (!pipelineManager.paused) {
+                                        inputSourceManager.requestSetInputSource(source)
                                         beforeSelectedSource = source
                                         beforeSelectedSourceIndex = sourceSelector.selectedIndex
+
                                     } else {
                                         //check if the user requested the pause or if it was due to one shoot analysis when selecting images
-                                        if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
+                                        if (pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
                                             sourceSelector.setSelectedIndex(beforeSelectedSourceIndex)
                                         } else { //handling pausing
-                                            eocvSim.pipelineManager.requestSetPaused(false)
-                                            eocvSim.inputSourceManager.requestSetInputSource(source)
+                                            pipelineManager.requestSetPaused(false)
+                                            inputSourceManager.requestSetInputSource(source)
                                             beforeSelectedSource = source
                                             beforeSelectedSourceIndex = sourceSelector.selectedIndex
                                         }
                                     }
+
                                 }
                             } else {
                                 sourceSelector.setSelectedIndex(1)
@@ -152,51 +166,54 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
             val index = sourceSelector.selectedIndex
             val source = sourceSelector.model.getElementAt(index)
 
-            eocvSim.onMainUpdate.once {
-                eocvSim.inputSourceManager.deleteInputSource(source)
+            onMainUpdate.once {
+                inputSourceManager.deleteInputSource(source)
                 updateSourcesList()
 
                 sourceSelector.selectedIndex = (index - 1).clipUpperZero()
             }
+
         }
 
-        eocvSim.inputSourceManager.onInputSourceRemoved {
+        inputSourceManager.onInputSourceRemoved {
             updateSourcesList()
         }
 
-        eocvSim.inputSourceManager.onInputSourceAdded {
-            val name = eocvSim.inputSourceManager.lastAddedSourceName
-            val dispatchedByUser = eocvSim.inputSourceManager.wasLastSourceAddedByUser
+        inputSourceManager.onInputSourceAdded {
+            val name = inputSourceManager.lastAddedSourceName
+            val dispatchedByUser = inputSourceManager.wasLastSourceAddedByUser
 
             updateSourcesList()
-            
+
             SwingUtilities.invokeLater {
                 val currentIndex = sourceSelector.selectedIndex
-                
+
                 if (dispatchedByUser) {
                     val index = getIndexOf(name)
                     sourceSelector.selectedIndex = index
 
-                    eocvSim.inputSourceManager.requestSetInputSource(name)
+                    inputSourceManager.requestSetInputSource(name)
 
-                    eocvSim.onMainUpdate.once {
-                        eocvSim.pipelineManager.requestSetPaused(false)
-                        eocvSim.inputSourceManager.pauseIfImageTwoFrames()
+                    onMainUpdate.once {
+                        pipelineManager.requestSetPaused(false)
+                        inputSourceManager.pauseIfImageTwoFrames()
                     }
                 } else {
                     sourceSelector.selectedIndex = currentIndex
                 }
-                
+
                 allowSourceSwitching = true
             }
         }
+
     }
 
     fun updateSourcesList(): Job {
         SwingUtilities.invokeLater {
             val listModel = DefaultListModel<String>()
 
-            eocvSim.inputSourceManager.sortedInputSources.forEach { source ->
+            inputSourceManager.sortedInputSources.forEach { source ->
+
                 listModel.addElement(source.name)
             }
 

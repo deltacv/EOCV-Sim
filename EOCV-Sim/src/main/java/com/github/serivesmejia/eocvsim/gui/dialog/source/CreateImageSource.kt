@@ -23,12 +23,15 @@
 package com.github.serivesmejia.eocvsim.gui.dialog.source
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.component.input.FileSelector
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.input.source.ImageSource
 import io.github.deltacv.vision.external.util.CvUtil
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.StrUtil
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import org.opencv.core.Size
 import java.awt.*
 import java.io.File
@@ -37,13 +40,19 @@ import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import kotlin.math.roundToInt
 
-class CreateImageSource(
-    parent: JFrame,
-    private val eocvSim: EOCVSim,
-    private val initialFile: File?
-) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
-    val createImageSource = JDialog(parent)
+class CreateImageSource(
+    private val initialFile: File?
+) : KoinComponent {
+
+    private val visualizer: Visualizer by inject()
+    private val inputSourceManager: InputSourceManager by inject()
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
+
+    val createImageSource = JDialog(visualizer.frame)
 
     val nameTextField = JTextField()
     val sizeFieldsInput = SizeFields()
@@ -53,7 +62,6 @@ class CreateImageSource(
     private var selectedValidImage = false
 
     init {
-        eocvSim.visualizer.childDialogs.add(createImageSource)
         initCreateImageSource()
     }
 
@@ -84,7 +92,7 @@ class CreateImageSource(
         val namePanel = JPanel(FlowLayout())
         val nameLabel = JLabel("Source name: ").apply { horizontalAlignment = JLabel.LEFT }
 
-        nameTextField.text = "ImageSource-${eocvSim.inputSourceManager.sources.size + 1}"
+        nameTextField.text = "ImageSource-${inputSourceManager.sources.size + 1}"
         namePanel.add(nameLabel)
         namePanel.add(nameTextField)
 
@@ -140,7 +148,7 @@ class CreateImageSource(
         if (CvUtil.checkImageValid(fileAbsPath)) {
             val fileName = StrUtil.getFileBaseName(f.name)
             if (fileName.isNotBlank()) {
-                nameTextField.text = eocvSim.inputSourceManager.tryName(fileName)
+                nameTextField.text = inputSourceManager.tryName(fileName)
             }
 
             val size = CvUtil.scaleToFit(CvUtil.getImageSize(fileAbsPath), EOCVSim.DEFAULT_EOCV_SIZE)
@@ -162,8 +170,8 @@ class CreateImageSource(
     }
 
     private fun createSource(sourceName: String, imgPath: String, size: Size) {
-        eocvSim.onMainUpdate.once {
-            eocvSim.inputSourceManager.addInputSource(
+        onMainLoop.once {
+            inputSourceManager.addInputSource(
                 sourceName,
                 ImageSource(imgPath, size),
                 false
@@ -176,6 +184,6 @@ class CreateImageSource(
             nameTextField.text.trim().isNotEmpty() &&
                     sizeFieldsInput.valid &&
                     selectedValidImage &&
-                    !eocvSim.inputSourceManager.isNameInUse(nameTextField.text)
+                    !inputSourceManager.isNameInUse(nameTextField.text)
     }
 }

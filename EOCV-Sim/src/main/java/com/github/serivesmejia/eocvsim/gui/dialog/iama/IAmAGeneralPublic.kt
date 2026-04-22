@@ -37,12 +37,15 @@ import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-class IAmAGeneralPublic(
-    parent: JFrame,
-    visualizer: Visualizer
-) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-    private val dialog = JDialog(parent).apply {
+class IAmAGeneralPublic : KoinComponent {
+
+    private val visualizer: Visualizer by inject()
+
+    private val dialog = JDialog(visualizer.frame).apply {
+
         isModal = true
         title = "Welcome !"
         contentPane.layout = GridBagLayout()
@@ -96,14 +99,13 @@ class IAmAGeneralPublic(
                 }
             })
 
-            add(Box.createHorizontalStrut(10)) // Add some space between the buttons
-
             add(JButton("Next").apply {
                 addActionListener {
-                    dialog.dispose() // Close the dialog on click
-                    IAmAPaperVision(parent, visualizer)
+                    dialog.dispose()
+                    IAmAPaperVision()
                 }
             })
+
 
             border = BorderFactory.createEmptyBorder(0, 10, 10, 10)
         }

@@ -17,7 +17,8 @@ object CrashReportOutputMain {
 
         override fun run() {
             SwingUtilities.invokeLater(FlatArcDarkIJTheme::setup)
-            DialogFactory.createCrashReport(null, SysUtil.loadFileStr(File(crashReportPath ?: "")))
+            // TODO: Make this actually work, need to setup koin
+            // dialogFactory.createCrashReport(null, SysUtil.loadFileStr(File(crashReportPath ?: "")))
         }
     }
 

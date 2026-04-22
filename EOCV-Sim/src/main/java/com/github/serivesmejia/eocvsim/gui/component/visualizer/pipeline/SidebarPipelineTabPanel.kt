@@ -23,7 +23,8 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.SidebarPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel
 import java.awt.Font
@@ -34,12 +35,20 @@ import javax.swing.JPanel
 import javax.swing.border.EmptyBorder
 import javax.swing.border.TitledBorder
 
-class SidebarPipelineTabPanel(private val eocvSim: EOCVSim) : SidebarPanel.TabJPanel() {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-    val pipelineSelectorPanel = PipelineSelectorPanel(eocvSim)
-    val sourceSelectorPanel = SourceSelectorPanel(eocvSim)
+class SidebarPipelineTabPanel : SidebarPanel.TabJPanel(), KoinComponent {
 
-    val telemetryPanel = TelemetryPanel(eocvSim.pipelineManager)
+    private val pipelineManager: PipelineManager by inject()
+
+
+    val pipelineSelectorPanel = PipelineSelectorPanel()
+    val sourceSelectorPanel = SourceSelectorPanel()
+
+
+    val telemetryPanel = TelemetryPanel()
+
 
     init {
         font = font.deriveFont(Font.PLAIN, 14f)
@@ -93,10 +102,11 @@ class SidebarPipelineTabPanel(private val eocvSim: EOCVSim) : SidebarPanel.TabJP
 
     override fun onActivated() {
         pipelineSelectorPanel.isActive = true
-        eocvSim.pipelineManager.onUpdate.once {
-            eocvSim.pipelineManager.changePipeline(0)
+        pipelineManager.onUpdate.once {
+            pipelineManager.changePipeline(0)
         }
     }
+
 
     override fun onDeactivated() {
         pipelineSelectorPanel.isActive = false

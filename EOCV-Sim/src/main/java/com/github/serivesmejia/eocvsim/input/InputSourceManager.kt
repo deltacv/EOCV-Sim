@@ -23,30 +23,38 @@
 
 package com.github.serivesmejia.eocvsim.input
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.config.ConfigManager
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
-import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel
 import com.github.serivesmejia.eocvsim.input.source.ImageSource
 import com.github.serivesmejia.eocvsim.input.source.NullSource
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import io.github.deltacv.common.util.loggerForThis
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.opencv.core.Mat
 import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
-import java.awt.Dimension
-import java.io.File
-import java.io.IOException
-import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import org.openftc.easyopencv.MatRecycler
+import java.io.IOException
 import java.util.concurrent.CancellationException
 import javax.swing.JDialog
-import javax.swing.SwingUtilities
 
-class InputSourceManager(val eocvSim: EOCVSim) {
+class InputSourceManager : KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+    private val configManager: ConfigManager by inject()
+    private val visualizer: Visualizer by inject()
+    private val dialogFactory: DialogFactory by inject()
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
+
+    private val inputSourceInitializer: InputSourceInitializer by inject()
 
     companion object {
         private val BLACK = Scalar(0.0, 0.0, 0.0, 255.0)
@@ -128,7 +136,7 @@ class InputSourceManager(val eocvSim: EOCVSim) {
         val currentSource = currentInputSource ?: return
 
         try {
-            currentSource.setPaused(isPaused)
+            currentSource.isPaused = isPaused
 
             val m = currentSource.update()
 
@@ -161,8 +169,6 @@ class InputSourceManager(val eocvSim: EOCVSim) {
         if (inputSource == null) return
 
         if (sources.containsKey(name)) return
-
-        inputSource.eocvSim = eocvSim
 
         inputSource.name = name
         sources[name] = inputSource
@@ -218,7 +224,7 @@ class InputSourceManager(val eocvSim: EOCVSim) {
         src?.reset()
 
         if (src != null) {
-            if (!InputSourceInitializer.initializeWithTimeout(src, this)) {
+            if (!inputSourceInitializer.initializeWithTimeout(src)) {
                 onInputSourceInitError.run()
 
                 logger.error("Error while loading requested source ($sourceName) reported by itself (init method returned false)")
@@ -231,7 +237,7 @@ class InputSourceManager(val eocvSim: EOCVSim) {
         currentInputSource = src
 
         // if pause on images option is turned on by user
-        if (eocvSim.configManager.config.pauseOnImages) {
+        if (configManager.config.pauseOnImages) {
             pauseIfImage()
         }
 
@@ -264,8 +270,8 @@ class InputSourceManager(val eocvSim: EOCVSim) {
         // if the new input source is an image, we will pause the next frame
         // to execute one shot analysis on images and save resources.
         if (SourceType.fromClass(source.javaClass) == SourceType.IMAGE) {
-            eocvSim.onMainUpdate.once {
-                eocvSim.pipelineManager.setPaused(
+            onMainLoop.once {
+                pipelineManager.setPaused(
                     true,
                     PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS
                 )
@@ -276,18 +282,18 @@ class InputSourceManager(val eocvSim: EOCVSim) {
     fun pauseIfImageTwoFrames() {
         // if the new input source is an image, we will pause the next frame
         // to execute one shot analysis on images and save resources.
-        eocvSim.onMainUpdate.once { pauseIfImage() }
+        onMainLoop.once { pauseIfImage() }
     }
 
     fun requestSetInputSource(name: String?) {
-        eocvSim.onMainUpdate.once { setInputSource(name) }
+        onMainLoop.once { setInputSource(name) }
     }
 
-    fun showApwdIfNeeded(sourceName: String?, job: Job?): JDialog? {
+    fun showLoadingDialogIfNeeded(sourceName: String?, job: Job?): JDialog? {
         val type = getSourceType(sourceName)
         if (type == SourceType.CAMERA || type == SourceType.VIDEO || type == SourceType.HTTP) {
-            return DialogFactory.createInformation(
-                eocvSim.visualizer.frame,
+            return dialogFactory.createInformation(
+                visualizer.frame,
                 "Opening source...", null, "Information", "Cancel"
             ) {
                 job?.cancel(CancellationException())

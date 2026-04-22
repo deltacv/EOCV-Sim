@@ -23,7 +23,6 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode
 
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
@@ -34,7 +33,14 @@ import javax.swing.JPanel
 import javax.swing.JButton
 import javax.swing.SwingUtilities
 
-class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class OpModeControlsPanel : JPanel(), KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+
+
 
     val controlButton = JButton()
 
@@ -55,12 +61,12 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
         controlButton.icon = EOCVSimIconLibrary.icoFlag
 
         controlButton.addActionListener {
-            eocvSim.pipelineManager.onUpdate.once {
-                if(eocvSim.pipelineManager.currentPipeline !is OpMode) return@once
+            pipelineManager.onUpdate.once {
+                if(pipelineManager.currentPipeline !is OpMode) return@once
 
-                eocvSim.pipelineManager.setPaused(false, PipelineManager.PauseReason.NOT_PAUSED)
+                pipelineManager.setPaused(false, PipelineManager.PauseReason.NOT_PAUSED)
 
-                val opMode = eocvSim.pipelineManager.currentPipeline as OpMode
+                val opMode = pipelineManager.currentPipeline as OpMode
                 val state = opMode.notifier.state
 
                 opMode.notifier.notify(when(state) {
@@ -71,18 +77,21 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
                 })
             }
         }
+
     }
 
     fun stopCurrentOpMode() {
-        if(eocvSim.pipelineManager.currentPipeline != currentOpMode || currentOpMode == null) return
+        if(pipelineManager.currentPipeline != currentOpMode || currentOpMode == null) return
+
         currentOpMode!!.notifier.notify(OpModeNotification.STOP)
     }
 
     private fun notifySelected() {
         if(!isActive) return
 
-        if(eocvSim.pipelineManager.currentPipeline !is OpMode) return
-        val opMode = eocvSim.pipelineManager.currentPipeline as OpMode
+        if(pipelineManager.currentPipeline !is OpMode) return
+        val opMode = pipelineManager.currentPipeline as OpMode
+
         val opModeIndex = currentManagerIndex!!
 
         opMode.notifier.onStateChange {
@@ -123,19 +132,20 @@ class OpModeControlsPanel(val eocvSim: EOCVSim) : JPanel() {
     }
 
     fun opModeSelected(managerIndex: Int, forceChangePipeline: Boolean = true) {
-        eocvSim.pipelineManager.requestSetPaused(false)
+        pipelineManager.requestSetPaused(false)
 
         if(forceChangePipeline) {
-            eocvSim.pipelineManager.requestForceChangePipeline(managerIndex)
+            pipelineManager.requestForceChangePipeline(managerIndex)
         }
 
         upcomingIndex = managerIndex
 
-        eocvSim.pipelineManager.onUpdate.once {
+        pipelineManager.onUpdate.once {
             currentManagerIndex = managerIndex
             notifySelected()
         }
     }
+
 
     fun reset() {
         controlButton.isEnabled = false

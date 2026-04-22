@@ -7,9 +7,9 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 
 class BooleanField(
     instance: Any,
-    reflectionField: VirtualField,
-    eocvSim: EOCVSim
-) : TunableField<Boolean>(instance, reflectionField, eocvSim, AllowMode.TEXT) {
+    reflectionField: VirtualField
+) : TunableField<Boolean>(instance, reflectionField, AllowMode.TEXT) {
+
 
     private var _value: Boolean = initialFieldValue as? Boolean ?: false
 

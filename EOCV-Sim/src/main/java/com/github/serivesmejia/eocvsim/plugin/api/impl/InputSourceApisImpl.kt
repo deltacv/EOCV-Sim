@@ -33,7 +33,7 @@ import io.github.deltacv.eocvsim.plugin.api.InputSourceApi
 import io.github.deltacv.eocvsim.plugin.api.InputSourceManagerApi
 
 class InputSourceApiImpl(owner: EOCVSimPlugin, val internalInputSource: com.github.serivesmejia.eocvsim.input.InputSource) : InputSourceApi(owner) {
-    override val isPaused by liveApiField { internalInputSource.paused }
+    override val isPaused by liveApiField<Boolean> { internalInputSource.isPaused }
 
     override val data by apiField {
         when(internalInputSource) {
@@ -46,18 +46,20 @@ class InputSourceApiImpl(owner: EOCVSimPlugin, val internalInputSource: com.gith
     }
 
     override val name: String by apiField { internalInputSource.name }
-    override val creationTime by apiField { internalInputSource.creationTime }
+    override val creationTime by apiField<Long> { internalInputSource.creationTime }
+
+
 
     override fun disableApi() { }
 }
 
 class InputSourceManagerApiImpl(owner: EOCVSimPlugin, val internalInputSourceManager: InputSourceManager) : InputSourceManagerApi(owner) {
-    override val allSources: List<InputSourceApi> by liveApiField {
+    override val allSources: List<InputSourceApi> by liveApiField<List<InputSourceApi>> {
         internalInputSourceManager.sources.values.map {
             InputSourceApiImpl(owner, it)
         }
     }
-    override val currentSource: InputSourceApi? by liveNullableApiField {
+    override val currentSource: InputSourceApi? by liveNullableApiField<InputSourceApi> {
         internalInputSourceManager.currentInputSource?.let { InputSourceApiImpl(owner, it) }
     }
 

@@ -28,12 +28,16 @@ import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox
 import com.github.serivesmejia.eocvsim.input.SourceType
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.awt.FlowLayout
 import java.awt.GridLayout
 import javax.swing.JButton
 import javax.swing.JPanel
 
-class CreateSourcePanel(eocvSim: EOCVSim) : JPanel(GridLayout(2, 1)) {
+class CreateSourcePanel(eocvSim: EOCVSim) : JPanel(GridLayout(2, 1)), KoinComponent {
+
+    private val dialogFactory: DialogFactory by inject()
 
     private val sourceSelectComboBox = EnumComboBox(
             "", SourceType::class.java, SourceType.values(),
@@ -54,7 +58,7 @@ class CreateSourcePanel(eocvSim: EOCVSim) : JPanel(GridLayout(2, 1)) {
 
         nextButton.addActionListener {
             //creates "create source" dialog from selected enum
-            DialogFactory.createSourceDialog(eocvSim, sourceSelectComboBox.selectedEnum!!)
+            dialogFactory.createSourceDialog(sourceSelectComboBox.selectedEnum!!)
             popup?.hide()
         }
         nextPanel.add(nextButton)

@@ -23,7 +23,11 @@
 
 package com.github.serivesmejia.eocvsim
 
+import com.github.serivesmejia.eocvsim.di.makeEOCVSimModule
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
+import org.koin.core.context.GlobalContext
+import org.koin.core.component.KoinComponent
+import org.koin.dsl.module
 import picocli.CommandLine
 import java.io.File
 import java.nio.file.Paths
@@ -108,7 +112,14 @@ class EOCVSimCommandInterface : Runnable {
             parameters.opencvNativeLibrary = checkPath("OpenCV Native", opencvNativePath!!, false)
         }
 
-        EOCVSim(parameters).init()
+        GlobalContext.startKoin {
+            modules(makeEOCVSimModule(), module { single { parameters } })
+        }
+
+        val eocvSim = EOCVSim(parameters)
+        GlobalContext.loadKoinModules(module { single { eocvSim } })
+
+        eocvSim.init()
     }
 
     private fun checkPath(parameter: String, path: String, shouldBeDirectory: Boolean): File {

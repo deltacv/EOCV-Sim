@@ -7,9 +7,9 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 
 class LongField(
     instance: Any,
-    reflectionField: VirtualField,
-    eocvSim: EOCVSim
-) : NumericField<Long>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS, reflectionField.get() as? Long ?: 0L) {
+    reflectionField: VirtualField
+) : NumericField<Long>(instance, reflectionField, AllowMode.ONLY_NUMBERS, reflectionField.get() as? Long ?: 0L) {
+
 
     override fun createNumber(value: Double): Long = value.toLong()
 

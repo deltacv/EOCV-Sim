@@ -31,7 +31,7 @@ class VisionInputSource(
         return true
     }
 
-    override fun startSource(size: Size?): Boolean {
+    override fun startSource(size: Size): Boolean {
         inputSource.setSize(size)
         inputSource.init()
         return true

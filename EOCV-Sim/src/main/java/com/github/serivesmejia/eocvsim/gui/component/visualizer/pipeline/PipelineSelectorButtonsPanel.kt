@@ -23,8 +23,12 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.output.RecordingManager
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
+import org.koin.core.qualifier.named
+
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -35,7 +39,17 @@ import javax.swing.JPanel
 import javax.swing.JToggleButton
 import javax.swing.SwingUtilities
 
-class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class PipelineSelectorButtonsPanel : JPanel(GridBagLayout()), KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+    private val recordingManager: RecordingManager by inject()
+    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+
+    private val dialogFactory: DialogFactory by inject()
+
 
     val pipelinePauseBtt  = JToggleButton("Pause")
     val pipelineRecordBtt = JToggleButton("Record")
@@ -50,8 +64,9 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
     init {
         //listener for changing pause state
         pipelinePauseBtt.addActionListener {
-            eocvSim.onMainUpdate.once { eocvSim.pipelineManager.setPaused(pipelinePauseBtt.isSelected) }
+            onMainUpdate.once { pipelineManager.setPaused(pipelinePauseBtt.isSelected) }
         }
+
         pipelinePauseBtt.addChangeListener {
             pipelinePauseBtt.text = if(pipelinePauseBtt.isSelected) "Resume" else "Pause"
         }
@@ -61,14 +76,15 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
         })
 
         pipelineRecordBtt.addActionListener {
-            eocvSim.onMainUpdate.once {
+            onMainUpdate.once {
                 if (pipelineRecordBtt.isSelected) {
-                    if (!eocvSim.isCurrentlyRecording()) eocvSim.startRecordingSession()
+                    if (!recordingManager.isCurrentlyRecording()) recordingManager.startRecordingSession()
                 } else {
-                    if (eocvSim.isCurrentlyRecording()) eocvSim.stopRecordingSession()
+                    if (recordingManager.isCurrentlyRecording()) recordingManager.stopRecordingSession()
                 }
             }
         }
+
         add(pipelineRecordBtt, GridBagConstraints().apply { gridx = 1 })
 
         pipelineWorkspaceBtt.addActionListener {
@@ -103,7 +119,7 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
 
         val selectWorkspBtt = JButton("Select Workspace")
 
-        selectWorkspBtt.addActionListener { DialogFactory.createWorkspace(eocvSim.visualizer) }
+        selectWorkspBtt.addActionListener { dialogFactory.createWorkspace() }
         workspaceButtonsPanel.add(selectWorkspBtt, GridBagConstraints().apply {
             gridx = 0
             gridy = 0
@@ -114,7 +130,8 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
             gridy = 0
         })
 
-        pipelineCompileBtt.addActionListener { eocvSim.pipelineManager.compiledPipelineManager.asyncBuild() }
+        pipelineCompileBtt.addActionListener { pipelineManager.compiledPipelineManager.asyncBuild() }
+
         workspaceButtonsPanel.add(pipelineCompileBtt, GridBagConstraints().apply {
             gridx = 2
             gridy = 0
@@ -122,7 +139,7 @@ class PipelineSelectorButtonsPanel(eocvSim: EOCVSim) : JPanel(GridBagLayout()) {
 
         val outputBtt = JButton("Pipeline Output")
 
-        outputBtt.addActionListener { DialogFactory.createPipelineOutput(eocvSim) }
+        outputBtt.addActionListener { dialogFactory.createPipelineOutput() }
 
         workspaceButtonsPanel.add(outputBtt, GridBagConstraints().apply {
             gridy = 1

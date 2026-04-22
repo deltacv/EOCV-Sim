@@ -23,10 +23,13 @@
 package com.github.serivesmejia.eocvsim.gui.dialog.source
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.component.input.FileSelector
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.input.source.VideoSource
 import com.github.serivesmejia.eocvsim.util.FileFilters
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import io.github.deltacv.vision.external.util.CvUtil
 import org.opencv.core.Size
 import java.awt.BorderLayout
@@ -38,12 +41,20 @@ import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import kotlin.math.roundToInt
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
+
 class CreateVideoSource(
-    parent: JFrame,
-    private val eocvsim: EOCVSim,
-    initialFile: File? = null
-) {
-    private val dialog: JDialog = JDialog(parent)
+    private val initialFile: File? = null
+) : KoinComponent {
+
+    private val visualizer: Visualizer by inject()
+    private val inputSourceManager by inject<InputSourceManager>()
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
+
+    private val dialog: JDialog = JDialog(visualizer.frame)
+
 
     private var nameTextField: JTextField
     private var fileSelector: FileSelector
@@ -53,8 +64,6 @@ class CreateVideoSource(
     private var selectedValidVideo = false
 
     init {
-        eocvsim.visualizer.childDialogs.add(dialog)
-
         // Main content panel
         val contentsPanel = JPanel(GridLayout(4, 1)).apply {
             border = BorderFactory.createEmptyBorder(15, 0, 0, 0)
@@ -79,7 +88,7 @@ class CreateVideoSource(
 
         // Name input panel
         val namePanel = JPanel(FlowLayout()).apply {
-            val sourceCount = eocvsim.inputSourceManager.sources.size + 1
+            val sourceCount = inputSourceManager.sources.size + 1
             nameTextField = JTextField("VideoSource-$sourceCount", 15)
             add(JLabel("Source name: "))
             add(nameTextField)
@@ -122,7 +131,7 @@ class CreateVideoSource(
                 // Suggest a name from the filename if it's not blank
                 val fileName = file.nameWithoutExtension
                 if (fileName.isNotBlank()) {
-                    nameTextField.text = eocvsim.inputSourceManager.tryName(fileName)
+                    nameTextField.text = inputSourceManager.tryName(fileName)
                 }
 
                 // Calculate a fitted size and update the fields
@@ -148,8 +157,8 @@ class CreateVideoSource(
     }
 
     private fun createSource(sourceName: String, videoPath: String, size: Size) {
-        eocvsim.onMainUpdate.once {
-            eocvsim.inputSourceManager.addInputSource(
+        onMainLoop.once {
+            inputSourceManager.addInputSource(
                 sourceName,
                 VideoSource(videoPath, size),
                 true
@@ -159,7 +168,7 @@ class CreateVideoSource(
 
     private fun updateCreateButton() {
         val isNameValid = nameTextField.text.isNotBlank() &&
-                !eocvsim.inputSourceManager.isNameInUse(nameTextField.text)
+                !inputSourceManager.isNameInUse(nameTextField.text)
 
         createButton.isEnabled = isNameValid && sizeFields.valid && selectedValidVideo
     }

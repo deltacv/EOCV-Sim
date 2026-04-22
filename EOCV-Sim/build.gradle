@@ -76,6 +76,9 @@ dependencies {
 
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 
+    implementation(platform("io.insert-koin:koin-bom:$koin_version"))
+    implementation("io.insert-koin:koin-core")
+
     implementation "org.eclipse.jdt:ecj:3.21.0"
 
     api "org.openpnp:opencv:$opencv_version"

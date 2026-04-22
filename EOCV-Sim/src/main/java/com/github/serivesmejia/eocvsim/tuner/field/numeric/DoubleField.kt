@@ -7,9 +7,9 @@ import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 
 class DoubleField(
     instance: Any,
-    reflectionField: VirtualField,
-    eocvSim: EOCVSim
-) : NumericField<Double>(instance, reflectionField, eocvSim, AllowMode.ONLY_NUMBERS_DECIMAL, reflectionField.get() as? Double ?: 0.0) {
+    reflectionField: VirtualField
+) : NumericField<Double>(instance, reflectionField, AllowMode.ONLY_NUMBERS_DECIMAL, reflectionField.get() as? Double ?: 0.0) {
+
 
     override fun createNumber(value: Double): Double = value
 

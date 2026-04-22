@@ -8,9 +8,9 @@ import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 
 class StringField(
     instance: Any,
-    reflectionField: VirtualField,
-    eocvSim: EOCVSim
-) : TunableField<String>(instance, reflectionField, eocvSim, AllowMode.TEXT) {
+    reflectionField: VirtualField
+) : TunableField<String>(instance, reflectionField, AllowMode.TEXT) {
+
 
     private var _value: String = initialFieldValue as? String ?: ""
 

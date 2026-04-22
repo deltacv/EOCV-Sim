@@ -25,6 +25,9 @@ package com.github.serivesmejia.eocvsim.gui.dialog.iama
 
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.config.ConfigManager
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.awt.BorderLayout
 import java.awt.Dimension
 import javax.swing.BorderFactory
@@ -40,17 +43,21 @@ import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 class IAmAPaperVision(
-    parent: JFrame,
-    visualizer: Visualizer,
-    specificallyInterested: Boolean = false,
-    showWorkspacesButton: Boolean = true
-) {
+    private val specificallyInterested: Boolean = false,
+    private val showWorkspacesButton: Boolean = true
+) : KoinComponent {
 
     companion object {
         val papervisionGif = ImageIcon(this::class.java.getResource("/images/papervision.gif"))
     }
 
-    val dialog = JDialog(parent).apply {
+    private val visualizer: Visualizer by inject()
+    private val configManager: ConfigManager by inject()
+
+    private val dialogFactory: DialogFactory by inject()
+
+    val dialog = JDialog(visualizer.frame).apply {
+
         isModal = true
         title = "Welcome !"
 
@@ -115,7 +122,7 @@ class IAmAPaperVision(
                 add(JButton("Use Workspaces Instead").apply {
                     addActionListener {
                         dialog.dispose() // Close the dialog on click
-                        DialogFactory.createWorkspace(visualizer)
+                        dialogFactory.createWorkspace()
                     }
                 })
 
@@ -131,7 +138,8 @@ class IAmAPaperVision(
                         visualizer.sidebarPanel.selectedIndex = indexOfTab
                     } else {
                         JOptionPane.showMessageDialog(
-                            parent,
+                            visualizer.frame,
+
                             "PaperVision is not currently available, please check your plugin settings.",
                             "Warning",
                             JOptionPane.ERROR_MESSAGE
@@ -140,14 +148,15 @@ class IAmAPaperVision(
                     }
 
                     fun openPaperVisionByDefault() {
-                        visualizer.eocvSim.config.flags["prefersPaperVision"] = true
+                        configManager.config.flags["prefersPaperVision"] = true
                     }
 
                     if(specificallyInterested) {
                         openPaperVisionByDefault()
 
                         JOptionPane.showConfirmDialog(
-                            parent,
+                            visualizer.frame,
+
                             "From now on, EOCV-Sim will focus on PaperVision upon startup.\nYou can change this in the settings.",
                             "PaperVision",
                             JOptionPane.DEFAULT_OPTION,
@@ -155,7 +164,8 @@ class IAmAPaperVision(
                         )
                     } else {
                         JOptionPane.showOptionDialog(
-                            parent,
+                            visualizer.frame,
+
                             "Would you like to focus on PaperVision by default?\nThis is useful if you're not interested on the other tools.\nYou can change this in the settings.",
                             "PaperVision",
                             JOptionPane.YES_NO_OPTION,
@@ -167,7 +177,7 @@ class IAmAPaperVision(
                             if(it == JOptionPane.YES_OPTION) {
                                 openPaperVisionByDefault()
                             } else {
-                                visualizer.eocvSim.config.flags["prefersPaperVision"] = false
+                                configManager.config.flags["prefersPaperVision"] = false
                             }
                         }
                     }
@@ -181,7 +191,7 @@ class IAmAPaperVision(
         dialog.contentPane.add(buttonsPanel)
 
 
-        visualizer.eocvSim.config.flags["hasShownIamPaperVision"] = true
+        configManager.config.flags["hasShownIamPaperVision"] = true
         dialog.isVisible = true
     }
 

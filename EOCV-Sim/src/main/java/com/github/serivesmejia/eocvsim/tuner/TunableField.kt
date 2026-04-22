@@ -29,12 +29,18 @@ import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanelConf
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import javax.swing.SwingUtilities
+
 abstract class TunableField<T>(
     protected val target: Any,
     val reflectionField: VirtualField,
-    protected val eocvSim: EOCVSim,
     val allowMode: AllowMode = AllowMode.TEXT
-) {
+) : KoinComponent {
+
+    protected val eocvSim: EOCVSim by inject()
+
     var fieldPanel: TunableFieldPanel? = null
         private set
 
@@ -72,7 +78,7 @@ abstract class TunableField<T>(
         for ((index, tunableValue) in tunableValues.withIndex()) {
             tunableValue.onPipelineUpdate.attach {
                 if (!isIgnoreGuiUpdates) {
-                    javax.swing.SwingUtilities.invokeLater {
+                    SwingUtilities.invokeLater {
                         fieldPanel.setFieldValue(index, tunableValue.value)
                     }
                 }
