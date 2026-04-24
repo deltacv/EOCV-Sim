@@ -31,8 +31,9 @@ import com.github.serivesmejia.eocvsim.input.source.NullSource
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.event.Orchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
 import io.github.deltacv.common.util.loggerForThis
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -46,12 +47,14 @@ import java.io.IOException
 import java.util.concurrent.CancellationException
 import javax.swing.JDialog
 
-class InputSourceManager : KoinComponent {
+class InputSourceManager : Orchestrable, KoinComponent {
 
     private val pipelineManager: PipelineManager by inject()
     private val configManager: ConfigManager by inject()
     private val visualizer: Visualizer by inject()
     private val dialogFactory: DialogFactory by inject()
+
+    private val initOrchestrator: Orchestrator by inject(named("init"))
     private val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
     private val inputSourceInitializer: InputSourceInitializer by inject()
@@ -80,7 +83,13 @@ class InputSourceManager : KoinComponent {
 
     private val logger by loggerForThis()
 
-    fun init() {
+    init {
+        initOrchestrator.register(this) {
+            target { it.init() }
+        }
+    }
+
+    private fun init() {
         logger.info("Initializing...")
 
         matRecycler = MatRecycler(4)
@@ -119,7 +128,7 @@ class InputSourceManager : KoinComponent {
     private fun createDefaultImgInputSource(resourcePath: String, fileName: String, sourceName: String, imgSize: Size) {
         try {
             val `is` = InputSource::class.java.getResourceAsStream(resourcePath)
-            val f = SysUtil.copyFileIsTemp(`is`, fileName, true).file
+            val f = SysUtil.copyFileIsTemp(`is`, fileName, false).file
 
             val src = ImageSource(f.absolutePath, imgSize).apply {
                 isDefault = true

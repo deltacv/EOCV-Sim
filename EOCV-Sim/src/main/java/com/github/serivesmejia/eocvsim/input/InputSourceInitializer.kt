@@ -29,7 +29,6 @@ class InputSourceInitializer : KoinComponent {
         }
     }
 
-    private val inputSourceManager: InputSourceManager by inject()
     private val scope: CoroutineScope by inject()
 
     val logger by loggerForThis()
@@ -46,8 +45,6 @@ class InputSourceInitializer : KoinComponent {
             }
         }
 
-        val dialog = inputSourceManager.showLoadingDialogIfNeeded(inputSource.name, job)
-
         runBlocking {
             try {
                 withTimeout(TIMEOUT) {
@@ -57,13 +54,11 @@ class InputSourceInitializer : KoinComponent {
                 logger.error("InputSource initialization timed out after $TIMEOUT ms", e)
             } finally {
                 job.cancel()
-                dialog?.dispose()
             }
         }
 
         return result
     }
-
 
     @OptIn(DelicateCoroutinesApi::class)
     @JvmOverloads

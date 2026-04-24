@@ -64,6 +64,6 @@ class EOCVSimApiImpl(owner: EOCVSimPlugin) : EOCVSimApi(owner), KoinComponent {
     override val configApi: ConfigApi by apiField(ConfigApiImpl(owner, configManager))
 
     override fun disableApi() {
-        logger.info("EOCV-Sim API for {} says: \"ight, imma head out\"", ownerName)
+        logger.info("API for {} says: \"ight, imma head out\"", ownerName)
     }
 }

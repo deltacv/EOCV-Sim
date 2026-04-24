@@ -32,14 +32,10 @@ import javax.swing.JPanel
 import javax.swing.JTabbedPane
 
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class SidebarPanel : JTabbedPane(), KoinComponent {
 
-
-
-
-    private var previousActiveIndex = -1;
+    private var previousActiveIndex = -1
 
     val onTabChange = EventHandler("SidebarPanel-OnTabChange")
 
@@ -63,9 +59,12 @@ class SidebarPanel : JTabbedPane(), KoinComponent {
 
         addChangeListener {
             val index = this.selectedIndex
+            val currentIndexValid = index in 0 until componentCount
+            val previousIndexValid = previousActiveIndex in 0 until componentCount
 
             // deactivate previous pane first
-            val previousPane = if (previousActiveIndex != -1) this.getComponentAt(previousActiveIndex) else null
+            val previousPane = if (previousIndexValid) this.getComponentAt(previousActiveIndex) else null
+
             if (previousPane is TabJPanel && previousActiveIndex != index) {
                 previousPane.isActive = false
 
@@ -74,7 +73,7 @@ class SidebarPanel : JTabbedPane(), KoinComponent {
             }
 
             // activate current pane
-            val currentPane = this.getComponentAt(index)
+            val currentPane = if (currentIndexValid) this.getComponentAt(index) else null
             if (currentPane is TabJPanel && previousActiveIndex != index) {
                 currentPane.isActive = true
 
@@ -82,7 +81,7 @@ class SidebarPanel : JTabbedPane(), KoinComponent {
                 logger.info("Activating $name")
             }
 
-            previousActiveIndex = index
+            previousActiveIndex = if (currentIndexValid) index else -1
 
             onTabChange.run()
         }

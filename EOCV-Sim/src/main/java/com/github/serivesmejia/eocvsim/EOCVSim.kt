@@ -27,26 +27,19 @@ import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
-import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.RecordingManager
-import com.github.serivesmejia.eocvsim.output.VideoRecordingSession
-
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
-import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
-import com.github.serivesmejia.eocvsim.util.ClasspathScan
-import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.JavaProcess
-import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.common.util.ParsedVersion
@@ -56,20 +49,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import nu.pattern.OpenCV
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import org.opencv.core.Mat
 import org.opencv.core.Size
-import org.openftc.easyopencv.OpenCvViewport
 import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.io.File
 import java.lang.Thread.sleep
 import javax.swing.JOptionPane
-import javax.swing.SwingUtilities
-import javax.swing.filechooser.FileFilter
-import javax.swing.filechooser.FileNameExtensionFilter
 import kotlin.system.exitProcess
 
 /**
@@ -77,10 +67,9 @@ import kotlin.system.exitProcess
  * This class is the entry point of the program
  * and is responsible for initializing all the
  * components of the simulator.
- * @param params the parameters to initialize the simulator with
  * @see Parameters
  */
-class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
+class EOCVSim : KoinComponent {
 
     companion object {
         const val VERSION = Build.versionString
@@ -93,7 +82,6 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
 
         @JvmField
         val DEFAULT_EOCV_SIZE = Size(DEFAULT_EOCV_WIDTH.toDouble(), DEFAULT_EOCV_HEIGHT.toDouble())
-
 
         val logger by loggerFor(EOCVSim::class)
 
@@ -116,7 +104,7 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
                 try {
                     System.load(alternativeNative.absolutePath)
 
-                    Mat().release() //test if native lib is loaded correctly
+                    Mat().release() //test if OpenCV is loaded correctly
 
                     isNativeLibLoaded = true
                     logger.info("Successfully loaded the OpenCV native lib from specified path")
@@ -133,7 +121,7 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
                 logger.info("Successfully loaded the OpenCV native lib")
             } catch (ex: Throwable) {
                 logger.error("Failure loading the OpenCV native lib", ex)
-                logger.error("The sim will exit now as it's impossible to continue execution without OpenCV")
+                logger.error("The sim will exit now as it's impossible to continue without OpenCV")
 
                 CrashReport(ex).saveCrashReport()
 
@@ -144,6 +132,10 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
         }
     }
 
+    val parameters: Parameters by inject()
+
+    val initOrchestrator: Orchestrator by inject(named("init"))
+
     /**
      * Event handler for the main update loop
      * This event handler is called every frame
@@ -151,10 +143,7 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
      * posted by the different components of the simulator
      * @see EventHandler
      */
-    val onMainUpdate: EventHandler by inject(named("onMainLoop"))
-    val onRestartRequested: EventHandler by inject(named("onRestartRequested"))
-    val onDestroyRequested: EventHandler by inject(named("onDestroyRequested"))
-
+    val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
     /**
      * The visualizer instance in charge of managing the GUI
@@ -169,7 +158,6 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
 
     val recordingManager: RecordingManager by inject()
     val dialogFactory: DialogFactory by inject()
-
 
     /**
      * The pipeline statistics calculator instance in charge of
@@ -204,7 +192,7 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
      */
     val config: Config get() = configManager.config
 
-    val classpathScan: ClasspathScan by inject()
+    val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
 
     /**
      * Utility in charge of limiting the FPS of the simulator
@@ -223,35 +211,13 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
     private var destroying = false
 
     /**
-     * The reason why the simulator was destroyed
-     * to handle different actions when flushing
-     * the simulator away.
-     * @see destroy
-     */
-    enum class DestroyReason {
-        USER_REQUESTED, THREAD_EXIT, RESTART, CRASH
-    }
-
-    private val pipelineRenderHook =
-        OpenCvViewport.RenderHook {
-            canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity, userContext ->
-            if (pipelineManager.hasInitCurrentPipeline) {
-                pipelineManager.currentPipeline?.onDrawFrame(canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity, userContext)
-            }
-        }
-
-    /**
      * Initializes the simulator
      * This method is called to initialize all the components
      * of the simulator and start the main loop
-     * @see start
+     * @see mainLoop
      */
-    fun init() {
+    fun start() {
         eocvSimThread = Thread.currentThread()
-
-        // Wire up lifecycle events so components can trigger restart/destroy without injecting EOCVSim
-        onRestartRequested { restart() }
-        onDestroyRequested { destroy() }
 
         if (!EOCVSimFolder.couldLock) {
             logger.error(
@@ -278,18 +244,9 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
         EOCVSimUncaughtExceptionHandler.register()
 
         //loading native lib only once in the app runtime
-        loadOpenCvLib(params.opencvNativeLibrary)
+        loadOpenCvLib(parameters.opencvNativeLibrary)
 
-        classpathScan.asyncScan(scope)
-
-        configManager.init()
-
-        configManager.config.simTheme.install()
-
-        pluginManager.init() // woah
-        pluginManager.loadPlugins()
-
-        workspaceManager.init()
+        initOrchestrator.orchestrate()
 
         visualizer.onInitFinished {
             // SHOW WELCOME DIALOGS TO NEW USERS
@@ -310,24 +267,6 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
             }
 
             // END OF WELCOME DIALOGS
-        }
-
-        visualizer.initAsync(configManager.config.simTheme) //create gui in the EDT
-
-        inputSourceManager.init() //loading user created input sources
-
-        pipelineManager.init() //init pipeline manager (scan for pipelines)
-
-        tunerManager.init() //init tunable variables manager
-
-        //shows a warning when a pipeline gets "stuck"
-        pipelineManager.onPipelineTimeout {
-            dialogFactory.createInformation(
-                visualizer.frame,
-                "Current pipeline took too long to ${pipelineManager.lastPipelineAction}",
-                "Falling back to DefaultPipeline",
-                "Operation failed"
-            )
         }
 
         inputSourceManager.inputSourceLoader.saveInputSourcesToFile()
@@ -353,48 +292,21 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
         //post output mats from the pipeline to the visualizer viewport
         pipelineManager.pipelineOutputPosters.add(visualizer.viewport)
 
-        // now that we have two different runnable units (OpenCvPipeline and OpMode)
-        // we have to give a more special treatment to the OpenCvPipeline
-        // OpModes can take care of themselves, setting up their own stuff
-        // but we need to do some hand holding for OpenCvPipelines...
-        pipelineManager.onPipelineChange {
-            pipelineStatisticsCalculator.init()
-
-            if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
-                visualizer.viewport.activate()
-                visualizer.viewport.setRenderHook(pipelineRenderHook) // calls OpenCvPipeline#onDrawFrame on the viewport (UI) thread
-            } else {
-                // opmodes are on their own, lol
-                visualizer.viewport.deactivate()
-                visualizer.viewport.clearViewport()
-            }
-        }
-
-        pipelineManager.onUpdate {
-            if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
-                visualizer.viewport.notifyStatistics(
-                        pipelineStatisticsCalculator.avgFps,
-                        pipelineStatisticsCalculator.avgPipelineTime,
-                        pipelineStatisticsCalculator.avgOverheadTime
-                )
-            }
-
-            updateVisualizerTitle() // update current pipeline in title
-        }
-
         pluginManager.enablePlugins()
 
+         // BEGIN
+
         try {
-            start()
+            mainLoop()
         } catch (e: InterruptedException) {
             logger.warn("Main thread interrupted ($hexCode)", e)
         }
 
-        if(!destroying) {
-            destroy(DestroyReason.THREAD_EXIT)
-        }
+        // HANDLE MAIN LOOP EXITS
 
-        if (isRestarting) {
+        if(!destroying) {
+            destroy(LifecycleSignal.Destroy.Reason.THREAD_EXIT)
+        } else if (isRestarting) {
             Thread.interrupted() //clear interrupted flag
             EOCVSimFolder.lock?.lock?.close()
 
@@ -419,10 +331,10 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
      * such as the GUI, the pipelines, the input sources,
      * and the different manages declared at the top level
      * are explicitly updated within this method
-     * @see init
+     * @see start
      */
     @Throws(InterruptedException::class)
-    private fun start() {
+    private fun mainLoop() {
         if(Thread.currentThread() != eocvSimThread) {
             throw IllegalStateException("start() must be called from the EOCVSim thread")
         }
@@ -431,7 +343,7 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
 
         while (!eocvSimThread.isInterrupted && !destroying) {
             //run all pending requested runnables
-            onMainUpdate.run()
+            onMainLoop.run()
 
             pipelineStatisticsCalculator.newInputFrameStart()
 
@@ -448,6 +360,18 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
             } catch (_: InterruptedException) {
                 break
             }
+
+            when(val signal = lifecycleChannel.tryReceive().getOrNull()) {
+                is LifecycleSignal.Restart -> {
+                    logger.info("Restart signal received")
+                    restart()
+                }
+                is LifecycleSignal.Destroy -> {
+                    logger.info("Destroy signal received")
+                    destroy(signal.reason)
+                }
+                null -> {}
+            }
         }
 
         logger.warn("Main thread interrupted ($hexCode)")
@@ -457,14 +381,13 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
      * Destroys the simulator
      * @param reason the reason why the simulator is being destroyed, it mainly allows to restart the simulator if requested
      */
-    fun destroy(reason: DestroyReason) {
+    fun destroy(reason: LifecycleSignal.Destroy.Reason) {
         logger.warn("-- Destroying current EOCVSim ($hexCode) due to $reason, it is normal to see InterruptedExceptions and other kinds of stack traces below --")
 
         pluginManager.disablePlugins()
 
         //stop recording session if there's currently an ongoing one
         recordingManager.stopRecordingSession()
-
 
         logger.info("Trying to save config file...")
 
@@ -476,20 +399,21 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
         destroying = true
         scope.cancel()
 
-        if(reason == DestroyReason.THREAD_EXIT) {
+        if(reason == LifecycleSignal.Destroy.Reason.THREAD_EXIT) {
             exitProcess(0)
         } else {
             eocvSimThread.interrupt()
         }
 
-        if (reason == DestroyReason.USER_REQUESTED || reason == DestroyReason.CRASH) jvmMainThread.interrupt()
+        if (reason == LifecycleSignal.Destroy.Reason.USER_REQUESTED || reason == LifecycleSignal.Destroy.Reason.CRASH)
+            jvmMainThread.interrupt()
     }
 
     /**
      * Destroys the simulator with the reason being USER_REQUESTED
      */
     fun destroy() {
-        destroy(DestroyReason.USER_REQUESTED)
+        destroy(LifecycleSignal.Destroy.Reason.USER_REQUESTED)
     }
 
     /**
@@ -502,40 +426,14 @@ class EOCVSim(val params: Parameters = Parameters()) : KoinComponent {
         pipelineManager.captureStaticSnapshot()
 
         isRestarting = true
-        destroy(DestroyReason.RESTART)
+        destroy(LifecycleSignal.Destroy.Reason.USER_REQUESTED)
     }
-
-
 
     /**
      * Checks if the simulator is currently recording
      * @return true if the simulator is currently recording, false otherwise
      */
     fun isCurrentlyRecording() = recordingManager.isCurrentlyRecording()
-
-
-    /**
-     * Updates the visualizer title message
-     * with different information such as the current pipeline
-     * the workspace file, if the pipeline is paused, if the pipeline
-     * is currently building, and if the simulator is currently recording
-     */
-    private fun updateVisualizerTitle() {
-        val isBuildRunning = if (pipelineManager.compiledPipelineManager.isBuildRunning) "(Building)" else ""
-
-        val workspaceMsg = " - ${workspaceManager.workspaceFile.absolutePath} $isBuildRunning"
-
-        val isPaused = if (pipelineManager.paused) " (Paused)" else ""
-        val isRecording = if (isCurrentlyRecording()) " RECORDING" else ""
-
-        val msg = isRecording + isPaused
-
-        if (pipelineManager.currentPipeline == null) {
-            visualizer.setTitleMessage("No pipeline$msg${workspaceMsg}")
-        } else {
-            visualizer.setTitleMessage("${pipelineManager.currentPipelineName}$msg${workspaceMsg}")
-        }
-    }
 
     /**
      * Parameters class to initialize the simulator with

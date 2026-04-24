@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.pipeline
 
+import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
@@ -40,11 +41,12 @@ import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.event.Orchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
-import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
-import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.common.image.MatPoster
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
+import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.eocvsim.virtualreflect.VirtualField
 import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
 import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
@@ -55,28 +57,28 @@ import org.firstinspires.ftc.vision.VisionProcessor
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import com.github.serivesmejia.eocvsim.EOCVSim
 import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport
 import org.openftc.easyopencv.processFrameInternal
-import java.util.*
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong
 
 @OptIn(DelicateCoroutinesApi::class)
-class PipelineManager : KoinComponent {
+class PipelineManager : Orchestrable, KoinComponent {
 
-    val onMainUpdate: EventHandler by inject(named("onMainLoop"))
-    val params: EOCVSim.Parameters by inject()
+    private val initOrchestrator: Orchestrator by inject(named("init"))
+    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
 
-    val dialogFactory: DialogFactory by inject()
-    val configManager: ConfigManager by inject()
-    val inputSourceManager: InputSourceManager by inject()
+    private val params: EOCVSim.Parameters by inject()
+
+    private val dialogFactory: DialogFactory by inject()
+    private val configManager: ConfigManager by inject()
+    private val inputSourceManager: InputSourceManager by inject()
     val pipelineStatisticsCalculator: PipelineStatisticsCalculator by inject()
-    val visualizer: Visualizer by inject()
-    val classpathScan: ClasspathScan by inject()
-    val scope: CoroutineScope by inject()
+    private val visualizer: Visualizer by inject()
+    private val classpathScan: ClasspathScan by inject()
+    private val scope: CoroutineScope by inject()
 
     val compiledPipelineManager: CompiledPipelineManager by inject()
 
@@ -189,15 +191,18 @@ class PipelineManager : KoinComponent {
         USER_REQUESTED, IMAGE_ONE_ANALYSIS, NOT_PAUSED
     }
 
-    fun init() {
+    init {
+        initOrchestrator.register(this) {
+            target { it.init() }
+            dependsOn(classpathScan, compiledPipelineManager)
+        }
+    }
+
+    private fun init() {
         logger.info("Initializing...")
 
         //add default pipeline
         addPipelineClass(DefaultPipeline::class.java)
-
-        compiledPipelineManager.init()
-
-        classpathScan.join()
 
         //scan for pipelines
         for (pipelineClass in classpathScan.scanResult!!.pipelineClasses) {

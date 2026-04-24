@@ -23,6 +23,7 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog
 
+import com.github.serivesmejia.eocvsim.LifecycleSignal
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
@@ -31,9 +32,12 @@ import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoaderImpl
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import io.github.deltacv.eocvsim.plugin.loader.PluginSource
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
-import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.swing.Swing
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -47,11 +51,10 @@ import javax.swing.event.ChangeListener
 class PluginOutput(
     appendDelegate: AppendDelegate,
     val pluginManager: PluginManager,
-    val onRestartRequested: EventHandler,
     val configManager: ConfigManager,
     val scope: CoroutineScope,
     val onContinue: Runnable
-) : Appendable {
+) : Appendable, KoinComponent {
 
     companion object {
         const val SPECIAL = "[13mck]"
@@ -73,6 +76,8 @@ class PluginOutput(
                 .replace(SPECIAL_FREE, "")
         }
     }
+
+    private val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
 
     private val output = JDialog()
     private val tabbedPane: JTabbedPane
@@ -130,14 +135,11 @@ class PluginOutput(
             mavenBottomButtonsPanel.closeButton.isEnabled = true
         }
 
-        tabbedPane.addChangeListener(object: ChangeListener {
-            override fun stateChanged(e: ChangeEvent?) {
-                // remake plugin manager panel
-                if(tabbedPane.selectedIndex == tabbedPane.indexOfTab("Plugins")) {
-                    tabbedPane.setComponentAt(0, makePluginManagerPanel())
-                }
+        tabbedPane.addChangeListener { // remake plugin manager panel
+            if (tabbedPane.selectedIndex == tabbedPane.indexOfTab("Plugins")) {
+                tabbedPane.setComponentAt(0, makePluginManagerPanel())
             }
-        })
+        }
     }
 
     private fun checkShouldAskForRestart() {
@@ -151,7 +153,7 @@ class PluginOutput(
  
             if(dialogResult == JOptionPane.YES_OPTION) {
                 output.isVisible = false
-                onRestartRequested.run()
+                lifecycleChannel.trySend(LifecycleSignal.Restart)
             }
  
             shouldAskForRestart = false

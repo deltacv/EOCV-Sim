@@ -27,7 +27,9 @@ dependencies {
     implementation "com.moandjiezana.toml:toml4j:$toml4j_version"
     implementation "info.picocli:picocli:$picocli_version"
     implementation "org.slf4j:slf4j-api:$slf4j_version"
+
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version"
 
     implementation "com.formdev:flatlaf:$flatlaf_version"
     implementation "com.miglayout:miglayout-swing:$miglayout_version"
@@ -41,4 +43,5 @@ dependencies {
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-arm64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-arm64:$skiko_version")
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
 }

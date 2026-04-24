@@ -1,6 +1,11 @@
 package com.github.serivesmejia.eocvsim.util.event
 
 import io.github.deltacv.common.util.loggerOf
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -8,15 +13,17 @@ import java.util.concurrent.atomic.AtomicInteger
  * - Persistent listeners (ID-based, queue-based adding)
  * - Once listeners (double buffered queue-based, deferred)
  */
-class EventHandler(val name: String) : Runnable {
+class EventHandler @JvmOverloads constructor(
+    val name: String,
+    var callRightAway: CallRightAway = CallRightAway.Disabled,
+    val catchExceptions: Boolean = true
+) : Runnable {
 
     // ------------------------------------------------------------
     // config
     // ------------------------------------------------------------
 
     private val logger by loggerOf("EventHandler-$name")
-
-    var callRightAway = false
 
     // ------------------------------------------------------------
     // ids
@@ -76,14 +83,22 @@ class EventHandler(val name: String) : Runnable {
             }
         }
 
+        fun run(id: Int, listener: EventListener) {
+            val remover = persistentContextCache.getOrPut(id) { EventListenerContext(this, EventListenerId(id)) }
+            listener(remover)
+        }
+
         // execute
         for ((id, listener) in persistentListeners) {
-            try {
-                val remover = persistentContextCache.getOrPut(id) { EventListenerContext(this, EventListenerId(id)) }
-                listener(remover)
-            } catch (e: Exception) {
-                if (e is InterruptedException) throw e
-                logger.error("Exception in listener", e)
+            if(catchExceptions) {
+                try {
+                    run(id, listener)
+                } catch (e: Exception) {
+                    if (e is InterruptedException) throw e
+                    logger.error("Exception in listener", e)
+                }
+            } else {
+                run(id, listener)
             }
         }
     }
@@ -112,11 +127,15 @@ class EventHandler(val name: String) : Runnable {
             val listener = toRunListeners.removeFirst()
             toRunIds.removeFirst() // keep in sync
 
-            try {
+            if(catchExceptions) {
+                try {
+                    listener()
+                } catch (e: Exception) {
+                    if (e is InterruptedException) throw e
+                    logger.error("Exception in once listener", e)
+                }
+            } else {
                 listener()
-            } catch (e: Exception) {
-                if (e is InterruptedException) throw e
-                logger.error("Exception in once listener", e)
             }
         }
 
@@ -137,8 +156,19 @@ class EventHandler(val name: String) : Runnable {
             persistentAddQueue.addLast(id.value to listener)
         }
 
-        if (callRightAway) {
-            listener(EventListenerContext(this, id))
+
+        when(val mode = callRightAway) {
+            CallRightAway.InPlace -> listener(EventListenerContext(this, id))
+            is CallRightAway.InScope -> {
+                val job = mode.scope.launch {
+                    listener(EventListenerContext(this@EventHandler, id))
+                }
+
+                if(mode.shouldJoin) {
+                    runBlocking { job.join() }
+                }
+            }
+            CallRightAway.Disabled -> {} // do nothing
         }
 
         return id
@@ -147,12 +177,22 @@ class EventHandler(val name: String) : Runnable {
     fun once(listener: OnceEventListener): EventListenerId {
         val id = EventListenerId(idCounter.getAndIncrement())
 
-        if (callRightAway) {
-            listener()
-        } else {
-            synchronized(onceLock) {
-                onceListenersQueue.addLast(listener)
-                onceIdsQueue.addLast(id.value)
+        when(val mode = callRightAway) {
+            CallRightAway.InPlace -> listener()
+            is CallRightAway.InScope -> {
+                val job = mode.scope.launch {
+                    listener()
+                }
+
+                if(mode.shouldJoin) {
+                    runBlocking { job.join() }
+                }
+            }
+            CallRightAway.Disabled -> {
+                synchronized(onceLock) {
+                    onceListenersQueue.addLast(listener)
+                    onceIdsQueue.addLast(id.value)
+                }
             }
         }
 
@@ -199,5 +239,11 @@ class EventHandler(val name: String) : Runnable {
             onceListenersQueue.clear()
             onceIdsQueue.clear()
         }
+    }
+
+    sealed interface CallRightAway {
+        data class InScope(val scope: CoroutineScope, val shouldJoin: Boolean = false) : CallRightAway
+        object InPlace : CallRightAway
+        object Disabled : CallRightAway
     }
 }

@@ -25,7 +25,8 @@ package com.github.serivesmejia.eocvsim.gui
 
 import com.formdev.flatlaf.FlatLaf
 import com.github.serivesmejia.eocvsim.Build
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.LifecycleSignal
+import com.github.serivesmejia.eocvsim.LifecycleSignal.Destroy.Reason
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.component.CollapsiblePanelX
 import com.github.serivesmejia.eocvsim.gui.component.tuner.ColorPicker
@@ -57,21 +58,37 @@ import java.awt.event.WindowEvent
 import javax.swing.*
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import com.github.serivesmejia.eocvsim.output.RecordingManager
+import com.github.serivesmejia.eocvsim.util.event.Orchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
+import org.openftc.easyopencv.OpenCvViewport
 import org.koin.core.qualifier.named
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.swing.Swing
+import kotlinx.coroutines.withContext
 
-class Visualizer : KoinComponent {
+class Visualizer : Orchestrable, KoinComponent {
 
     val onMainUpdate: EventHandler by inject(named("onMainLoop"))
-    val onDestroyRequested: EventHandler by inject(named("onDestroyRequested"))
+
+    val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
+
     val pipelineManager: PipelineManager by inject()
     val inputSourceManager: InputSourceManager by inject()
     val configManager: ConfigManager by inject()
     val workspaceManager: WorkspaceManager by inject()
     val dialogFactory: DialogFactory by inject()
+    val recordingManager: RecordingManager by inject()
+    val pipelineStatisticsCalculator: PipelineStatisticsCalculator by inject()
     val scope: CoroutineScope by inject()
+
+    private val initOrchestrator: Orchestrator by inject(named("init"))
 
     val onInitFinished = EventHandler("OnVisualizerInitFinish")
     val onPluginGuiAttachment = EventHandler("OnPluginGuiAttachment")
@@ -127,7 +144,26 @@ class Visualizer : KoinComponent {
 
     private val logger by loggerForThis()
 
-    fun init(theme: Theme) {
+    private val pipelineRenderHook =
+        OpenCvViewport.RenderHook {
+            canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity, userContext ->
+            if (pipelineManager.hasInitCurrentPipeline) {
+                pipelineManager.currentPipeline?.onDrawFrame(canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity, userContext)
+            }
+        }
+
+    init {
+        initOrchestrator.register(this) {
+            target {
+                withContext(Dispatchers.Swing) {
+                    it.init(configManager.config.simTheme)
+                }
+            }
+            dependsOn(configManager)
+        }
+    }
+
+    private fun init(theme: Theme) {
         try {
             theme.install()
         } catch (e: Exception) {
@@ -190,7 +226,7 @@ class Visualizer : KoinComponent {
         tunerCollapsible.contentPanel.add(tunerScrollPane)
 
         onPluginGuiAttachment.run()
-        onPluginGuiAttachment.callRightAway = true
+        onPluginGuiAttachment.callRightAway = EventHandler.CallRightAway.InPlace
 
         frame.add(tunerCollapsible, BorderLayout.SOUTH)
         frame.add(sidebarContainer, BorderLayout.EAST)
@@ -221,12 +257,11 @@ class Visualizer : KoinComponent {
 
         frame.setLocationRelativeTo(null)
         frame.extendedState = JFrame.MAXIMIZED_BOTH
-        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
 
         frame.isVisible = true
 
         onInitFinished.run()
-        onInitFinished.callRightAway = true
+        onInitFinished.callRightAway = EventHandler.CallRightAway.InPlace
 
         registerListeners()
 
@@ -243,17 +278,14 @@ class Visualizer : KoinComponent {
         if (!PipelineCompiler.IS_USABLE) {
             compilerUnsupported()
         }
-    }
 
-    fun initAsync(simTheme: Theme) {
-        SwingUtilities.invokeLater { init(simTheme) }
+        setupSubscriptions()
     }
 
     private fun registerListeners() {
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
-                onMainUpdate.once { onDestroyRequested.run() }
-
+                lifecycleChannel.trySend(LifecycleSignal.Destroy(Reason.USER_REQUESTED))
             }
         })
 
@@ -277,7 +309,7 @@ class Visualizer : KoinComponent {
     fun close() {
         SwingUtilities.invokeLater {
             frame.isVisible = false
-            viewport.deactivate()
+            viewport.dispose()
             frame.dispose()
         }
     }
@@ -296,6 +328,59 @@ class Visualizer : KoinComponent {
         this.titleMsg = titleMsg
         if (beforeTitleMsg != titleMsg) updateFrameTitle(title, titleMsg)
         beforeTitleMsg = titleMsg
+    }
+
+    private fun updateTitle() {
+        val isBuildRunning = if (pipelineManager.compiledPipelineManager.isBuildRunning) "(Building)" else ""
+
+        val workspaceMsg = " - ${workspaceManager.workspaceFile.absolutePath} $isBuildRunning"
+
+        val isPaused = if (pipelineManager.paused) " (Paused)" else ""
+        val isRecording = if (recordingManager.isCurrentlyRecording()) " RECORDING" else ""
+
+        val msg = isRecording + isPaused
+
+        if (pipelineManager.currentPipeline == null) {
+            setTitleMessage("No pipeline$msg${workspaceMsg}")
+        } else {
+            setTitleMessage("${pipelineManager.currentPipelineName}$msg${workspaceMsg}")
+        }
+    }
+
+    private fun setupSubscriptions() {
+        pipelineManager.onPipelineChange {
+            colorPicker.stopPicking()
+            pipelineStatisticsCalculator.init()
+
+            if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
+                viewport.activate()
+                viewport.setRenderHook(pipelineRenderHook)
+            } else {
+                viewport.deactivate()
+                viewport.clearViewport()
+            }
+        }
+
+        pipelineManager.onUpdate {
+            if(pipelineManager.currentPipeline !is OpMode && pipelineManager.currentPipeline != null) {
+                viewport.notifyStatistics(
+                    pipelineStatisticsCalculator.avgFps,
+                    pipelineStatisticsCalculator.avgPipelineTime,
+                    pipelineStatisticsCalculator.avgOverheadTime
+                )
+            }
+
+            updateTitle()
+        }
+
+        pipelineManager.onPipelineTimeout {
+            dialogFactory.createInformation(
+                frame,
+                "Current pipeline took too long to ${pipelineManager.lastPipelineAction}",
+                "Falling back to DefaultPipeline",
+                "Operation failed"
+            )
+        }
     }
 
     fun updateTunerFields(fields: List<TunableFieldPanel>) {

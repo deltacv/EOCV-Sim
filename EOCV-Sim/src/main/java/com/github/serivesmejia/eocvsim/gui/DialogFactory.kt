@@ -23,10 +23,8 @@
 
 package com.github.serivesmejia.eocvsim.gui
 
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.dialog.*
-import com.github.serivesmejia.eocvsim.gui.dialog.SplashScreen // Explicit import to resolve reference
 import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmA
 import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmAPaperVision
 import com.github.serivesmejia.eocvsim.gui.dialog.source.*
@@ -34,23 +32,20 @@ import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import kotlinx.coroutines.CoroutineScope
-import java.awt.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import java.awt.Component
+import java.awt.GridLayout
 import java.io.File
-import java.util.*
 import javax.swing.*
 import javax.swing.filechooser.FileFilter
 import javax.swing.filechooser.FileNameExtensionFilter
-
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 
 class DialogFactory : KoinComponent {
 
     val visualizer: Visualizer by inject()
     val pluginManager: PluginManager by inject()
     val configManager: ConfigManager by inject()
-    val onRestartRequested: EventHandler by inject(named("onRestartRequested"))
     val scope: CoroutineScope by inject()
 
     fun createYesOrNo(parent: Component?, message: String, submessage: String, result: (Int) -> Unit) {
@@ -181,7 +176,7 @@ class DialogFactory : KoinComponent {
 
     fun createMavenOutput(onContinue: Runnable?): AppendDelegate {
         val delegate = AppendDelegate()
-        invokeLater { PluginOutput(delegate, pluginManager, onRestartRequested, configManager, scope, onContinue ?: Runnable { }) }
+        invokeLater { PluginOutput(delegate, pluginManager, configManager, scope, onContinue ?: Runnable { }) }
 
         return delegate
     }

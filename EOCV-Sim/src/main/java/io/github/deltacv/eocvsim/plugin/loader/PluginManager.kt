@@ -25,6 +25,7 @@ package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.LifecycleSignal
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput.Companion.trimSpecials
@@ -46,18 +47,23 @@ import org.koin.core.component.inject
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.event.Orchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import kotlinx.coroutines.channels.Channel
 import org.koin.core.qualifier.named
 
 /**
  * Manages the loading, enabling and disabling of plugins
  */
-class PluginManager : KoinComponent {
+class PluginManager : Orchestrable, KoinComponent {
 
     private val configManager: ConfigManager by inject()
     private val visualizer: Visualizer by inject()
     private val dialogFactory: DialogFactory by inject()
+
+    private val initOrchestrator: Orchestrator by inject(named("init"))
     private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
-    private val onRestartRequested: EventHandler by inject(named("onRestartRequested"))
+    private val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
 
     companion object {
         val PLUGIN_FOLDER = io.github.deltacv.eocvsim.plugin.PLUGIN_FOLDER
@@ -106,7 +112,7 @@ class PluginManager : KoinComponent {
     }
 
     val repositoryManager by lazy {
-        PluginRepositoryManager(appender, onMainUpdate, { onRestartRequested.run() }, haltLock, haltCondition)
+        PluginRepositoryManager(appender, onMainUpdate, { lifecycleChannel.trySend(LifecycleSignal.Restart) }, haltLock, haltCondition)
     }
 
     private val _pluginFiles = mutableListOf<File>()
@@ -127,6 +133,13 @@ class PluginManager : KoinComponent {
      */
     val eocvSimApiProvider = EOCVSimApiProvider { plugin -> EOCVSimApiImpl(plugin) }
 
+    init {
+        initOrchestrator.register(this) {
+            target { it.init() }
+            dependsOn(configManager)
+        }
+    }
+
     /**
      * Initializes the plugin manager
      * Loads all plugin files in the plugins folder
@@ -134,7 +147,7 @@ class PluginManager : KoinComponent {
      * and stores them in the loaders map
      * @see PluginLoader
      */
-    fun init() {
+    private fun init() {
         visualizer.onInitFinished {
             appender.append(PluginOutput.SPECIAL_FREE)
         }
@@ -254,6 +267,8 @@ class PluginManager : KoinComponent {
         } else {
             appender.appendln(PluginOutput.SPECIAL_SILENT + "PaperVision plugin is already loaded, skipping embedded plugin.")
         }
+
+        loadPlugins()
     }
 
     private fun <T : EOCVSimPlugin> addEmbeddedPlugin(
@@ -270,7 +285,7 @@ class PluginManager : KoinComponent {
      * Loads all plugins
      * @see PluginLoader.load
      */
-    fun loadPlugins() {
+    private fun loadPlugins() {
         for (loader in _loaders.toTypedArray()) {
             try {
                 val hash = loader.hash()

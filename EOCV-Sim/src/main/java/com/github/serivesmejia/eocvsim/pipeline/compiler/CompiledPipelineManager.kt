@@ -40,19 +40,22 @@ import java.io.File
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.Visualizer
-import com.github.serivesmejia.eocvsim.util.ClasspathScan
+import com.github.serivesmejia.eocvsim.util.event.Orchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import org.koin.core.qualifier.named
 
-class CompiledPipelineManager : KoinComponent {
+class CompiledPipelineManager : Orchestrable, KoinComponent {
+
+    private val initOrchestrator: Orchestrator by inject(named("init"))
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
+    private val scope: CoroutineScope by inject()
 
     private val pipelineManager: PipelineManager by inject()
+    val workspaceManager: WorkspaceManager by inject()
     private val visualizer: Visualizer by inject()
     private val dialogFactory: DialogFactory by inject()
-    private val scope: CoroutineScope by inject()
-    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
     companion object {
         val logger by loggerForThis()
@@ -98,9 +101,14 @@ class CompiledPipelineManager : KoinComponent {
     var isBuildRunning = false
         private set
 
-    val workspaceManager: WorkspaceManager by inject()
+    init {
+        initOrchestrator.register(this) {
+            target { it.init() }
+            dependsOn(workspaceManager)
+        }
+    }
 
-    fun init() {
+    private fun init() {
         logger.info("Initializing...")
 
         onBuildStart {
@@ -206,12 +214,12 @@ class CompiledPipelineManager : KoinComponent {
                 }
         }
 
-        onBuildEnd.callRightAway = true
+        onBuildEnd.callRightAway = EventHandler.CallRightAway.InPlace
         onBuildEnd.run()
 
         scope.launch {
             delay(1000)
-            onBuildEnd.callRightAway = false
+            onBuildEnd.callRightAway = EventHandler.CallRightAway.Disabled
         }
 
         isBuildRunning = false

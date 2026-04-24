@@ -23,10 +23,8 @@
 
 package com.github.serivesmejia.eocvsim
 
-import com.github.serivesmejia.eocvsim.di.makeEOCVSimModule
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import org.koin.core.context.GlobalContext
-import org.koin.core.component.KoinComponent
 import org.koin.dsl.module
 import picocli.CommandLine
 import java.io.File
@@ -113,13 +111,17 @@ class EOCVSimCommandInterface : Runnable {
         }
 
         GlobalContext.startKoin {
-            modules(makeEOCVSimModule(), module { single { parameters } })
+            modules(
+                eocvSimModule,
+                module {
+                    single { EOCVSim() }
+                    single { parameters }
+                }
+            )
         }
 
-        val eocvSim = EOCVSim(parameters)
-        GlobalContext.loadKoinModules(module { single { eocvSim } })
-
-        eocvSim.init()
+        // get eocv-sim from DI and start
+        GlobalContext.get().get<EOCVSim>().start()
     }
 
     private fun checkPath(parameter: String, path: String, shouldBeDirectory: Boolean): File {

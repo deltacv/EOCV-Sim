@@ -60,9 +60,6 @@ class SwingOpenCvViewport(
     private val needToDeactivateRegardlessOfUser = false
     private var surfaceExistsAndIsReady = false
 
-    @Volatile
-    private var useGpuCanvas = false
-
     private var isInitialized = false
 
     var dark = false
@@ -210,6 +207,11 @@ class SwingOpenCvViewport(
             userRequestedActive = false
             checkState()
         }
+    }
+
+    fun dispose() {
+        deactivate()
+        skiaLayer.dispose()
     }
 
     override fun setOptimizedViewRotation(rotation: OptimizedRotation) {}

@@ -24,6 +24,7 @@
 package com.github.serivesmejia.eocvsim.gui.component.visualizer
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.LifecycleSignal
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
@@ -50,6 +51,7 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import org.koin.core.qualifier.named
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -61,12 +63,8 @@ class TopMenuBar : JMenuBar(), KoinComponent {
     val workspaceManager: WorkspaceManager by inject()
     val pipelineManager: PipelineManager by inject()
     val onMainUpdate: EventHandler by inject(named("onMainLoop"))
-    val onRestartRequested: EventHandler by inject(named("onRestartRequested"))
+    val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
     val scope: CoroutineScope by inject()
-
-
-
-
 
     companion object {
         val docsUrl = URI("https://docs.deltacv.org/eocv-sim/")
@@ -137,7 +135,7 @@ class TopMenuBar : JMenuBar(), KoinComponent {
 
         val fileRestart = JMenuItem("Restart")
 
-        fileRestart.addActionListener { onMainUpdate.once { onRestartRequested.run() } }
+        fileRestart.addActionListener { onMainUpdate.once { lifecycleChannel.trySend(LifecycleSignal.Restart) } }
 
         mFileMenu.add(fileRestart)
 

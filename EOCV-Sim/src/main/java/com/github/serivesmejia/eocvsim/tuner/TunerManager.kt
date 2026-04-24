@@ -11,13 +11,15 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.util.event.Orchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import org.koin.core.qualifier.named
 
-class TunerManager : KoinComponent {
+class TunerManager : Orchestrable, KoinComponent {
 
-    val pipelineManager: PipelineManager by inject()
-
-    val visualizer: Visualizer by inject()
-
+    private val initOrchestrator: Orchestrator by inject(named("init"))
+    private val pipelineManager: PipelineManager by inject()
+    private val visualizer: Visualizer by inject()
 
     val logger by loggerForThis()
 
@@ -27,12 +29,19 @@ class TunerManager : KoinComponent {
 
     private var firstInit = true
 
-    fun init() {
-        if (firstInit) {
-            pipelineManager.onPipelineChange.attach { reset() }
-            firstInit = false
+    init {
+        initOrchestrator.register(this) {
+            target { it.init() }
+            dependsOn(pipelineManager)
         }
+    }
 
+    private fun init() {
+        pipelineManager.onPipelineChange.attach { reset() }
+        refreshFields()
+    }
+
+    private fun refreshFields() {
         pipelineManager.reflectTarget?.let { target ->
             addFieldsFrom(target)
             visualizer.updateTunerFields(createTunableFieldPanels())
@@ -68,7 +77,7 @@ class TunerManager : KoinComponent {
 
     fun reset() {
         fields.clear()
-        init()
+        refreshFields()
     }
 
     fun newTunableFieldInstanceFor(field: VirtualField, pipeline: Any): TunableField<*>? {

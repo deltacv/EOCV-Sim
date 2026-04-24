@@ -23,17 +23,32 @@
 
 package com.github.serivesmejia.eocvsim.config
 
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.event.Orchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
 import io.github.deltacv.common.util.loggerForThis
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
-class ConfigManager {
+class ConfigManager : Orchestrable, KoinComponent {
 
     val configLoader = ConfigLoader()
+
     var config: Config = Config()
         private set
 
     private val logger by loggerForThis()
 
-    fun init() {
+    private val initOrchestrator: Orchestrator by inject(named("init"))
+
+    init {
+        initOrchestrator.register(this) {
+            target { it.init() }
+        }
+    }
+
+    private fun init() {
         logger.info("Initializing...")
 
         try {

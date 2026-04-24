@@ -29,6 +29,8 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.event.Orchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
 import com.github.serivesmejia.eocvsim.util.io.FileWatcher
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfig
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfigLoader
@@ -60,13 +62,15 @@ import java.nio.file.Paths
  * classloader.
  */
 @OptIn(DelicateCoroutinesApi::class)
-class WorkspaceManager : KoinComponent {
+class WorkspaceManager : Orchestrable, KoinComponent {
 
     private val pipelineManager: PipelineManager by inject()
     private val compiledPipelineManager: CompiledPipelineManager by inject()
     private val configManager: ConfigManager by inject()
     private val params: EOCVSim.Parameters by inject()
     private val scope: CoroutineScope by inject()
+
+    private val initOrchestrator: Orchestrator by inject(named("init"))
     private val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
     val logger by loggerForThis()
@@ -212,6 +216,13 @@ class WorkspaceManager : KoinComponent {
     lateinit var fileWatcher: FileWatcher
         private set
 
+    init {
+        initOrchestrator.register(this) {
+            target { it.init() }
+            dependsOn(configManager)
+        }
+    }
+
     /**
      * Stops the current file watcher, if initialized
      */
@@ -219,6 +230,27 @@ class WorkspaceManager : KoinComponent {
         if (::fileWatcher.isInitialized) {
             fileWatcher.stop()
         }
+    }
+
+    /**
+     * Initializes the workspace manager
+     * To be called by the EOCVSim instance
+     * Initializes the file watcher and the workspace configuration loader
+     * and sets the workspace file to the initial workspace or the default one
+     */
+    private fun init() {
+        onWorkspaceChange {
+            fileWatcher.onChange {
+                pipelineManager.compiledPipelineManager.asyncBuild()
+            }
+        }
+
+        val file = params.initialWorkspace ?: File(configManager.config.workspacePath)
+
+        workspaceFile = if (file.exists())
+            file
+        else
+            CompiledPipelineManager.DEF_WORKSPACE_FOLDER
     }
 
     /**
@@ -258,27 +290,6 @@ class WorkspaceManager : KoinComponent {
 
             compiledPipelineManager.asyncBuild()
         }
-    }
-
-    /**
-     * Initializes the workspace manager
-     * To be called by the EOCVSim instance
-     * Initializes the file watcher and the workspace configuration loader
-     * and sets the workspace file to the initial workspace or the default one
-     */
-    fun init() {
-        onWorkspaceChange {
-            fileWatcher.onChange {
-                pipelineManager.compiledPipelineManager.asyncBuild()
-            }
-        }
-
-        val file = params.initialWorkspace ?: File(configManager.config.workspacePath)
-
-        workspaceFile = if (file.exists())
-            file
-        else
-            CompiledPipelineManager.DEF_WORKSPACE_FOLDER
     }
 
     /**

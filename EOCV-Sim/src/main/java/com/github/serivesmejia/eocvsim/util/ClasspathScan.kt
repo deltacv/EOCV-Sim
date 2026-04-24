@@ -23,22 +23,36 @@
 
 package com.github.serivesmejia.eocvsim.util
 
-        import com.qualcomm.robotcore.eventloop.opmode.Disabled
+import com.github.serivesmejia.eocvsim.util.event.Orchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
 import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.classgraph.ClassGraph
 import io.github.deltacv.common.util.loggerForThis
-import kotlinx.coroutines.*
 import org.firstinspires.ftc.vision.VisionProcessor
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.openftc.easyopencv.OpenCvPipeline
+
+class AutoClasspathScan : ClasspathScan(), Orchestrable, KoinComponent {
+    val initOrchestrator: Orchestrator by inject(named("init"))
+
+    init {
+        initOrchestrator.register(this) {
+            target { it.scan() }
+        }
+    }
+}
 
 /**
  * Classpath scanner using ClassGraph.
  *
  * It scans for OpenCvPipelines, OpModes, VisionProcessors and TunableFields
  */
-class ClasspathScan {
+open class ClasspathScan {
 
     companion object {
         val ignoredPackages = arrayOf(
@@ -65,8 +79,6 @@ class ClasspathScan {
     var hasScanned = false
         private set
 
-    private lateinit var scanResultJob: Job
-
     /**
      * Perform the classpath scan using ClassGraph, surprisingly fast due to
      * the miracles of said library using bytecode scanning instead of reflection.
@@ -77,7 +89,11 @@ class ClasspathScan {
      * @param addProcessorsAsPipelines if true, VisionProcessors will be wrapped as pipelines
      */
     @Suppress("UNCHECKED_CAST")
-    fun scan(jarFile: String? = null, classLoader: ClassLoader? = null, addProcessorsAsPipelines: Boolean = true): ScanResult {
+    fun scan(
+        jarFile: String? = null,
+        classLoader: ClassLoader? = null,
+        addProcessorsAsPipelines: Boolean = true
+    ): ScanResult {
         val timer = ElapsedTime()
         val classGraph = ClassGraph()
             .enableClassInfo()
@@ -85,21 +101,21 @@ class ClasspathScan {
             .enableAnnotationInfo()
             .rejectPackages(*ignoredPackages)
 
-        if(jarFile != null) {
+        if (jarFile != null) {
             classGraph.overrideClasspath("$jarFile!/")
             logger.info("Starting to scan for classes in $jarFile...")
         } else {
             logger.info("Starting to scan classpath...")
         }
 
-        if(classLoader != null) {
+        if (classLoader != null) {
             classGraph.overrideClassLoaders(classLoader)
         }
 
         val scanResult = classGraph.scan()
 
         logger.info("ClassGraph finished scanning (took ${timer.seconds()}s)")
-        
+
 
         val pipelineClasses = mutableListOf<Class<*>>()
 
@@ -108,33 +124,33 @@ class ClasspathScan {
         fun searchPipelinesOfSuperclass(superclass: String) {
             logger.trace("searchPipelinesOfSuperclass: {}", superclass)
 
-            val superclassClazz = if(classLoader != null) {
+            val superclassClazz = if (classLoader != null) {
                 classLoader.loadClass(superclass)
             } else Class.forName(superclass)
 
-            val pipelineClassesInfo = if(superclassClazz.isInterface)
+            val pipelineClassesInfo = if (superclassClazz.isInterface)
                 scanResult.getClassesImplementing(superclass)
-                else scanResult.getSubclasses(superclass)
+            else scanResult.getSubclasses(superclass)
 
-            for(pipelineClassInfo in pipelineClassesInfo) {
+            for (pipelineClassInfo in pipelineClassesInfo) {
                 logger.trace("pipelineClassInfo: {}", pipelineClassInfo.name)
 
-                for(pipelineSubclassInfo in pipelineClassInfo.subclasses) {
+                for (pipelineSubclassInfo in pipelineClassInfo.subclasses) {
                     searchPipelinesOfSuperclass(pipelineSubclassInfo.name) // naming is my passion
                 }
 
-                if(pipelineClassInfo.isAbstract || pipelineClassInfo.isInterface) {
+                if (pipelineClassInfo.isAbstract || pipelineClassInfo.isInterface) {
                     continue // nope'd outta here
                 }
 
-                val clazz = if(classLoader != null) {
+                val clazz = if (classLoader != null) {
                     classLoader.loadClass(pipelineClassInfo.name)
                 } else Class.forName(pipelineClassInfo.name)
 
                 logger.trace("class {} super {}", clazz.typeName, clazz.superclass.typeName)
 
-                if(!pipelineClasses.contains(clazz) && ReflectUtil.hasSuperclass(clazz, superclassClazz)) {
-                    if(clazz.isAnnotationPresent(Disabled::class.java)) {
+                if (!pipelineClasses.contains(clazz) && ReflectUtil.hasSuperclass(clazz, superclassClazz)) {
+                    if (clazz.isAnnotationPresent(Disabled::class.java)) {
                         logger.info("Found @Disabled pipeline ${clazz.typeName}")
                     } else {
                         logger.info("Found pipeline ${clazz.typeName}")
@@ -147,7 +163,7 @@ class ClasspathScan {
         // start recursive hell
         searchPipelinesOfSuperclass(OpenCvPipeline::class.java.name)
 
-        if(jarFile != null) {
+        if (jarFile != null) {
             // Since we removed EOCV-Sim from the scan classpath,
             // ClassGraph does not know that OpMode and LinearOpMode
             // are subclasses of OpenCvPipeline, so we have to scan them
@@ -156,7 +172,7 @@ class ClasspathScan {
             searchPipelinesOfSuperclass(LinearOpMode::class.java.name)
         }
 
-        if(addProcessorsAsPipelines) {
+        if (addProcessorsAsPipelines) {
             logger.info("Searching for VisionProcessors...")
             searchPipelinesOfSuperclass(VisionProcessor::class.java.name)
         }
@@ -166,34 +182,10 @@ class ClasspathScan {
         logger.info("Finished scanning (took ${timer.seconds()}s)")
 
         this.scanResult = ScanResult(
-            pipelineClasses.toTypedArray()
+            pipelineClasses
         )
 
         return this.scanResult!!
-    }
-
-    /**
-     * Asynchronously perform the classpath scan
-     * and store the result in [scanResult]
-     */
-    @OptIn(DelicateCoroutinesApi::class)
-    fun asyncScan(scope: CoroutineScope = GlobalScope) {
-        if(hasScanned) return
-        hasScanned = true
-
-        scanResultJob = scope.launch(Dispatchers.IO) {
-            scan()
-        }
-    }
-
-    /**
-     * Join the async scan coroutine
-     * @see asyncScan
-     */
-    fun join() = runBlocking {
-        if(::scanResultJob.isInitialized) {
-            scanResultJob.join()
-        }
     }
 
 }
@@ -203,5 +195,5 @@ class ClasspathScan {
  * @param pipelineClasses the found OpenCvPipelines
  */
 data class ScanResult(
-    val pipelineClasses: Array<Class<*>>
+    val pipelineClasses: List<Class<*>>
 )
