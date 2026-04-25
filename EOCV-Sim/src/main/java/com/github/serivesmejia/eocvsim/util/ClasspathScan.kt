@@ -33,16 +33,14 @@ import io.github.classgraph.ClassGraph
 import io.github.deltacv.common.util.loggerForThis
 import org.firstinspires.ftc.vision.VisionProcessor
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 import org.openftc.easyopencv.OpenCvPipeline
 
-class AutoClasspathScan : ClasspathScan(), Orchestrable, KoinComponent {
-    val initOrchestrator: Orchestrator by inject(named("init"))
-
-    init {
-        initOrchestrator.register(this) {
-            target { it.scan() }
+class InitClasspathScan : ClasspathScan(), Orchestrable, KoinComponent {
+    override fun wire(orchestrator: Orchestrator) {
+        orchestrator.register(this) {
+            phase(Orchestrator.Phase.INIT) {
+                target { scan() }
+            }
         }
     }
 }

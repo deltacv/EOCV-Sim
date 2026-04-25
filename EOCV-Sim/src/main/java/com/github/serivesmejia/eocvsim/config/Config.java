@@ -29,8 +29,7 @@ import com.github.serivesmejia.eocvsim.gui.theme.Theme;
 import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineFps;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout;
-import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager;
-import com.github.serivesmejia.eocvsim.util.SysUtil;
+import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager;
 import org.opencv.core.Size;
 
 import java.util.ArrayList;

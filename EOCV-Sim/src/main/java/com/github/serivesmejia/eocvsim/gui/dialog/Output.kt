@@ -23,16 +23,14 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog
 
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
-import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
-import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompileStatus
+import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.compiled.PipelineCompileStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import java.awt.Dimension

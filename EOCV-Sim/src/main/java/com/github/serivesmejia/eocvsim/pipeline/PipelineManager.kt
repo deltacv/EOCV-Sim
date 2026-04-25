@@ -28,7 +28,7 @@ import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
-import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.handler.PipelineHandler
 import com.github.serivesmejia.eocvsim.pipeline.instantiator.DefaultPipelineInstantiator
 import com.github.serivesmejia.eocvsim.pipeline.instantiator.PipelineInstantiator
@@ -36,13 +36,12 @@ import com.github.serivesmejia.eocvsim.pipeline.instantiator.processor.Processor
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineExceptionTracker
 import com.github.serivesmejia.eocvsim.pipeline.util.PipelineSnapshot
 import com.github.serivesmejia.eocvsim.tuner.TunableFieldRegistry
-import com.github.serivesmejia.eocvsim.util.ClasspathScan
+import com.github.serivesmejia.eocvsim.util.InitClasspathScan
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import io.github.deltacv.common.image.MatPoster
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
@@ -57,7 +56,6 @@ import org.firstinspires.ftc.vision.VisionProcessor
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import org.opencv.core.Mat
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport
 import org.openftc.easyopencv.processFrameInternal
@@ -65,22 +63,22 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong
 
 @OptIn(DelicateCoroutinesApi::class)
-class PipelineManager : Orchestrable, KoinComponent {
-
-    private val initOrchestrator: Orchestrator by inject(named("init"))
-    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+class PipelineManager : MagicPhaseOrchestrable(), KoinComponent {
 
     private val params: EOCVSim.Parameters by inject()
 
+    private val classpathScan: InitClasspathScan by initDependency(inject())
+
     private val dialogFactory: DialogFactory by inject()
     private val configManager: ConfigManager by inject()
-    private val inputSourceManager: InputSourceManager by inject()
+    private val inputSourceManager: InputSourceManager by runDependency(inject())
     val pipelineStatisticsCalculator: PipelineStatisticsCalculator by inject()
     private val visualizer: Visualizer by inject()
-    private val classpathScan: ClasspathScan by inject()
+
+    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
     private val scope: CoroutineScope by inject()
 
-    val compiledPipelineManager: CompiledPipelineManager by inject()
+    val compiledPipelineManager: CompiledPipelineManager by initDependency(inject())
 
     companion object {
         var staticSnapshot: PipelineSnapshot? = null
@@ -191,14 +189,7 @@ class PipelineManager : Orchestrable, KoinComponent {
         USER_REQUESTED, IMAGE_ONE_ANALYSIS, NOT_PAUSED
     }
 
-    init {
-        initOrchestrator.register(this) {
-            target { it.init() }
-            dependsOn(classpathScan, compiledPipelineManager)
-        }
-    }
-
-    private fun init() {
+    override suspend fun init() {
         logger.info("Initializing...")
 
         //add default pipeline
@@ -300,7 +291,7 @@ class PipelineManager : Orchestrable, KoinComponent {
 
     private var wasBuildRunning = false
 
-    fun update(inputMat: Mat?) {
+    override suspend fun run() {
         val telemetry = currentTelemetry
         onUpdate.run()
 
@@ -337,6 +328,8 @@ class PipelineManager : Orchestrable, KoinComponent {
         } else {
             "processFrame"
         }
+
+        val inputMat = inputSourceManager.lastMatFromSource
 
         pipelineStatisticsCalculator.newPipelineFrameStart()
 
@@ -454,6 +447,10 @@ class PipelineManager : Orchestrable, KoinComponent {
                 pipelineJob.cancel()
             }
         }
+    }
+
+    override suspend fun destroy() {
+        // TODO: check if we need to do anything here
     }
 
     private fun updateExceptionTracker(ex: Throwable? = null) {

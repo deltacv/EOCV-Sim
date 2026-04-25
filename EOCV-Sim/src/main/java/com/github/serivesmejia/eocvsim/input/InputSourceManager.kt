@@ -31,8 +31,8 @@ import com.github.serivesmejia.eocvsim.input.source.NullSource
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
+import com.github.serivesmejia.eocvsim.util.event.PhaseOrchestrable
 import io.github.deltacv.common.util.loggerForThis
 import kotlinx.coroutines.Job
 import org.koin.core.component.KoinComponent
@@ -47,14 +47,13 @@ import java.io.IOException
 import java.util.concurrent.CancellationException
 import javax.swing.JDialog
 
-class InputSourceManager : Orchestrable, KoinComponent {
+class InputSourceManager : MagicPhaseOrchestrable(), KoinComponent {
 
     private val pipelineManager: PipelineManager by inject()
     private val configManager: ConfigManager by inject()
     private val visualizer: Visualizer by inject()
     private val dialogFactory: DialogFactory by inject()
 
-    private val initOrchestrator: Orchestrator by inject(named("init"))
     private val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
     private val inputSourceInitializer: InputSourceInitializer by inject()
@@ -83,13 +82,7 @@ class InputSourceManager : Orchestrable, KoinComponent {
 
     private val logger by loggerForThis()
 
-    init {
-        initOrchestrator.register(this) {
-            target { it.init() }
-        }
-    }
-
-    private fun init() {
+    override suspend fun init() {
         logger.info("Initializing...")
 
         matRecycler = MatRecycler(4)
@@ -141,7 +134,9 @@ class InputSourceManager : Orchestrable, KoinComponent {
         }
     }
     
-    fun update(isPaused: Boolean) {
+    override suspend fun run() {
+        val isPaused = pipelineManager.paused
+
         val currentSource = currentInputSource ?: return
 
         try {
@@ -171,6 +166,10 @@ class InputSourceManager : Orchestrable, KoinComponent {
 
             setInputSource(defaultSource)
         }
+    }
+
+    override suspend fun destroy() {
+        currentInputSource?.close()
     }
 
     @JvmOverloads

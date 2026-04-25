@@ -24,12 +24,15 @@
 package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.Build
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.LifecycleSignal
+import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
+import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput.Companion.trimSpecials
 import com.github.serivesmejia.eocvsim.plugin.api.impl.EOCVSimApiImpl
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
 import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.common.util.loggerOf
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
@@ -37,31 +40,24 @@ import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
 import io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemon
 import io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemonClient
 import io.github.deltacv.eocvsim.plugin.security.toMutable
+import kotlinx.coroutines.channels.Channel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import java.io.File
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.properties.Delegates
 
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import com.github.serivesmejia.eocvsim.config.ConfigManager
-import com.github.serivesmejia.eocvsim.gui.Visualizer
-import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
-import kotlinx.coroutines.channels.Channel
-import org.koin.core.qualifier.named
-
 /**
  * Manages the loading, enabling and disabling of plugins
  */
-class PluginManager : Orchestrable, KoinComponent {
+class PluginManager : MagicPhaseOrchestrable(), KoinComponent {
 
-    private val configManager: ConfigManager by inject()
+    private val configManager: ConfigManager by initDependency(inject())
     private val visualizer: Visualizer by inject()
     private val dialogFactory: DialogFactory by inject()
 
-    private val initOrchestrator: Orchestrator by inject(named("init"))
     private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
     private val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
 
@@ -133,13 +129,6 @@ class PluginManager : Orchestrable, KoinComponent {
      */
     val eocvSimApiProvider = EOCVSimApiProvider { plugin -> EOCVSimApiImpl(plugin) }
 
-    init {
-        initOrchestrator.register(this) {
-            target { it.init() }
-            dependsOn(configManager)
-        }
-    }
-
     /**
      * Initializes the plugin manager
      * Loads all plugin files in the plugins folder
@@ -147,7 +136,7 @@ class PluginManager : Orchestrable, KoinComponent {
      * and stores them in the loaders map
      * @see PluginLoader
      */
-    private fun init() {
+    override suspend fun init() {
         visualizer.onInitFinished {
             appender.append(PluginOutput.SPECIAL_FREE)
         }
@@ -269,6 +258,12 @@ class PluginManager : Orchestrable, KoinComponent {
         }
 
         loadPlugins()
+    }
+
+    override suspend fun run() { }
+
+    override suspend fun destroy() {
+        disablePlugins()
     }
 
     private fun <T : EOCVSimPlugin> addEmbeddedPlugin(

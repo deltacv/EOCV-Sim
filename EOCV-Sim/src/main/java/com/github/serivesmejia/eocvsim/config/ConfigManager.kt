@@ -23,16 +23,12 @@
 
 package com.github.serivesmejia.eocvsim.config
 
-import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
+import com.github.serivesmejia.eocvsim.util.event.PhaseOrchestrable
 import io.github.deltacv.common.util.loggerForThis
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 
-class ConfigManager : Orchestrable, KoinComponent {
-
+class ConfigManager : MagicPhaseOrchestrable(), KoinComponent {
     val configLoader = ConfigLoader()
 
     var config: Config = Config()
@@ -40,15 +36,7 @@ class ConfigManager : Orchestrable, KoinComponent {
 
     private val logger by loggerForThis()
 
-    private val initOrchestrator: Orchestrator by inject(named("init"))
-
-    init {
-        initOrchestrator.register(this) {
-            target { it.init() }
-        }
-    }
-
-    private fun init() {
+    override suspend fun init() {
         logger.info("Initializing...")
 
         try {
@@ -65,15 +53,15 @@ class ConfigManager : Orchestrable, KoinComponent {
             logger.info("Creating config file...")
             configLoader.saveToFile(config)
         }
+    }
 
-        Runtime.getRuntime().addShutdownHook(Thread {
-            logger.info("SHUTDOWN - Saving config to file...")
-            saveToFile()
-        })
+    override suspend fun run() { }
+
+    override suspend fun destroy() {
+        saveToFile()
     }
 
     fun saveToFile() {
         configLoader.saveToFile(config)
     }
-
 }

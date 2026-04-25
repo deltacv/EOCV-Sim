@@ -11,14 +11,14 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
 import com.github.serivesmejia.eocvsim.util.event.Orchestrable
 import com.github.serivesmejia.eocvsim.util.event.Orchestrator
 import org.koin.core.qualifier.named
 
-class TunerManager : Orchestrable, KoinComponent {
+class TunerManager : MagicPhaseOrchestrable(), KoinComponent {
 
-    private val initOrchestrator: Orchestrator by inject(named("init"))
-    private val pipelineManager: PipelineManager by inject()
+    private val pipelineManager: PipelineManager by dependency(inject())
     private val visualizer: Visualizer by inject()
 
     val logger by loggerForThis()
@@ -29,14 +29,7 @@ class TunerManager : Orchestrable, KoinComponent {
 
     private var firstInit = true
 
-    init {
-        initOrchestrator.register(this) {
-            target { it.init() }
-            dependsOn(pipelineManager)
-        }
-    }
-
-    private fun init() {
+    override suspend fun init() {
         pipelineManager.onPipelineChange.attach { reset() }
         refreshFields()
     }
@@ -59,7 +52,7 @@ class TunerManager : Orchestrable, KoinComponent {
         }
     }
 
-    fun update() {
+    override suspend fun run() {
         for (field in fields.toList()) { // toList to avoid concurrent modification issues
             try {
                 field.update()
@@ -73,6 +66,10 @@ class TunerManager : Orchestrable, KoinComponent {
                 }
             }
         }
+    }
+
+    override suspend fun destroy() {
+        reset()
     }
 
     fun reset() {

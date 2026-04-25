@@ -21,7 +21,7 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.pipeline.compiler
+package com.github.serivesmejia.eocvsim.pipeline.compiled
 
 import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
@@ -41,19 +41,19 @@ import java.io.File
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
 import com.github.serivesmejia.eocvsim.util.event.Orchestrable
 import com.github.serivesmejia.eocvsim.util.event.Orchestrator
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import org.koin.core.qualifier.named
 
-class CompiledPipelineManager : Orchestrable, KoinComponent {
+class CompiledPipelineManager : MagicPhaseOrchestrable(), KoinComponent {
 
-    private val initOrchestrator: Orchestrator by inject(named("init"))
     private val onMainLoop: EventHandler by inject(named("onMainLoop"))
     private val scope: CoroutineScope by inject()
 
     private val pipelineManager: PipelineManager by inject()
-    val workspaceManager: WorkspaceManager by inject()
+    val workspaceManager: WorkspaceManager by initDependency(inject())
     private val visualizer: Visualizer by inject()
     private val dialogFactory: DialogFactory by inject()
 
@@ -101,14 +101,7 @@ class CompiledPipelineManager : Orchestrable, KoinComponent {
     var isBuildRunning = false
         private set
 
-    init {
-        initOrchestrator.register(this) {
-            target { it.init() }
-            dependsOn(workspaceManager)
-        }
-    }
-
-    private fun init() {
+    override suspend fun init() {
         logger.info("Initializing...")
 
         onBuildStart {
@@ -131,6 +124,10 @@ class CompiledPipelineManager : Orchestrable, KoinComponent {
             asyncBuild()
         }
     }
+
+    override suspend fun run() { }
+
+    override suspend fun destroy() { }
 
     @OptIn(DelicateCoroutinesApi::class)
     suspend fun uncheckedBuild(): PipelineCompileResult {
@@ -267,7 +264,6 @@ class CompiledPipelineManager : Orchestrable, KoinComponent {
     }
 
     val isCompilerSupported get() = PipelineCompiler.IS_USABLE
-
 
     private fun deleteJarFile() {
         if(PIPELINES_OUTPUT_JAR.exists()) PIPELINES_OUTPUT_JAR.delete()

@@ -21,7 +21,7 @@
  *
  */
 
-package com.github.serivesmejia.eocvsim.pipeline.compiler
+package com.github.serivesmejia.eocvsim.pipeline.compiled
 
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.compiler.DelegatingStandardFileManager

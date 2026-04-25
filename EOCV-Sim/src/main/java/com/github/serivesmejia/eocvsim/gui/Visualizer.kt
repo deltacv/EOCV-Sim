@@ -39,15 +39,30 @@ import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.SidebarOp
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SidebarPipelineTabPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel
-import com.github.serivesmejia.eocvsim.gui.theme.Theme
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
-import com.github.serivesmejia.eocvsim.pipeline.compiler.PipelineCompiler
+import com.github.serivesmejia.eocvsim.output.RecordingManager
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.compiled.PipelineCompiler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
+import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
 import com.github.serivesmejia.eocvsim.workspace.util.template.GradleWorkspaceTemplate
+import com.qualcomm.robotcore.eventloop.opmode.OpMode
+import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.vision.external.gui.SwingOpenCvViewport
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.swing.Swing
+import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import org.opencv.core.Size
+import org.openftc.easyopencv.OpenCvViewport
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.Taskbar
@@ -56,24 +71,8 @@ import java.awt.event.MouseEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
-import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
-import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
-import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import com.github.serivesmejia.eocvsim.output.RecordingManager
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
-import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
-import org.openftc.easyopencv.OpenCvViewport
-import org.koin.core.qualifier.named
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.swing.Swing
-import kotlinx.coroutines.withContext
 
-class Visualizer : Orchestrable, KoinComponent {
+class Visualizer : MagicPhaseOrchestrable(), KoinComponent {
 
     val onMainUpdate: EventHandler by inject(named("onMainLoop"))
 
@@ -81,7 +80,7 @@ class Visualizer : Orchestrable, KoinComponent {
 
     val pipelineManager: PipelineManager by inject()
     val inputSourceManager: InputSourceManager by inject()
-    val configManager: ConfigManager by inject()
+    val configManager: ConfigManager by initDependency(inject())
     val workspaceManager: WorkspaceManager by inject()
     val dialogFactory: DialogFactory by inject()
     val recordingManager: RecordingManager by inject()
@@ -152,22 +151,11 @@ class Visualizer : Orchestrable, KoinComponent {
             }
         }
 
-    init {
-        initOrchestrator.register(this) {
-            target {
-                withContext(Dispatchers.Swing) {
-                    it.init(configManager.config.simTheme)
-                }
-            }
-            dependsOn(configManager)
-        }
-    }
-
-    private fun init(theme: Theme) {
+    override suspend fun init() = withContext(Dispatchers.Swing) {
         try {
-            theme.install()
+            configManager.config.simTheme.install()
         } catch (e: Exception) {
-            logger.error("Failed to install theme ${theme.name}", e)
+            logger.error("Failed to install theme ${configManager.config.simTheme.name}", e)
         }
 
         Icons.setDark(FlatLaf.isLafDark())
@@ -282,6 +270,8 @@ class Visualizer : Orchestrable, KoinComponent {
         setupSubscriptions()
     }
 
+    override suspend fun run() { }
+
     private fun registerListeners() {
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
@@ -306,7 +296,7 @@ class Visualizer : Orchestrable, KoinComponent {
         }
     }
 
-    fun close() {
+    override suspend fun destroy() {
         SwingUtilities.invokeLater {
             frame.isVisible = false
             viewport.dispose()

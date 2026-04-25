@@ -26,11 +26,10 @@ package com.github.serivesmejia.eocvsim.workspace
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
-import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
 import com.github.serivesmejia.eocvsim.util.io.FileWatcher
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfig
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfigLoader
@@ -62,15 +61,14 @@ import java.nio.file.Paths
  * classloader.
  */
 @OptIn(DelicateCoroutinesApi::class)
-class WorkspaceManager : Orchestrable, KoinComponent {
+class WorkspaceManager : MagicPhaseOrchestrable(), KoinComponent {
 
     private val pipelineManager: PipelineManager by inject()
     private val compiledPipelineManager: CompiledPipelineManager by inject()
-    private val configManager: ConfigManager by inject()
+    private val configManager: ConfigManager by initDependency(inject())
     private val params: EOCVSim.Parameters by inject()
     private val scope: CoroutineScope by inject()
 
-    private val initOrchestrator: Orchestrator by inject(named("init"))
     private val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
     val logger by loggerForThis()
@@ -216,29 +214,13 @@ class WorkspaceManager : Orchestrable, KoinComponent {
     lateinit var fileWatcher: FileWatcher
         private set
 
-    init {
-        initOrchestrator.register(this) {
-            target { it.init() }
-            dependsOn(configManager)
-        }
-    }
-
-    /**
-     * Stops the current file watcher, if initialized
-     */
-    fun stopFileWatcher() {
-        if (::fileWatcher.isInitialized) {
-            fileWatcher.stop()
-        }
-    }
-
     /**
      * Initializes the workspace manager
      * To be called by the EOCVSim instance
      * Initializes the file watcher and the workspace configuration loader
      * and sets the workspace file to the initial workspace or the default one
      */
-    private fun init() {
+    override suspend fun init() {
         onWorkspaceChange {
             fileWatcher.onChange {
                 pipelineManager.compiledPipelineManager.asyncBuild()
@@ -251,6 +233,23 @@ class WorkspaceManager : Orchestrable, KoinComponent {
             file
         else
             CompiledPipelineManager.DEF_WORKSPACE_FOLDER
+    }
+
+    override suspend fun run() {
+        // TODO: check if we need to do anything here
+    }
+
+    override suspend fun destroy() {
+        stopFileWatcher()
+    }
+
+    /**
+     * Stops the current file watcher, if initialized
+     */
+    fun stopFileWatcher() {
+        if (::fileWatcher.isInitialized) {
+            fileWatcher.stop()
+        }
     }
 
     /**

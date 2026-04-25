@@ -134,7 +134,7 @@ class EOCVSim : KoinComponent {
 
     val parameters: Parameters by inject()
 
-    val initOrchestrator: Orchestrator by inject(named("init"))
+    val orchestrator: Orchestrator by inject()
 
     /**
      * Event handler for the main update loop
@@ -246,7 +246,8 @@ class EOCVSim : KoinComponent {
         //loading native lib only once in the app runtime
         loadOpenCvLib(parameters.opencvNativeLibrary)
 
-        initOrchestrator.orchestrate()
+        orchestrator.changePhase(Orchestrator.Phase.INIT)
+        orchestrator.orchestrate()
 
         visualizer.onInitFinished {
             // SHOW WELCOME DIALOGS TO NEW USERS
@@ -341,17 +342,15 @@ class EOCVSim : KoinComponent {
 
         logger.info("-- Begin EOCVSim loop ($hexCode) --")
 
+        orchestrator.changePhase(Orchestrator.Phase.RUN)
+
         while (!eocvSimThread.isInterrupted && !destroying) {
             //run all pending requested runnables
             onMainLoop.run()
 
             pipelineStatisticsCalculator.newInputFrameStart()
 
-            inputSourceManager.update(pipelineManager.paused)
-            tunerManager.update()
-
-            val lastMat = inputSourceManager.lastMatFromSource
-            pipelineManager.update(lastMat)
+            orchestrator.orchestrate()
 
             //limit FPS
             fpsLimiter.maxFPS = config.pipelineMaxFps.fps.toDouble()
@@ -384,17 +383,10 @@ class EOCVSim : KoinComponent {
     fun destroy(reason: LifecycleSignal.Destroy.Reason) {
         logger.warn("-- Destroying current EOCVSim ($hexCode) due to $reason, it is normal to see InterruptedExceptions and other kinds of stack traces below --")
 
-        pluginManager.disablePlugins()
-
-        //stop recording session if there's currently an ongoing one
-        recordingManager.stopRecordingSession()
-
         logger.info("Trying to save config file...")
 
-        inputSourceManager.currentInputSource?.close()
-        workspaceManager.stopFileWatcher()
-        configManager.saveToFile()
-        visualizer.close()
+        orchestrator.changePhase(Orchestrator.Phase.DESTROY)
+        orchestrator.orchestrate()
 
         destroying = true
         scope.cancel()
