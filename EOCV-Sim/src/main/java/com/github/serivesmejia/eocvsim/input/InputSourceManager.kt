@@ -232,12 +232,18 @@ class InputSourceManager : MagicPhaseOrchestrable(), KoinComponent {
         src?.reset()
 
         if (src != null) {
-            if (!inputSourceInitializer.initializeWithTimeout(src)) {
-                onInputSourceInitError.run()
-
-                logger.error("Error while loading requested source ($sourceName) reported by itself (init method returned false)")
-
-                return false
+            when (val initResult = inputSourceInitializer.initializeWithTimeout(src, this)) {
+                InputSourceInitializer.Result.SUCCESS -> Unit
+                InputSourceInitializer.Result.CANCELED -> {
+                    logger.info("Input source loading canceled by user ($sourceName)")
+                    return false
+                }
+                InputSourceInitializer.Result.FAILED,
+                InputSourceInitializer.Result.TIMED_OUT -> {
+                    onInputSourceInitError.run()
+                    logger.error("Error while loading requested source ($sourceName), result=$initResult")
+                    return false
+                }
             }
         }
 

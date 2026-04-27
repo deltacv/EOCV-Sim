@@ -85,7 +85,7 @@ class DialogFactory : KoinComponent {
             if (submessage != null) add(JLabel(submessage))
         }
 
-        val options = if (cancelText != null) arrayOf(cancelText) else emptyArray<String>()
+        val options = if (cancelText != null) arrayOf(cancelText) else null
         val pane = JOptionPane(panel, JOptionPane.INFORMATION_MESSAGE, JOptionPane.DEFAULT_OPTION, null, options)
         val dialog = pane.createDialog(parent, title)
 

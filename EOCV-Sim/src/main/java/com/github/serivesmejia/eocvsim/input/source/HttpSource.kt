@@ -91,7 +91,7 @@ class HttpSource @JvmOverloads constructor(
             frame != null
         }
 
-        if (!result || frame == null) {
+        if (result != InputSourceInitializer.Result.SUCCESS || frame == null) {
             return null
         }
 
