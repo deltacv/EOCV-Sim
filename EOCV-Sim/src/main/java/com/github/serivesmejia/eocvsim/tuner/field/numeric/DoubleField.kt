@@ -10,7 +10,6 @@ class DoubleField(
     reflectionField: VirtualField
 ) : NumericField<Double>(instance, reflectionField, AllowMode.ONLY_NUMBERS_DECIMAL, reflectionField.get() as? Double ?: 0.0) {
 
-
     override fun createNumber(value: Double): Double = value
 
     class Acceptor : TunableFieldAcceptor {

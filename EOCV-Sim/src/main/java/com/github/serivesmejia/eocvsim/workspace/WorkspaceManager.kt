@@ -29,7 +29,8 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
+import com.github.serivesmejia.eocvsim.util.orchestration.initDependency
+import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
 import com.github.serivesmejia.eocvsim.util.io.FileWatcher
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfig
 import com.github.serivesmejia.eocvsim.workspace.config.WorkspaceConfigLoader
@@ -61,11 +62,11 @@ import java.nio.file.Paths
  * classloader.
  */
 @OptIn(DelicateCoroutinesApi::class)
-class WorkspaceManager : MagicPhaseOrchestrable(), KoinComponent {
+class WorkspaceManager : PhaseOrchestrableBase(), KoinComponent {
 
     private val pipelineManager: PipelineManager by inject()
     private val compiledPipelineManager: CompiledPipelineManager by inject()
-    private val configManager: ConfigManager by initDependency(inject())
+    private val configManager: ConfigManager by initDependency<ConfigManager>(inject())
     private val params: EOCVSim.Parameters by inject()
     private val scope: CoroutineScope by inject()
 

@@ -65,7 +65,6 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             "Oops.",
             "Uh... Did I do that?",
             "This is fine.",
-            "I'm not even angry. I'm being so sincere right now.",
             "I feel sad now :(",
             "I let you down. Sorry :(",
             "On the bright side, I bought you a teddy bear!",
@@ -85,8 +84,6 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             "This doesn't make any sense!",
             "Why is it breaking :(",
             "Don't do that.",
-            "Ouch. That hurt :(",
-            "This is a token for 1 free hug. Redeem at your nearest local team: [~~HUG~~]",
             "But it works on my machine!"
         )
 
@@ -144,7 +141,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
         sb.appendLine("==================================").appendLine()
 
 
-        sb.appendLine(": Full logs").appendLine()
+        sb.appendLine(": Full log").appendLine()
 
         val lastLogFile = EOCVSimFolder.lastLogFile
         if(lastLogFile != null) {

@@ -23,12 +23,11 @@
 
 package com.github.serivesmejia.eocvsim.config
 
-import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
-import com.github.serivesmejia.eocvsim.util.event.PhaseOrchestrable
+import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
 import io.github.deltacv.common.util.loggerForThis
 import org.koin.core.component.KoinComponent
 
-class ConfigManager : MagicPhaseOrchestrable(), KoinComponent {
+class ConfigManager : PhaseOrchestrableBase(), KoinComponent {
     val configLoader = ConfigLoader()
 
     var config: Config = Config()

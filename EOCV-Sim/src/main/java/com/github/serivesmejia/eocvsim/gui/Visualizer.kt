@@ -44,8 +44,8 @@ import com.github.serivesmejia.eocvsim.output.RecordingManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.compiled.PipelineCompiler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.github.serivesmejia.eocvsim.util.orchestration.initDependency
+import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
 import com.github.serivesmejia.eocvsim.workspace.util.template.GradleWorkspaceTemplate
@@ -58,12 +58,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import org.opencv.core.Size
 import org.openftc.easyopencv.OpenCvViewport
 import java.awt.BorderLayout
+import java.util.concurrent.CancellationException
 import java.awt.Dimension
 import java.awt.Taskbar
 import java.awt.event.MouseAdapter
@@ -72,7 +74,7 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.*
 
-class Visualizer : MagicPhaseOrchestrable(), KoinComponent {
+class Visualizer : PhaseOrchestrableBase(), KoinComponent {
 
     val onMainUpdate: EventHandler by inject(named("onMainLoop"))
 
@@ -86,8 +88,6 @@ class Visualizer : MagicPhaseOrchestrable(), KoinComponent {
     val recordingManager: RecordingManager by inject()
     val pipelineStatisticsCalculator: PipelineStatisticsCalculator by inject()
     val scope: CoroutineScope by inject()
-
-    private val initOrchestrator: Orchestrator by inject(named("init"))
 
     val onInitFinished = EventHandler("OnVisualizerInitFinish")
     val onPluginGuiAttachment = EventHandler("OnPluginGuiAttachment")
@@ -236,9 +236,9 @@ class Visualizer : MagicPhaseOrchestrable(), KoinComponent {
             val taskbar = Taskbar.getTaskbar()
             try {
                 taskbar.iconImage = EOCVSimIconLibrary.icoEOCVSim128.image
-            } catch (e: UnsupportedOperationException) {
+            } catch (_: UnsupportedOperationException) {
                 logger.warn("Setting the Taskbar icon image is not supported on this platform")
-            } catch (e: SecurityException) {
+            } catch (_: SecurityException) {
                 logger.warn("Setting the Taskbar icon image was not allowed by the security manager")
             }
         }
@@ -259,6 +259,38 @@ class Visualizer : MagicPhaseOrchestrable(), KoinComponent {
                 "Error while loading requested source", "Falling back to previous source",
                 "Operation failed"
             )
+        }
+
+        // Subscribe to initializer begin events so the UI can show a cancelable loading
+        // dialog for slow initializations without the initializer knowing about the UI.
+        val inputSourceInitializer: com.github.serivesmejia.eocvsim.input.InputSourceInitializer by inject()
+        inputSourceInitializer.onInitBegin.attachPayload { session ->
+            // Let listeners decide whether to show a dialog. We show it when the
+            // session explicitly requested a dialog or when the source itself
+            // signals a slow initialization.
+            val shouldShow = session.hasSlowInitialization || (session.inputSource?.hasSlowInitialization == true)
+
+            if (!shouldShow) return@attachPayload
+
+            val dialog = dialogFactory.createInformation(
+                frame,
+                if (session.sourceName.isNullOrBlank()) "Opening source..." else "Opening ${session.sourceName}...",
+                null,
+                "Information",
+                "Cancel"
+            ) {
+                session.cancelJob.cancel(CancellationException())
+            }
+
+            // Dispose dialog when the session finishes (success/failure/cancel/timeout)
+            scope.launch {
+                try {
+                    session.resultSignal.await()
+                } catch (_: Exception) {
+                } finally {
+                    dialog.dispose()
+                }
+            }
         }
 
         hasFinishedInitializing = true
@@ -306,12 +338,6 @@ class Visualizer : MagicPhaseOrchestrable(), KoinComponent {
 
     private fun updateFrameTitle(title: String, titleMsg: String) {
         frame.title = "$title - $titleMsg"
-    }
-
-    fun setTitle(title: String) {
-        this.title = title
-        if (beforeTitle != title) updateFrameTitle(title, titleMsg)
-        beforeTitle = title
     }
 
     fun setTitleMessage(titleMsg: String) {

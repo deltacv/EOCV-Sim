@@ -11,8 +11,8 @@ import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.InitClasspathScan
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrable
+import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrator
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager

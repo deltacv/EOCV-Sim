@@ -32,7 +32,8 @@ import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput.Companion.trimSpecials
 import com.github.serivesmejia.eocvsim.plugin.api.impl.EOCVSimApiImpl
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
+import com.github.serivesmejia.eocvsim.util.orchestration.initDependency
+import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
 import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.common.util.loggerOf
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
@@ -52,9 +53,9 @@ import kotlin.properties.Delegates
 /**
  * Manages the loading, enabling and disabling of plugins
  */
-class PluginManager : MagicPhaseOrchestrable(), KoinComponent {
+class PluginManager : PhaseOrchestrableBase(), KoinComponent {
 
-    private val configManager: ConfigManager by initDependency(inject())
+    private val configManager: ConfigManager by initDependency<ConfigManager>(inject())
     private val visualizer: Visualizer by inject()
     private val dialogFactory: DialogFactory by inject()
 

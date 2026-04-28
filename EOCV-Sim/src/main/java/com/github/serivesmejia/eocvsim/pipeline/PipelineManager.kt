@@ -41,7 +41,9 @@ import com.github.serivesmejia.eocvsim.util.ReflectUtil
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
+import com.github.serivesmejia.eocvsim.util.orchestration.initDependency
+import com.github.serivesmejia.eocvsim.util.orchestration.runDependency
+import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
 import com.github.serivesmejia.eocvsim.util.fps.FpsCounter
 import io.github.deltacv.common.image.MatPoster
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
@@ -63,22 +65,22 @@ import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.roundToLong
 
 @OptIn(DelicateCoroutinesApi::class)
-class PipelineManager : MagicPhaseOrchestrable(), KoinComponent {
+class PipelineManager : PhaseOrchestrableBase(), KoinComponent {
 
     private val params: EOCVSim.Parameters by inject()
 
-    private val classpathScan: InitClasspathScan by initDependency(inject())
+    private val classpathScan: InitClasspathScan by initDependency<InitClasspathScan>(inject())
 
     private val dialogFactory: DialogFactory by inject()
     private val configManager: ConfigManager by inject()
-    private val inputSourceManager: InputSourceManager by runDependency(inject())
+    private val inputSourceManager: InputSourceManager by runDependency<InputSourceManager>(inject())
     val pipelineStatisticsCalculator: PipelineStatisticsCalculator by inject()
     private val visualizer: Visualizer by inject()
 
     private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
     private val scope: CoroutineScope by inject()
 
-    val compiledPipelineManager: CompiledPipelineManager by initDependency(inject())
+    val compiledPipelineManager: CompiledPipelineManager by initDependency<CompiledPipelineManager>(inject())
 
     companion object {
         var staticSnapshot: PipelineSnapshot? = null
@@ -90,17 +92,22 @@ class PipelineManager : MagicPhaseOrchestrable(), KoinComponent {
 
     @JvmField
     val onExternalSwitchingEnable = EventHandler("OnEnableExternalPipelineSwitching")
+
     @JvmField
     val onExternalSwitchingDisable = EventHandler("OnDisableExternalPipelineSwitching")
 
     @JvmField
     val onUpdate = EventHandler("OnPipelineUpdate")
+
     @JvmField
     val onPipelineChange = EventHandler("OnPipelineChange")
+
     @JvmField
     val onPipelineTimeout = EventHandler("OnPipelineTimeout")
+
     @JvmField
     val onPause = EventHandler("OnPipelinePause")
+
     @JvmField
     val onResume = EventHandler("OnPipelineResume")
 
@@ -119,6 +126,7 @@ class PipelineManager : MagicPhaseOrchestrable(), KoinComponent {
     @Volatile
     var currentPipeline: OpenCvPipeline? = null
         private set
+
     @Volatile
     var currentPipelineData: PipelineData? = null
         private set
@@ -416,36 +424,34 @@ class PipelineManager : MagicPhaseOrchestrable(), KoinComponent {
             pipelineStatisticsCalculator.endFrame()
         }
 
-        runBlocking {
-            val configTimeout = configManager.config.pipelineTimeout
+        val configTimeout = configManager.config.pipelineTimeout
 
-            //allow double timeout if we haven't initialized the pipeline
-            val timeout = if (hasInitCurrentPipeline) {
-                configTimeout.ms
-            } else {
-                (configTimeout.ms * 1.8).roundToLong()
+        //allow double timeout if we haven't initialized the pipeline
+        val timeout = if (hasInitCurrentPipeline) {
+            configTimeout.ms
+        } else {
+            (configTimeout.ms * 1.8).roundToLong()
+        }
+
+        try {
+            //ok! this is the part in which we'll wait for the pipeline with a timeout
+            withTimeout(timeout) {
+                pipelineJob.join()
             }
+        } catch (_: TimeoutCancellationException) {
+            //oops, pipeline ran out of time! we'll fall back
+            //to default pipeline to avoid further issues.
+            requestForceChangePipeline(0)
+            //also call the event listeners in case
+            //someone wants to do something here
+            onPipelineTimeout.run()
 
-            try {
-                //ok! this is the part in which we'll wait for the pipeline with a timeout
-                withTimeout(timeout) {
-                    pipelineJob.join()
-                }
-            } catch (_: TimeoutCancellationException) {
-                //oops, pipeline ran out of time! we'll fall back
-                //to default pipeline to avoid further issues.
-                requestForceChangePipeline(0)
-                //also call the event listeners in case
-                //someone wants to do something here
-                onPipelineTimeout.run()
-
-                logger.warn("User pipeline $currentPipelineName took too long to $lastPipelineAction (more than $timeout ms), falling back to DefaultPipeline.")
-            } finally {
-                //we cancel our pipeline job so that it
-                //doesn't post the output mat from the
-                //pipeline if it ever returns.
-                pipelineJob.cancel()
-            }
+            logger.warn("User pipeline $currentPipelineName took too long to $lastPipelineAction (more than $timeout ms), falling back to DefaultPipeline.")
+        } finally {
+            //we cancel our pipeline job so that it
+            //doesn't post the output mat from the
+            //pipeline if it ever returns.
+            pipelineJob.cancel()
         }
     }
 
@@ -701,14 +707,14 @@ class PipelineManager : MagicPhaseOrchestrable(), KoinComponent {
         currentPipelineIndex = index
         currentPipelineData = data
 
-            forceChangePipeline(
-                clazz = data.clazz,
-                applyLatestSnapshot = applyLatestSnapshot,
-                applyStaticSnapshot = applyStaticSnapshot
-            )
-    
-            visualizer.pipelineSelectorPanel.selectedIndex = index
-        }
+        forceChangePipeline(
+            clazz = data.clazz,
+            applyLatestSnapshot = applyLatestSnapshot,
+            applyStaticSnapshot = applyStaticSnapshot
+        )
+
+        visualizer.pipelineSelectorPanel.selectedIndex = index
+    }
 
     /**
      * Change to the requested pipeline only if we're

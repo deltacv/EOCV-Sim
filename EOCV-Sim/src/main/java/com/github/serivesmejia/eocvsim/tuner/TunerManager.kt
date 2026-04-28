@@ -11,14 +11,12 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.gui.Visualizer
-import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
-import org.koin.core.qualifier.named
+import com.github.serivesmejia.eocvsim.util.orchestration.dependency
+import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
 
-class TunerManager : MagicPhaseOrchestrable(), KoinComponent {
+class TunerManager : PhaseOrchestrableBase(), KoinComponent {
 
-    private val pipelineManager: PipelineManager by dependency(inject())
+    private val pipelineManager: PipelineManager by dependency<PipelineManager>(inject())
     private val visualizer: Visualizer by inject()
 
     val logger by loggerForThis()

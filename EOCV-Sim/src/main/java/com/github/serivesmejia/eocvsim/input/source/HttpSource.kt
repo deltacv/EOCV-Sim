@@ -25,12 +25,9 @@ package com.github.serivesmejia.eocvsim.input.source
 
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.input.InputSourceInitializer
-import com.github.serivesmejia.eocvsim.input.InputSourceManager
 
 import com.google.gson.annotations.Expose
 import io.github.deltacv.visionloop.io.MjpegHttpReader
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.opencv.core.Mat
 import org.opencv.core.MatOfByte
 import org.opencv.imgcodecs.Imgcodecs
@@ -42,8 +39,7 @@ class HttpSource @JvmOverloads constructor(
     @Expose @JvmField var url: String = ""
 ) : InputSource() {
 
-    @delegate:Transient
-    private val inputSourceManager: InputSourceManager by inject()
+    override val hasSlowInitialization: Boolean get() = true
 
     @Transient private var mjpegHttpReader: MjpegHttpReader? = null
 
@@ -134,7 +130,7 @@ class HttpSource @JvmOverloads constructor(
     }
 
     override fun onResume() {
-        InputSourceInitializer.runWithTimeout(name, inputSourceManager) {
+        InputSourceInitializer.runWithTimeout(this) {
 
 
             init()

@@ -23,8 +23,8 @@
 
 package com.github.serivesmejia.eocvsim.util
 
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrable
+import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrator
 import com.qualcomm.robotcore.eventloop.opmode.Disabled
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
@@ -32,10 +32,9 @@ import com.qualcomm.robotcore.util.ElapsedTime
 import io.github.classgraph.ClassGraph
 import io.github.deltacv.common.util.loggerForThis
 import org.firstinspires.ftc.vision.VisionProcessor
-import org.koin.core.component.KoinComponent
 import org.openftc.easyopencv.OpenCvPipeline
 
-class InitClasspathScan : ClasspathScan(), Orchestrable, KoinComponent {
+class InitClasspathScan : ClasspathScan(), Orchestrable {
     override fun wire(orchestrator: Orchestrator) {
         orchestrator.register(this) {
             phase(Orchestrator.Phase.INIT) {

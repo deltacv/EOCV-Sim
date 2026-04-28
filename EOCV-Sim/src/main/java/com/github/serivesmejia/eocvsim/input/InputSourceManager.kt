@@ -24,17 +24,13 @@
 package com.github.serivesmejia.eocvsim.input
 
 import com.github.serivesmejia.eocvsim.config.ConfigManager
-import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.input.source.ImageSource
 import com.github.serivesmejia.eocvsim.input.source.NullSource
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
-import com.github.serivesmejia.eocvsim.util.event.PhaseOrchestrable
+import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
 import io.github.deltacv.common.util.loggerForThis
-import kotlinx.coroutines.Job
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
@@ -44,15 +40,11 @@ import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import org.openftc.easyopencv.MatRecycler
 import java.io.IOException
-import java.util.concurrent.CancellationException
-import javax.swing.JDialog
 
-class InputSourceManager : MagicPhaseOrchestrable(), KoinComponent {
+class InputSourceManager : PhaseOrchestrableBase(), KoinComponent {
 
     private val pipelineManager: PipelineManager by inject()
     private val configManager: ConfigManager by inject()
-    private val visualizer: Visualizer by inject()
-    private val dialogFactory: DialogFactory by inject()
 
     private val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
@@ -232,7 +224,7 @@ class InputSourceManager : MagicPhaseOrchestrable(), KoinComponent {
         src?.reset()
 
         if (src != null) {
-            when (val initResult = inputSourceInitializer.initializeWithTimeout(src, this)) {
+            when (val initResult = inputSourceInitializer.initializeWithTimeout(src)) {
                 InputSourceInitializer.Result.SUCCESS -> Unit
                 InputSourceInitializer.Result.CANCELED -> {
                     logger.info("Input source loading canceled by user ($sourceName)")
@@ -260,6 +252,7 @@ class InputSourceManager : MagicPhaseOrchestrable(), KoinComponent {
         return true
     }
 
+    @Suppress("unused")
     fun cleanSourceIfDirty() {
         currentInputSource?.cleanIfDirty()
     }
@@ -303,20 +296,8 @@ class InputSourceManager : MagicPhaseOrchestrable(), KoinComponent {
         onMainLoop.once { setInputSource(name) }
     }
 
-    fun showLoadingDialogIfNeeded(sourceName: String?, job: Job?): JDialog? {
-        val type = getSourceType(sourceName)
-        if (type == SourceType.CAMERA || type == SourceType.VIDEO || type == SourceType.HTTP) {
-            return dialogFactory.createInformation(
-                visualizer.frame,
-                "Opening source...", null, "Information", "Cancel"
-            ) {
-                job?.cancel(CancellationException())
-            }
-        }
 
-        return null
-    }
-
+    @Suppress("unused")
     fun getDefaultInputSource() = defaultSource
 
     fun getSourceType(sourceName: String?): SourceType {

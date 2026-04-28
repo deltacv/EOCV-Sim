@@ -1,17 +1,12 @@
 package com.github.serivesmejia.eocvsim.input
 
+import com.github.serivesmejia.eocvsim.util.event.ParamEventHandler
 import io.github.deltacv.common.util.loggerForThis
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.context.GlobalContext
+import java.util.concurrent.atomic.AtomicInteger
 
 class InputSourceInitializer : KoinComponent {
 
@@ -20,16 +15,19 @@ class InputSourceInitializer : KoinComponent {
     companion object {
         const val TIMEOUT = 10000L
 
-        fun runWithTimeout(sourceName: String, manager: InputSourceManager? = null, callback: () -> Boolean): Result {
-
+        fun runWithTimeout(sourceName: String, callback: () -> Boolean): Result {
             val initializer = GlobalContext.get().get<InputSourceInitializer>()
-            return initializer.runWithTimeout(sourceName, manager, callback)
+            return initializer.runWithTimeout(sourceName, false, callback)
+        }
+
+        fun runWithTimeout(inputSource: InputSource, callback: () -> Boolean): Result {
+            val initializer = GlobalContext.get().get<InputSourceInitializer>()
+            return initializer.runWithTimeout(inputSource.name, inputSource.hasSlowInitialization, callback)
         }
         
-        fun initializeWithTimeout(inputSource: InputSource, manager: InputSourceManager? = null): Result {
-
+        fun initializeWithTimeout(inputSource: InputSource): Result {
             val initializer = GlobalContext.get().get<InputSourceInitializer>()
-            return initializer.initializeWithTimeout(inputSource, manager)
+            return initializer.initializeWithTimeout(inputSource)
         }
     }
 
@@ -37,8 +35,21 @@ class InputSourceInitializer : KoinComponent {
 
     val logger by loggerForThis()
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun initializeWithTimeout(inputSource: InputSource, manager: InputSourceManager? = null): Result {
+    // Event fired when an initialization that may need UI interaction starts.
+    // Listeners will receive the InitSession payload directly.
+    val onInitBegin = ParamEventHandler<InitSession>("InputSourceInitBegin")
+
+    private val sessionIdCounter = AtomicInteger(0)
+    data class InitSession(
+        val id: Int,
+        val inputSource: InputSource?,
+        val sourceName: String?,
+        val cancelJob: Job,
+        val resultSignal: CompletableDeferred<Result>,
+        val hasSlowInitialization: Boolean = false
+    )
+
+    fun initializeWithTimeout(inputSource: InputSource): Result {
         val resultSignal = CompletableDeferred<Result>()
         val cancelSignal = Job().apply {
             invokeOnCompletion {
@@ -47,6 +58,9 @@ class InputSourceInitializer : KoinComponent {
                 }
             }
         }
+
+        val sessionId = sessionIdCounter.getAndIncrement()
+        val session = InitSession(sessionId, inputSource, inputSource.name, cancelSignal, resultSignal, inputSource.hasSlowInitialization)
 
         scope.launch {
             try {
@@ -79,16 +93,15 @@ class InputSourceInitializer : KoinComponent {
             }
         }
 
-        val dialog = manager?.showLoadingDialogIfNeeded(inputSource.name, cancelSignal)
+        onInitBegin.run(session)
 
         val result = runBlocking {
             try {
                 withTimeout(TIMEOUT) { resultSignal.await() }
-            } catch (e: TimeoutCancellationException) {
+            } catch (_: TimeoutCancellationException) {
                 Result.TIMED_OUT
             } finally {
                 cancelSignal.cancel()
-                dialog?.dispose()
             }
         }
 
@@ -97,7 +110,7 @@ class InputSourceInitializer : KoinComponent {
 
     @OptIn(DelicateCoroutinesApi::class)
     @JvmOverloads
-    fun runWithTimeout(sourceName: String, manager: InputSourceManager? = null, callback: () -> Boolean): Result {
+    fun runWithTimeout(sourceName: String, showDialog: Boolean = false, callback: () -> Boolean): Result {
         val resultSignal = CompletableDeferred<Result>()
         val cancelSignal = Job().apply {
             invokeOnCompletion {
@@ -106,6 +119,9 @@ class InputSourceInitializer : KoinComponent {
                 }
             }
         }
+
+        val sessionId = sessionIdCounter.getAndIncrement()
+        val session = InitSession(sessionId, null, sourceName, cancelSignal, resultSignal, showDialog)
 
         scope.launch {
             try {
@@ -132,20 +148,21 @@ class InputSourceInitializer : KoinComponent {
             }
         }
 
-        val dialog = manager?.showLoadingDialogIfNeeded(sourceName, cancelSignal)
+        // always notify, listeners decide if they want to show UI
+        onInitBegin.run(session)
 
         val result = runBlocking {
             try {
                 withTimeout(TIMEOUT) { resultSignal.await() }
-            } catch (e: TimeoutCancellationException) {
+            } catch (_: TimeoutCancellationException) {
                 Result.TIMED_OUT
             } finally {
                 cancelSignal.cancel()
-                dialog?.dispose()
             }
         }
 
         return result
     }
+
 
 }

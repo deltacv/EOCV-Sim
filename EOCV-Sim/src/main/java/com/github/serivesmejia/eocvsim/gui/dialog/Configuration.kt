@@ -24,8 +24,10 @@
 package com.github.serivesmejia.eocvsim.gui.dialog
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.LifecycleSignal
 import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields
@@ -34,6 +36,7 @@ import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver
 import com.github.serivesmejia.eocvsim.pipeline.PipelineFps
 import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import kotlinx.coroutines.channels.Channel
 import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -47,13 +50,14 @@ import org.koin.core.qualifier.named
 class Configuration : KoinComponent {
 
     private val visualizer: Visualizer by inject()
+    private val lifecycle: Channel<LifecycleSignal> by inject(named("lifecycle"))
+    private val dialogFactory: DialogFactory by inject()
     private val configManager: ConfigManager by inject()
     private val onMainLoop: EventHandler by inject(named("onMainLoop"))
 
     private val config get() = configManager.config
 
     private val dialog = JDialog(visualizer.frame)
-
 
     private val themeComboBox: JComboBox<String>
     private val superAccessCheckBox: JCheckBox
@@ -196,8 +200,9 @@ class Configuration : KoinComponent {
         configManager.saveToFile()
 
         if (userSelectedTheme != previousTheme) {
-            // TODO: Implement restart()
-            // eocvSim.restart()
+            dialogFactory.createYesOrNo(dialog, "Applying a new interface theme requires restarting.", "Do you wish to restart now?") {
+                lifecycle.trySend(LifecycleSignal.Restart)
+            }
         }
     }
 

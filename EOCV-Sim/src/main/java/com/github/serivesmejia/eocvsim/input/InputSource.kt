@@ -31,6 +31,11 @@ import javax.swing.filechooser.FileFilter
 
 abstract class InputSource : Comparable<InputSource>, KoinComponent {
 
+    // Computed property (no backing field) to avoid adding serializable fields that
+    // cause duplicate JSON field errors with Gson when subclasses also declare
+    // a backing field. Subclasses should override with a getter as well.
+    open val hasSlowInitialization: Boolean get() = false
+
     @Transient var isDefault = false
 
     @Transient open var name: String = ""

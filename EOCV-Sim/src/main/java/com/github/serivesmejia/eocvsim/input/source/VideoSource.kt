@@ -42,6 +42,8 @@ class VideoSource @JvmOverloads constructor(
 
 ) : InputSource() {
 
+    override val hasSlowInitialization: Boolean get() = true
+
     @Transient private var video: VideoCapture? = null
 
     @Transient private val fpsLimiter = FpsLimiter(30.0)

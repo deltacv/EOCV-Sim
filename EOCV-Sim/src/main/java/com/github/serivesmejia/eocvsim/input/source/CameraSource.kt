@@ -27,7 +27,6 @@ import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.input.InputSourceInitializer
-import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.util.StrUtil
 
 import com.google.gson.annotations.Expose
@@ -47,21 +46,19 @@ import javax.swing.filechooser.FileFilter
 
 class CameraSource : InputSource {
 
-
     companion object {
         // for global use, -1 means no webcam currently in use
         @JvmStatic var currentWebcamIndex = -1
     }
 
+    override val hasSlowInitialization: Boolean get() = true
+
     @delegate:Transient
     private val configManager: ConfigManager by inject()
-    @delegate:Transient
-    private val inputSourceManager: InputSourceManager by inject()
 
     @Transient var webcamIndex: Int = 0
 
     @Expose @JvmField var webcamName: String = ""
-
 
     @Transient private var camera: Webcam? = null
 
@@ -260,7 +257,7 @@ class CameraSource : InputSource {
     }
 
     override fun onResume() {
-        InputSourceInitializer.runWithTimeout(name, inputSourceManager) {
+        InputSourceInitializer.runWithTimeout(this) {
 
             camera?.open()
             camera?.isOpen == true

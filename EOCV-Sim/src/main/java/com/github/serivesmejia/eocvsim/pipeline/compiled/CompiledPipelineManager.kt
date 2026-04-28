@@ -41,19 +41,18 @@ import java.io.File
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import com.github.serivesmejia.eocvsim.gui.Visualizer
-import com.github.serivesmejia.eocvsim.util.event.MagicPhaseOrchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrable
-import com.github.serivesmejia.eocvsim.util.event.Orchestrator
+import com.github.serivesmejia.eocvsim.util.orchestration.initDependency
+import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import org.koin.core.qualifier.named
 
-class CompiledPipelineManager : MagicPhaseOrchestrable(), KoinComponent {
+class CompiledPipelineManager : PhaseOrchestrableBase(), KoinComponent {
 
     private val onMainLoop: EventHandler by inject(named("onMainLoop"))
     private val scope: CoroutineScope by inject()
 
     private val pipelineManager: PipelineManager by inject()
-    val workspaceManager: WorkspaceManager by initDependency(inject())
+    val workspaceManager: WorkspaceManager by initDependency<WorkspaceManager>(inject())
     private val visualizer: Visualizer by inject()
     private val dialogFactory: DialogFactory by inject()
 
