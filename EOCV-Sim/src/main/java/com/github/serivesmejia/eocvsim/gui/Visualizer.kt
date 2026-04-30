@@ -39,6 +39,7 @@ import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.SidebarOp
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SidebarPipelineTabPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel
+import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.RecordingManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
@@ -131,7 +132,6 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
 
     private var title = "EasyOpenCV Simulator v" + Build.standardVersionString
     private var titleMsg = "No pipeline"
-    private var beforeTitle = ""
     private var beforeTitleMsg = ""
 
     lateinit var colorPicker: ColorPicker
@@ -163,6 +163,12 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
         if (Build.isDev) {
             title += "-dev "
         }
+
+        // PluginOutput is only ever created once in the lifetime
+        // of the software. It however does not show up right away
+        // upon creation, as it simply attaches to the appropriate
+        // EventHandler-s to show up whenever signaled to do so.
+        dialogFactory.createPluginOutput()
 
         frame = JFrame()
 

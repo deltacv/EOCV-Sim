@@ -26,28 +26,25 @@ package io.github.deltacv.eocvsim.plugin.loader
 import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.LifecycleSignal
 import com.github.serivesmejia.eocvsim.config.ConfigManager
-import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput.Companion.trimSpecials
 import com.github.serivesmejia.eocvsim.plugin.api.impl.EOCVSimApiImpl
+import com.github.serivesmejia.eocvsim.plugin.output.PluginDialogSignal
+import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.orchestration.initDependency
 import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
 import io.github.deltacv.common.util.loggerForThis
-import io.github.deltacv.common.util.loggerOf
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
 import io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemon
 import io.github.deltacv.eocvsim.plugin.security.superaccess.SuperAccessDaemonClient
 import io.github.deltacv.eocvsim.plugin.security.toMutable
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import java.io.File
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlin.properties.Delegates
 
 /**
@@ -55,9 +52,9 @@ import kotlin.properties.Delegates
  */
 class PluginManager : PhaseOrchestrableBase(), KoinComponent {
 
-    private val configManager: ConfigManager by initDependency<ConfigManager>(inject())
+    private val configManager: ConfigManager by initDependency(inject())
     private val visualizer: Visualizer by inject()
-    private val dialogFactory: DialogFactory by inject()
+    private val outputHandler: PluginOutputHandler by inject()
 
     private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
     private val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
@@ -83,33 +80,8 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
 
     private val loadedPluginHashes = mutableListOf<String>()
 
-    private val haltLock = ReentrantLock()
-    private val haltCondition = haltLock.newCondition()
-
-    val appender by lazy {
-        val appender = dialogFactory.createMavenOutput {
-            haltLock.withLock {
-                haltCondition.signalAll()
-            }
-        }
-
-        val logger by loggerOf("PluginOutput")
-
-        appender.subscribe {
-            if (!it.isBlank()) {
-                val message = it.trimSpecials()
-
-                if (message.isNotBlank()) {
-                    logger.info(message)
-                }
-            }
-        }
-
-        appender
-    }
-
     val repositoryManager by lazy {
-        PluginRepositoryManager(appender, onMainUpdate, { lifecycleChannel.trySend(LifecycleSignal.Restart) }, haltLock, haltCondition)
+        PluginRepositoryManager(outputHandler, onMainUpdate) { lifecycleChannel.trySend(LifecycleSignal.Restart) }
     }
 
     private val _pluginFiles = mutableListOf<File>()
@@ -139,10 +111,10 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
      */
     override suspend fun init() {
         visualizer.onInitFinished {
-            appender.append(PluginOutput.SPECIAL_FREE)
+            outputHandler.sendDialogSignal(PluginDialogSignal.Hide)
         }
 
-        appender.appendln(PluginOutput.SPECIAL_SILENT + "Initializing PluginManager")
+        outputHandler.sendOutputLine("Initializing PluginManager")
 
         superAccessDaemonClient.init()
 
@@ -194,7 +166,7 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
         }
 
         if (pluginFiles.isEmpty()) {
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "No plugin files to load")
+            outputHandler.sendOutputLine("No plugin files to load")
         }
 
         for (pluginFile in pluginFiles) {
@@ -205,13 +177,13 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
                     if (pluginFile in repositoryManager.resolvedFiles)
                         PluginSource.REPOSITORY else PluginSource.FILE,
                     this,
-                    appender
+                    outputHandler
                 )
 
                 _loaders.add(loader)
                 loader.fetchInfoFromToml()
             } catch (e: Throwable) {
-                appender.appendln("Failure creating PluginLoader for ${pluginFile.name}: ${e.message}")
+                outputHandler.sendOutputLine("Failure creating PluginLoader for ${pluginFile.name}: ${e.message}")
                 logger.error("Failure creating PluginLoader for ${pluginFile.name}", e)
             }
         }
@@ -226,7 +198,7 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
                         "/embedded_plugins/PaperVisionPlugin.jar",
                         listOf(),
                         this,
-                        appender
+                        outputHandler
                     )
                 )
 
@@ -255,7 +227,7 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
                 }
             }
         } else {
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "PaperVision plugin is already loaded, skipping embedded plugin.")
+            outputHandler.sendOutputLine("PaperVision plugin is already loaded, skipping embedded plugin.")
         }
 
         loadPlugins()
@@ -273,7 +245,7 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
     ) {
         val tempLoader = EmbeddedPluginLoader(pluginInfo, pluginClass, eocvSimApiProvider)
 
-        logger.info("Adding embedded plugin: ${pluginInfo.name} v${pluginInfo.version} by ${pluginInfo.author}")
+        logger.info("Adding embedded plugin: ${pluginInfo.nameWithVersionAndAuthor}")
         _loaders.add(tempLoader)
     }
 
@@ -293,16 +265,19 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
                         PluginSource.EMBEDDED -> "embedded plugin"
                     }
 
-                    appender.appendln("Plugin ${loader.pluginInfo.name} by ${loader.pluginInfo.author} is already loaded. Please delete the duplicate from the $source !")
+                    outputHandler.sendDialogSignal(PluginDialogSignal.ShowOutput)
+                    outputHandler.sendOutputLine("Plugin ${loader.pluginInfo.nameWithVersion} is already loaded. Please delete the duplicate from the $source !")
                     return
                 }
 
                 loader.load()
                 loadedPluginHashes.add(hash)
             } catch (e: Throwable) {
-                appender.appendln("Failure loading ${loader.pluginInfo.name} v${loader.pluginInfo.version}:")
-                appender.appendln(e.message ?: "Unknown error")
-                logger.error("Failure loading ${loader.pluginInfo.name} v${loader.pluginInfo.version}", e)
+                outputHandler.sendDialogSignal(PluginDialogSignal.ShowOutput)
+                outputHandler.sendOutputLine("-- Failure loading ${loader.pluginInfo.nameWithVersion} --")
+                outputHandler.sendOutputLine("'${e.toString()}'")
+
+                logger.error("Failure loading ${loader.pluginInfo.nameWithVersion}", e)
 
                 _loaders.remove(loader)
                 loader.kill()
@@ -319,8 +294,8 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
             try {
                 loader.enable()
             } catch (e: Throwable) {
-                appender.appendln("Failure enabling ${loader.pluginInfo.name} v${loader.pluginInfo.version}: ${e.message}")
-                logger.error("Failure enabling ${loader.pluginInfo.name} v${loader.pluginInfo.version}", e)
+                outputHandler.sendOutputLine("Failure enabling ${loader.pluginInfo.nameWithVersion}: ${e.message}")
+                logger.error("Failure enabling ${loader.pluginInfo.nameWithVersion}", e)
                 loader.kill()
             }
         }
@@ -338,8 +313,8 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
             try {
                 loader.disable()
             } catch (e: Throwable) {
-                appender.appendln("Failure disabling ${loader.pluginInfo.name} v${loader.pluginInfo.version}: ${e.message}")
-                logger.error("Failure disabling ${loader.pluginInfo.name} v${loader.pluginInfo.version}", e)
+                outputHandler.sendOutputLine("Failure disabling ${loader.pluginInfo.nameWithVersion}: ${e.message}")
+                logger.error("Failure disabling ${loader.pluginInfo.nameWithVersion}", e)
                 loader.kill()
             }
         }
@@ -356,13 +331,15 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
      */
     fun requestSuperAccessFor(loader: PluginLoader, reason: String): Boolean {
         if (loader.hasSuperAccess) {
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "Plugin ${loader.pluginInfo.name} v${loader.pluginInfo.version} already has super access")
+            outputHandler.sendOutputLine("Plugin ${loader.pluginInfo.name} v${loader.pluginInfo.version} already has super access")
             return true
         }
 
         val signature = loader.signature
 
-        appender.appendln(PluginOutput.SPECIAL_SILENT + "Requesting super access for ${loader.pluginInfo.name} v${loader.pluginInfo.version}")
+        outputHandler.sendOutputLine("Requesting super access for ${loader.pluginInfo.name} v${loader.pluginInfo.version}")
+        outputHandler.sendDialogSignal(PluginDialogSignal.ShowOutput)
+        outputHandler.sendDialogSignal(PluginDialogSignal.EnableContinue)
 
         if (loader is FilePluginLoaderImpl) {
             var access = false
@@ -374,24 +351,20 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
                     reason
                 )
             ) {
-                if (it) {
-                    access = true
-                }
-
-                haltLock.withLock {
-                    haltCondition.signalAll()
-                }
+                access = it
             }
 
-            haltLock.withLock {
-                haltCondition.await()
+            // Block until user continues (uses runBlocking since this is sync context)
+            runBlocking {
+                outputHandler.waitForContinuation(15000L)  // 15 second timeout
             }
 
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginInfo.nameWithVersion} was ${if (access) "granted" else "denied"}")
+            outputHandler.sendDialogSignal(PluginDialogSignal.DisableContinue)
+            outputHandler.sendOutputLine("Super access for ${loader.pluginInfo.nameWithVersion} was ${if (access) "granted" else "denied"}")
 
             return access
         } else {
-            appender.appendln(PluginOutput.SPECIAL_SILENT + "Super access for ${loader.pluginInfo.nameWithVersion} is automatically determined, it was ${if (loader.hasSuperAccess) "granted" else "denied"}")
+            outputHandler.sendOutputLine("Super access for ${loader.pluginInfo.nameWithVersion} is automatically determined, it was ${if (loader.hasSuperAccess) "granted" else "denied"}")
             return loader.hasSuperAccess
         }
     }

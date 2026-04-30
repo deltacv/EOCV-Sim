@@ -8,6 +8,8 @@ import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.RecordingManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
+import com.github.serivesmejia.eocvsim.plugin.output.VisualPluginOutputHandler
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.InitClasspathScan
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
@@ -43,6 +45,7 @@ val eocvSimModule = module {
 
     single { Visualizer() }.bindOrchestrable()
     single { DialogFactory() }
+    single<PluginOutputHandler> { VisualPluginOutputHandler() }
 
     single { RecordingManager() }
 

@@ -29,6 +29,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmA
 import com.github.serivesmejia.eocvsim.gui.dialog.iama.IAmAPaperVision
 import com.github.serivesmejia.eocvsim.gui.dialog.source.*
 import com.github.serivesmejia.eocvsim.input.SourceType
+import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import kotlinx.coroutines.CoroutineScope
@@ -47,6 +48,7 @@ class DialogFactory : KoinComponent {
     val pluginManager: PluginManager by inject()
     val configManager: ConfigManager by inject()
     val scope: CoroutineScope by inject()
+    val outputHandler: PluginOutputHandler by inject()
 
     fun createYesOrNo(parent: Component?, message: String, submessage: String, result: (Int) -> Unit) {
         val panel = JPanel()
@@ -174,11 +176,8 @@ class DialogFactory : KoinComponent {
         }
     }
 
-    fun createMavenOutput(onContinue: Runnable?): AppendDelegate {
-        val delegate = AppendDelegate()
-        invokeLater { PluginOutput(delegate, pluginManager, configManager, scope, onContinue ?: Runnable { }) }
-
-        return delegate
+    fun createPluginOutput() {
+        invokeLater { PluginOutput(outputHandler, pluginManager, configManager, scope) }
     }
 
     fun createSplashScreen(closeHandler: EventHandler?) {

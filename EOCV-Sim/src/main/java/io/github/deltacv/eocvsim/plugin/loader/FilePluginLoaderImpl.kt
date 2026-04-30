@@ -25,8 +25,7 @@ package io.github.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.config.ConfigLoader
-import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
+import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.hashString
@@ -50,14 +49,14 @@ import java.nio.file.Path
  * @param classpath the classpath of the plugin
  * @param pluginSource the source of the plugin (file or repository)
  * @param pluginManager the plugin manager
- * @param appender the appender to use for logging
+ * @param outputHandler the output handler for plugin logging
  */
 open class FilePluginLoaderImpl(
     override val pluginFile: File,
     override val classpath: List<File>,
     override val pluginSource: PluginSource,
     val pluginManager: PluginManager,
-    val appender: AppendDelegate
+    val outputHandler: PluginOutputHandler
 ) : FilePluginLoader() {
 
     val logger by loggerForThis()
@@ -111,6 +110,7 @@ open class FilePluginLoaderImpl(
 
     /**
      * Fetch the plugin info from the plugin.toml file
+     *
      * Fills the pluginName, pluginVersion, pluginAuthor and pluginAuthorEmail fields
      */
     fun fetchInfoFromToml() {
@@ -134,11 +134,11 @@ open class FilePluginLoaderImpl(
         fetchInfoFromToml()
 
         if(!shouldEnable) {
-            appender.appendln("${PluginOutput.SPECIAL_SILENT}Plugin ${pluginInfo.name} v${pluginInfo.version} is disabled")
+            outputHandler.sendOutputLine("Plugin ${pluginInfo.name} v${pluginInfo.version} is disabled")
             return
         }
 
-        appender.appendln("${PluginOutput.SPECIAL_SILENT}Loading plugin ${pluginInfo.name} v${pluginInfo.version} by ${pluginInfo.version} from ${pluginSource.name}")
+        outputHandler.sendOutputLine("Loading plugin ${pluginInfo.name} v${pluginInfo.version} by ${pluginInfo.version} from ${pluginSource.name}")
 
         signature
 
@@ -214,7 +214,7 @@ open class FilePluginLoaderImpl(
 
         if(!shouldEnable) return
 
-        appender.appendln("${PluginOutput.SPECIAL_SILENT}Enabling plugin ${pluginInfo.name} v${pluginInfo.version}")
+        outputHandler.sendOutputLine("Enabling plugin ${pluginInfo.name} v${pluginInfo.version}")
 
         plugin.onEnable()
 
@@ -227,7 +227,7 @@ open class FilePluginLoaderImpl(
     override fun disable() {
         if(!enabled || !loaded) return
 
-        appender.appendln("${PluginOutput.SPECIAL_SILENT}Disabling plugin ${pluginInfo.name} v${pluginInfo.version}")
+        outputHandler.sendOutputLine("Disabling plugin ${pluginInfo.name} v${pluginInfo.version}")
 
         plugin.onDisable()
 
@@ -262,7 +262,7 @@ class EmbeddedFilePluginLoader(
     resourcePath: String,
     classpath: List<File>,
     pluginManager: PluginManager,
-    appender: AppendDelegate
+    outputHandler: PluginOutputHandler
 ) : FilePluginLoaderImpl(
     pluginFile = resourcePath.let {
         // extract to EMBEDDED_PLUGIN_FOLDER
@@ -286,7 +286,7 @@ class EmbeddedFilePluginLoader(
     },
     pluginSource = PluginSource.FILE,
     pluginManager = pluginManager,
-    appender = appender
+    outputHandler = outputHandler
 ) {
     override val hasSuperAccess = true // Embedded plugins always have super access
 

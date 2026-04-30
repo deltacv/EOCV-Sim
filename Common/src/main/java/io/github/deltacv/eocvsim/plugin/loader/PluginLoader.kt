@@ -62,7 +62,7 @@ data class PluginInfo(
     val nameWithVersion = "$name v$version"
 
     /** Human-readable name including version and author */
-    val nameWithAuthorVersion = "$name v$version by $author"
+    val nameWithVersionAndAuthor = "$name v$version by $author"
 
     companion object {
 

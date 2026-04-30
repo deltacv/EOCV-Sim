@@ -34,7 +34,6 @@ import javax.swing.JPanel
  * sidebar tabs, and dialog creation facilities.
  */
 abstract class VisualizerApi(owner: EOCVSimPlugin) : Api(owner) {
-
     /**
      * The visualizer window frame.
      *
@@ -62,6 +61,16 @@ abstract class VisualizerApi(owner: EOCVSimPlugin) : Api(owner) {
     abstract val sidebarApi: VisualizerSidebarApi
 
     /**
+     * Access to the main OpenCV viewport API.
+     */
+    abstract val viewportApi: VisualizerViewportApi
+
+    /**
+     * Create some of the components used by the
+     */
+    abstract val visualizerComponentsFactoryApi: VisualizerComponentsFactoryApi
+
+    /**
      * Factory for creating dialogs tied to the visualizer.
      */
     abstract val dialogFactoryApi: DialogFactoryApi
@@ -71,7 +80,6 @@ abstract class VisualizerApi(owner: EOCVSimPlugin) : Api(owner) {
  * API for accessing and modifying the visualizer's top menu bar.
  */
 abstract class VisualizerTopMenuBarApi(owner: EOCVSimPlugin) : Api(owner) {
-
     /**
      * The "File" menu.
      */
@@ -95,7 +103,6 @@ abstract class VisualizerTopMenuBarApi(owner: EOCVSimPlugin) : Api(owner) {
  * dynamically by plugins.
  */
 abstract class VisualizerSidebarApi(owner: EOCVSimPlugin) : Api(owner) {
-
     /**
      * Fired whenever the active sidebar tab changes.
      */
@@ -136,7 +143,6 @@ abstract class VisualizerSidebarApi(owner: EOCVSimPlugin) : Api(owner) {
      * is disabled.
      */
     abstract class Tab(owner: EOCVSimPlugin) : Api(owner) {
-
         /**
          * Display title of the tab.
          */
@@ -163,6 +169,28 @@ abstract class VisualizerSidebarApi(owner: EOCVSimPlugin) : Api(owner) {
          * Sidebar tabs do not manage external resources and
          * require no explicit cleanup by default.
          */
-        override fun disableApi() { }
+        override fun disableApi() {}
     }
+}
+
+/**
+ * API for interacting with the visualizer's main OpenCV viewport.
+ */
+abstract class VisualizerViewportApi(owner: EOCVSimPlugin) : Api(owner) {
+    /**
+     * Activates the viewport. This does not affect the main
+     * pipeline processing, it simply enables the visualization
+     * of the current pipeline's output.
+     */
+    abstract fun activate()
+
+    /**
+     * Deactivates the viewport. This does not affect the main
+     * pipeline processing, it simply disables the visualization
+     * of the current pipeline's output, as it stops rendering
+     * incoming frames.
+     */
+    abstract fun deactivate()
+
+    abstract fun setFpsMeterEnabled(enabled: Boolean)
 }

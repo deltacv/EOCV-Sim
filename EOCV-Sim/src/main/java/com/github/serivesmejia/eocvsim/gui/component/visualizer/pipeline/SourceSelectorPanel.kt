@@ -23,27 +23,20 @@
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
-import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.input.InputSourceManager
-import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import org.koin.core.qualifier.named
 import com.github.serivesmejia.eocvsim.gui.util.icon.SourcesListIconRenderer
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.swing.Swing
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.event.MouseAdapter
 import javax.swing.*
-
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class SourceSelectorPanel : JPanel(), KoinComponent {
 
@@ -208,12 +201,11 @@ class SourceSelectorPanel : JPanel(), KoinComponent {
 
     }
 
-    fun updateSourcesList(): Job {
+    fun updateSourcesList() {
         SwingUtilities.invokeLater {
             val listModel = DefaultListModel<String>()
 
             inputSourceManager.sortedInputSources.forEach { source ->
-
                 listModel.addElement(source.name)
             }
 
@@ -225,8 +217,6 @@ class SourceSelectorPanel : JPanel(), KoinComponent {
 
             sourceSelector.selectedIndex = 0
         }
-
-        return Job() // we can't break ABI here, so we return a dummy Job
     }
 
     fun getIndexOf(name: String): Int {

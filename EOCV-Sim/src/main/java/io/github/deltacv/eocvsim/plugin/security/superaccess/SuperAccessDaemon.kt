@@ -163,7 +163,7 @@ object SuperAccessDaemon {
 
             val reason = message.reason
 
-            val name = parser.nameWithAuthorVersion
+            val name = parser.nameWithVersionAndAuthor
 
             var warning = "<html>$GENERIC_SUPERACCESS_WARN"
             if(reason.trim().isNotBlank()) {

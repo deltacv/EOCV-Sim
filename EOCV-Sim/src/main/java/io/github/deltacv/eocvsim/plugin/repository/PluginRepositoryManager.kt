@@ -23,34 +23,26 @@
 
 package io.github.deltacv.eocvsim.plugin.repository
 
-import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.gui.dialog.AppendDelegate
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
+import com.github.serivesmejia.eocvsim.plugin.output.PluginDialogSignal
+import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
-import io.github.deltacv.common.util.loggerForThis
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.common.util.ParsedVersion
+import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import kotlinx.coroutines.runBlocking
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem
 import org.jboss.shrinkwrap.resolver.api.maven.Maven
 import java.io.File
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.Condition
-import java.util.concurrent.locks.ReentrantLock
 import javax.swing.JOptionPane
-import kotlin.concurrent.withLock
-
-
-import com.github.serivesmejia.eocvsim.util.event.EventHandler
 
 class PluginRepositoryManager(
-    val appender: AppendDelegate,
+    val outputHandler: PluginOutputHandler,
     val onMainUpdate: EventHandler,
-    val restart: () -> Unit,
-    val haltLock: ReentrantLock,
-    val haltCondition: Condition
+    val restart: () -> Unit
 ) {
 
     companion object {
@@ -83,7 +75,6 @@ class PluginRepositoryManager(
     fun init() {
         logger.info("Initializing...")
 
-        appender // init appender
 
         SysUtil.copyFileIs(CACHE_TOML_RES, CACHE_FILE, false)
         cacheToml = Toml().read(CACHE_FILE)
@@ -153,18 +144,16 @@ class PluginRepositoryManager(
             val latest = checkForUpdates(pluginDep, repositories.toTypedArray())
 
             if(latest != null) {
-                appender.appendln(
-                    PluginOutput.SPECIAL_SILENT +
-                            "Plugin \"${plugin.key}\" is outdated. Latest version is ${latest.version}."
+                outputHandler.sendOutputLine(
+                    "Plugin \"${plugin.key}\" is outdated. Latest version is ${latest.version}."
                 )
 
                 onMainUpdate.once {
                     promptUpdateAndRestart(plugin.key, pluginDep, latest)
                 }
             } else {
-                appender.appendln(
-                    PluginOutput.SPECIAL_SILENT +
-                            "Plugin \"${plugin.key}\" is up to date."
+                outputHandler.sendOutputLine(
+                    "Plugin \"${plugin.key}\" is up to date."
                 )
             }
         }
@@ -178,7 +167,7 @@ class PluginRepositoryManager(
 
     private fun promptUpdateAndRestart(pluginName: String, pluginDep: String, latest: ParsedVersion) {
         if (promptUpdate(pluginName, latest)) {
-            appender.appendln(PluginOutput.SPECIAL_SILENT +"Updating plugin \"$pluginName\" to version ${latest.version}...")
+            outputHandler.sendOutputLine("Updating plugin \"$pluginName\" to version ${latest.version}...")
 
             val artifact = parseArtifact(pluginDep)
 
@@ -190,7 +179,7 @@ class PluginRepositoryManager(
             // Locate the `[plugins]` section
             val indexOfPlugins = tomlLines.indexOfFirst { it.trim() == "[plugins]" }
             if (indexOfPlugins == -1) {
-                appender.appendln("Failed to find [plugins] section in the TOML file.")
+                outputHandler.sendOutputLine("Failed to find [plugins] section in the TOML file.")
                 return
             }
 
@@ -202,7 +191,7 @@ class PluginRepositoryManager(
                 ?.let { it + indexOfPlugins + 1 } // Adjust the index relative to the full list
 
             if (pluginLineIndex == -1 || pluginLineIndex == null) {
-                appender.appendln("Failed to find plugin \"$pluginName\" in the TOML file.")
+                outputHandler.sendOutputLine("Failed to find plugin \"$pluginName\" in the TOML file.")
                 return
             }
 
@@ -213,7 +202,7 @@ class PluginRepositoryManager(
             // Write updated content back to the TOML file
             tomlFile.writeText(tomlLines.joinToString("\n"))
 
-            appender.appendln(PluginOutput.SPECIAL_SILENT +"Successfully updated \"$pluginName\" to version ${latest.version}. Restarting...")
+            outputHandler.sendOutputLine("Successfully updated \"$pluginName\" to version ${latest.version}. Restarting...")
             restart()
         }
     }
@@ -248,15 +237,13 @@ class PluginRepositoryManager(
 
                 if (cachedFile.exists() && areAllTransitivesCached(pluginDep)) {
                     addToResolvedFiles(cachedFile, pluginDep, newCache, newTransitiveCache)
-                    appender.appendln(
-                        PluginOutput.SPECIAL_SILENT +
-                                "Found cached plugin \"$pluginDep\" (${pluginDep.hashString}). All transitive dependencies OK."
+                    outputHandler.sendOutputLine(
+                        "Found cached plugin \"$pluginDep\" (${pluginDep.hashString}). All transitive dependencies OK."
                     )
                     return true
                 } else {
-                    appender.appendln(
-                        PluginOutput.SPECIAL_SILENT +
-                                "Dependency missing for plugin $pluginDep. Resolving..."
+                    outputHandler.sendOutputLine(
+                        "Dependency missing for plugin $pluginDep. Resolving..."
                     )
                 }
             }
@@ -274,14 +261,12 @@ class PluginRepositoryManager(
         val matchesDepsHash = depsHash == tomlHash
 
         if(!matchesDepsHash) {
-            appender.appendln(
-                PluginOutput.SPECIAL_SILENT +
-                        "Mismatch, $depsHash != $tomlHash"
+            outputHandler.sendOutputLine(
+                "Mismatch, $depsHash != $tomlHash"
             )
 
-            appender.appendln(
-                PluginOutput.SPECIAL_SILENT +
-                        "Transitive dependencies hash mismatch for plugin $pluginDep. Resolving..."
+            outputHandler.sendOutputLine(
+                "Transitive dependencies hash mismatch for plugin $pluginDep. Resolving..."
             )
         }
 
@@ -292,9 +277,8 @@ class PluginRepositoryManager(
                 val exists = File(it).exists()
 
                 if(!exists) {
-                    appender.appendln(
-                        PluginOutput.SPECIAL_SILENT +
-                                "Couldn't find file specified in cache for plugin $pluginDep, expected at \"$it\"."
+                    outputHandler.sendOutputLine(
+                        "Couldn't find file specified in cache for plugin $pluginDep, expected at \"$it\"."
                     )
                 }
 
@@ -308,7 +292,7 @@ class PluginRepositoryManager(
         newCache: MutableMap<String, String>,
         newTransitiveCache: MutableMap<String, MutableList<String>>
     ): File {
-        appender.appendln("Resolving plugin \"$pluginDep\"...")
+        outputHandler.sendOutputLine("Resolving plugin \"$pluginDep\"...")
 
         var pluginJar: File? = null
 
@@ -350,18 +334,23 @@ class PluginRepositoryManager(
     // Function to handle resolution errors
     private fun handleResolutionError(pluginDep: String, ex: Exception) {
         logger.warn("Failed to resolve plugin dependency \"$pluginDep\"", ex)
-        appender.appendln("Failed to resolve plugin \"$pluginDep\": ${ex.message}")
+        outputHandler.sendOutputLine("Failed to resolve plugin \"$pluginDep\": ${ex.message}")
     }
 
     // Function to handle the outcome of the resolution process
     private fun handleResolutionOutcome(shouldHalt: Boolean) {
         if (shouldHalt) {
-            appender.append(PluginOutput.SPECIAL_CONTINUE)
-            haltLock.withLock {
-                haltCondition.await(15, TimeUnit.SECONDS) // wait for user to read the error
+            // Show dialog and enable Continue button if errors occurred
+            outputHandler.sendDialogSignal(PluginDialogSignal.ShowOutput)
+            outputHandler.sendDialogSignal(PluginDialogSignal.EnableContinue)
+
+            // Block for up to 15 seconds waiting for user to read the error
+            runBlocking {
+                outputHandler.waitForContinuation(15000L)
             }
         } else {
-            appender.append(PluginOutput.SPECIAL_CLOSE)
+            // Close dialog if everything resolved successfully
+            outputHandler.sendDialogSignal(PluginDialogSignal.Hide)
         }
     }
 

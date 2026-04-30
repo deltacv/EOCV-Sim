@@ -27,10 +27,11 @@ import com.github.serivesmejia.eocvsim.LifecycleSignal
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.plugin.output.PluginDialogSignal
+import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
@@ -59,6 +60,7 @@ class TopMenuBar : JMenuBar(), KoinComponent {
     val visualizer: Visualizer by inject()
     val dialogFactory: DialogFactory by inject()
     val pluginManager: PluginManager by inject()
+    val outputHandler: PluginOutputHandler by inject()
     val workspaceManager: WorkspaceManager by inject()
     val pipelineManager: PipelineManager by inject()
     val onMainUpdate: EventHandler by inject(named("onMainLoop"))
@@ -125,8 +127,9 @@ class TopMenuBar : JMenuBar(), KoinComponent {
         }
 
         val filePlugins = JMenuItem("Manage Plugins")
-        filePlugins.addActionListener { pluginManager.appender.append(PluginOutput.SPECIAL_OPEN_MGR)}
-
+        filePlugins.addActionListener {
+            outputHandler.sendDialogSignal(PluginDialogSignal.ShowPlugins)
+        }
 
         mFileMenu.add(filePlugins)
 
