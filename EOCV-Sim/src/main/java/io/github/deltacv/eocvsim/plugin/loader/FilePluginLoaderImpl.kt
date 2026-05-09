@@ -134,11 +134,11 @@ open class FilePluginLoaderImpl(
         fetchInfoFromToml()
 
         if(!shouldEnable) {
-            outputHandler.sendOutputLine("Plugin ${pluginInfo.name} v${pluginInfo.version} is disabled")
+            outputHandler.sendOutputLine("Plugin ${pluginInfo.nameWithVersion} is disabled")
             return
         }
 
-        outputHandler.sendOutputLine("Loading plugin ${pluginInfo.name} v${pluginInfo.version} by ${pluginInfo.version} from ${pluginSource.name}")
+        outputHandler.sendOutputLine("Loading plugin ${pluginInfo.nameWithVersionAndAuthor} from ${pluginSource.name}")
 
         signature
 
@@ -214,7 +214,7 @@ open class FilePluginLoaderImpl(
 
         if(!shouldEnable) return
 
-        outputHandler.sendOutputLine("Enabling plugin ${pluginInfo.name} v${pluginInfo.version}")
+        outputHandler.sendOutputLine("Enabling plugin ${pluginInfo.nameWithVersionAndAuthor}")
 
         plugin.onEnable()
 

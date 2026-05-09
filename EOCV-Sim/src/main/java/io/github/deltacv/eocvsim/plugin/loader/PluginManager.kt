@@ -279,6 +279,12 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
 
                 logger.error("Failure loading ${loader.pluginInfo.nameWithVersion}", e)
 
+                outputHandler.sendDialogSignal(PluginDialogSignal.EnableContinue)
+                runBlocking {
+                    outputHandler.waitForContinuation(15000L)
+                }
+                outputHandler.sendDialogSignal(PluginDialogSignal.DisableContinue)
+
                 _loaders.remove(loader)
                 loader.kill()
             }
@@ -338,8 +344,6 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
         val signature = loader.signature
 
         outputHandler.sendOutputLine("Requesting super access for ${loader.pluginInfo.name} v${loader.pluginInfo.version}")
-        outputHandler.sendDialogSignal(PluginDialogSignal.ShowOutput)
-        outputHandler.sendDialogSignal(PluginDialogSignal.EnableContinue)
 
         if (loader is FilePluginLoaderImpl) {
             var access = false
@@ -352,14 +356,13 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
                 )
             ) {
                 access = it
+                outputHandler.signalContinuation()
             }
 
-            // Block until user continues (uses runBlocking since this is sync context)
             runBlocking {
-                outputHandler.waitForContinuation(15000L)  // 15 second timeout
+                outputHandler.waitForContinuation(0L) // Wait indefinitely.
             }
 
-            outputHandler.sendDialogSignal(PluginDialogSignal.DisableContinue)
             outputHandler.sendOutputLine("Super access for ${loader.pluginInfo.nameWithVersion} was ${if (access) "granted" else "denied"}")
 
             return access

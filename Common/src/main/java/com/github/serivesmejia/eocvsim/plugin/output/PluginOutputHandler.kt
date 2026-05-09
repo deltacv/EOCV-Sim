@@ -106,6 +106,9 @@ interface PluginOutputHandler {
      * @throws CancellationException if the coroutine is cancelled
      */
     suspend fun waitForContinuation(timeoutMillis: Long = 0L): Boolean
+
+    /**
+     * Programmatically signal that continuation is complete.
+     */
+    fun signalContinuation()
 }
-
-

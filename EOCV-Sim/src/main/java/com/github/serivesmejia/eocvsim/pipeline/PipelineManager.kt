@@ -625,6 +625,7 @@ class PipelineManager : PhaseOrchestrableBase(), KoinComponent {
         previousPipelineIndex = currentPipelineIndex
         previousPipeline = currentPipeline
 
+        hasInitCurrentPipeline = false
         currentPipeline = nextPipeline
         currentTelemetry = nextTelemetry
         currentPipelineName = clazz.simpleName
@@ -645,8 +646,6 @@ class PipelineManager : PhaseOrchestrableBase(), KoinComponent {
         } else snap
 
         if (applyStaticSnapshot) staticSnapshot?.transferTo(currentPipeline!!)
-
-        hasInitCurrentPipeline = false
 
         currentPipelineContext?.close()
         currentPipelineContext = newSingleThreadContext("Pipeline-$currentPipelineName")

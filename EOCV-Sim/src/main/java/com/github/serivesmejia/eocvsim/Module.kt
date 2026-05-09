@@ -32,7 +32,7 @@ val eocvSimModule = module {
     single { InitClasspathScan() }.bindOrchestrable()
 
     // global scope for launching coroutines within the app
-    single<CoroutineScope> { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
+    single { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
     single { ConfigManager() }.bindOrchestrable()
     single { WorkspaceManager() }.bindOrchestrable()

@@ -27,6 +27,7 @@ import com.github.serivesmejia.eocvsim.util.event.ParamEventHandler
 import io.github.deltacv.common.util.loggerOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Concrete implementation of PluginOutputHandler.
@@ -79,11 +80,17 @@ class VisualPluginOutputHandler : PluginOutputHandler {
      * @return true if completed by UI, false if timeout expired
      */
     override suspend fun waitForContinuation(timeoutMillis: Long): Boolean {
+        if (timeoutMillis > 0L) {
+            sendOutputLine("Waiting for confirmation for ${timeoutMillis / 1000} seconds...")
+        } else {
+            sendOutputLine("Waiting for confirmation...")
+        }
+
         val deferred = continuationDeferred
 
         return if (timeoutMillis > 0L) {
             // Use withTimeoutOrNull for coroutine-native timeout
-            val result = withTimeoutOrNull(timeoutMillis) {
+            val result = withTimeoutOrNull(timeoutMillis.milliseconds) {
                 deferred.await()
                 true
             }
@@ -110,11 +117,9 @@ class VisualPluginOutputHandler : PluginOutputHandler {
      * UI calls this to signal that continuation is complete (e.g., user clicked "Continue").
      * This allows plugin code waiting in [waitForContinuation] to resume.
      */
-    fun signalContinuation() {
+    override fun signalContinuation() {
         if (!continuationDeferred.isCompleted) {
             continuationDeferred.complete(Unit)
         }
     }
 }
-
-
