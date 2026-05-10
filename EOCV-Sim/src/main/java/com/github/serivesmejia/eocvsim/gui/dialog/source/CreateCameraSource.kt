@@ -39,7 +39,6 @@ import io.github.deltacv.steve.openpnp.OpenPnpBackend
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.opencv.core.Mat
 import org.opencv.core.Size
 import java.awt.*
 import javax.swing.*
@@ -60,7 +59,6 @@ class CreateCameraSource : KoinComponent {
     }
 
     val createCameraSource = JDialog(visualizer.frame)
-    private val statusLabel = JLabel("", SwingConstants.CENTER)
 
     private val camerasComboBox = JComboBox<String>()
     private val dimensionsComboBox = JComboBox<String>()
@@ -73,15 +71,14 @@ class CreateCameraSource : KoinComponent {
     ) { WebcamRotation.fromDisplayName(it) ?: WebcamRotation.UPRIGHT }
 
     private val nameTextField = JTextField(15)
-    private val createButton = JButton()
-    private var wasCancelled = false
+    private val createButton = JButton("Create")
 
     private var webcams = listOf<Webcam>()
     private val indexes = mutableMapOf<String, Int>()
     private var usingOpenCvDiscovery = false
 
     private var state = State.INITIAL
-    private enum class State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED, NO_WEBCAMS, UNSUPPORTED }
+    private enum class State { INITIAL, NO_WEBCAMS, UNSUPPORTED }
 
     init {
         // Force preferred driver fallback
@@ -89,7 +86,6 @@ class CreateCameraSource : KoinComponent {
             configManager.config.preferredWebcamDriver = WebcamDriver.OpenPnp
 
         val preferredDriver = configManager.config.preferredWebcamDriver
-
 
         when (preferredDriver) {
             WebcamDriver.OpenPnp -> {
@@ -181,9 +177,6 @@ class CreateCameraSource : KoinComponent {
         gbc.gridx = 0; gbc.gridy = 0
         contentsPanel.add(fieldsPanel, gbc)
 
-        gbc.gridy = 1
-        contentsPanel.add(statusLabel, gbc)
-
         // Bottom buttons
         val bottomPanel = JPanel(GridBagLayout())
         val gbcBtts = GridBagConstraints().apply { insets = Insets(0, 0, 0, 10) }
@@ -193,7 +186,7 @@ class CreateCameraSource : KoinComponent {
         bottomPanel.add(cancelButton, gbcBtts)
 
         gbc.insets = Insets(10, 0, 0, 0)
-        gbc.gridx = 0; gbc.gridy = 2
+        gbc.gridx = 0; gbc.gridy = 1
         contentsPanel.add(bottomPanel, gbc)
 
         contentsPanel.border = BorderFactory.createEmptyBorder(8, 15, 15, 0)
@@ -205,7 +198,7 @@ class CreateCameraSource : KoinComponent {
         camerasComboBox.addActionListener { onCameraSelectionChanged() }
 
         nameTextField.document.addDocumentListener(SimpleDocumentListener { updateCreateButton() })
-        cancelButton.addActionListener { wasCancelled = true; close() }
+        cancelButton.addActionListener { close() }
 
         updateState()
 
@@ -219,36 +212,17 @@ class CreateCameraSource : KoinComponent {
     }
 
     private fun onCreateButton() {
-        if (state == State.TEST_SUCCESSFUL) {
-            val webcam = webcams[getSelectedIndex()]
-            val dim = sizes[camerasComboBox.selectedItem]!![dimensionsComboBox.selectedIndex]
-            val rotation = rotationComboBox.selectedEnum ?: WebcamRotation.UPRIGHT // Correction: Handle null case
+        val webcam = webcams[getSelectedIndex()]
+        val dim = sizes[camerasComboBox.selectedItem]!![dimensionsComboBox.selectedIndex]
+        val rotation = rotationComboBox.selectedEnum ?: WebcamRotation.UPRIGHT
 
-            if (usingOpenCvDiscovery) {
-                val index = if (webcam is OpenCvWebcam) webcam.index else camerasComboBox.selectedIndex
-                createSource(nameTextField.text, index, dim, rotation)
-            } else {
-                createSource(nameTextField.text, webcam.name, dim, rotation)
-            }
-            close()
+        if (usingOpenCvDiscovery) {
+            val index = if (webcam is OpenCvWebcam) webcam.index else camerasComboBox.selectedIndex
+            createSource(nameTextField.text, index, dim, rotation)
         } else {
-            state = State.CLICKED_TEST
-            updateState()
-            CoroutineScope(Dispatchers.IO).launch {
-                val webcam = webcams[getSelectedIndex()]
-                val dim = sizes[camerasComboBox.selectedItem]!![dimensionsComboBox.selectedIndex]
-
-                webcam.resolution = dim
-                val success = testCamera(webcam)
-
-                SwingUtilities.invokeLater {
-                    if (!wasCancelled) {
-                        state = if (success) State.TEST_SUCCESSFUL else State.TEST_FAILED
-                        updateState()
-                    }
-                }
-            }
+            createSource(nameTextField.text, webcam.name, dim, rotation)
         }
+        close()
     }
 
     private fun onCameraSelectionChanged() {
@@ -274,48 +248,16 @@ class CreateCameraSource : KoinComponent {
         }
     }
 
-    private fun testCamera(webcam: Webcam): Boolean {
-        webcam.open()
-        var success = webcam.isOpen
-        if (success) {
-            val m = Mat()
-            try { webcam.read(m) } catch (_: Exception) { success = false }
-            m.release()
-            webcam.close()
-        }
-        return success
-    }
-
     private fun updateState() {
         when (state) {
             State.INITIAL -> {
-                statusLabel.text = "Click \"test\" to test camera."
-                createButton.text = "Test"
-                setInteractables(true)
-            }
-            State.CLICKED_TEST -> {
-                statusLabel.text = "Trying to open camera, please wait..."
-                setInteractables(false)
-            }
-            State.TEST_SUCCESSFUL -> {
-                statusLabel.text = "Camera was opened successfully."
-                createButton.text = "Create"
-                setInteractables(true)
-            }
-            State.TEST_FAILED -> {
-                statusLabel.text = "Failed to open camera, try another one."
-                createButton.text = "Test"
                 setInteractables(true)
             }
             State.NO_WEBCAMS -> {
-                statusLabel.text = "No cameras detected."
-                createButton.text = "Test"
                 nameTextField.text = ""
                 setInteractables(false)
             }
             State.UNSUPPORTED -> {
-                statusLabel.text = "This camera is currently unavailable."
-                createButton.text = "Test"
                 nameTextField.text = ""
                 setInteractables(false)
                 camerasComboBox.isEnabled = true
