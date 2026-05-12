@@ -31,13 +31,19 @@ import com.github.serivesmejia.eocvsim.input.source.VideoSource
 import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
 import io.github.deltacv.eocvsim.plugin.api.InputSourceApi
 import io.github.deltacv.eocvsim.plugin.api.InputSourceManagerApi
+import org.opencv.core.Size
 
 class InputSourceApiImpl(owner: EOCVSimPlugin, val internalInputSource: com.github.serivesmejia.eocvsim.input.InputSource) : InputSourceApi(owner) {
-    override val isPaused by liveApiField<Boolean> { internalInputSource.isPaused }
+    override val isPaused by liveApiField { internalInputSource.isPaused }
 
     override val data by apiField {
         when(internalInputSource) {
-            is CameraSource -> TODO() // New.Camera(internalInputSource.webcamName, internalInputSource.size)
+            is CameraSource -> New.Camera(
+                internalInputSource.camera?.name ?: "",
+                Size(internalInputSource.videoMode?.width?.toDouble() ?: 0.0,
+                    internalInputSource.videoMode?.height?.toDouble() ?: 0.0
+                )
+            )
             is ImageSource -> New.Image(internalInputSource.imgPath, internalInputSource.size)
             is VideoSource -> New.Video(internalInputSource.videoPath, internalInputSource.size)
             is HttpSource -> New.Http(internalInputSource.url)
@@ -46,7 +52,7 @@ class InputSourceApiImpl(owner: EOCVSimPlugin, val internalInputSource: com.gith
     }
 
     override val name: String by apiField { internalInputSource.name }
-    override val creationTime by apiField<Long> { internalInputSource.creationTime }
+    override val creationTime by apiField { internalInputSource.creationTime }
 
 
 

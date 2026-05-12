@@ -455,9 +455,7 @@ class PipelineManager : PhaseOrchestrableBase(), KoinComponent {
         }
     }
 
-    override suspend fun destroy() {
-        // TODO: check if we need to do anything here
-    }
+    override suspend fun destroy() { }
 
     private fun updateExceptionTracker(ex: Throwable? = null) {
         pipelineExceptionTracker.update(

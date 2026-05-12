@@ -40,12 +40,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 object JacksonJsonSupport {
 
     @JvmField
-    val persistenceMapper: ObjectMapper = createMapper()
-
-    @JvmField
-    val ipcMapper: ObjectMapper = createMapper()
-
-    private fun createMapper(): ObjectMapper = ObjectMapper()
+    val persistenceMapper: ObjectMapper = ObjectMapper()
         .registerKotlinModule()
         .registerModule(VideoModeJackson.module())
         .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
@@ -53,4 +48,11 @@ object JacksonJsonSupport {
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .enable(SerializationFeature.INDENT_OUTPUT)
 
+    @JvmField
+    val ipcMapper: ObjectMapper = ObjectMapper()
+        .registerKotlinModule()
+        .setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE)
+        .setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .enable(SerializationFeature.INDENT_OUTPUT)
 }

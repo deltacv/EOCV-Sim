@@ -21,7 +21,9 @@ class CreateCameraSource : KoinComponent {
 
     private val camerasComboBox = JComboBox<String>()
     private val modesComboBox = JComboBox<VideoMode>()
-    private val nameTextField = JTextField(15)
+    private val nameTextField = JTextField(20)
+    private val sameCameraCheckBox = JCheckBox("Match to exact port")
+
     private val createButton = JButton("Create")
 
     private val dialog = JDialog(visualizer.frame)
@@ -30,7 +32,6 @@ class CreateCameraSource : KoinComponent {
     private var modes: Array<VideoMode> = emptyArray()
 
     init {
-
         cameraInfos = try {
             UsbCamera.enumerateUsbCameras()
         } catch (t: Throwable) {
@@ -44,26 +45,38 @@ class CreateCameraSource : KoinComponent {
         }
 
         val root = JPanel(GridBagLayout())
+
         val gbc = GridBagConstraints().apply {
             fill = GridBagConstraints.HORIZONTAL
-            insets = Insets(5, 5, 5, 5)
+            weightx = 1.0
+            insets = Insets(6, 6, 6, 6)
         }
+
+        // ---------------- CAMERA LIST ----------------
 
         if (cameraInfos.isEmpty()) {
             camerasComboBox.addItem("No Cameras Found")
+            createButton.isEnabled = false
         } else {
             cameraInfos.forEach {
                 camerasComboBox.addItem(it.name)
             }
+
             camerasComboBox.selectedIndex = 0
+
+            updateAutomaticName()
             loadModes(0)
         }
 
         camerasComboBox.addActionListener {
+            updateAutomaticName()
             loadModes(camerasComboBox.selectedIndex)
         }
 
+        // ---------------- MODE RENDERER ----------------
+
         modesComboBox.renderer = object : DefaultListCellRenderer() {
+
             override fun getListCellRendererComponent(
                 list: JList<*>,
                 value: Any?,
@@ -71,12 +84,23 @@ class CreateCameraSource : KoinComponent {
                 isSelected: Boolean,
                 cellHasFocus: Boolean
             ): Component {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+
+                super.getListCellRendererComponent(
+                    list,
+                    value,
+                    index,
+                    isSelected,
+                    cellHasFocus
+                )
 
                 val mode = value as? VideoMode
 
                 text = if (mode != null) {
-                    "${mode.width}x${mode.height} @ ${mode.fps}fps (${mode.pixelFormat})"
+                    buildString {
+                        append("${mode.width}x${mode.height}")
+                        append(" @ ${mode.fps}fps")
+                        append(" (${mode.pixelFormat})")
+                    }
                 } else {
                     "Unknown"
                 }
@@ -85,58 +109,116 @@ class CreateCameraSource : KoinComponent {
             }
         }
 
-        gbc.gridx = 0; gbc.gridy = 0
+        // ---------------- FORM ----------------
+
+        gbc.gridx = 0
+        gbc.gridy = 0
+        gbc.weightx = 0.0
         root.add(JLabel("Camera:"), gbc)
+
         gbc.gridx = 1
+        gbc.weightx = 1.0
         root.add(camerasComboBox, gbc)
 
-        gbc.gridx = 0; gbc.gridy = 1
+        gbc.gridx = 0
+        gbc.gridy = 1
+        gbc.weightx = 0.0
         root.add(JLabel("Mode:"), gbc)
+
         gbc.gridx = 1
+        gbc.weightx = 1.0
         root.add(modesComboBox, gbc)
 
-        gbc.gridx = 0; gbc.gridy = 2
+        gbc.gridx = 0
+        gbc.gridy = 2
+        gbc.weightx = 0.0
         root.add(JLabel("Name:"), gbc)
+
         gbc.gridx = 1
-        nameTextField.text = "CameraSource-${inputSourceManager.sources.size + 1}"
+        gbc.weightx = 1.0
         root.add(nameTextField, gbc)
 
-        val buttons = JPanel()
-        buttons.add(createButton)
-        val cancel = JButton("Cancel")
-        buttons.add(cancel)
+        gbc.gridx = 1
+        gbc.gridy = 3
+        gbc.weightx = 1.0
+        root.add(sameCameraCheckBox, gbc)
 
-        gbc.gridx = 0; gbc.gridy = 3
+        // ---------------- BUTTONS ----------------
+
+        val buttons = JPanel(FlowLayout(FlowLayout.RIGHT))
+
+        val cancelButton = JButton("Cancel")
+
+        buttons.add(createButton)
+        buttons.add(cancelButton)
+
+        gbc.gridx = 0
+        gbc.gridy = 4
         gbc.gridwidth = 2
+
         root.add(buttons, gbc)
 
-        createButton.addActionListener { create() }
-        cancel.addActionListener { close() }
+        // ---------------- EVENTS ----------------
+
+        createButton.addActionListener {
+            create()
+        }
+
+        cancelButton.addActionListener {
+            close()
+        }
+
+        // ---------------- DIALOG ----------------
 
         dialog.contentPane.add(root)
+
         dialog.pack()
+        dialog.minimumSize = dialog.size
+
         dialog.setLocationRelativeTo(null)
         dialog.isVisible = true
     }
 
+    private fun updateAutomaticName() {
+        val info = cameraInfos.getOrNull(camerasComboBox.selectedIndex)
+            ?: return
+
+        nameTextField.text = inputSourceManager.tryName(info.name)
+    }
+
     private fun loadModes(index: Int) {
+
         val info = cameraInfos.getOrNull(index) ?: return
 
         try {
+
             val cam = UsbCamera(info.name, info.dev)
 
             modes = cam.enumerateVideoModes()
+                .distinctBy {
+                    "${it.width}x${it.height}_${it.fps}_${it.pixelFormat}"
+                }
+                .sortedWith(
+                    compareByDescending<VideoMode> {
+                        it.width * it.height
+                    }.thenByDescending {
+                        it.fps
+                    }
+                )
+                .toTypedArray()
 
             cam.close()
+
         } catch (t: Throwable) {
+
             t.printStackTrace()
             modes = emptyArray()
         }
 
         modesComboBox.removeAllItems()
 
-        for (m in modes) {
-            modesComboBox.addItem(m)
+        for (mode in modes) {
+            modesComboBox.addItem(mode)
         }
 
         if (modes.isNotEmpty()) {
@@ -145,15 +227,27 @@ class CreateCameraSource : KoinComponent {
     }
 
     private fun create() {
-        val camIndex = camerasComboBox.selectedIndex
-        val info = cameraInfos.getOrNull(camIndex) ?: return
 
-        val mode = modes.getOrNull(modesComboBox.selectedIndex) ?: return
+        val camIndex = camerasComboBox.selectedIndex
+
+        val info = cameraInfos.getOrNull(camIndex)
+            ?: return
+
+        val mode = modes.getOrNull(modesComboBox.selectedIndex)
+            ?: return
 
         onMainUpdate.once {
+
             inputSourceManager.addInputSource(
-                nameTextField.text,
-                CameraSource(info.name, mode),
+                nameTextField.text.trim(),
+                CameraSource(
+                    info.name,
+                    info.dev,
+                    sameCameraCheckBox.isSelected,
+                    info.vendorId,
+                    info.productId,
+                    mode
+                ),
                 true
             )
         }

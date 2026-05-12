@@ -23,29 +23,25 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog
 
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.LifecycleSignal
-import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields
 import com.github.serivesmejia.eocvsim.gui.theme.Theme
-import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver
 import com.github.serivesmejia.eocvsim.pipeline.PipelineFps
 import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import kotlinx.coroutines.channels.Channel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.GridLayout
 import javax.swing.*
-
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import org.koin.core.qualifier.named
 
 class Configuration : KoinComponent {
 
@@ -63,9 +59,10 @@ class Configuration : KoinComponent {
     private val superAccessCheckBox: JCheckBox
     private val prefersPaperVisionCheckbox: JCheckBox
     private val pauseOnImageCheckBox: JCheckBox
+    private val webcamOpenTimeoutSpinner: JSpinner
+    private val webcamNewFrameTimeoutSpinner: JSpinner
     private val pipelineTimeoutComboBox: EnumComboBox<PipelineTimeout>
     private val pipelineFpsComboBox: EnumComboBox<PipelineFps>
-    private val preferredWebcamDriver: EnumComboBox<WebcamDriver>
     private val videoRecordingSize: SizeFields
     private val videoRecordingFpsComboBox: EnumComboBox<PipelineFps>
     private val acceptButton: JButton
@@ -95,17 +92,18 @@ class Configuration : KoinComponent {
         pauseOnImageCheckBox = JCheckBox("Pause with Image Sources").apply {
             isSelected = config.pauseOnImages
         }
-        preferredWebcamDriver = EnumComboBox(
-            "Preferred Webcam Driver: ",
-            WebcamDriver::class.java,
-            WebcamDriver.entries.toTypedArray()
-        ).apply {
-            removeEnumOption(WebcamDriver.OpenIMAJ)
-            selectedEnum = config.preferredWebcamDriver
-        }
-        val inputSourcesPanel = JPanel(GridLayout(2, 1, 1, 8)).apply {
+        webcamOpenTimeoutSpinner = JSpinner(SpinnerNumberModel(config.webcamOpenTimeoutSec, 0.1, 60.0, 0.1))
+        webcamNewFrameTimeoutSpinner = JSpinner(SpinnerNumberModel(config.webcamNewFrameTimeoutSec, 0.1, 60.0, 0.1))
+        val inputSourcesPanel = JPanel(GridLayout(3, 1, 1, 8)).apply {
             add(JPanel(FlowLayout()).apply { add(pauseOnImageCheckBox) })
-            add(preferredWebcamDriver)
+            add(JPanel(FlowLayout()).apply {
+                add(JLabel("Timeout to start camera stream (seconds): "))
+                add(webcamOpenTimeoutSpinner)
+            })
+            add(JPanel(FlowLayout()).apply {
+                add(JLabel("Timeout for new camera frame (seconds): "))
+                add(webcamNewFrameTimeoutSpinner)
+            })
         }
 
         // --- Processing Tab ---
@@ -189,7 +187,8 @@ class Configuration : KoinComponent {
 
         config.simTheme = userSelectedTheme
         config.pauseOnImages = pauseOnImageCheckBox.isSelected
-        config.preferredWebcamDriver = preferredWebcamDriver.selectedEnum
+        config.webcamOpenTimeoutSec = (webcamOpenTimeoutSpinner.value as Number).toDouble()
+        config.webcamNewFrameTimeoutSec = (webcamNewFrameTimeoutSpinner.value as Number).toDouble()
         config.pipelineTimeout = pipelineTimeoutComboBox.selectedEnum
         config.pipelineMaxFps = pipelineFpsComboBox.selectedEnum
         config.videoRecordingSize = videoRecordingSize.currentSize

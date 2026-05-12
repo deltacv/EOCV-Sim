@@ -236,9 +236,7 @@ class WorkspaceManager : PhaseOrchestrableBase(), KoinComponent {
             CompiledPipelineManager.DEF_WORKSPACE_FOLDER
     }
 
-    override suspend fun run() {
-        // TODO: check if we need to do anything here
-    }
+    override suspend fun run() { }
 
     override suspend fun destroy() {
         stopFileWatcher()

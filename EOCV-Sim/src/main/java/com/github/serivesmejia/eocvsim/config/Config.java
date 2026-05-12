@@ -26,32 +26,28 @@ package com.github.serivesmejia.eocvsim.config;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel;
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanelConfig;
 import com.github.serivesmejia.eocvsim.gui.theme.Theme;
-import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineFps;
 import com.github.serivesmejia.eocvsim.pipeline.PipelineTimeout;
 import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager;
 import org.opencv.core.Size;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class Config {
     public volatile Theme simTheme = Theme.Dark;
-
-    @Deprecated
-    public volatile double zoom = 1;
 
     public volatile PipelineFps pipelineMaxFps = PipelineFps.MEDIUM;
     public volatile PipelineTimeout pipelineTimeout = PipelineTimeout.MEDIUM;
 
     public volatile boolean pauseOnImages = true;
 
+    public volatile double webcamOpenTimeoutSec = 5.0;
+    public volatile double webcamNewFrameTimeoutSec = 3.0;
+
     public volatile Size videoRecordingSize = new Size(640, 480);
     public volatile PipelineFps videoRecordingFps = PipelineFps.MEDIUM;
 
-    public volatile WebcamDriver preferredWebcamDriver = WebcamDriver.OpenPnp;
-    public volatile String workspacePath  = CompiledPipelineManager.Companion.getDEF_WORKSPACE_FOLDER().getAbsolutePath();
+    public volatile String workspacePath = CompiledPipelineManager.Companion.getDEF_WORKSPACE_FOLDER().getAbsolutePath();
 
     public volatile TunableFieldPanelConfig.Config globalTunableFieldsConfig =
             new TunableFieldPanelConfig.Config(
@@ -62,9 +58,6 @@ public class Config {
             );
 
     public volatile HashMap<String, TunableFieldPanelConfig.Config> specificTunableFieldConfig = new HashMap<>();
-
-    @Deprecated
-    public volatile List<String> superAccessPluginHashes = new ArrayList<>();
 
     public volatile boolean autoAcceptSuperAccessOnTrusted = true;
 
