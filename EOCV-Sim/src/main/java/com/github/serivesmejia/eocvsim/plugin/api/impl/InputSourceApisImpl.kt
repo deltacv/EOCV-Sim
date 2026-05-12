@@ -37,7 +37,7 @@ class InputSourceApiImpl(owner: EOCVSimPlugin, val internalInputSource: com.gith
 
     override val data by apiField {
         when(internalInputSource) {
-            is CameraSource -> New.Camera(internalInputSource.webcamName, internalInputSource.size)
+            is CameraSource -> TODO() // New.Camera(internalInputSource.webcamName, internalInputSource.size)
             is ImageSource -> New.Image(internalInputSource.imgPath, internalInputSource.size)
             is VideoSource -> New.Video(internalInputSource.videoPath, internalInputSource.size)
             is HttpSource -> New.Http(internalInputSource.url)
@@ -69,7 +69,7 @@ class InputSourceManagerApiImpl(owner: EOCVSimPlugin, val internalInputSourceMan
 
     override fun addInputSource(name: String, aNew: InputSourceApi.New) = apiImpl {
         val source = when(aNew) {
-            is InputSourceApi.New.Camera -> CameraSource(aNew.cameraName, aNew.size)
+            is InputSourceApi.New.Camera -> TODO() // CameraSource(aNew.cameraName, aNew.size)
             is InputSourceApi.New.Image -> ImageSource(aNew.filePath, aNew.size)
             is InputSourceApi.New.Video -> VideoSource(aNew.filePath, aNew.size)
             is InputSourceApi.New.Http -> HttpSource(aNew.url)

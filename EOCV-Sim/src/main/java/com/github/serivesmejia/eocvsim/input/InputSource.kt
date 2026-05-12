@@ -23,17 +23,24 @@
 
 package com.github.serivesmejia.eocvsim.input
 
-import com.google.gson.annotations.Expose
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.koin.core.component.KoinComponent
 import org.opencv.core.Mat
 import org.opencv.core.Size
 import javax.swing.filechooser.FileFilter
 
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE,
+    creatorVisibility = JsonAutoDetect.Visibility.NONE
+)
 abstract class InputSource : Comparable<InputSource>, KoinComponent {
 
-    // Computed property (no backing field) to avoid adding serializable fields that
-    // cause duplicate JSON field errors with Gson when subclasses also declare
-    // a backing field. Subclasses should override with a getter as well.
+    // Computed property (no backing field) so Jackson field-based persistence only
+    // stores the actual source state and does not capture derived values.
     open val hasSlowInitialization: Boolean get() = false
 
     @Transient var isDefault = false
@@ -50,7 +57,7 @@ abstract class InputSource : Comparable<InputSource>, KoinComponent {
             beforeIsPaused = value
         }
 
-    @Expose
+    @JsonProperty
     @JvmField
     var createdOn = -1L
 

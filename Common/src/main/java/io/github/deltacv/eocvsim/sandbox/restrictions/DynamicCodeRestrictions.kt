@@ -151,7 +151,6 @@ val dynamicCodePackageWhitelist = setOf(
     // Third-party libs explicitly allowed
     "com.moandjiezana.toml",
     "net.lingala.zip4j",
-    "com.google.gson",
     "com.google.jimfs",
     "org.slf4j",
     "com.apache.logging",

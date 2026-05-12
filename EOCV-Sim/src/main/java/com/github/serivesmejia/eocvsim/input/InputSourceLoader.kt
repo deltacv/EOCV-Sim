@@ -23,11 +23,11 @@
 
 package com.github.serivesmejia.eocvsim.input
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.github.serivesmejia.eocvsim.input.source.*
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.annotations.Expose
+import com.github.serivesmejia.eocvsim.util.serialization.JacksonJsonSupport
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -36,12 +36,6 @@ class InputSourceLoader {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     companion object {
-        @JvmStatic
-        val gson: Gson = GsonBuilder()
-            .registerTypeAdapter(CameraSource::class.java, CameraSourceAdapter())
-            .setPrettyPrinting()
-            .create()
-
         const val SOURCES_SAVEFILE_NAME = "eocvsim_sources.json"
 
         @JvmStatic
@@ -89,7 +83,7 @@ class InputSourceLoader {
     }
 
     fun saveInputSourcesToFile(file: File, sourcesContainer: InputSourcesContainer) {
-        val jsonInputSources = gson.toJson(sourcesContainer)
+        val jsonInputSources = JacksonJsonSupport.persistenceMapper.writeValueAsString(sourcesContainer)
         SysUtil.saveFileStr(file, jsonInputSources)
     }
 
@@ -110,7 +104,7 @@ class InputSourceLoader {
 
         val sources: InputSourcesContainer
         try {
-            sources = gson.fromJson(jsonSources, InputSourcesContainer::class.java)
+            sources = JacksonJsonSupport.persistenceMapper.readValue(jsonSources, InputSourcesContainer::class.java)
         } catch (ex: Exception) {
             logger.error("Error while parsing sources file, it will be replaced and fixed later on, but the user created sources will be deleted.", ex)
             return
@@ -126,17 +120,23 @@ class InputSourceLoader {
         loadedInputSources = sources.allSources
     }
 
+    @JsonAutoDetect(
+        fieldVisibility = JsonAutoDetect.Visibility.NONE,
+        getterVisibility = JsonAutoDetect.Visibility.NONE,
+        isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+        setterVisibility = JsonAutoDetect.Visibility.NONE,
+        creatorVisibility = JsonAutoDetect.Visibility.NONE
+    )
     class InputSourcesContainer {
 
         @Transient var allSources = HashMap<String, InputSource>()
 
-        var imageSources = HashMap<String, ImageSource>()
-        var cameraSources = HashMap<String, CameraSource>()
-        var videoSources = HashMap<String, VideoSource>()
-        var httpSources = HashMap<String, HttpSource>()
+        @JsonProperty var imageSources = HashMap<String, ImageSource>()
+        @JsonProperty var cameraSources = HashMap<String, CameraSource>()
+        @JsonProperty var videoSources = HashMap<String, VideoSource>()
+        @JsonProperty var httpSources = HashMap<String, HttpSource>()
 
-        @Expose
-        var sourcesFileVersion: SourcesFileVersion? = null
+        @JsonProperty var sourcesFileVersion: SourcesFileVersion? = null
 
         enum class SourcesFileVersion { DOS, SEIS, SIETE }
 

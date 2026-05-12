@@ -113,7 +113,7 @@ dependencies {
 
     implementation "info.picocli:picocli:$picocli_version"
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
-    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2'
     implementation "io.github.classgraph:classgraph:$classgraph_version"
 
     implementation "com.formdev:flatlaf:$flatlaf_version"

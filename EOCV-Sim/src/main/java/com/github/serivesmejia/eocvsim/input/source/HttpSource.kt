@@ -23,10 +23,11 @@
 
 package com.github.serivesmejia.eocvsim.input.source
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.input.InputSourceInitializer
 
-import com.google.gson.annotations.Expose
 import io.github.deltacv.visionloop.io.MjpegHttpReader
 import org.opencv.core.Mat
 import org.opencv.core.MatOfByte
@@ -35,8 +36,15 @@ import org.opencv.imgproc.Imgproc
 import org.slf4j.LoggerFactory
 import javax.swing.filechooser.FileFilter
 
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE,
+    creatorVisibility = JsonAutoDetect.Visibility.NONE
+)
 class HttpSource @JvmOverloads constructor(
-    @Expose @JvmField var url: String = ""
+    @JsonProperty @JvmField var url: String = ""
 ) : InputSource() {
 
     override val hasSlowInitialization: Boolean get() = true

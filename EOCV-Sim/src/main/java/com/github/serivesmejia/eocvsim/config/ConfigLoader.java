@@ -24,8 +24,7 @@
 package com.github.serivesmejia.eocvsim.config;
 
 import com.github.serivesmejia.eocvsim.util.SysUtil;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.github.serivesmejia.eocvsim.util.serialization.JacksonJsonSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +40,6 @@ public class ConfigLoader {
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
     public Config loadFromFile(File file) throws FileNotFoundException {
         if (!file.exists()) throw new FileNotFoundException();
 
@@ -50,9 +47,9 @@ public class ConfigLoader {
         if (jsonConfig.trim().equals("")) return null;
 
         try {
-            return gson.fromJson(jsonConfig, Config.class);
+            return JacksonJsonSupport.persistenceMapper.readValue(jsonConfig, Config.class);
         } catch (Exception ex) {
-            logger.info("Gson exception while parsing config file", ex);
+            logger.info("Jackson exception while parsing config file", ex);
             return null;
         }
     }
@@ -63,7 +60,15 @@ public class ConfigLoader {
     }
 
     public void saveToFile(File file, Config conf) {
-        String jsonConfig = gson.toJson(conf);
+        String jsonConfig;
+
+        try {
+            jsonConfig = JacksonJsonSupport.persistenceMapper.writeValueAsString(conf);
+        } catch (Exception ex) {
+            logger.error("Failed to serialize config file", ex);
+            return;
+        }
+
         SysUtil.saveFileStr(file, jsonConfig);
     }
 

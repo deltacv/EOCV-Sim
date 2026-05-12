@@ -40,9 +40,9 @@ data class Authority(
     val publicKey: PublicKey
 )
 
-data class MutableAuthority(
-    var name: String,
-    var publicKey: ByteArray
+class MutableAuthority(
+    var name: String = "",
+    var publicKey: ByteArray = byteArrayOf()
 )
 
 fun Authority.toMutable() = MutableAuthority(name, publicKey.encoded)

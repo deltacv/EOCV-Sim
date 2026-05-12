@@ -1,25 +1,3 @@
-/*
- * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
-
 package com.github.serivesmejia.eocvsim.gui.dialog.source
 
 import com.github.serivesmejia.eocvsim.gui.Visualizer
@@ -29,9 +7,9 @@ import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import org.opencv.core.Size
 import org.wpilib.vision.camera.UsbCamera
 import org.wpilib.vision.camera.UsbCameraInfo
+import org.wpilib.vision.camera.VideoMode
 import java.awt.*
 import javax.swing.*
 
@@ -41,33 +19,18 @@ class CreateCameraSource : KoinComponent {
     private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
     private val visualizer: Visualizer by inject()
 
-    companion object {
-        const val VISIBLE_CHARACTERS_COMBO_BOX = 22
-
-        // common resolutions to offer since cscore doesn't enumerate supported modes
-        // until the camera is opened
-        private val commonResolutions = listOf(
-            Size(640.0, 480.0),
-            Size(1280.0, 720.0),
-            Size(1920.0, 1080.0),
-            Size(320.0, 240.0),
-            Size(160.0, 120.0)
-        )
-    }
-
-    val createCameraSource = JDialog(visualizer.frame)
-
     private val camerasComboBox = JComboBox<String>()
-    private val dimensionsComboBox = JComboBox<String>()
+    private val modesComboBox = JComboBox<VideoMode>()
     private val nameTextField = JTextField(15)
     private val createButton = JButton("Create")
 
-    private var cameraInfos = emptyArray<UsbCameraInfo>()
+    private val dialog = JDialog(visualizer.frame)
 
-    private var state = State.INITIAL
-    private enum class State { INITIAL, NO_WEBCAMS }
+    private var cameraInfos: Array<UsbCameraInfo> = emptyArray()
+    private var modes: Array<VideoMode> = emptyArray()
 
     init {
+
         cameraInfos = try {
             UsbCamera.enumerateUsbCameras()
         } catch (t: Throwable) {
@@ -75,138 +38,130 @@ class CreateCameraSource : KoinComponent {
             emptyArray()
         }
 
-        createCameraSource.apply {
+        dialog.apply {
             isModal = true
-            title = "Create camera source"
+            title = "Create Camera Source"
         }
 
-        val contentsPanel = JPanel(GridBagLayout())
+        val root = JPanel(GridBagLayout())
         val gbc = GridBagConstraints().apply {
             fill = GridBagConstraints.HORIZONTAL
-            insets = Insets(7, 0, 0, 7)
+            insets = Insets(5, 5, 5, 5)
         }
 
         if (cameraInfos.isEmpty()) {
-            camerasComboBox.addItem("No Cameras Detected")
-            state = State.NO_WEBCAMS
+            camerasComboBox.addItem("No Cameras Found")
         } else {
-            cameraInfos.forEach { info ->
-                val name = info.name.let {
-                    if (it.length > VISIBLE_CHARACTERS_COMBO_BOX) it.take(VISIBLE_CHARACTERS_COMBO_BOX) + "..."
-                    else it
-                }
-                camerasComboBox.addItem(name)
+            cameraInfos.forEach {
+                camerasComboBox.addItem(it.name)
             }
-
-            commonResolutions.forEach { res ->
-                dimensionsComboBox.addItem("${res.width.toInt()}x${res.height.toInt()}")
-            }
-
-            SwingUtilities.invokeLater { camerasComboBox.selectedIndex = 0 }
+            camerasComboBox.selectedIndex = 0
+            loadModes(0)
         }
 
-        val fieldsPanel = JPanel(GridBagLayout()).apply {
-            gbc.gridx = 0; gbc.gridy = 0
-            add(JLabel("Available cameras: ", JLabel.RIGHT), gbc)
-            gbc.gridx = 1
-            add(camerasComboBox, gbc)
+        camerasComboBox.addActionListener {
+            loadModes(camerasComboBox.selectedIndex)
+        }
 
-            gbc.gridx = 0; gbc.gridy = 1
-            add(JLabel("Source name: ", JLabel.RIGHT), gbc)
-            gbc.gridx = 1
-            nameTextField.text = "CameraSource-${inputSourceManager.sources.size + 1}"
-            add(nameTextField, gbc)
+        modesComboBox.renderer = object : DefaultListCellRenderer() {
+            override fun getListCellRendererComponent(
+                list: JList<*>,
+                value: Any?,
+                index: Int,
+                isSelected: Boolean,
+                cellHasFocus: Boolean
+            ): Component {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
 
-            gbc.gridx = 0; gbc.gridy = 2
-            add(JLabel("Resolution: ", JLabel.RIGHT), gbc)
-            gbc.gridx = 1
-            add(dimensionsComboBox, gbc)
+                val mode = value as? VideoMode
+
+                text = if (mode != null) {
+                    "${mode.width}x${mode.height} @ ${mode.fps}fps (${mode.pixelFormat})"
+                } else {
+                    "Unknown"
+                }
+
+                return this
+            }
         }
 
         gbc.gridx = 0; gbc.gridy = 0
-        contentsPanel.add(fieldsPanel, gbc)
+        root.add(JLabel("Camera:"), gbc)
+        gbc.gridx = 1
+        root.add(camerasComboBox, gbc)
 
-        val bottomPanel = JPanel(GridBagLayout())
-        val gbcBtts = GridBagConstraints().apply { insets = Insets(0, 0, 0, 10) }
-        bottomPanel.add(createButton, gbcBtts)
-        gbcBtts.gridx = 1; gbcBtts.insets = Insets(0, 0, 0, 0)
-        val cancelButton = JButton("Cancel")
-        bottomPanel.add(cancelButton, gbcBtts)
-
-        gbc.insets = Insets(10, 0, 0, 0)
         gbc.gridx = 0; gbc.gridy = 1
-        contentsPanel.add(bottomPanel, gbc)
+        root.add(JLabel("Mode:"), gbc)
+        gbc.gridx = 1
+        root.add(modesComboBox, gbc)
 
-        contentsPanel.border = BorderFactory.createEmptyBorder(8, 15, 15, 0)
-        createCameraSource.contentPane.add(contentsPanel, BorderLayout.CENTER)
+        gbc.gridx = 0; gbc.gridy = 2
+        root.add(JLabel("Name:"), gbc)
+        gbc.gridx = 1
+        nameTextField.text = "CameraSource-${inputSourceManager.sources.size + 1}"
+        root.add(nameTextField, gbc)
 
-        createButton.addActionListener { onCreateButton() }
-        camerasComboBox.addActionListener { onCameraSelectionChanged() }
-        nameTextField.document.addDocumentListener(SimpleDocumentListener { updateCreateButton() })
-        cancelButton.addActionListener { close() }
+        val buttons = JPanel()
+        buttons.add(createButton)
+        val cancel = JButton("Cancel")
+        buttons.add(cancel)
 
-        updateState()
+        gbc.gridx = 0; gbc.gridy = 3
+        gbc.gridwidth = 2
+        root.add(buttons, gbc)
 
-        createCameraSource.apply {
-            pack()
-            isResizable = false
-            isAlwaysOnTop = true
-            setLocationRelativeTo(null)
-            isVisible = true
+        createButton.addActionListener { create() }
+        cancel.addActionListener { close() }
+
+        dialog.contentPane.add(root)
+        dialog.pack()
+        dialog.setLocationRelativeTo(null)
+        dialog.isVisible = true
+    }
+
+    private fun loadModes(index: Int) {
+        val info = cameraInfos.getOrNull(index) ?: return
+
+        try {
+            val cam = UsbCamera(info.name, info.dev)
+
+            modes = cam.enumerateVideoModes()
+
+            cam.close()
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            modes = emptyArray()
+        }
+
+        modesComboBox.removeAllItems()
+
+        for (m in modes) {
+            modesComboBox.addItem(m)
+        }
+
+        if (modes.isNotEmpty()) {
+            modesComboBox.selectedIndex = 0
         }
     }
 
-    private fun onCreateButton() {
-        val index = camerasComboBox.selectedIndex
-        val info = cameraInfos.getOrNull(index) ?: return
-        val size = commonResolutions.getOrNull(dimensionsComboBox.selectedIndex) ?: Size(640.0, 480.0)
+    private fun create() {
+        val camIndex = camerasComboBox.selectedIndex
+        val info = cameraInfos.getOrNull(camIndex) ?: return
+
+        val mode = modes.getOrNull(modesComboBox.selectedIndex) ?: return
 
         onMainUpdate.once {
             inputSourceManager.addInputSource(
                 nameTextField.text,
-                CameraSource(info.name, size),
+                CameraSource(info.name, mode),
                 true
             )
         }
+
         close()
     }
 
-    private fun onCameraSelectionChanged() {
-        val info = cameraInfos.getOrNull(camerasComboBox.selectedIndex) ?: return
-        nameTextField.text = inputSourceManager.tryName(info.name)
-        updateCreateButton()
-    }
-
-    private fun updateState() {
-        when (state) {
-            State.INITIAL -> setInteractables(true)
-            State.NO_WEBCAMS -> {
-                nameTextField.text = ""
-                setInteractables(false)
-            }
-        }
-    }
-
-    private fun setInteractables(enabled: Boolean) {
-        createButton.isEnabled = enabled
-        nameTextField.isEnabled = enabled
-        camerasComboBox.isEnabled = enabled
-        dimensionsComboBox.isEnabled = enabled
-    }
-
     private fun close() {
-        createCameraSource.isVisible = false
-        createCameraSource.dispose()
-    }
-
-    private fun updateCreateButton() {
-        createButton.isEnabled = nameTextField.text.trim().isNotEmpty() &&
-                !inputSourceManager.isNameInUse(nameTextField.text)
-    }
-
-    private class SimpleDocumentListener(val onChange: () -> Unit) : javax.swing.event.DocumentListener {
-        override fun insertUpdate(e: javax.swing.event.DocumentEvent) = onChange()
-        override fun removeUpdate(e: javax.swing.event.DocumentEvent) = onChange()
-        override fun changedUpdate(e: javax.swing.event.DocumentEvent) = onChange()
+        dialog.dispose()
     }
 }

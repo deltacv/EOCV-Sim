@@ -24,6 +24,7 @@
 package io.github.deltacv.eocvsim.plugin.security.superaccess
 
 import com.github.serivesmejia.eocvsim.util.JavaProcess
+import com.github.serivesmejia.eocvsim.util.serialization.JacksonJsonSupport
 import io.github.deltacv.common.util.loggerForThis
 import org.java_websocket.WebSocket
 import org.java_websocket.handshake.ClientHandshake
@@ -77,7 +78,7 @@ class SuperAccessDaemonClient(
             return
         }
 
-        server.broadcast(SuperAccessDaemon.gson.toJson(request))
+        server.broadcast(JacksonJsonSupport.ipcMapper.writeValueAsString(request))
 
         server.addResponseReceiver(request.id) { response ->
             val result = when (response) {
@@ -114,7 +115,7 @@ class SuperAccessDaemonClient(
         val condition = lock.newCondition()
 
         val check = SuperAccessDaemon.SuperAccessMessage.Check(file.absolutePath)
-        server.broadcast(SuperAccessDaemon.gson.toJson(check))
+        server.broadcast(JacksonJsonSupport.ipcMapper.writeValueAsString(check))
 
         var hasAccess = false
 
@@ -197,7 +198,7 @@ class SuperAccessDaemonClient(
         }
 
         override fun onMessage(ws: WebSocket, msg: String) {
-            val response = SuperAccessDaemon.gson.fromJson(msg, SuperAccessDaemon.SuperAccessResponse::class.java)
+            val response = JacksonJsonSupport.ipcMapper.readValue(msg, SuperAccessDaemon.SuperAccessResponse::class.java)
 
             synchronized(responseReceiverLock) {
                 for ((condition, receiver) in responseReceiver.toMap()) {

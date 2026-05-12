@@ -25,9 +25,9 @@ package io.github.deltacv.eocvsim.plugin.security.superaccess
 
 import com.github.serivesmejia.eocvsim.util.extension.fileHash
 import com.github.serivesmejia.eocvsim.util.extension.plus
+import com.github.serivesmejia.eocvsim.util.serialization.JacksonJsonSupport
 import io.github.deltacv.common.util.loggerForThis
-import com.github.serivesmejia.eocvsim.util.serialization.PolymorphicAdapter
-import com.google.gson.GsonBuilder
+import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.moandjiezana.toml.Toml
 import io.github.deltacv.eocvsim.gui.dialog.SuperAccessRequest
 import io.github.deltacv.eocvsim.plugin.loader.PluginInfo
@@ -51,15 +51,13 @@ import kotlin.system.exitProcess
 object SuperAccessDaemon {
     val logger by loggerForThis()
 
-    val gson = GsonBuilder()
-        .registerTypeHierarchyAdapter(SuperAccessMessage::class.java, PolymorphicAdapter<SuperAccessMessage>("message"))
-        .registerTypeHierarchyAdapter(SuperAccessResponse::class.java, PolymorphicAdapter<SuperAccessResponse>("response"))
-        .create()
+    val mapper = JacksonJsonSupport.ipcMapper
 
     @get:Synchronized
     @set:Synchronized
     private var uniqueId = 0
 
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
     sealed class SuperAccessMessage {
         data class Request(var pluginPath: String, var signature: MutablePluginSignature, var reason: String) : SuperAccessMessage()
         data class Check(var pluginPath: String) : SuperAccessMessage()
@@ -67,6 +65,7 @@ object SuperAccessDaemon {
         var id = uniqueId++
     }
 
+    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
     sealed class SuperAccessResponse(val id: Int) {
         class Success(id: Int) : SuperAccessResponse(id)
         class Failure(id: Int) : SuperAccessResponse(id)
@@ -105,7 +104,7 @@ object SuperAccessDaemon {
         }
 
         override fun onMessage(msg: String) {
-            val message = gson.fromJson(msg, SuperAccessMessage::class.java)
+            val message = mapper.readValue(msg, SuperAccessMessage::class.java)
 
             executor.submit {
                 when (message) {
@@ -125,7 +124,7 @@ object SuperAccessDaemon {
 
             val parser = parsePlugin(pluginFile) ?: run {
                 logger.error("Failed to parse plugin at ${message.pluginPath}")
-                (gson.toJson(SuperAccessResponse.Failure(message.id)))
+                send(mapper.writeValueAsString(SuperAccessResponse.Failure(message.id)))
                 return@handleRequest
             }
 
@@ -225,12 +224,12 @@ object SuperAccessDaemon {
 
         private fun accessGranted(id: Int, pluginPath: String) {
             access[pluginPath] = true
-            send(gson.toJson(SuperAccessResponse.Success(id)))
+            send(mapper.writeValueAsString(SuperAccessResponse.Success(id)))
         }
 
         private fun accessDenied(id: Int, pluginPath: String) {
             access[pluginPath] = false
-            send(gson.toJson(SuperAccessResponse.Failure(id)))
+            send(mapper.writeValueAsString(SuperAccessResponse.Failure(id)))
         }
 
         override fun onClose(p0: Int, p1: String?, p2: Boolean) {

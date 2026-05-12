@@ -11,10 +11,10 @@ import io.github.deltacv.vision.internal.opmode.OpModeState
 import io.github.deltacv.vision.internal.opmode.RedirectToOpModeThrowableHandler
 import org.opencv.core.Mat
 import org.opencv.core.Size
-import org.opencv.videoio.VideoCapture
 import org.openftc.easyopencv.OpenCvViewport
+import org.wpilib.vision.camera.UsbCamera
+import org.wpilib.vision.camera.VideoMode
 import java.io.File
-import java.io.IOException
 import javax.imageio.ImageIO
 
 class VisionInputSourceProvider(
@@ -25,40 +25,67 @@ class VisionInputSourceProvider(
 
     private fun isImage(path: String) = try {
         ImageIO.read(File(path)) != null
-    } catch(ex: IOException) { false }
+    } catch (_: Exception) {
+        false
+    }
 
     private fun isVideo(path: String): Boolean {
-        val capture = VideoCapture(path)
+        val capture = org.opencv.videoio.VideoCapture(path)
         val mat = Mat()
 
         capture.read(mat)
-
-        val isVideo = !mat.empty()
+        val ok = !mat.empty()
 
         capture.release()
+        return ok
+    }
 
-        return isVideo
+    private fun defaultMode(index: Int): VideoMode {
+        val cam = UsbCamera("$index", index)
+
+        val mode = try {
+            cam.videoMode
+        } catch (_: Exception) {
+            // fallback safe mode if enumeration fails
+            VideoMode(0, 640, 480, 30)
+        }
+
+        cam.close()
+        return mode
     }
 
     override fun get(name: String): VisionSource {
-        val source = VisionInputSource(if(File(name).exists()) {
-            if(isImage(name)) {
-                ImageSource(name, Size())
-            } else if(isVideo(name)) {
-                VideoSource(name, Size())
-            } else throw IllegalArgumentException("File $name is neither an image nor a video")
-        } else {
-            val index = name.toIntOrNull()
-                    ?: if(name == "default" || name == "Webcam 1") 0
-                    else null
 
-            if(index == null) {
-                inputSourceManager.sources[name] ?: throw IllegalArgumentException("Input source $name not found")
-            } else CameraSource(index, Size(640.0, 480.0))
-        }, RedirectToOpModeThrowableHandler(notifier))
+        val source = VisionInputSource(
+            when {
+                File(name).exists() -> {
+                    when {
+                        isImage(name) -> ImageSource(name, Size())
+                        isVideo(name) -> VideoSource(name, Size())
+                        else -> throw IllegalArgumentException(
+                            "File $name is neither image nor video"
+                        )
+                    }
+                }
+
+                else -> {
+                    val index = name.toIntOrNull()
+                        ?: if (name == "default" || name == "Webcam 1") 0 else null
+
+                    if (index == null) {
+                        inputSourceManager.sources[name]
+                            ?: throw IllegalArgumentException("Input source $name not found")
+                    } else {
+                        // 🔥 FIX: use real VideoMode instead of Size hack
+                        CameraSource(index, defaultMode(index))
+                    }
+                }
+            },
+            RedirectToOpModeThrowableHandler(notifier)
+        )
 
         notifier.onStateChange {
-            when(notifier.state) {
+            when (notifier.state) {
                 OpModeState.STOPPED -> {
                     source.stop()
                     removeListener()
@@ -71,5 +98,4 @@ class VisionInputSourceProvider(
     }
 
     override fun viewport() = viewport
-
 }
