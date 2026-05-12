@@ -1,10 +1,8 @@
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
-
-import org.gradle.plugins.signing.Sign
 
 tasks.withType(Sign).configureEach {
     // Disable signing unless explicitly enabled AND not publishing to Maven Local

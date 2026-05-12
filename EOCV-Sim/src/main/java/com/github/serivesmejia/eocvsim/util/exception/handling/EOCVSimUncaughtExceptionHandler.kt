@@ -33,9 +33,9 @@ class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExc
 
         logger.error("Uncaught exception thrown in \"${t.name}\" thread", e)
 
-        //Exit if uncaught exception happened in the main thread
-        //since we would be basically in a deadlock state if that happened
-        //or if we have a lotta uncaught exceptions.
+        // Exit if uncaught exception happened in the main thread
+        // since we would be basically in a deadlock state if that happened
+        // or if we have a lotta uncaught exceptions.
         if(t == currentMainThread || SwingUtilities.isEventDispatchThread() || e !is Exception || uncaughtExceptionsCount > MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH) {
             val file = CrashReport(e).saveCrashReport()
 

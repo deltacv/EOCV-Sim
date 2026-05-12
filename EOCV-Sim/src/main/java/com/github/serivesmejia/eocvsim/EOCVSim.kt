@@ -33,12 +33,12 @@ import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.JavaProcess
+import com.github.serivesmejia.eocvsim.util.LibraryLoader
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrator
-import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
+import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrator
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
 import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
@@ -50,11 +50,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
-import nu.pattern.OpenCV
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import org.opencv.core.Mat
 import org.opencv.core.Size
 import org.openftc.easyopencv.TimestampedPipelineHandler
 import java.io.File
@@ -87,48 +85,6 @@ class EOCVSim : KoinComponent {
 
         init {
             EOCVSimFolder.mkdir() // mkdir needed folders
-        }
-
-        private var isNativeLibLoaded = false
-
-        /**
-         * Load the OpenCV native library
-         * @param alternativeNative the alternative native library file to load instead of the packaged one
-         */
-        fun loadOpenCvLib(alternativeNative: File? = null) {
-            if (isNativeLibLoaded) return
-
-            if (alternativeNative != null) {
-                logger.info("Loading native lib from ${alternativeNative.absolutePath}...")
-
-                try {
-                    System.load(alternativeNative.absolutePath)
-
-                    Mat().release() //test if OpenCV is loaded correctly
-
-                    isNativeLibLoaded = true
-                    logger.info("Successfully loaded the OpenCV native lib from specified path")
-
-                    return
-                } catch (ex: Throwable) {
-                    logger.error("Failure loading the OpenCV native lib from specified path", ex)
-                    logger.info("Retrying with loadLocally...")
-                }
-            }
-
-            try {
-                OpenCV.loadLocally()
-                logger.info("Successfully loaded the OpenCV native lib")
-            } catch (ex: Throwable) {
-                logger.error("Failure loading the OpenCV native lib", ex)
-                logger.error("The sim will exit now as it's impossible to continue without OpenCV")
-
-                CrashReport(ex).saveCrashReport()
-
-                exitProcess(-1)
-            }
-
-            isNativeLibLoaded = true
         }
     }
 
@@ -244,7 +200,12 @@ class EOCVSim : KoinComponent {
         EOCVSimUncaughtExceptionHandler.register()
 
         //loading native lib only once in the app runtime
-        loadOpenCvLib(parameters.opencvNativeLibrary)
+        val loadLibrariesResult = LibraryLoader.loadLibraries()
+        if(!loadLibrariesResult.success) {
+            logger.error("Exception in loadLibraries():", loadLibrariesResult.error)
+            logger.error("The sim will exit now as it's impossible to continue without the required libraries")
+            exitProcess(-1)
+        }
 
         orchestrator.changePhase(Orchestrator.Phase.INIT)
         orchestrator.orchestrate()

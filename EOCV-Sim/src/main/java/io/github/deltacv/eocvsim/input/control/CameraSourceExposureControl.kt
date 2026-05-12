@@ -1,41 +1,94 @@
 package io.github.deltacv.eocvsim.input.control
 
 import com.github.serivesmejia.eocvsim.input.source.CameraSource
-import io.github.deltacv.steve.WebcamProperty
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl
 import org.firstinspires.ftc.robotcore.internal.collections.MutableReference
+import org.wpilib.vision.camera.VideoProperty
 import java.util.concurrent.TimeUnit
 
 class CameraSourceExposureControl(
-    cameraSource: CameraSource
+    private val cameraSource: CameraSource
 ) : ExposureControl {
 
-    val control = cameraSource.getWebcamPropertyControl()!!
+    private val camera
+        get() = cameraSource.camera ?: error("Camera not initialized")
 
-    override fun getMode() = if(control.getPropertyAuto(WebcamProperty.EXPOSURE)) {
-        ExposureControl.Mode.Auto
-    } else ExposureControl.Mode.Manual
+    /**
+     * CSCore exposure property.
+     *
+     * Usually:
+     * - exposure_absolute (Windows / DirectShow)
+     * - exposure (Linux / V4L)
+     *
+     * Try absolute first.
+     */
+    private val exposureProperty: VideoProperty
+        get() {
+            val abs = camera.getProperty("exposure_absolute")
 
-    override fun setMode(mode: ExposureControl.Mode): Boolean {
-        control.setPropertyAuto(WebcamProperty.EXPOSURE, mode == ExposureControl.Mode.Auto)
-        return control.getPropertyAuto(WebcamProperty.EXPOSURE)
+            return if (abs.kind != VideoProperty.Kind.kNone) {
+                abs
+            } else {
+                camera.getProperty("exposure")
+            }
+        }
+
+    override fun getMode(): ExposureControl.Mode {
+        val prop = camera.getProperty("exposure_auto")
+
+        if (prop.kind == VideoProperty.Kind.kNone) {
+            return ExposureControl.Mode.Unknown
+        }
+
+        return if (prop.get() != 0) {
+            ExposureControl.Mode.Auto
+        } else {
+            ExposureControl.Mode.Manual
+        }
     }
 
-    override fun isModeSupported(mode: ExposureControl.Mode) =
-        mode == ExposureControl.Mode.Auto || mode == ExposureControl.Mode.Manual
+    override fun setMode(mode: ExposureControl.Mode): Boolean {
+        when (mode) {
+            ExposureControl.Mode.Auto -> {
+                camera.setExposureAuto()
+            }
+
+            ExposureControl.Mode.Manual -> {
+                // Keep current exposure value when switching to manual
+                val current = exposureProperty.get()
+                camera.setExposureManual(current)
+            }
+
+            else -> return false
+        }
+
+        return getMode() == mode
+    }
+
+    override fun isModeSupported(mode: ExposureControl.Mode): Boolean {
+        return mode == ExposureControl.Mode.Auto ||
+                mode == ExposureControl.Mode.Manual
+    }
 
     override fun getMinExposure(resultUnit: TimeUnit): Long {
-        val bounds = control.getPropertyBounds(WebcamProperty.EXPOSURE)
-        return TimeUnit.SECONDS.convert(bounds.min.toLong(), resultUnit)
+        return convertExposure(
+            exposureProperty.min.toLong(),
+            resultUnit
+        )
     }
 
     override fun getMaxExposure(resultUnit: TimeUnit): Long {
-        val bounds = control.getPropertyBounds(WebcamProperty.EXPOSURE)
-        return TimeUnit.SECONDS.convert(bounds.max.toLong(), resultUnit)
+        return convertExposure(
+            exposureProperty.max.toLong(),
+            resultUnit
+        )
     }
 
     override fun getExposure(resultUnit: TimeUnit): Long {
-        return TimeUnit.SECONDS.convert(control.getProperty(WebcamProperty.EXPOSURE).toLong(), resultUnit)
+        return convertExposure(
+            exposureProperty.get().toLong(),
+            resultUnit
+        )
     }
 
     @Deprecated("")
@@ -44,23 +97,58 @@ class CameraSourceExposureControl(
         refreshed: MutableReference<Boolean>,
         permittedStaleness: Long,
         permittedStalenessUnit: TimeUnit
-    ) = getExposure(resultUnit)
-
-    override fun setExposure(duration: Long, durationUnit: TimeUnit): Boolean {
-        val seconds = TimeUnit.SECONDS.convert(duration, durationUnit).toInt()
-
-        control.setProperty(WebcamProperty.EXPOSURE, seconds)
-        return control.getProperty(WebcamProperty.EXPOSURE) == seconds
+    ): Long {
+        refreshed.value = true
+        return getExposure(resultUnit)
     }
 
-    override fun isExposureSupported() = control.isPropertySupported(WebcamProperty.EXPOSURE)
+    override fun setExposure(
+        duration: Long,
+        durationUnit: TimeUnit
+    ): Boolean {
+
+        val value = convertFromTimeUnit(duration, durationUnit)
+
+        camera.setExposureManual(value.toInt())
+
+        return exposureProperty.get() == value.toInt()
+    }
+
+    override fun isExposureSupported(): Boolean {
+        return exposureProperty.kind != VideoProperty.Kind.kNone
+    }
 
     override fun getAePriority(): Boolean {
-        throw UnsupportedOperationException("AE priority is not supported by EOCV-Sim")
+        throw UnsupportedOperationException(
+            "AE priority is not supported by CSCore"
+        )
     }
 
     override fun setAePriority(priority: Boolean): Boolean {
-        throw UnsupportedOperationException("AE priority is not supported by EOCV-Sim")
+        throw UnsupportedOperationException(
+            "AE priority is not supported by CSCore"
+        )
     }
 
+    /**
+     * CSCore exposure values are typically milliseconds-ish integers,
+     * not true nanosecond durations.
+     *
+     * FTC ExposureControl expects time units.
+     *
+     * You may need platform-specific scaling here.
+     */
+    private fun convertExposure(
+        value: Long,
+        resultUnit: TimeUnit
+    ): Long {
+        return resultUnit.convert(value, TimeUnit.MILLISECONDS)
+    }
+
+    private fun convertFromTimeUnit(
+        duration: Long,
+        unit: TimeUnit
+    ): Long {
+        return TimeUnit.MILLISECONDS.convert(duration, unit)
+    }
 }

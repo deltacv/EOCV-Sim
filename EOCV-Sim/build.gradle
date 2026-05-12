@@ -6,10 +6,9 @@ import java.time.format.DateTimeFormatter
 plugins {
     id 'org.jetbrains.kotlin.jvm'
     id 'com.gradleup.shadow'
-
+    id 'org.photonvision.tools.WpilibTools'
     id 'signing'
     id "com.vanniktech.maven.publish" version "0.30.0"
-
     id 'io.github.fvarrui.javapackager.plugin'
 }
 
@@ -27,14 +26,6 @@ sourceSets {
     }
 }
 
-components.java {
-    tasks.named("shadowJar").configure {
-        // only run shadowJar when explicitly specified by the user
-        // check if user invoked gradle with :shadowJar
-        enabled = project.gradle.startParameter.taskNames.contains("shadowJar")
-    }
-}
-
 shadowJar {
     mergeServiceFiles()
 }
@@ -47,9 +38,7 @@ apply from: '../test-logging.gradle'
 
 tasks.register('pack', PackageTask) {
     dependsOn build
-    // mandatory
     mainClass = 'com.github.serivesmejia.eocvsim.Main'
-    // optional
     bundleJre = true
     customizedJre = false
     generateInstaller = true
@@ -57,7 +46,6 @@ tasks.register('pack', PackageTask) {
 
     winConfig {
         icoFile = file('src/main/resources/images/icon/ico_eocvsim.ico')
-
         generateMsi = false
         disableDirPage = false
         disableProgramGroupPage = false
@@ -69,38 +57,62 @@ tasks.register('pack', PackageTask) {
     }
 }
 
-
 tasks.processResources {
     from({
         project(":PaperVisionShadow").tasks.shadowJar
     }) {
-        rename { "PaperVisionPlugin.jar" } // name inside resources
-        into("embedded_plugins") // folder inside resources
+        rename { "PaperVisionPlugin.jar" }
+        into("embedded_plugins")
     }
 }
+
+
+wpilibTools.deps.wpilibVersion = wpilibVersion
+
+def nativeConfigName = 'wpilibNatives'
+def nativeConfig = configurations.create(nativeConfigName)
+
+def nativeTasks = wpilibTools.createExtractionTasks {
+    configurationName = nativeConfigName
+}
+
+nativeTasks.addToSourceSetResources(sourceSets.main)
+
+nativeConfig.dependencies.add wpilibTools.deps.wpilib("wpiutil")
+nativeConfig.dependencies.add wpilibTools.deps.wpilib("cscore")
+nativeConfig.dependencies.add wpilibTools.deps.wpilibOpenCv(opencvVersion)
 
 dependencies {
     api project(':Common')
     api project(':Vision')
 
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.3.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 
     implementation(platform("io.insert-koin:koin-bom:$koin_version"))
     implementation("io.insert-koin:koin-core")
 
     implementation "org.eclipse.jdt:ecj:3.21.0"
 
-    api "org.openpnp:opencv:$opencv_version"
+    // WPILib OpenCV replaces openpnp
+    api wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
+    wpilibNatives wpilibTools.deps.wpilibOpenCv(opencvVersion)
+
+    // use cscore for webcams
+    implementation wpilibTools.deps.wpilibJava("cscore")
+    wpilibNatives wpilibTools.deps.wpilib("cscore")
+    // cscore depends on these
+    implementation wpilibTools.deps.wpilibJava("wpinet")
+    wpilibNatives wpilibTools.deps.wpilib("wpinet")
+    implementation wpilibTools.deps.wpilibJava("wpiutil")
+    wpilibNatives wpilibTools.deps.wpilib("wpiutil")
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
     implementation "org.apache.logging.log4j:log4j-core:2.25.0"
     implementation "org.apache.logging.log4j:log4j-slf4j2-impl:$log4j_version"
 
-    implementation "org.deltacv.steve:core:1.1.3"
-    implementation "org.deltacv.steve:backend-openpnp:1.1.3"
-
     implementation "info.picocli:picocli:$picocli_version"
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation "io.github.classgraph:classgraph:$classgraph_version"
 
@@ -125,8 +137,6 @@ dependencies {
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:3.3.2'
 
     implementation('org.deltacv.visionloop:streaming:1.2.9') { transitive = false }
-
-    // implementation "org.deltacv.PaperVision:EOCVSimPlugin:$papervision_version"
 }
 
 tasks.register('writeBuildClassJava') {
@@ -158,7 +168,7 @@ public final class Build {
     public static final String buildDate = "$date";
     public static final boolean isDev = ${version.contains("dev")};
 
-    public static final String opencvVersion = "$opencv_version";
+    public static final String opencvVersion = "$opencvVersion";
     public static final String apriltagPluginVersion = "$apriltag_plugin_version";
     public static final String paperVisionVersion = "$papervision_version";
 }

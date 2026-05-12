@@ -23,44 +23,34 @@
 
 package com.github.serivesmejia.eocvsim.input.source
 
-import com.github.serivesmejia.eocvsim.config.ConfigManager
-import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.input.InputSourceInitializer
-import com.github.serivesmejia.eocvsim.util.StrUtil
-
 import com.google.gson.annotations.Expose
-import io.github.deltacv.steve.Webcam
-import io.github.deltacv.steve.WebcamRotation
-import io.github.deltacv.steve.opencv.OpenCvWebcam
-import io.github.deltacv.steve.opencv.OpenCvWebcamBackend
-import io.github.deltacv.steve.openpnp.OpenPnpBackend
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.opencv.core.Mat
 import org.opencv.core.Size
-import org.opencv.imgproc.Imgproc
 import org.openftc.easyopencv.MatRecycler
 import org.slf4j.LoggerFactory
+import org.wpilib.vision.camera.CvSink
+import org.wpilib.vision.camera.UsbCamera
+import org.wpilib.vision.camera.VideoMode
 import javax.swing.filechooser.FileFilter
 
-class CameraSource : InputSource {
+class CameraSource : InputSource, KoinComponent {
 
     companion object {
-        // for global use, -1 means no webcam currently in use
         @JvmStatic var currentWebcamIndex = -1
     }
 
     override val hasSlowInitialization: Boolean get() = true
 
-    @delegate:Transient
-    private val configManager: ConfigManager by inject()
-
     @Transient var webcamIndex: Int = 0
 
     @Expose @JvmField var webcamName: String = ""
 
-    @Transient private var camera: Webcam? = null
+    @Transient var camera: UsbCamera? = null
+        private set
+    @Transient private var cvSink: CvSink? = null
 
     @Transient private var lastFramePaused: MatRecycler.RecyclableMat? = null
     @Transient private var lastFrame: MatRecycler.RecyclableMat? = null
@@ -70,39 +60,27 @@ class CameraSource : InputSource {
     @Transient var isLegacyByIndex = false
 
     @Expose @JvmField @Volatile var size: Size = Size()
-    @Expose @JvmField @Volatile var rotation: WebcamRotation = WebcamRotation.UPRIGHT
-
 
     @Transient private var matRecycler = MatRecycler(4)
-
     @Transient private var capTimeNanos: Long = 0
-
     @Transient private val logger = LoggerFactory.getLogger(javaClass)
 
     constructor() : super() {
         createdOn = System.currentTimeMillis()
     }
 
-
-    constructor(webcamName: String?, size: Size?, rotation: WebcamRotation? = WebcamRotation.UPRIGHT) : super() {
+    constructor(webcamName: String?, size: Size?) : super() {
         this.webcamName = webcamName ?: ""
         this.size = size ?: Size()
-        this.rotation = rotation ?: WebcamRotation.UPRIGHT
         createdOn = System.currentTimeMillis()
     }
 
-
-    constructor(webcamIndex: Int, size: Size?, rotation: WebcamRotation? = WebcamRotation.UPRIGHT) : super() {
+    constructor(webcamIndex: Int, size: Size?) : super() {
         this.webcamIndex = webcamIndex
         this.size = size ?: Size()
-        this.rotation = rotation ?: WebcamRotation.UPRIGHT
         isLegacyByIndex = true
         createdOn = System.currentTimeMillis()
     }
-
-
-
-    fun getWebcamPropertyControl() = camera?.propertyControl
 
     override fun setSize(size: Size) {
         this.size = size
@@ -110,78 +88,53 @@ class CameraSource : InputSource {
 
     override fun getSize(): Size = size
 
-
     override fun init(): Boolean {
         if (initialized) return false
         initialized = true
 
-        if (rotation == WebcamRotation.UPRIGHT) rotation = WebcamRotation.UPRIGHT // already defaulted
-
-
-        if (webcamName.isNotEmpty()) {
-
-            when (configManager.config.preferredWebcamDriver) {
-                WebcamDriver.OpenPnp -> Webcam.backend = OpenPnpBackend
-                WebcamDriver.OpenIMAJ -> {
-                    configManager.config.preferredWebcamDriver = WebcamDriver.OpenPnp
-
-                    Webcam.backend = OpenPnpBackend
-                }
-                else -> {}
-            }
-
-            val webcams = Webcam.availableWebcams
-            var foundWebcam = false
-
-            for (device in webcams) {
-                val name = device.name
-                val similarity = StrUtil.similarity(name, webcamName)
-
-                if (name == webcamName || similarity > 0.6) {
-                    logger.info("\"$name\" compared to \"$webcamName\", similarity $similarity")
-                    camera = device
-                    foundWebcam = true
-                    break
-                }
-            }
-
-            if (!foundWebcam) {
-                logger.error("Could not find webcam $webcamName")
+        val cam = if (webcamName.isNotEmpty()) {
+            // find by name
+            val infos = UsbCamera.enumerateUsbCameras()
+            val info = infos.firstOrNull { it.name == webcamName }
+            if (info == null) {
+                logger.error("Could not find webcam \"$webcamName\"")
                 return false
             }
+            UsbCamera(webcamName, info.dev)
         } else {
-            Webcam.backend = OpenCvWebcamBackend
-            camera = OpenCvWebcam(webcamIndex, size, rotation)
-
+            UsbCamera("camera$webcamIndex", webcamIndex)
         }
 
-        camera?.resolution = size
-        camera?.rotation = rotation
+        camera = cam
 
+        if (size.width > 0 && size.height > 0) {
+            cam.setResolution(size.width.toInt(), size.height.toInt())
+        }
 
-        try {
-            camera?.open()
-        } catch (ex: Exception) {
-            logger.error("Error while opening camera $webcamIndex", ex)
+        // pick highest fps mode available at requested resolution
+        val mode = cam.videoMode
+        cam.videoMode = VideoMode(mode.pixelFormat, mode.width, mode.height, mode.fps)
+
+        cvSink = CvSink("eocvsim_sink_$webcamIndex").also {
+            it.source = cam
+        }
+
+        // test frame
+        val testMat = matRecycler.takeMatOrNull()!!
+        val grabbed = cvSink!!.grabFrame(testMat)
+        if (grabbed == 0L) {
+            logger.error("Unable to open camera $webcamIndex: ${cvSink!!.error}")
+            testMat.returnMat()
             return false
         }
 
-        if (camera?.isOpen != true) {
-            logger.error("Unable to open camera $webcamIndex, isOpen() returned false.")
-            return false
-        }
-
-        val newFrame = matRecycler.takeMatOrNull()
-
-        camera?.read(newFrame)
-
-        if (newFrame!!.empty()) {
+        if (testMat.empty()) {
             logger.error("Unable to open camera $webcamIndex, returned Mat was empty.")
-            newFrame.release()
+            testMat.returnMat()
             return false
         }
 
-        matRecycler.returnMat(newFrame)
+        matRecycler.returnMat(testMat)
         currentWebcamIndex = webcamIndex
 
         return true
@@ -189,7 +142,11 @@ class CameraSource : InputSource {
 
     override fun reset() {
         if (!initialized) return
-        if (camera?.isOpen == true) camera?.close()
+
+        cvSink?.close()
+        cvSink = null
+        camera?.close()
+        camera = null
 
         if (lastFrame?.isCheckedOut == true) lastFrame?.returnMat()
         if (lastFramePaused?.isCheckedOut == true) lastFramePaused?.returnMat()
@@ -198,7 +155,10 @@ class CameraSource : InputSource {
     }
 
     override fun close() {
-        if (camera?.isOpen == true) camera?.close()
+        cvSink?.close()
+        cvSink = null
+        camera?.close()
+        camera = null
         currentWebcamIndex = -1
     }
 
@@ -208,75 +168,64 @@ class CameraSource : InputSource {
         lastNewFrame?.returnMat()
         lastNewFrame = null
 
-        if (isPaused) {
-            return lastFramePaused
-        } else if (lastFramePaused != null) {
+        if (isPaused) return lastFramePaused
+
+        if (lastFramePaused != null) {
             lastFramePaused?.release()
             lastFramePaused?.returnMat()
             lastFramePaused = null
         }
 
         if (lastFrame == null) lastFrame = matRecycler.takeMatOrNull()
-        if (camera == null) return lastFrame
+        if (cvSink == null) return lastFrame
 
-        val newFrame = matRecycler.takeMatOrNull()
+        val newFrame = matRecycler.takeMatOrNull()!!
         lastNewFrame = newFrame
 
-        camera?.read(newFrame)
+        val grabbed = cvSink!!.grabFrameNoTimeout(newFrame)
         capTimeNanos = System.nanoTime()
 
-        if (newFrame == null || newFrame.empty()) {
-
-            newFrame?.returnMat()
+        if (grabbed == 0L || newFrame.empty()) {
+            newFrame.returnMat()
+            lastNewFrame = null
             return lastFrame
         }
 
-        if (size.area() == 0.0) size = lastFrame!!.size()
+        if (size.area() == 0.0) size = newFrame.size()
 
         newFrame.copyTo(lastFrame)
-
         newFrame.release()
         newFrame.returnMat()
-
         lastNewFrame = null
 
         return lastFrame
     }
 
     override fun onPause() {
-        if (lastFrame != null) lastFrame?.release()
         if (lastFramePaused == null) lastFramePaused = matRecycler.takeMatOrNull()
+        cvSink?.grabFrameNoTimeout(lastFramePaused!!)
 
-        camera?.read(lastFramePaused!!)
-        lastFramePaused?.let { Imgproc.cvtColor(it, it, Imgproc.COLOR_BGR2RGB) }
-
-        update()
-
+        cvSink?.close()
+        cvSink = null
         camera?.close()
+        camera = null
         currentWebcamIndex = -1
     }
 
     override fun onResume() {
         InputSourceInitializer.runWithTimeout(this) {
-
-            camera?.open()
-            camera?.isOpen == true
+            init()
         }
     }
 
     override fun internalCloneSource(): InputSource = if (isLegacyByIndex) {
-        CameraSource(webcamIndex, size, rotation)
+        CameraSource(webcamIndex, size)
     } else {
-        CameraSource(webcamName, size, rotation)
+        CameraSource(webcamName, size)
     }
-
 
     override val fileFilters: FileFilter? get() = null
     override val captureTimeNanos: Long get() = capTimeNanos
 
-
-    override fun toString(): String {
-        return "CameraSource($webcamName, $webcamIndex, ${size})"
-    }
-
+    override fun toString() = "CameraSource($webcamName, $webcamIndex, $size)"
 }

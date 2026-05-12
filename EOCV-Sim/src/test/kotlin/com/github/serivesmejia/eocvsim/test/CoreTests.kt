@@ -25,13 +25,14 @@
 package com.github.serivesmejia.eocvsim.test
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.util.LibraryLoader
 import io.kotest.core.spec.style.StringSpec
 import org.opencv.core.Mat
 import org.openftc.apriltag.AprilTagDetectorJNI
 
 class OpenCvTest : StringSpec({
     "Loading native library" {
-        EOCVSim.loadOpenCvLib()
+        LibraryLoader.loadLibraries()
     }
 
     "Creating a Mat" {

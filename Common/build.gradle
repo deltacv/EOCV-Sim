@@ -2,6 +2,7 @@ plugins {
     id 'kotlin'
     id 'signing'
     id 'com.gradleup.shadow'
+    id 'org.photonvision.tools.WpilibTools'
     id "com.vanniktech.maven.publish" version "0.30.0"
 }
 
@@ -9,20 +10,29 @@ apply from: '../build.common.gradle'
 
 components.java {
     tasks.named("shadowJar").configure {
-        // only run shadowJar when explicitly specified by the user
-        // check if user invoked gradle with :shadowJar
         enabled = project.gradle.startParameter.taskNames.contains("shadowJar")
     }
 }
 
-shadowJar {
-    dependencies {
-        exclude "nu/pattern/*"
-    }
+wpilibTools.deps.wpilibVersion = wpilibVersion
+
+def nativeConfigName = 'wpilibNatives'
+def nativeConfig = configurations.create(nativeConfigName)
+
+def nativeTasks = wpilibTools.createExtractionTasks {
+    configurationName = nativeConfigName
 }
 
+nativeTasks.addToSourceSetResources(sourceSets.main)
+
+nativeConfig.dependencies.add wpilibTools.deps.wpilib("wpiutil")
+nativeConfig.dependencies.add wpilibTools.deps.wpilib("cscore")
+nativeConfig.dependencies.add wpilibTools.deps.wpilibOpenCv(opencvVersion)
+
 dependencies {
-    api "org.openpnp:opencv:$opencv_version"
+    // WPILib OpenCV replaces openpnp
+    api wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
+    wpilibNatives wpilibTools.deps.wpilibOpenCv(opencvVersion)
 
     implementation "com.moandjiezana.toml:toml4j:$toml4j_version"
     implementation "info.picocli:picocli:$picocli_version"
@@ -34,11 +44,7 @@ dependencies {
     implementation "com.formdev:flatlaf:$flatlaf_version"
     implementation "com.miglayout:miglayout-swing:$miglayout_version"
 
-    // Compatibility: Skiko supports many platforms but we will only be adding
-    // those that are supported by AprilTagDesktop as well
-
     implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:$skiko_version")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-arm64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:$skiko_version")

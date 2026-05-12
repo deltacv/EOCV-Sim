@@ -1,10 +1,26 @@
 plugins {
     id 'kotlin'
     id 'signing'
+    id 'org.photonvision.tools.WpilibTools'
     id "com.vanniktech.maven.publish" version "0.30.0"
 }
 
 apply from: '../build.common.gradle'
+
+wpilibTools.deps.wpilibVersion = wpilibVersion
+
+def nativeConfigName = 'wpilibNatives'
+def nativeConfig = configurations.create(nativeConfigName)
+
+def nativeTasks = wpilibTools.createExtractionTasks {
+    configurationName = nativeConfigName
+}
+
+nativeTasks.addToSourceSetResources(sourceSets.main)
+
+nativeConfig.dependencies.add wpilibTools.deps.wpilib("wpiutil")
+nativeConfig.dependencies.add wpilibTools.deps.wpilib("cscore")
+nativeConfig.dependencies.add wpilibTools.deps.wpilibOpenCv(opencvVersion)
 
 dependencies {
     implementation project(':Common')
@@ -13,17 +29,13 @@ dependencies {
         transitive = false
     }
 
-    api "org.openpnp:opencv:$opencv_version"
+    api wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
+    wpilibNatives wpilibTools.deps.wpilibOpenCv(opencvVersion)
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 
-
-    // Compatibility: Skiko supports many platforms but we will only be adding
-    // those that are supported by AprilTagDesktop as well
-
     implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:$skiko_version")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-arm64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:$skiko_version")
