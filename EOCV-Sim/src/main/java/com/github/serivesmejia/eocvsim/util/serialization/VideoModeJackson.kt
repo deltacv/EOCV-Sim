@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.util.serialization
 
 import com.fasterxml.jackson.core.JsonGenerator
@@ -72,4 +77,5 @@ object VideoModeJackson {
         }
     }
 }
+
 

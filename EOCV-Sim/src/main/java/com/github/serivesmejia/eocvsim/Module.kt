@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim
 
 import com.github.serivesmejia.eocvsim.config.ConfigManager
@@ -51,6 +56,7 @@ val eocvSimModule = module {
 
     single { Orchestrator(scope = get(), tasks = getAll<Orchestrable>(), name = "Main") }
     single(named("lifecycle")) { Channel<LifecycleSignal>(Channel.BUFFERED) }
+    single(named("onCrash")) { EventHandler("OnCrash") }
     single(named("onMainLoop")) { EventHandler("OnMainLoop") }
 }
 

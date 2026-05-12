@@ -1,24 +1,6 @@
 /*
  * Copyright (c) 2025 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.input.source
@@ -27,13 +9,14 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.input.InputSourceInitializer
-
-import io.github.deltacv.visionloop.io.MjpegHttpReader
+import com.github.serivesmejia.eocvsim.config.ConfigManager
+import io.github.deltacv.common.util.loggerForThis
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.opencv.core.Mat
-import org.opencv.core.MatOfByte
-import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
-import org.slf4j.LoggerFactory
+import org.wpilib.vision.camera.CvSink
+import org.wpilib.vision.camera.HttpCamera
 import javax.swing.filechooser.FileFilter
 
 @JsonAutoDetect(
@@ -43,106 +26,86 @@ import javax.swing.filechooser.FileFilter
     setterVisibility = JsonAutoDetect.Visibility.NONE,
     creatorVisibility = JsonAutoDetect.Visibility.NONE
 )
-class HttpSource @JvmOverloads constructor(
-    @JsonProperty @JvmField var url: String = ""
-) : InputSource() {
+class HttpSource @JvmOverloads constructor (
+    @field:JsonProperty @JvmField var url: String = ""
+) : InputSource(), KoinComponent {
 
     override val hasSlowInitialization: Boolean get() = true
 
-    @Transient private var mjpegHttpReader: MjpegHttpReader? = null
+    @Transient private var camera: HttpCamera? = null
 
-    @Transient private var buf: MatOfByte? = null
-    @Transient private var img: Mat? = null
+    @Transient private var cvSink: CvSink? = null
 
-    @Transient private var iterator: Iterator<ByteArray>? = null
-
+    @Transient private var lastFrame = Mat()
+    @Transient private var initialized = false
     @Transient private var capTimeNanos: Long = 0
-
-    @Transient private val logger = LoggerFactory.getLogger(javaClass)
+    private val configManager: ConfigManager by inject()
+    private val logger by loggerForThis()
 
     override fun init(): Boolean {
-        buf = MatOfByte()
-        img = Mat()
-
         try {
-            mjpegHttpReader = MjpegHttpReader(url)
-            mjpegHttpReader!!.start()
+            camera = HttpCamera("eocvsim_http_source", url)
         } catch (e: Exception) {
-            logger.error("Error while initializing MjpegHttpReader", e)
+            logger.error("Error while initializing HTTP camera", e)
             return false
         }
 
         try {
-            iterator = mjpegHttpReader!!.iterator()
+            cvSink = CvSink("eocvsim_http_sink").also {
+                it.source = camera
+            }
         } catch (e: Exception) {
-            logger.error("Error while getting MjpegHttpReader iterator", e)
+            logger.error("Error while setting up HTTP camera sink", e)
+            return false
+        }
+
+        val ok = cvSink!!.grabFrame(lastFrame, configManager.config.webcamOpenTimeoutSec)
+        if (ok == 0L || lastFrame.empty()) {
+            logger.error("Failed to grab frame from HTTP camera: ${cvSink!!.error}")
             return false
         }
 
         logger.info("HttpSource initialized")
-
-        return mjpegHttpReader != null && iterator != null
+        initialized = true
+        return true
     }
 
-    @Transient private var frame: ByteArray? = null
 
     override fun update(): Mat? {
-        if (mjpegHttpReader == null || iterator == null) return null
+        if (!initialized) return null
 
-        val result = InputSourceInitializer.runWithTimeout(name) {
+        val ok = cvSink?.grabFrame(lastFrame, configManager.config.webcamNewFrameTimeoutSec) ?: 0L
 
-            frame = iterator!!.next()
-            frame != null
-        }
-
-        if (result != InputSourceInitializer.Result.SUCCESS || frame == null) {
+        if (ok == 0L || lastFrame.empty()) {
             return null
         }
-
-        val frameData = frame!!
-
-        if (!dataIsValidJPEG(frameData)) {
-            logger.error("Received data is not a valid JPEG image")
-            return null
-        }
-
-        buf!!.fromArray(*frameData)
-
-        if (buf!!.empty()) {
-            return null
-        }
-
-        val mat = Imgcodecs.imdecode(buf, Imgcodecs.IMREAD_COLOR)
-        Imgproc.cvtColor(mat, img, Imgproc.COLOR_BGR2RGBA)
-
-        mat.release()
-
         capTimeNanos = System.nanoTime()
-
-        return img
+        Imgproc.cvtColor(lastFrame, lastFrame, Imgproc.COLOR_BGR2RGBA)
+        return lastFrame
     }
 
     override fun reset() {
-        mjpegHttpReader?.stop()
-        mjpegHttpReader = null
+        if (!initialized) return
+        cvSink?.close()
+        cvSink = null
+        camera?.close()
+        camera = null
+        lastFrame.release()
+        initialized = false
     }
 
     override fun close() {
-        reset()
+        cvSink?.close()
+        camera?.close()
     }
 
     override fun onPause() {
-        if (mjpegHttpReader != null) {
-            reset()
-        }
+        cvSink?.close()
+        camera?.close()
     }
 
     override fun onResume() {
-        InputSourceInitializer.runWithTimeout(this) {
-
-
-            init()
-        }
+        InputSourceInitializer.runWithTimeout(this) { init() }
     }
 
     override fun internalCloneSource(): InputSource = HttpSource(url)
@@ -150,80 +113,8 @@ class HttpSource @JvmOverloads constructor(
     override val fileFilters: FileFilter? get() = null
     override val captureTimeNanos: Long get() = capTimeNanos
 
-
     override fun toString(): String {
         return "HttpSource($url)"
     }
-
-    companion object {
-        private fun dataIsValidJPEG(data: ByteArray?): Boolean {
-            if (data == null || data.size < 2) {
-                return false
-            }
-
-            val totalBytes = getJPEGSize(data, data.size)
-
-            if (totalBytes == -1) {
-                return false
-            }
-
-            return (data[0] == 0xFF.toByte() &&
-                    data[1] == 0xD8.toByte() &&
-                    data[totalBytes - 2] == 0xFF.toByte() &&
-                    data[totalBytes - 1] == 0xD9.toByte())
-        }
-
-        private fun getJPEGSize(data: ByteArray?, maxLength: Int): Int {
-            if (data == null || maxLength < 4) {
-                return -1 // Invalid or too small to be a JPEG
-            }
-
-            // Check for SOI marker
-            if (data[0] != 0xFF.toByte() || data[1] != 0xD8.toByte()) {
-                return -1 // Not a JPEG
-            }
-
-            var pos = 2 // Start after SOI
-
-            while (pos < maxLength - 2) {
-                // Look for the next marker (0xFF xx)
-                if (data[pos] == 0xFF.toByte()) {
-                    val marker = data[pos + 1]
-
-                    // End of Image (EOI) found
-                    if (marker == 0xD9.toByte()) {
-                        return pos + 2 // JPEG size
-                    }
-
-                    // Skip padding bytes (some JPEGs use 0xFF 0x00)
-                    if (marker == 0x00.toByte()) {
-                        pos++
-                        continue
-                    }
-
-                    // Most markers have a 2-byte length field
-                    if ((marker >= 0xC0.toByte() && marker <= 0xFE.toByte()) && marker != 0xD9.toByte()) {
-                        if (pos + 3 >= maxLength) {
-                            return -1 // Incomplete JPEG
-                        }
-
-                        // Read segment length (big-endian)
-                        val segmentLength = ((data[pos + 2].toInt() and 0xFF) shl 8) or (data[pos + 3].toInt() and 0xFF)
-
-                        if (segmentLength < 2 || pos + segmentLength >= maxLength) {
-                            return -1 // Corrupt or incomplete JPEG
-                        }
-
-                        pos += segmentLength // Move to next marker
-                    } else {
-                        pos++ // Skip unknown byte
-                    }
-                } else {
-                    pos++ // Continue searching
-                }
-            }
-
-            return -1 // No valid JPEG end found
-        }
-    }
 }
+

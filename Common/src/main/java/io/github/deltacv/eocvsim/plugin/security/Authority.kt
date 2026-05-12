@@ -1,24 +1,6 @@
 /*
  * Copyright (c) 2024 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package io.github.deltacv.eocvsim.plugin.security
@@ -28,11 +10,11 @@ import com.github.serivesmejia.eocvsim.util.io.LockFile
 import io.github.deltacv.common.util.loggerForThis
 import io.github.deltacv.eocvsim.plugin.PLUGIN_CACHING_FOLDER
 import java.io.File
-import java.net.URL
+import java.net.URI
 import java.security.KeyFactory
 import java.security.PublicKey
 import java.security.spec.X509EncodedKeySpec
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 data class Authority(
@@ -107,12 +89,12 @@ object AuthorityFetcher {
         }
 
         // Fetch the authority from the server
-        val authorityUrl = "${AUTHORITY_SERVER_URL.trim('/')}/${name}.txt"
+        val authorityUrl = "${AUTHORITY_SERVER_URL.trim('/')}/${name}"
 
         return try {
             logger.info("Fetching authority from URL: $authorityUrl")
 
-            val authorityPublicKey = URL(authorityUrl).readText()
+            val authorityPublicKey = URI.create(authorityUrl).toURL().readText()
             val pem = parsePem(authorityPublicKey)
 
             val authority = Authority(name, parsePublicKey(pem))

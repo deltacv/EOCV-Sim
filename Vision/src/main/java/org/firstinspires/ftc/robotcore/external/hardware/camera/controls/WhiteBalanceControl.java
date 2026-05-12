@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2021 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+/*
  * Copyright (c) 2021 Michael Hoogasian
  *
  * All rights reserved.
@@ -84,3 +89,4 @@ public interface WhiteBalanceControl extends CameraControl
      */
     boolean setWhiteBalanceTemperature(int temperature);
 }
+

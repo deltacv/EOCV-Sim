@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.pipeline.compiled
 
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
@@ -81,3 +86,4 @@ class PipelineClassLoader(pipelinesJar: File) : ClassLoader() {
 
 val OpenCvPipeline.isFromRuntimeCompilation: Boolean
     get() = this::class.java.classLoader is PipelineClassLoader
+

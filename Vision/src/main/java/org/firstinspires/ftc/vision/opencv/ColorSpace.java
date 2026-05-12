@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2024 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+/*
  * Copyright (c) 2024 FIRST
  *
  * All rights reserved.
@@ -42,3 +47,4 @@ public enum ColorSpace
     HSV,
     RGB,
 }
+

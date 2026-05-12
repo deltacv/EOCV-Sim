@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.util;
 
 import java.io.IOException;
@@ -9,7 +14,7 @@ import org.wpilib.vision.camera.CameraServerJNI;
 import org.wpilib.vision.camera.OpenCvLoader;
 
 public class LibraryLoader {
-    public record Result(boolean success, IOException error) {}
+    public record Result(boolean success, Throwable error) {}
 
     public static Result loadLibraries() {
         WPIUtilJNI.Helper.setExtractOnStaticLoad(false);
@@ -27,7 +32,7 @@ public class LibraryLoader {
                     "cscorejni");
 
             CombinedRuntimeLoader.loadLibraries(LibraryLoader.class, Core.NATIVE_LIBRARY_NAME);
-        } catch(IOException e) {
+        } catch(IOException | UnsatisfiedLinkError e) {
             return new Result(false, e);
         }
 

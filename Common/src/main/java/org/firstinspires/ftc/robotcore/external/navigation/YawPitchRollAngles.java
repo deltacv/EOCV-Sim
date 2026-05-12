@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2022 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+/*
 Copyright (c) 2022 REV Robotics
 
 All rights reserved.
@@ -142,3 +147,4 @@ public class YawPitchRollAngles {
                 angleUnit.toDegrees(yaw), angleUnit.toDegrees(pitch), angleUnit.toDegrees(roll));
     }
 }
+

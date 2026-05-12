@@ -28,6 +28,7 @@ sourceSets {
 
 shadowJar {
     mergeServiceFiles()
+    archiveClassifier.set(wpilibTools.currentPlatform.platformName)
 }
 
 test {

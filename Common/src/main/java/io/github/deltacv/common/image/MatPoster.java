@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package io.github.deltacv.common.image;
 
 import org.opencv.core.Mat;
@@ -23,3 +28,4 @@ public interface MatPoster {
     void post(Mat m, Object context);
 
 }
+

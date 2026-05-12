@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.gui.component.tuner.element
 
 import com.github.serivesmejia.eocvsim.EOCVSim
@@ -152,3 +157,4 @@ class TunableTextField(val tunableValue: TunableValue<*>) : JTextField(), KoinCo
     }
 
 }
+

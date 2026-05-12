@@ -1,24 +1,6 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui
@@ -31,6 +13,7 @@ import com.github.serivesmejia.eocvsim.gui.dialog.source.*
 import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import io.github.deltacv.eocvsim.plugin.loader.PluginManager
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.component.KoinComponent
@@ -44,11 +27,13 @@ import javax.swing.filechooser.FileNameExtensionFilter
 
 class DialogFactory : KoinComponent {
 
-    val visualizer: Visualizer by inject()
-    val pluginManager: PluginManager by inject()
-    val configManager: ConfigManager by inject()
-    val scope: CoroutineScope by inject()
-    val outputHandler: PluginOutputHandler by inject()
+    private val visualizer: Visualizer by inject()
+    private val pluginManager: PluginManager by inject()
+    private val configManager: ConfigManager by inject()
+    private val scope: CoroutineScope by inject()
+    private val outputHandler: PluginOutputHandler by inject()
+
+    private val frame: JFrame? get() = if (visualizer.hasFinishedInitializing) visualizer.frame else null
 
     fun createYesOrNo(parent: Component?, message: String, submessage: String, result: (Int) -> Unit) {
         val panel = JPanel()
@@ -180,8 +165,8 @@ class DialogFactory : KoinComponent {
         invokeLater { PluginOutput(outputHandler, pluginManager, configManager, scope) }
     }
 
-    fun createSplashScreen(closeHandler: EventHandler?) {
-        invokeLater { SplashScreen(closeHandler) }
+    fun createSplashScreen(vararg closeHandlers: EventHandler) {
+        invokeLater { SplashScreen(*closeHandlers) }
     }
 
     fun createIAmA() {
@@ -196,8 +181,11 @@ class DialogFactory : KoinComponent {
         invokeLater { CreateWorkspace() }
     }
 
-    fun createCrashReport(crash: String?) {
-        invokeLater { CrashReportOutput(visualizer.frame, crash ?: "") }
+    fun instantiateCrashReport(crash: String?, headerText: String? = null) =
+        CrashReportOutput(frame, crash ?: "", headerText)
+
+    fun createCrashReport(crash: String?, headerText: String? = null) {
+        invokeLater { instantiateCrashReport(crash, headerText) }
     }
 
     fun createFileAlreadyExistsDialog(): FileAlreadyExists.UserChoice {
@@ -264,3 +252,4 @@ class DialogFactory : KoinComponent {
         }
     }
 }
+

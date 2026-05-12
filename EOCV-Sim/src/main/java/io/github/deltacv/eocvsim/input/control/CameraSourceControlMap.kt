@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package io.github.deltacv.eocvsim.input.control
 
 import com.github.serivesmejia.eocvsim.input.source.CameraSource

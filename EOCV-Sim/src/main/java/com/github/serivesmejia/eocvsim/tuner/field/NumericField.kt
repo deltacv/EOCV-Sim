@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.tuner.field
 
 import com.github.serivesmejia.eocvsim.EOCVSim
@@ -38,3 +43,4 @@ abstract class NumericField<T : Number>(
     override val value: T
         get() = _value
 }
+

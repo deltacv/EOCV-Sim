@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.gui.component.tuner.element
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
@@ -53,3 +58,4 @@ class TunableComboBox(val tunableValue: TunableEnum<*>) : JComboBox<String>(), K
     }
 
 }
+

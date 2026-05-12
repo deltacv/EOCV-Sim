@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2017 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+/*
 Copyright (c) 2017 Robert Atkinson
 
 All rights reserved.
@@ -66,3 +71,4 @@ public class MutableReference<T>
         return "[{" + getValue() + "}]";
     }
 }
+

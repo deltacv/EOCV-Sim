@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2023 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 /* Copyright (c) 2023 FIRST. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,

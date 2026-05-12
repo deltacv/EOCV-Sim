@@ -1,24 +1,6 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim
@@ -35,6 +17,7 @@ import com.github.serivesmejia.eocvsim.tuner.TunerManager
 import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.LibraryLoader
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import com.github.serivesmejia.eocvsim.util.fps.FpsLimiter
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
@@ -50,6 +33,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.swing.Swing
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
@@ -88,8 +74,6 @@ class EOCVSim : KoinComponent {
         }
     }
 
-    val parameters: Parameters by inject()
-
     val orchestrator: Orchestrator by inject()
 
     /**
@@ -99,7 +83,8 @@ class EOCVSim : KoinComponent {
      * posted by the different components of the simulator
      * @see EventHandler
      */
-    val onMainLoop: EventHandler by inject(named("onMainLoop"))
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
+    private val onCrash: EventHandler by inject(named("onCrash"))
 
     /**
      * The visualizer instance in charge of managing the GUI
@@ -193,7 +178,7 @@ class EOCVSim : KoinComponent {
             logger.info("Confirmed claiming of the lock file in ${EOCVSimFolder.absolutePath}")
         }
 
-        dialogFactory.createSplashScreen(visualizer.onInitFinished)
+        dialogFactory.createSplashScreen(visualizer.onInitFinished, onCrash)
 
         logger.info("-- Initializing EasyOpenCV Simulator v$VERSION ($hexCode) --")
 
@@ -204,6 +189,25 @@ class EOCVSim : KoinComponent {
         if(!loadLibrariesResult.success) {
             logger.error("Exception in loadLibraries():", loadLibrariesResult.error)
             logger.error("The sim will exit now as it's impossible to continue without the required libraries")
+
+            onCrash.run()
+
+            runBlocking {
+                launch(Dispatchers.Swing) {
+                    val crashHeader = """
+                        One or more of WPILib's native libraries failed to load at the earliest stage.
+                        Ensure you're running EOCV-Sim on a supported platform, Java 25 is required.
+                        Read the crash report below, this is not likely to be a bug on the program,
+                        If it seems like a bug, please open an issue in GitHub with this report. 
+                    """.trimIndent()
+
+                    dialogFactory.instantiateCrashReport(
+                        crash = "$crashHeader\n\n${CrashReport(loadLibrariesResult.error())}",
+                        headerText = "An error occurred while loading the required native libraries for your platform"
+                    )
+                }
+            }
+
             exitProcess(-1)
         }
 
@@ -394,14 +398,13 @@ class EOCVSim : KoinComponent {
      */
     class Parameters {
         /**
-         * The initial user workspace file to load
-         * Overrides the workspace file in the config file
+         * The initial user workspace path to load
+         * Overrides the workspace path in the config
          */
         var initialWorkspace: File? = null
 
         /**
-         * The initial pipeline name to load
-         * specified by class name
+         * The initial pipeline to load
          */
         var initialPipelineName: String? = null
 
@@ -409,11 +412,6 @@ class EOCVSim : KoinComponent {
          * Whether the specified pipeline must be searched in the CLASSPATH or from the workspace
          */
         var initialPipelineSource: PipelineSource? = null
-
-        /**
-         * An alternative path for the OpenCV native library to be loaded at runtime
-         */
-        var opencvNativeLibrary: File? = null
     }
 
 }

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.tuner.field
 
 import com.github.serivesmejia.eocvsim.EOCVSim
@@ -34,3 +39,4 @@ class BooleanField(
     override val value: Boolean
         get() = _value
 }
+

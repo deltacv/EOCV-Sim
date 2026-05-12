@@ -127,7 +127,7 @@ public final class CombinedRuntimeLoader {
         if (System.getProperty("os.name").startsWith("Windows")) {
             msg.append(
                     "A common cause of this error is missing the C++ runtime.\n"
-                            + "Download the latest at https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads\n");
+                            + "Download the latest at https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170\n");
         }
         return msg.toString();
     }

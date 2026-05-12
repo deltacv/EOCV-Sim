@@ -12,7 +12,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '25'
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle
@@ -27,7 +27,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '25'
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle
@@ -42,7 +42,7 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '25'
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle

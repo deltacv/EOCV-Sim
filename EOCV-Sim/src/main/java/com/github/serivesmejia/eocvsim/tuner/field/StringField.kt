@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.tuner.field
 
 import com.github.serivesmejia.eocvsim.EOCVSim
@@ -35,3 +40,4 @@ class StringField(
     override val value: String
         get() = _value
 }
+

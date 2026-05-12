@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.util.event
 
 import io.github.deltacv.common.util.loggerOf
@@ -262,5 +267,15 @@ class EventHandler @JvmOverloads constructor(
         data class InScope(val scope: CoroutineScope, val shouldJoin: Boolean = false) : CallRightAway
         object InPlace : CallRightAway
         object Disabled : CallRightAway
+    }
+
+    companion object {
+        fun batchOnce(vararg eventHandler: EventHandler, listener: OnceEventListener): List<EventListenerId> {
+            return eventHandler.map { it.once(listener) }
+        }
+
+        fun batchAttach(vararg eventHandler: EventHandler, listener: EventListener): List<EventListenerId> {
+            return eventHandler.map { it.attach(listener) }
+        }
     }
 }

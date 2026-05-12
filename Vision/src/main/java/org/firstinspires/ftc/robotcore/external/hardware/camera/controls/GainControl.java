@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2020 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+/*
  * Copyright (c) 2020 Michael Hoogasian
  *
  * All rights reserved.
@@ -66,3 +71,4 @@ public interface GainControl extends CameraControl
      */
     boolean setGain(int gain);
 }
+

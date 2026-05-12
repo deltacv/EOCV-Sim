@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package org.openftc.easyopencv;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -35,3 +40,4 @@ public abstract class OpenCvCameraFactory {
     }
 
 }
+

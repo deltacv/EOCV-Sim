@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.plugin.api.impl
 
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package io.github.deltacv.eocvsim.plugin
 
 import io.github.deltacv.common.util.loggerForThis
@@ -114,3 +119,4 @@ abstract class EOCVSimPlugin {
      */
     abstract fun onDisable()
 }
+

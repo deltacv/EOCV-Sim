@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2023 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+/*
  * Copyright (c) 2023 FIRST
  *
  * All rights reserved.
@@ -37,3 +42,4 @@ package org.firstinspires.ftc.vision;
  * May be attached to a {@link VisionPortal} to run image processing
  */
 public interface VisionProcessor extends VisionProcessorInternal {}
+

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.gui.dialog.source
 
 import com.github.serivesmejia.eocvsim.gui.Visualizer

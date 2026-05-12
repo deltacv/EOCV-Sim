@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package android.hardware;
 
 public class Camera {
@@ -56,3 +61,4 @@ public class Camera {
     };
 
 }
+

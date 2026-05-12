@@ -1,4 +1,9 @@
 /*
+ * Copyright (c) 2016 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+/*
 Copyright (c) 2016 Robert Atkinson
 
 All rights reserved.
@@ -60,3 +65,4 @@ public class RowMatrixF extends MatrixF
         return new GeneralMatrixF(numRows, numCols);
     }
 }
+

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package org.firstinspires.ftc.robotcore.internal.system;
 
 import com.qualcomm.robotcore.util.RobotLog;
@@ -68,3 +73,4 @@ public class AppUtil {
         System.exit(code);
     }
 }
+

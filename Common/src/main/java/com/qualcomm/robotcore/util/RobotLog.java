@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.qualcomm.robotcore.util;
 
 import org.slf4j.Logger;
@@ -15,3 +20,4 @@ public class RobotLog {
         LoggerFactory.getLogger(tag).error(message);
     }
 }
+

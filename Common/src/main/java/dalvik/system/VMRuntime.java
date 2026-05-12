@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package dalvik.system;
 
 import java.lang.reflect.Array;
@@ -20,3 +25,4 @@ public class VMRuntime {
     }
 
 }
+

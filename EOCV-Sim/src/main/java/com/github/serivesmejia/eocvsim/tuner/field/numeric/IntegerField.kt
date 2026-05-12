@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.tuner.field.numeric
 
 import com.github.serivesmejia.eocvsim.EOCVSim
@@ -18,3 +23,4 @@ class IntegerField(
             clazz == Int::class.java || clazz == java.lang.Integer::class.java
     }
 }
+

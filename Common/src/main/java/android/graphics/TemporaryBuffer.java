@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package android.graphics;
 
 import com.android.internal.util.ArrayUtils;
