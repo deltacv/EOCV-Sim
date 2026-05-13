@@ -128,10 +128,15 @@ jobs:
           ls -la artifacts/macos || true
           ls -la artifacts/windows || true
 
-      - name: Filter main release jars only
+      - name: Select platform jars for release
         run: |
           mkdir -p release-jars
-          find artifacts -name "*EOCV-Sim-*.jar" ! -name "*-sources.jar" ! -name "*-linux*" ! -name "*-windows*" ! -name "*-mac*" -exec cp {} release-jars/ \;
+          # Copy the first (and should be only) jar from each platform folder
+          cp artifacts/ubuntu/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
+          cp artifacts/windows/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
+          cp artifacts/macos/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
+          # Remove source jars if any were copied
+          rm -f release-jars/*-sources.jar
           echo "Release jars to upload:"
           ls -la release-jars/
 
@@ -166,10 +171,15 @@ jobs:
           name: eocvsim-windows-latest
           path: artifacts/dev/windows
 
-      - name: Filter main release jars only for dev
+      - name: Select platform jars for dev release
         run: |
           mkdir -p release-jars
-          find artifacts/dev -name "*EOCV-Sim-*.jar" ! -name "*-sources.jar" ! -name "*-linux*" ! -name "*-windows*" ! -name "*-mac*" -exec cp {} release-jars/ \;
+          # Copy the first (and should be only) jar from each platform folder
+          cp artifacts/dev/ubuntu/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
+          cp artifacts/dev/windows/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
+          cp artifacts/dev/macos/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
+          # Remove source jars if any were copied
+          rm -f release-jars/*-sources.jar
           echo "Dev release jars to upload:"
           ls -la release-jars/
 
