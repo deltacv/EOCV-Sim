@@ -73,7 +73,7 @@ public class Bootstrap {
 
     public static final class PromptTest {
         public static void main(String[] args) {
-            promptUser(new File("C:/Program Files/Java/jdk-25"), 17);
+            promptUser(new File("C:/Program Files/Java/jdk-25"), 0);
         }
     }
 
@@ -150,7 +150,8 @@ public class Bootstrap {
 
         continueBtn.setEnabled(hasDetected);
 
-        continueBtn.setPreferredSize(new Dimension(180, 30));
+        // Make the continue button long and the other two standard width
+        continueBtn.setPreferredSize(new Dimension(360, 30));
         selectBtn.setPreferredSize(new Dimension(180, 30));
         exitBtn.setPreferredSize(new Dimension(180, 30));
 
@@ -225,20 +226,23 @@ public class Bootstrap {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        // Row 0: Select and Exit
+        // Row 0: Continue with detected (spans both columns)
         gbc.gridx = 0;
         gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        buttonBlock.add(continueBtn, gbc);
+
+        // Row 1: Select and Exit
+        gbc.gridwidth = 1;
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
         buttonBlock.add(selectBtn, gbc);
 
         gbc.gridx = 1;
         buttonBlock.add(exitBtn, gbc);
 
-        // Row 1: Continue with detected (spans both columns, centered)
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.CENTER;
-        buttonBlock.add(continueBtn, gbc);
 
         root.add(buttonBlock);
 
