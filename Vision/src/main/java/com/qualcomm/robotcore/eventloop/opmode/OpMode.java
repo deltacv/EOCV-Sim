@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2014 Sebastian Erives
- * Licensed under the MIT License.
- */
-
 /* Copyright (c) 2014 Qualcomm Technologies Inc
 
 All rights reserved.
@@ -216,4 +211,6 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
         stopped = true;
     }
 }
+
+
 

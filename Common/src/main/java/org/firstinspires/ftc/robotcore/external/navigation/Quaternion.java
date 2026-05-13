@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2016 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
 Copyright (c) 2016 Robert Atkinson
 
 All rights reserved.
@@ -303,4 +298,6 @@ public class Quaternion
         return String.format(Locale.US, "{w=%.3f, x=%.3f, y=%.3f, z=%.3f}", w, x, y, z);
     }
 }
+
+
 

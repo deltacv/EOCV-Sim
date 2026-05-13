@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2016 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
 Copyright (c) 2016 Robert Atkinson
 
 All rights reserved.
@@ -59,4 +54,6 @@ public abstract class ColumnMajorMatrixF extends DenseMatrixF
         return new VectorF(this.getData());
     }
 }
+
+
 

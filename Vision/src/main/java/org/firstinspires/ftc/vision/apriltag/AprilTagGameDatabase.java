@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2023 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (c) 2023 FIRST
  *
  * All rights reserved.
@@ -163,4 +158,5 @@ public class AprilTagGameDatabase
                 .build();
     }
 }
+
 

@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2026 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (C) 2016 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -850,3 +845,4 @@ public final class Half extends Number implements Comparable<Half> {
         return FP16.toHexString(h);
     }
 }
+

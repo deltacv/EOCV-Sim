@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2026 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -75,3 +70,4 @@ public final class EmptyArray {
     /** @hide */
     public static final Annotation[] ANNOTATION = new Annotation[0];
 }
+

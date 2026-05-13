@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2018 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
 Copyright (c) 2018 Robert Atkinson
 
 All rights reserved.
@@ -66,3 +61,5 @@ public interface WebcamName extends CameraName, HardwareDevice
      */
     boolean isAttached();
 }
+
+

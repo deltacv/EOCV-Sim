@@ -42,3 +42,4 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
 @Target({METHOD,CONSTRUCTOR,TYPE})
 public @interface AnyThread {
 }
+

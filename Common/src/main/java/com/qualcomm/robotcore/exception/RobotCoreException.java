@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2014 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (c) 2014, 2015 Qualcomm Technologies Inc
  *
  * All rights reserved.
@@ -57,3 +52,4 @@ public class RobotCoreException extends Exception {
         return new RobotCoreException(String.format(format, args), e);
     }
 }
+

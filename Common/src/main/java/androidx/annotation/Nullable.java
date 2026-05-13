@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2026 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (C) 2013 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,3 +40,4 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @Target({METHOD, PARAMETER, FIELD})
 public @interface Nullable {
 }
+

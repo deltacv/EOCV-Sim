@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2026 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,3 +33,4 @@ public @interface SuppressLint {
      */
     String[] value();
 }
+

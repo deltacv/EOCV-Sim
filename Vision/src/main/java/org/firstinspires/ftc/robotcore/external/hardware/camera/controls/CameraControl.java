@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2018 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
 Copyright (c) 2018 Robert Atkinson
 
 All rights reserved.
@@ -45,3 +40,5 @@ package org.firstinspires.ftc.robotcore.external.hardware.camera.controls;
 public interface CameraControl
 {
 }
+
+

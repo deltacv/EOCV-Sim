@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2015 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (c) 2015 Robert Atkinson
  *
  *    Ported from the Swerve library by Craig MacFarlane
@@ -58,3 +53,4 @@ import java.lang.annotation.Target;
 public @interface Disabled
 {
 }
+

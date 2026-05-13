@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2023 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (c) 2023 FIRST
  *
  * All rights reserved.
@@ -52,3 +47,4 @@ interface VisionProcessorInternal
     Object processFrame(Mat frame, long captureTimeNanos);
     void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext);
 }
+

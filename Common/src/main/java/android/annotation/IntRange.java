@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2026 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,3 +43,5 @@ public @interface IntRange {
     /** Largest value, inclusive */
     long to() default Long.MAX_VALUE;
 }
+
+

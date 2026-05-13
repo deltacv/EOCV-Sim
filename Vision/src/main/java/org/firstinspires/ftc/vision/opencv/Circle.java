@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2025 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (c) 2025 Miriam Sinton-Remes
  *
  * All rights reserved.
@@ -102,4 +97,5 @@ public class Circle {
         return y;
     }
 }
+
 

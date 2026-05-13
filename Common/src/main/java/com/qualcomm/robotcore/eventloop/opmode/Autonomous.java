@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2015 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (c) 2015 Robert Atkinson
  *
  *    Ported from the Swerve library by Craig MacFarlane
@@ -78,3 +73,4 @@ public @interface Autonomous
      */
     String preselectTeleOp() default "";
 }
+

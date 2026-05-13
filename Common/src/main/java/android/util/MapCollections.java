@@ -1,9 +1,4 @@
 /*
- * Copyright (c) 2026 Sebastian Erives
- * Licensed under the MIT License.
- */
-
-/*
  * Copyright (C) 2013 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -490,3 +485,4 @@ abstract class MapCollections<K, V> {
     protected abstract void colRemoveAt(int index);
     protected abstract void colClear();
 }
+
