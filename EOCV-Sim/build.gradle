@@ -36,6 +36,12 @@ tasks.named('compileBootstrapJava', JavaCompile) {
     options.release.set(8)
 }
 
+components.java {
+    tasks.named("shadowJar").configure {
+        enabled = project.gradle.startParameter.taskNames.contains("shadowJar")
+    }
+}
+
 shadowJar {
     mergeServiceFiles()
     archiveClassifier.set(wpilibTools.currentPlatform.platformName)
@@ -76,16 +82,6 @@ tasks.register('pack', PackageTask) {
         pngFile = file('src/main/resources/images/icon/ico_eocvsim.png')
     }
 }
-
-tasks.processResources {
-    from({
-        project(":PaperVisionShadow").tasks.shadowJar
-    }) {
-        rename { "PaperVisionPlugin.jar" }
-        into("embedded_plugins")
-    }
-}
-
 
 wpilibTools.deps.wpilibVersion = wpilibVersion
 
@@ -128,7 +124,7 @@ dependencies {
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
-    implementation "org.apache.logging.log4j:log4j-core:2.25.0"
+    implementation 'org.apache.logging.log4j:log4j-core:2.25.4'
     implementation "org.apache.logging.log4j:log4j-slf4j2-impl:$log4j_version"
 
     implementation "info.picocli:picocli:$picocli_version"
