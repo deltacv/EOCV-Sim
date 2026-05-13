@@ -71,7 +71,13 @@ public class Bootstrap {
 
     // ---------------- UI ----------------
 
-    private static File promptUser(File detected, int currentJava) {
+    public static final class PromptTest {
+        public static void main(String[] args) {
+            promptUser(new File("C:/Program Files/Java/jdk-25"), 17);
+        }
+    }
+
+    static File promptUser(File detected, int currentJava) {
 
         boolean hasDetected = detected != null;
 
@@ -112,7 +118,7 @@ public class Bootstrap {
         StringBuilder text = new StringBuilder();
         text.append("EOCV-Sim was started with Java ")
                 .append(currentJava)
-                .append(", but requires Java 25 or newer to run.\n\n");
+                .append(", but requires Java 25 or newer to run.\n");
         if (!hasDetected) {
             text.append("No compatible Java installation was found automatically.\n\n");
         }
@@ -121,26 +127,20 @@ public class Bootstrap {
         info.setMaximumSize(new Dimension(420, 120));
 
         // ---------------- DETECTED AREAS ----------------
-        JTextArea detectedLabel = null;
-        JTextArea detectedPath = null;
+        JLabel detectedLabel = null;
+        JLabel detectedPath = null;
 
         if (hasDetected) {
-            detectedLabel = new JTextArea("Autodetected installation:");
-            detectedLabel.setEditable(false);
-            detectedLabel.setOpaque(false);
-            detectedLabel.setFocusable(false);
+            detectedLabel = new JLabel("Autodetected installation:");
             detectedLabel.setFont(info.getFont().deriveFont(Font.BOLD));
             detectedLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            detectedLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-            detectedPath = new JTextArea(detected.getAbsolutePath());
-            detectedPath.setEditable(false);
-            detectedPath.setOpaque(false);
-            detectedPath.setFocusable(false);
+            detectedPath = new JLabel("<html><div style='text-align:center;'>" + detected.getAbsolutePath() + "</div></html>");
             detectedPath.setFont(info.getFont().deriveFont(Font.BOLD));
             detectedPath.setForeground(new Color(0, 120, 215));
             detectedPath.setAlignmentX(Component.CENTER_ALIGNMENT);
-            detectedPath.setLineWrap(true);
-            detectedPath.setWrapStyleWord(true);
+            detectedPath.setHorizontalAlignment(SwingConstants.CENTER);
         }
 
         // ---------------- BUTTONS ----------------
@@ -217,17 +217,28 @@ public class Bootstrap {
 
         root.add(Box.createVerticalStrut(12));
 
-        JPanel row1 = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        row1.add(selectBtn);
-        row1.add(exitBtn);
+        JPanel buttonBlock = new JPanel(new GridBagLayout());
+        buttonBlock.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+        buttonBlock.setAlignmentX(Component.CENTER_ALIGNMENT);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(0, 8, 8, 8);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
 
-        JPanel row2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 8));
-        row2.add(continueBtn);
+        // Row 0: Select and Exit
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        buttonBlock.add(selectBtn, gbc);
 
-        JPanel buttonBlock = new JPanel();
-        buttonBlock.setLayout(new BoxLayout(buttonBlock, BoxLayout.Y_AXIS));
-        buttonBlock.add(row1);
-        buttonBlock.add(row2);
+        gbc.gridx = 1;
+        buttonBlock.add(exitBtn, gbc);
+
+        // Row 1: Continue with detected (spans both columns, centered)
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;
+        buttonBlock.add(continueBtn, gbc);
 
         root.add(buttonBlock);
 
