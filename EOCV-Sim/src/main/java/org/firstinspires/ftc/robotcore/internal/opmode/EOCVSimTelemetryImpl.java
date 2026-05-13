@@ -803,7 +803,7 @@ public class EOCVSimTelemetryImpl implements Telemetry, TelemetryInternal
         String string = currentSb.toString().trim();
 
         for(TelemetryTransmissionReceiver receiver : transmissionReceivers) {
-            receiver.onTelemetryTransmission(string, this);
+            receiver.consumeTelemetry(string, this);
         }
     }
 

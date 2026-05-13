@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2026 Sebastian Erives
- * Licensed under the MIT License.
- */
-
 package org.firstinspires.ftc.vision.opencv;
 
 import android.graphics.Canvas;

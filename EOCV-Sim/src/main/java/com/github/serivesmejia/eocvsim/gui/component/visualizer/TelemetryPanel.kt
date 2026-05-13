@@ -126,7 +126,7 @@ class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver, KoinComponent {
 
     private var lastTelemetry = "";
 
-    override fun onTelemetryTransmission(text: String, srcTelemetry: Telemetry) {
+    override fun consumeTelemetry(text: String, srcTelemetry: Telemetry) {
         SwingUtilities.invokeLater {
             if(lastTelemetry != text) {
                 updateTelemetry(text, srcTelemetry.captionValueSeparator, srcTelemetry.itemSeparator)

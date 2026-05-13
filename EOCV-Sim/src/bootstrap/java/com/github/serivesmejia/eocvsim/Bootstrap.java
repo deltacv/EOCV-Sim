@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives, deltacv
+ *
+ * Use of this source code is governed by the MIT license
+ * that can be found in the LICENSE file or at
+ * https://opensource.org/licenses/MIT.
+ */
+
 package com.github.serivesmejia.eocvsim;
 
 import javax.swing.*;
@@ -80,7 +88,7 @@ public class Bootstrap {
                 dialog.setIconImage(new ImageIcon(icon).getImage());
             }
         } catch (Exception ignored) { }
-        
+
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         JPanel root = new JPanel();
@@ -122,6 +130,7 @@ public class Bootstrap {
             detectedLabel.setOpaque(false);
             detectedLabel.setFocusable(false);
             detectedLabel.setFont(info.getFont().deriveFont(Font.BOLD));
+            detectedLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
             detectedPath = new JTextArea(detected.getAbsolutePath());
             detectedPath.setEditable(false);
@@ -129,6 +138,9 @@ public class Bootstrap {
             detectedPath.setFocusable(false);
             detectedPath.setFont(info.getFont().deriveFont(Font.BOLD));
             detectedPath.setForeground(new Color(0, 120, 215));
+            detectedPath.setAlignmentX(Component.CENTER_ALIGNMENT);
+            detectedPath.setLineWrap(true);
+            detectedPath.setWrapStyleWord(true);
         }
 
         // ---------------- BUTTONS ----------------
@@ -139,8 +151,8 @@ public class Bootstrap {
         continueBtn.setEnabled(hasDetected);
 
         continueBtn.setPreferredSize(new Dimension(180, 30));
-        selectBtn.setPreferredSize(new Dimension(160, 30));
-        exitBtn.setPreferredSize(new Dimension(360, 30));
+        selectBtn.setPreferredSize(new Dimension(180, 30));
+        exitBtn.setPreferredSize(new Dimension(180, 30));
 
         // ---------------- ACTIONS ----------------
         continueBtn.addActionListener(e -> {
@@ -206,11 +218,11 @@ public class Bootstrap {
         root.add(Box.createVerticalStrut(12));
 
         JPanel row1 = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        row1.add(continueBtn);
         row1.add(selectBtn);
+        row1.add(exitBtn);
 
         JPanel row2 = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 8));
-        row2.add(exitBtn);
+        row2.add(continueBtn);
 
         JPanel buttonBlock = new JPanel();
         buttonBlock.setLayout(new BoxLayout(buttonBlock, BoxLayout.Y_AXIS));
