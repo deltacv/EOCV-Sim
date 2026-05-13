@@ -303,9 +303,37 @@ public class Bootstrap {
     // ---------------- DETECTION ----------------
 
     private static File findJava25() {
-        File jdks = new File(System.getProperty("user.home"), ".jdks");
-        log("Scanning: " + jdks.getAbsolutePath());
-        return scan(jdks);
+        List<File> roots = new ArrayList<>();
+
+        roots.add(new File(System.getProperty("user.home"), ".jdks"));
+
+        String javaHome = System.getenv("JAVA_HOME");
+        if (javaHome != null && !javaHome.isEmpty()) {
+            roots.add(new File(javaHome));
+        }
+
+        String osName = System.getProperty("os.name", "").toLowerCase();
+        if (osName.contains("win")) {
+            String pf = System.getenv("ProgramW6432");
+            if (pf == null) {
+                pf = System.getenv("ProgramFiles");
+            }
+
+            if (pf != null && !pf.isEmpty()) {
+                roots.add(new File(pf, "Java"));
+            }
+        }
+
+        for (File root : roots) {
+            log("Scanning: " + root.getAbsolutePath());
+
+            File detected = scan(root);
+            if (detected != null) {
+                return detected;
+            }
+        }
+
+        return null;
     }
 
     private static File scan(File root) {
@@ -319,6 +347,13 @@ public class Bootstrap {
             if (isJava25OrNewer(f)) {
                 log("Matched Java 25+: " + f.getAbsolutePath());
                 return f;
+            }
+
+            if (f.isDirectory()) {
+                File nested = scan(f);
+                if (nested != null) {
+                    return nested;
+                }
             }
         }
 
