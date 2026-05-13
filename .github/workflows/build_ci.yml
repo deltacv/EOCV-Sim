@@ -1,4 +1,4 @@
-name: Build, Test & Release
+  name: Build, Test & Release
 
 on:
   push:
@@ -28,6 +28,29 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: eocvsim-ubuntu-latest
+        path: |
+          EOCV-Sim/build/libs/*.jar
+
+  test_linux_arm:
+    runs-on: ubuntu-latest-arm64
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '25'
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build and test with Gradle
+      run: ./gradlew -Penv=${{ env.BUILD_ENV }} clean build shadowJar
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: eocvsim-ubuntu-arm64
         path: |
           EOCV-Sim/build/libs/*.jar
 
@@ -76,8 +99,31 @@ jobs:
         path: |
           EOCV-Sim/build/libs/*.jar
 
+  test_mac_intel:
+    runs-on: macos-13
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '25'
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build and test with Gradle
+      run: ./gradlew -Penv=${{ env.BUILD_ENV }} clean build shadowJar
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: eocvsim-macos-13
+        path: |
+          EOCV-Sim/build/libs/*.jar
+
   release:
-    needs: [test_linux, test_windows, test_mac]
+    needs: [test_linux, test_linux_arm, test_windows, test_mac, test_mac_intel]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
@@ -109,11 +155,23 @@ jobs:
           name: eocvsim-ubuntu-latest
           path: artifacts/ubuntu
 
+      - name: Download Linux ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-ubuntu-arm64
+          path: artifacts/ubuntu-arm64
+
       - name: Download macOS artifacts
         uses: actions/download-artifact@v4
         with:
           name: eocvsim-macos-latest
           path: artifacts/macos
+
+      - name: Download Intel macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-macos-13
+          path: artifacts/macos-intel
 
       - name: Download Windows artifacts
         uses: actions/download-artifact@v4
@@ -125,7 +183,9 @@ jobs:
         run: |
           ls -la artifacts || true
           ls -la artifacts/ubuntu || true
+          ls -la artifacts/ubuntu-arm64 || true
           ls -la artifacts/macos || true
+          ls -la artifacts/macos-intel || true
           ls -la artifacts/windows || true
 
       - name: Select platform jars for release
@@ -133,10 +193,14 @@ jobs:
           mkdir -p release-jars
           # Copy the first (and should be only) jar from each platform folder
           cp artifacts/ubuntu/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
+          cp artifacts/ubuntu-arm64/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux ARM64 jar found"
           cp artifacts/windows/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
           cp artifacts/macos/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
+          cp artifacts/macos-intel/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Intel macOS jar found"
           # Remove source jars if any were copied
           rm -f release-jars/*-sources.jar
+          # Remove the generic jar (no platform suffix)
+          find release-jars -name "EOCV-Sim-*.jar" ! -name "*x86*" ! -name "*arm*" ! -name "*win*" -delete
           echo "Release jars to upload:"
           ls -la release-jars/
 
@@ -149,7 +213,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   dev_release:
-    needs: [test_linux, test_windows, test_mac]
+    needs: [test_linux, test_linux_arm, test_windows, test_mac, test_mac_intel]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/v')
     steps:
@@ -158,6 +222,12 @@ jobs:
         with:
           name: eocvsim-ubuntu-latest
           path: artifacts/dev/ubuntu
+
+      - name: Download Linux ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-ubuntu-arm64
+          path: artifacts/dev/ubuntu-arm64
 
       - name: Download macOS artifacts
         uses: actions/download-artifact@v4
@@ -171,15 +241,25 @@ jobs:
           name: eocvsim-windows-latest
           path: artifacts/dev/windows
 
+      - name: Download Intel macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-macos-13
+          path: artifacts/dev/macos-intel
+
       - name: Select platform jars for dev release
         run: |
           mkdir -p release-jars
           # Copy the first (and should be only) jar from each platform folder
           cp artifacts/dev/ubuntu/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
+          cp artifacts/dev/ubuntu-arm64/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux ARM64 jar found"
           cp artifacts/dev/windows/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
           cp artifacts/dev/macos/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
+          cp artifacts/dev/macos-intel/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Intel macOS jar found"
           # Remove source jars if any were copied
           rm -f release-jars/*-sources.jar
+          # Remove the generic jar (no platform suffix)
+          find release-jars -name "EOCV-Sim-*.jar" ! -name "*x86*" ! -name "*arm*" ! -name "*win*" -delete
           echo "Dev release jars to upload:"
           ls -la release-jars/
 
