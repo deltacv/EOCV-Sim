@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -72,6 +73,14 @@ public class Bootstrap {
         final Object lock = new Object();
 
         JFrame dialog = new JFrame("EOCV-Sim: Java 25 Required");
+
+        try {
+            URL icon = Bootstrap.class.getResource("/images/icon/ico_eocvsim_new_128.png");
+            if (icon != null) {
+                dialog.setIconImage(new ImageIcon(icon).getImage());
+            }
+        } catch (Exception ignored) { }
+        
         dialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         JPanel root = new JPanel();

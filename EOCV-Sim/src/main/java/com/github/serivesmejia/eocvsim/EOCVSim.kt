@@ -184,8 +184,8 @@ class EOCVSim : KoinComponent {
 
         EOCVSimUncaughtExceptionHandler.register()
 
-        //loading native lib only once in the app runtime
         val loadLibrariesResult = LibraryLoader.loadLibraries()
+
         if(!loadLibrariesResult.success) {
             logger.error("Exception in loadLibraries():", loadLibrariesResult.error)
             logger.error("The sim will exit now as it's impossible to continue without the required libraries")
@@ -195,10 +195,13 @@ class EOCVSim : KoinComponent {
             runBlocking {
                 launch(Dispatchers.Swing) {
                     val crashHeader = """
-                        One or more of WPILib's native libraries failed to load at the earliest stage.
-                        Ensure you're running EOCV-Sim on a supported platform, Java 25 is required.
-                        Read the crash report below, this is not likely to be a bug on the program,
-                        If it seems like a bug, please open an issue in GitHub with this report. 
+                        Failed to load one or more WPILib native libraries during initialization.
+
+                        This EOCV-Sim package is intended for ${Build.packagePlatform}.
+                        Please verify that you are running the correct build.
+
+                        Additional details are available in the crash report below.
+                        If this seems like a bug, please report it on GitHub.
                     """.trimIndent()
 
                     dialogFactory.instantiateCrashReport(
