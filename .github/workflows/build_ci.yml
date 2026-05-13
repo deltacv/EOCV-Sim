@@ -8,7 +8,7 @@ on:
 
 
 jobs:
-  test_linux:
+  build_linux:
     runs-on: ubuntu-24.04
     env:
       BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
@@ -31,7 +31,7 @@ jobs:
         path: |
           EOCV-Sim/build/libs/*.jar
 
-  test_linux_arm:
+  build_linux_arm:
     runs-on: ubuntu-24.04-arm
     env:
       BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
@@ -54,7 +54,7 @@ jobs:
         path: |
           EOCV-Sim/build/libs/*.jar
 
-  test_windows:
+  build_windows:
     runs-on: windows-latest
     env:
       BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
@@ -76,7 +76,7 @@ jobs:
         path: |
           EOCV-Sim/build/libs/*.jar
 
-  test_mac:
+  build_mac:
     runs-on: macos-26
     env:
       BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
@@ -99,7 +99,7 @@ jobs:
         path: |
           EOCV-Sim/build/libs/*.jar
 
-  test_mac_intel:
+  build_mac_intel:
     runs-on: macos-26-intel
     env:
       BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}

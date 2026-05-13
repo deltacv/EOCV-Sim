@@ -78,12 +78,6 @@ allprojects {
     wpilibRepositories.use2027Repos()
     wpilibRepositories.addAllReleaseRepositories(project)
 
-    tasks.withType(Jar).configureEach {
-        manifest {
-            attributes['Main-Class'] = 'com.github.serivesmejia.eocvsim.Main'
-        }
-    }
-
     if (env == 'dev') {
         String date = DateTimeFormatter.ofPattern("yyMMdd-HHmm").format(LocalDateTime.now())
         String hash = findProperty('hash')

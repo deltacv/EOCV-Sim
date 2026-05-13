@@ -25,6 +25,8 @@ object Main {
      */
     @JvmStatic
     fun main(args: Array<String>) {
+        RuntimeVersionGuard.ensureJavaOrExit()
+
         System.setProperty("sun.java2d.d3d", "false")
         System.setProperty("apple.awt.application.appearance", "system")
         System.setProperty("apple.awt.application.name", "EasyOpenCV Simulator")

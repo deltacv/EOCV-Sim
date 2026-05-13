@@ -24,11 +24,30 @@ sourceSets {
             srcDirs += generatedSourcesDir
         }
     }
+
+    bootstrap {
+        java {
+            srcDirs = ['src/bootstrap/java']
+        }
+    }
+}
+
+tasks.named('compileBootstrapJava', JavaCompile) {
+    options.release.set(8)
 }
 
 shadowJar {
     mergeServiceFiles()
     archiveClassifier.set(wpilibTools.currentPlatform.platformName)
+
+    from(sourceSets.main.output)
+    from(sourceSets.bootstrap.output)
+
+    manifest {
+        attributes(
+                'Main-Class': 'com.github.serivesmejia.eocvsim.Bootstrap'
+        )
+    }
 }
 
 test {
