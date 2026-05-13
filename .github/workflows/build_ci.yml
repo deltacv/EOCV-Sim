@@ -3,13 +3,15 @@ name: Build, Test & Release
 on:
   push:
     branches: [ master, dev ]
-    tags: 'v*'
+    tags: ['v*']
   pull_request:
 
 
 jobs:
   test_linux:
     runs-on: ubuntu-latest
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
 
     steps:
     - uses: actions/checkout@v2
@@ -21,7 +23,7 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle
-      run: ./gradlew -Penv=ci clean build shadowJar
+      run: ./gradlew -Penv=${{ env.BUILD_ENV }} clean build shadowJar
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -32,6 +34,8 @@ jobs:
 
   test_windows:
     runs-on: windows-latest
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
 
     steps:
     - uses: actions/checkout@v2
@@ -42,7 +46,7 @@ jobs:
         java-version: '25'
     - name: Build and test with Gradle (Windows)
       shell: pwsh
-      run: .\gradlew.bat -Penv=ci clean build shadowJar
+      run: .\gradlew.bat -Penv=${{ env.BUILD_ENV }} clean build shadowJar
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -53,6 +57,8 @@ jobs:
 
   test_mac:
     runs-on: macos-latest
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
 
     steps:
     - uses: actions/checkout@v2
@@ -64,7 +70,7 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle
-      run: ./gradlew -Penv=ci clean build shadowJar
+      run: ./gradlew -Penv=${{ env.BUILD_ENV }} clean build shadowJar
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -79,6 +85,26 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '25'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Publish package to maven central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.JRELEASER_MAVENCENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
+        run: ./gradlew -Penv=release :Common:publishToMavenCentral :Vision:publishToMavenCentral :EOCV-Sim:publishToMavenCentral -x test -x :EOCV-Sim:shadowJar
+
+      - name: Build release shadow jar with Gradle
+        run: ./gradlew -Penv=release shadowJar -x test
 
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4
@@ -112,3 +138,23 @@ jobs:
           files: artifacts/**/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dev_release:
+    needs: [test_linux]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-ubuntu-latest
+          path: artifacts/dev
+
+      - name: Create Dev Release and upload artifacts
+        uses: pyTooling/Actions/releaser@r0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: 'Dev'
+          rm: true
+          files: |
+            artifacts/dev/**/*.jar
