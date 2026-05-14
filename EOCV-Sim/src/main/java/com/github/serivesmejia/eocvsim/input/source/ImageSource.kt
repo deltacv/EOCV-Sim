@@ -36,6 +36,8 @@ class ImageSource @JvmOverloads constructor(
 
     @Transient private var matRecycler = MatRecycler(2)
 
+    override val sourceSize get() = size
+
     override fun init(): Boolean {
         if (initialized) return false
         initialized = true
@@ -89,12 +91,11 @@ class ImageSource @JvmOverloads constructor(
         readMat.copyTo(img)
         readMat.release()
 
-        if (this.size.area() != 0.0) {
-            Imgproc.resize(img, img, this.size, 0.0, 0.0, Imgproc.INTER_AREA)
+        if (this.sourceSize.area() != 0.0) {
+            Imgproc.resize(img, img, this.sourceSize, 0.0, 0.0, Imgproc.INTER_AREA)
         } else {
             this.size = img!!.size()
         }
-
 
         Imgproc.cvtColor(img, img, Imgproc.COLOR_BGR2RGB)
     }
@@ -114,21 +115,14 @@ class ImageSource @JvmOverloads constructor(
         readImage()
     }
 
-    override fun internalCloneSource() = ImageSource(imgPath, size)
-
-    override fun setSize(size: Size) {
-        this.size = size
-    }
-
-    override fun getSize() = size
-
+    override fun internalCloneSource() = ImageSource(imgPath, sourceSize)
 
     override val fileFilters: FileFilter get() = FileFilters.imagesFilter
     override val captureTimeNanos: Long get() = System.nanoTime()
 
 
     override fun toString(): String {
-        return "ImageSource(\"$imgPath\", $size)"
+        return "ImageSource(\"$imgPath\", $sourceSize)"
 
     }
 

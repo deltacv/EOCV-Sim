@@ -26,8 +26,8 @@ class InputSourceApiImpl(owner: EOCVSimPlugin, val internalInputSource: com.gith
                     internalInputSource.videoMode?.height?.toDouble() ?: 0.0
                 )
             )
-            is ImageSource -> New.Image(internalInputSource.imgPath, internalInputSource.size)
-            is VideoSource -> New.Video(internalInputSource.videoPath, internalInputSource.size)
+            is ImageSource -> New.Image(internalInputSource.imgPath, internalInputSource.sourceSize)
+            is VideoSource -> New.Video(internalInputSource.videoPath, internalInputSource.sourceSize)
             is HttpSource -> New.Http(internalInputSource.url)
             else -> throw IllegalStateException("Unknown input source type: ${internalInputSource::class.java}")
         }

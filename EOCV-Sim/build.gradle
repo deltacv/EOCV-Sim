@@ -113,14 +113,28 @@ dependencies {
     api wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
     wpilibNatives wpilibTools.deps.wpilibOpenCv(opencvVersion)
 
-    // use cscore for webcams
+    // WPILib AprilTag replaces AprilTagDesktop
+    api wpilibTools.deps.wpilibJava("apriltag")
+    wpilibNatives wpilibTools.deps.wpilib("apriltag")
+
+    // WPILib cscore replaces steve
     implementation wpilibTools.deps.wpilibJava("cscore")
     wpilibNatives wpilibTools.deps.wpilib("cscore")
+
     // cscore depends on these
     implementation wpilibTools.deps.wpilibJava("wpinet")
     wpilibNatives wpilibTools.deps.wpilib("wpinet")
+
     implementation wpilibTools.deps.wpilibJava("wpiutil")
     wpilibNatives wpilibTools.deps.wpilib("wpiutil")
+
+    // needed for apriltags
+    implementation wpilibTools.deps.wpilibJava("wpimath")
+    wpilibNatives wpilibTools.deps.wpilib("wpimath")
+
+    // we don't use this at all... But if we don't have it in the classpath,
+    // we can't use WPILib's Geometry classes for apriltags.
+    implementation "us.hebi.quickbuf:quickbuf-runtime:$quickbufVersion"
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
@@ -128,8 +142,8 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-slf4j2-impl:$log4j_version"
 
     implementation "info.picocli:picocli:$picocli_version"
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
-    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.15.2'
+    implementation "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
     implementation "io.github.classgraph:classgraph:$classgraph_version"
 
     implementation "com.formdev:flatlaf:$flatlaf_version"
@@ -186,7 +200,6 @@ public final class Build {
     public static final String packagePlatform = "${wpilibTools.currentPlatform.platformName}";
 
     public static final String opencvVersion = "$opencvVersion";
-    public static final String apriltagPluginVersion = "$apriltag_plugin_version";
     public static final String paperVisionVersion = "$papervision_version";
 }
 """

@@ -385,6 +385,7 @@ class SwingOpenCvViewport(
 
     override fun setRenderingPolicy(policy: ViewportRenderingPolicy) {}
     override fun setRenderHook(renderHook: RenderHook) {
+        logger.debug("setRenderHook(): ${renderHook::class.simpleName}")
         this.renderHook = renderHook
     }
 

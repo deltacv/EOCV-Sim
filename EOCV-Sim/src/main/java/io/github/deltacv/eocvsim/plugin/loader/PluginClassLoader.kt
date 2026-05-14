@@ -164,7 +164,7 @@ class PluginClassLoader(
 
         if (entry != null) {
             // Construct a URL for the resource inside the plugin JAR
-            return URL("jar:file:${pluginJar.absolutePath}!/$name")
+            return URI.create("jar:file:${pluginJar.absolutePath}!/$name").toURL()
         } else {
             resourceFromClasspath(name)?.let { return it }
         }

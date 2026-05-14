@@ -9,11 +9,11 @@ import org.opencv.core.Size;
 
 public interface VisionSource {
 
-    int init();
+    int check();
 
     CameraControlMap getControlMap();
 
-    boolean start(Size requestedSize);
+    boolean start(Size size);
 
     boolean attach(FrameReceiver sourced);
     boolean remove(FrameReceiver sourced);

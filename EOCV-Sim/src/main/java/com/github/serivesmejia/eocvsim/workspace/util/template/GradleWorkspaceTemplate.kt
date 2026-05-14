@@ -54,7 +54,6 @@ object GradleWorkspaceTemplate : WorkspaceTemplate() {
         val fileContents = SysUtil.loadFileStr(buildGradleFile)
             .replace("\$eocvsim_version", Build.standardVersionString)
             .replace("\$opencv_version", Build.opencvVersion)
-            .replace("\$apriltag_version", Build.apriltagPluginVersion)
 
         SysUtil.saveFileStr(buildGradleFile, fileContents)
     }

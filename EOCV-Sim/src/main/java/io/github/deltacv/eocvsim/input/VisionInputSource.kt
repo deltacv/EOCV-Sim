@@ -16,34 +16,37 @@ import org.opencv.core.Mat
 import org.opencv.core.Size
 
 class VisionInputSource(
-    private val inputSource: InputSource,
-    throwableHandler: ThrowableHandler? = null
+    throwableHandler: ThrowableHandler? = null,
+    private val inputSourceProvider: (Size) -> InputSource,
 ) : VisionSourceBase(throwableHandler) {
 
     val logger by loggerForThis()
 
-    override fun init(): Int {
-        return 0
+    private var inputSource: InputSource? = null
+
+    override fun check(): Int {
+        val testSource = inputSourceProvider(Size(0.0, 0.0))
+        val state = testSource.init()
+        testSource.close()
+        return if(state) 0 else 1
     }
 
     override fun getControlMap() = if(inputSource is CameraSource) {
-        CameraSourceControlMap(inputSource)
-    } else throw IllegalStateException("Controls are not available for source ${inputSource.name}")
+        CameraSourceControlMap(inputSource!! as CameraSource)
+    } else throw IllegalStateException("Controls are not available for source ${inputSource?.name ?: ""}")
 
     override fun close(): Boolean {
-        inputSource.close()
-        inputSource.reset()
+        inputSource?.close()
         return true
     }
 
     override fun startSource(size: Size): Boolean {
-        inputSource.setSize(size)
-        inputSource.init()
-        return true
+        inputSource = inputSourceProvider(size)
+        return inputSource!!.init()
     }
 
     override fun stopSource(): Boolean {
-        inputSource.close()
+        inputSource?.close()
         return true;
     }
 
@@ -51,8 +54,8 @@ class VisionInputSource(
 
     override fun pullFrame(): Timestamped<Mat> {
         return try {
-            val frame = inputSource.update();
-            Timestamped(frame, inputSource.captureTimeNanos)
+            val frame = inputSource!!.update();
+            Timestamped(frame, inputSource!!.captureTimeNanos)
         } catch(e: Exception) {
             Timestamped(emptyMat, 0)
         }

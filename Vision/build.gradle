@@ -12,11 +12,10 @@ wpilibTools.deps.wpilibVersion = wpilibVersion
 dependencies {
     implementation project(':Common')
 
-    api("org.deltacv:AprilTagDesktop:$apriltag_plugin_version") {
-        transitive = false
-    }
-
-    api wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
+    compileOnly wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
+    compileOnly wpilibTools.deps.wpilibJava("wpiutil")
+    compileOnly wpilibTools.deps.wpilibJava("wpimath")
+    compileOnly wpilibTools.deps.wpilibJava("apriltag")
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'

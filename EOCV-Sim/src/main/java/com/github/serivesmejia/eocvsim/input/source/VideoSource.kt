@@ -50,6 +50,8 @@ class VideoSource @JvmOverloads constructor(
 
     @Transient private val logger = LoggerFactory.getLogger(javaClass)
 
+    override val sourceSize get() = size
+
     override fun init(): Boolean {
         if (initialized) return false
         initialized = true
@@ -136,10 +138,10 @@ class VideoSource @JvmOverloads constructor(
             return lastFrame
         }
 
-        if (size.area() == 0.0) size = lastFrame!!.size()
+        if (sourceSize.area() == 0.0) size = lastFrame!!.size()
 
         Imgproc.cvtColor(newFrame, lastFrame, Imgproc.COLOR_BGR2RGB)
-        Imgproc.resize(lastFrame, lastFrame, size, 0.0, 0.0, Imgproc.INTER_AREA)
+        Imgproc.resize(lastFrame, lastFrame, sourceSize, 0.0, 0.0, Imgproc.INTER_AREA)
 
         matRecycler?.returnMat(newFrame)
 
@@ -155,7 +157,7 @@ class VideoSource @JvmOverloads constructor(
 
         lastFramePaused?.let {
             Imgproc.cvtColor(it, it, Imgproc.COLOR_BGR2RGB)
-            Imgproc.resize(it, it, size, 0.0, 0.0, Imgproc.INTER_AREA)
+            Imgproc.resize(it, it, sourceSize, 0.0, 0.0, Imgproc.INTER_AREA)
         }
 
         update()
@@ -172,23 +174,11 @@ class VideoSource @JvmOverloads constructor(
         video!!.set(Videoio.CAP_PROP_POS_FRAMES, lastFramePosition)
     }
 
-    override fun internalCloneSource(): InputSource = VideoSource(videoPath, size)
-
-    override fun getSize(): Size = size
-
-    
-    override fun setSize(size: Size) {
-        this.size = size
-    }
+    override fun internalCloneSource(): InputSource = VideoSource(videoPath, sourceSize)
 
     override val fileFilters: FileFilter get() = FileFilters.videoMediaFilter
     override val captureTimeNanos: Long get() = capTimeNanos
 
-
-    override fun toString(): String {
-        return "VideoSource($videoPath, $size)"
-
-    }
-
+    override fun toString() = "VideoSource($videoPath, $sourceSize)"
 }
 

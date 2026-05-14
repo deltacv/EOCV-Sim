@@ -196,7 +196,6 @@ class CreateCameraSource : KoinComponent {
         val info = cameraInfos.getOrNull(index) ?: return
 
         try {
-
             val cam = UsbCamera(info.name, info.dev)
 
             modes = cam.enumerateVideoModes()

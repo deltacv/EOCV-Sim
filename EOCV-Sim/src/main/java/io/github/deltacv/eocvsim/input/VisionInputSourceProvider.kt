@@ -45,28 +45,36 @@ class VisionInputSourceProvider(
         return ok
     }
 
-    private fun defaultMode(index: Int): VideoMode {
+    private fun defaultMode(index: Int, size: Size): VideoMode {
         val cam = UsbCamera("$index", index)
 
         val mode = try {
-            cam.videoMode
+            val modes = cam.enumerateVideoModes()
+            if (size.width > 0 && size.height > 0) {
+                modes.firstOrNull { it.width == size.width.toInt() && it.height == size.height.toInt() }
+                    ?: modes.firstOrNull()
+                    ?: cam.videoMode
+            } else {
+                cam.videoMode
+            }
         } catch (_: Exception) {
-            // fallback safe mode if enumeration fails
             VideoMode(0, 640, 480, 30)
+        } finally {
+            cam.close()
         }
 
-        cam.close()
         return mode
     }
 
     override fun get(name: String): VisionSource {
-
         val source = VisionInputSource(
+            RedirectToOpModeThrowableHandler(notifier)
+        ) { size ->
             when {
                 File(name).exists() -> {
                     when {
-                        isImage(name) -> ImageSource(name, Size())
-                        isVideo(name) -> VideoSource(name, Size())
+                        isImage(name) -> ImageSource(name, size)
+                        isVideo(name) -> VideoSource(name, size)
                         else -> throw IllegalArgumentException(
                             "File $name is neither image nor video"
                         )
@@ -81,13 +89,11 @@ class VisionInputSourceProvider(
                         inputSourceManager.sources[name]
                             ?: throw IllegalArgumentException("Input source $name not found")
                     } else {
-                        // 🔥 FIX: use real VideoMode instead of Size hack
-                        CameraSource(index, defaultMode(index))
+                        CameraSource(index, defaultMode(index, size))
                     }
                 }
-            },
-            RedirectToOpModeThrowableHandler(notifier)
-        )
+            }
+        }
 
         notifier.onStateChange {
             when (notifier.state) {

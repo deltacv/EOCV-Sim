@@ -7,6 +7,7 @@ package com.github.serivesmejia.eocvsim.input.source
 
 import com.github.serivesmejia.eocvsim.input.InputSource
 import org.opencv.core.Mat
+import org.opencv.core.Size
 import javax.swing.filechooser.FileFilter
 
 class NullSource : InputSource() {
@@ -24,6 +25,8 @@ class NullSource : InputSource() {
     override fun onPause() {}
 
     override fun onResume() {}
+
+    override val sourceSize = Size()
 
     override fun internalCloneSource(): InputSource = NullSource()
 

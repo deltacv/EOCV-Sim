@@ -35,13 +35,13 @@ class CameraSource : InputSource, KoinComponent {
         @JvmStatic var currentWebcamIndex = -1
     }
 
-    override val hasSlowInitialization: Boolean get() = true
+    override val hasSlowInitialization = true
 
-    @JsonProperty @JvmField var cameraPortIndex: Int = -1
-    @JsonProperty @JvmField var exactPortMatch: Boolean = false
+    @JsonProperty @JvmField var cameraPortIndex = -1
+    @JsonProperty @JvmField var exactPortMatch = false
     @JsonProperty @JvmField var vendorId: Int? = null
     @JsonProperty @JvmField var productId: Int? = null
-    @Transient var webcamName: String = ""
+    @Transient var webcamName = ""
 
     @JsonProperty @JvmField var videoMode: VideoMode? = null
 
@@ -49,14 +49,11 @@ class CameraSource : InputSource, KoinComponent {
         private set
 
     @Transient private var cvSink: CvSink? = null
-
     @Transient private var lastFrame = Mat()
-
     @Transient private var initialized = false
-
     @Transient var isLegacyByIndex = false
+    @Transient private var capTimeNanos = 0L
 
-    @Transient private var capTimeNanos: Long = 0
     private val configManager: ConfigManager by inject()
     private val logger by loggerForThis()
 
@@ -96,94 +93,65 @@ class CameraSource : InputSource, KoinComponent {
         this.isLegacyByIndex = true
     }
 
-    override fun setSize(size: Size) {
-        // deprecated concept now; derived from VideoMode
-    }
-
-    override fun getSize(): Size =
-        videoMode?.let { Size(it.width.toDouble(), it.height.toDouble()) } ?: Size()
+    override val sourceSize: Size
+        get() = videoMode?.let { Size(it.width.toDouble(), it.height.toDouble()) } ?: Size()
 
     override fun init(): Boolean {
         if (initialized) return false
         initialized = true
 
+        val cameras by lazy { UsbCamera.enumerateUsbCameras() }
+
         val matchedInfo = when {
-            exactPortMatch -> {
-                val infos = UsbCamera.enumerateUsbCameras()
-                infos.firstOrNull {
-                    cameraPortIndex >= 0 &&
+            exactPortMatch -> cameras.firstOrNull {
+                cameraPortIndex >= 0 &&
                         it.dev == cameraPortIndex &&
                         vendorId != null && productId != null &&
                         it.vendorId == vendorId &&
                         it.productId == productId
-                } ?: run {
-                    logger.error("Camera not found on the same connection: $cameraPortIndex")
+            } ?: run {
+                logger.error("Camera not found on the same connection: $cameraPortIndex")
+                return false
+            }
+
+            cameraPortIndex >= 0 -> cameras.firstOrNull { it.dev == cameraPortIndex }
+                ?: run {
+                    logger.error("Camera not found on port: $cameraPortIndex")
                     return false
                 }
+
+            vendorId != null && productId != null -> cameras.firstOrNull {
+                it.vendorId == vendorId && it.productId == productId
+            } ?: run {
+                logger.error("Camera not found by VID/PID: $vendorId:$productId")
+                return false
             }
 
-            cameraPortIndex >= 0 -> {
-                val infos = UsbCamera.enumerateUsbCameras()
-                infos.firstOrNull { it.dev == cameraPortIndex }
-                    ?: run {
-                        logger.error("Camera not found on port: $cameraPortIndex")
-                        return false
-                    }
-            }
-
-            vendorId != null && productId != null -> {
-                val infos = UsbCamera.enumerateUsbCameras()
-                infos.firstOrNull {
-                    it.vendorId == vendorId && it.productId == productId
-                } ?: run {
-                    logger.error("Camera not found by VID/PID: ${vendorId}:${productId}")
+            webcamName.isNotEmpty() -> cameras.firstOrNull { it.name == webcamName }
+                ?: run {
+                    logger.error("Camera not found: $webcamName")
                     return false
                 }
-            }
-
-            webcamName.isNotEmpty() -> {
-                val infos = UsbCamera.enumerateUsbCameras()
-                infos.firstOrNull { it.name == webcamName }
-                    ?: run {
-                        logger.error("Camera not found: $webcamName")
-                        return false
-                    }
-            }
 
             else -> null
         }
 
-        val cam = if (matchedInfo != null) {
+        camera = if (matchedInfo != null) {
             webcamName = matchedInfo.name
             UsbCamera(matchedInfo.name, matchedInfo.dev)
         } else {
             UsbCamera("$cameraPortIndex", cameraPortIndex)
         }
 
-        camera = cam
+        camera!!.videoMode = videoMode ?: camera!!.videoMode
 
-        val desiredMode = videoMode
-
-        if (desiredMode != null) {
-            cam.videoMode = desiredMode
-        } else {
-            val mode = cam.videoMode
-            cam.videoMode = mode
-        }
-
-        val mode = cam.videoMode
-
-        logger.info(
-            "Camera started: ${matchedInfo?.name ?: webcamName.ifEmpty { "Camera $cameraPortIndex" }} ${mode?.stringify()}"
-        )
+        logger.info("Camera started: ${matchedInfo?.name ?: webcamName.ifEmpty { "Camera $cameraPortIndex" }} ${camera!!.videoMode?.stringify()}")
 
         cvSink = CvSink("eocvsim_sink_$cameraPortIndex", PixelFormat.BGR).also {
-            it.source = cam
+            it.source = camera
         }
 
-        val ok = cvSink!!.grabFrame(lastFrame, configManager.config.webcamOpenTimeoutSec)
-
-        if (ok == 0L || lastFrame.empty()) {
+        if (cvSink!!.grabFrame(lastFrame, configManager.config.webcamOpenTimeoutSec) == 0L || lastFrame.empty()) {
             logger.error("Failed to open camera: ${cvSink!!.error}")
             return false
         }
@@ -194,58 +162,48 @@ class CameraSource : InputSource, KoinComponent {
 
     override fun reset() {
         if (!initialized) return
-
-        cvSink?.close()
-        cvSink = null
-
-        camera?.close()
-        camera = null
-
+        teardown()
         lastFrame.release()
-
         initialized = false
     }
 
-    override fun close() {
-        cvSink?.close()
-        camera?.close()
-        currentWebcamIndex = -1
-    }
+    override fun close() = teardown()
 
     override fun update(): Mat {
         if (isPaused) return lastFrame
 
-        val grabTime = cvSink?.grabFrame(lastFrame, configManager.config.webcamNewFrameTimeoutSec) ?: 0L
+        capTimeNanos = cvSink?.grabFrame(lastFrame, configManager.config.webcamNewFrameTimeoutSec) ?: 0L
 
-        if(lastFrame.empty()) {
-            return lastFrame
+        if (!lastFrame.empty()) {
+            Imgproc.cvtColor(lastFrame, lastFrame, Imgproc.COLOR_BGR2RGBA)
         }
 
-        capTimeNanos = grabTime
-        Imgproc.cvtColor(lastFrame, lastFrame, Imgproc.COLOR_BGR2RGBA)
         return lastFrame
     }
 
     override fun onPause() {
         cvSink?.grabFrame(lastFrame, configManager.config.webcamNewFrameTimeoutSec)
-        cvSink?.close()
-        camera?.close()
-        currentWebcamIndex = -1
+        teardown()
     }
 
     override fun onResume() {
         InputSourceInitializer.runWithTimeout(this) { init() }
     }
 
-    override fun internalCloneSource(): InputSource =
-        if (isLegacyByIndex) {
-            CameraSource(cameraPortIndex, videoMode)
-        } else {
-            CameraSource(webcamName, cameraPortIndex, exactPortMatch, vendorId, productId, videoMode)
-        }
+    private fun teardown() {
+        cvSink?.close()
+        cvSink = null
+        camera?.close()
+        camera = null
+        currentWebcamIndex = -1
+    }
 
-    override val fileFilters: FileFilter? get() = null
-    override val captureTimeNanos: Long get() = capTimeNanos
+    override fun internalCloneSource(): InputSource =
+        if (isLegacyByIndex) CameraSource(cameraPortIndex, videoMode)
+        else CameraSource(webcamName, cameraPortIndex, exactPortMatch, vendorId, productId, videoMode)
+
+    override val fileFilters: FileFilter? = null
+    override val captureTimeNanos get() = capTimeNanos
 
     override fun toString() =
         "CameraSource($webcamName, port=$cameraPortIndex, exactPortMatch=$exactPortMatch, vid=$vendorId, pid=$productId, ${videoMode?.stringify()})"

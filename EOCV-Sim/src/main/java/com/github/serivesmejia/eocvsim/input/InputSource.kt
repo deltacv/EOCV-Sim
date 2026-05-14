@@ -53,9 +53,7 @@ abstract class InputSource : Comparable<InputSource>, KoinComponent {
     abstract fun onPause()
     abstract fun onResume()
 
-    open fun setSize(size: Size) {}
-
-    open fun getSize() = Size()
+    abstract val sourceSize: Size
 
     open fun update(): Mat? = null
 

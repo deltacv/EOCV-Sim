@@ -14,6 +14,7 @@ import io.github.deltacv.common.util.loggerForThis
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.opencv.core.Mat
+import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 import org.wpilib.vision.camera.CvSink
 import org.wpilib.vision.camera.HttpCamera
@@ -109,6 +110,9 @@ class HttpSource @JvmOverloads constructor (
     }
 
     override fun internalCloneSource(): InputSource = HttpSource(url)
+
+    override val sourceSize: Size
+        get() = cvSink?.directMat?.size() ?: Size()
 
     override val fileFilters: FileFilter? get() = null
     override val captureTimeNanos: Long get() = capTimeNanos

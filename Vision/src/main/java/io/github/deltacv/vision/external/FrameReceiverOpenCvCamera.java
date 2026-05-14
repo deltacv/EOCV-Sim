@@ -37,7 +37,7 @@ public class FrameReceiverOpenCvCamera extends OpenCvCameraBase implements OpenC
     public int openCameraDevice() {
         prepareForOpenCameraDevice();
 
-        return source.init();
+        return source.check();
     }
 
     @Override
