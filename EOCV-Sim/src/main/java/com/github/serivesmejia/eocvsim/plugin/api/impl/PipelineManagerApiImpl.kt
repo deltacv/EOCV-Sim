@@ -7,10 +7,10 @@ package com.github.serivesmejia.eocvsim.plugin.api.impl
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.pipeline.instantiator.PipelineInstantiator
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.PipelineInstantiatorApi
-import io.github.deltacv.eocvsim.plugin.api.PipelineManagerApi
-import io.github.deltacv.eocvsim.plugin.api.PipelineManagerApi.PipelineSource
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.PipelineInstantiatorApi
+import org.deltacv.eocvsim.plugin.api.PipelineManagerApi
+import org.deltacv.eocvsim.plugin.api.PipelineManagerApi.PipelineSource
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.openftc.easyopencv.OpenCvPipeline
 

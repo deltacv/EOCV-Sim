@@ -5,7 +5,7 @@
 
 package com.github.serivesmejia.eocvsim.util.event
 
-import io.github.deltacv.common.util.loggerOf
+import org.deltacv.common.util.loggerOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking

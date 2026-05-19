@@ -5,11 +5,11 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.util
 
-import io.github.deltacv.common.util.loggerForThis
-import io.github.deltacv.eocvsim.virtualreflect.VirtualField
-import io.github.deltacv.eocvsim.virtualreflect.VirtualReflectContext
-import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflectContext
-import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
+import org.deltacv.common.util.loggerForThis
+import org.deltacv.eocvsim.virtualreflect.VirtualField
+import org.deltacv.eocvsim.virtualreflect.VirtualReflectContext
+import org.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflectContext
+import org.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
 import org.openftc.easyopencv.OpenCvPipeline
 import java.util.*
 

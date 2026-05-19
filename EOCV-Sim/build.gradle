@@ -160,7 +160,7 @@ dependencies {
     testImplementation "io.kotest:kotest-runner-junit5:$kotest_version"
     testImplementation "io.kotest:kotest-assertions-core:$kotest_version"
 
-    implementation "com.moandjiezana.toml:toml4j:$toml4j_version"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-toml:$jackson_version"
     implementation 'org.ow2.asm:asm:9.7'
 
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain:3.3.3'

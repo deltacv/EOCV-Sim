@@ -6,8 +6,8 @@
 package com.github.serivesmejia.eocvsim.gui
 
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
-import io.github.deltacv.common.util.loggerForThis
-import io.github.deltacv.vision.external.gui.util.ImgUtil
+import org.deltacv.common.util.loggerForThis
+import org.deltacv.vision.external.gui.util.ImgUtil
 import java.awt.image.BufferedImage
 import java.util.NoSuchElementException
 import org.koin.core.component.KoinComponent

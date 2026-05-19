@@ -31,8 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 package com.qualcomm.robotcore.eventloop.opmode;
 
-import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider;
-import io.github.deltacv.vision.external.source.VisionSourceProvider;
+import org.deltacv.vision.external.source.ThreadVisionSourceProvider;
+import org.deltacv.vision.external.source.VisionSourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -9,7 +9,7 @@ import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import com.github.serivesmejia.eocvsim.tuner.TunableNumber
-import io.github.deltacv.vision.external.util.extension.cvtColor
+import org.deltacv.vision.external.util.extension.cvtColor
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
 import java.awt.FlowLayout
 import java.awt.GridLayout

@@ -6,7 +6,7 @@
 package com.github.serivesmejia.eocvsim.input
 
 import com.github.serivesmejia.eocvsim.util.event.ParamEventHandler
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

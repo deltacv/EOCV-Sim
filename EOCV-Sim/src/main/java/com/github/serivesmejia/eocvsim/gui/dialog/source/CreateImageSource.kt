@@ -11,7 +11,7 @@ import com.github.serivesmejia.eocvsim.gui.component.input.FileSelector
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.input.source.ImageSource
-import io.github.deltacv.vision.external.util.CvUtil
+import org.deltacv.vision.external.util.CvUtil
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler

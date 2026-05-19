@@ -24,10 +24,9 @@ import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrator
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
-import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
-import io.github.deltacv.common.util.ParsedVersion
-import io.github.deltacv.common.util.loggerFor
-import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import org.deltacv.common.pipeline.PipelineStatisticsCalculator
+import org.deltacv.common.util.ParsedVersion
+import org.deltacv.common.util.loggerFor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -95,7 +94,7 @@ class EOCVSim : KoinComponent {
 
     val configManager: ConfigManager by inject()
     val inputSourceManager: InputSourceManager by inject()
-    val pluginManager: PluginManager by inject()
+    val pluginManager: org.deltacv.eocvsim.plugin.loader.PluginManager by inject()
 
     val recordingManager: RecordingManager by inject()
     val dialogFactory: DialogFactory by inject()

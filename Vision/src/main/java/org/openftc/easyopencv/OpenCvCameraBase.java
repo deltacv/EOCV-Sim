@@ -21,8 +21,8 @@
 
 package org.openftc.easyopencv;
 
-import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator;
-import io.github.deltacv.vision.external.PipelineRenderHook;
+import org.deltacv.common.pipeline.PipelineStatisticsCalculator;
+import org.deltacv.vision.external.PipelineRenderHook;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 

@@ -12,10 +12,10 @@ import com.github.serivesmejia.eocvsim.gui.util.Corner
 import com.github.serivesmejia.eocvsim.gui.util.icon.PipelineListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import com.qualcomm.robotcore.eventloop.opmode.*
 import com.qualcomm.robotcore.util.Range
-import io.github.deltacv.vision.internal.opmode.OpModeState
+import org.deltacv.vision.internal.opmode.OpModeState
 import java.awt.GridBagConstraints
 import java.awt.event.MouseEvent
 import javax.swing.*

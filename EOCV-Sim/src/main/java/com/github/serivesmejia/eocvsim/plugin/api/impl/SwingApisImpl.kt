@@ -6,10 +6,10 @@
 package com.github.serivesmejia.eocvsim.plugin.api.impl
 
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.JFileChooserApi
-import io.github.deltacv.eocvsim.plugin.api.JMenuApi
-import io.github.deltacv.eocvsim.plugin.api.JMenuItemApi
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.JFileChooserApi
+import org.deltacv.eocvsim.plugin.api.JMenuApi
+import org.deltacv.eocvsim.plugin.api.JMenuItemApi
 import java.io.File
 import javax.swing.JFileChooser
 import javax.swing.JMenu

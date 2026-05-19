@@ -9,11 +9,11 @@ import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.DialogFactoryApi
-import io.github.deltacv.eocvsim.plugin.api.HookApi
-import io.github.deltacv.eocvsim.plugin.api.InputSourceApi
-import io.github.deltacv.eocvsim.plugin.api.JFileChooserApi
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.DialogFactoryApi
+import org.deltacv.eocvsim.plugin.api.HookApi
+import org.deltacv.eocvsim.plugin.api.InputSourceApi
+import org.deltacv.eocvsim.plugin.api.JFileChooserApi
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File

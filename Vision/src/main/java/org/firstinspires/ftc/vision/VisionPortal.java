@@ -38,8 +38,8 @@ import android.util.Size;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider;
-import io.github.deltacv.vision.internal.source.ftc.SourcedCameraNameImpl;
+import org.deltacv.vision.external.source.ThreadVisionSourceProvider;
+import org.deltacv.vision.internal.source.ftc.SourcedCameraNameImpl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;

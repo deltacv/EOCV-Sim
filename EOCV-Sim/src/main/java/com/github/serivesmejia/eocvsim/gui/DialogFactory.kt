@@ -14,7 +14,7 @@ import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
-import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import org.deltacv.eocvsim.plugin.loader.PluginManager
 import kotlinx.coroutines.CoroutineScope
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -28,7 +28,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
 class DialogFactory : KoinComponent {
 
     private val visualizer: Visualizer by inject()
-    private val pluginManager: PluginManager by inject()
+    private val pluginManager: org.deltacv.eocvsim.plugin.loader.PluginManager by inject()
     private val configManager: ConfigManager by inject()
     private val scope: CoroutineScope by inject()
     private val outputHandler: PluginOutputHandler by inject()

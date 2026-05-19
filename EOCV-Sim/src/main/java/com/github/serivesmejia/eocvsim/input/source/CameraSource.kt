@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.github.serivesmejia.eocvsim.input.InputSource
 import com.github.serivesmejia.eocvsim.input.InputSourceInitializer
 import com.github.serivesmejia.eocvsim.config.ConfigManager
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.opencv.core.Mat

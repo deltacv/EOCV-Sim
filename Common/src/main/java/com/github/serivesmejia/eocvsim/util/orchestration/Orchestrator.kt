@@ -7,7 +7,7 @@
 
 package com.github.serivesmejia.eocvsim.util.orchestration
 
-import io.github.deltacv.common.util.loggerOf
+import org.deltacv.common.util.loggerOf
 import kotlinx.coroutines.*
 import kotlin.reflect.KClass
 

@@ -6,12 +6,11 @@
 package com.github.serivesmejia.eocvsim.plugin.api.impl
 
 import com.github.serivesmejia.eocvsim.tuner.TunableField
-import com.github.serivesmejia.eocvsim.tuner.TunableNumber
 import com.github.serivesmejia.eocvsim.tuner.TunerManager
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.TunableFieldApi
-import io.github.deltacv.eocvsim.plugin.api.VariableTunerApi
-import io.github.deltacv.eocvsim.virtualreflect.VirtualField
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.TunableFieldApi
+import org.deltacv.eocvsim.plugin.api.VariableTunerApi
+import org.deltacv.eocvsim.virtualreflect.VirtualField
 
 class TunableFieldApiImpl(owner: EOCVSimPlugin, val internalTunableField: TunableField<*>) : TunableFieldApi(owner) {
     override val field: VirtualField by liveApiField { internalTunableField.reflectionField }

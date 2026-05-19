@@ -27,7 +27,7 @@ import javax.swing.JMenu
 import javax.swing.JMenuBar
 import javax.swing.JMenuItem
 
-import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import org.deltacv.eocvsim.plugin.loader.PluginManager
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
@@ -41,7 +41,7 @@ class TopMenuBar : JMenuBar(), KoinComponent {
 
     val visualizer: Visualizer by inject()
     val dialogFactory: DialogFactory by inject()
-    val pluginManager: PluginManager by inject()
+    val pluginManager: org.deltacv.eocvsim.plugin.loader.PluginManager by inject()
     val outputHandler: PluginOutputHandler by inject()
     val workspaceManager: WorkspaceManager by inject()
     val pipelineManager: PipelineManager by inject()

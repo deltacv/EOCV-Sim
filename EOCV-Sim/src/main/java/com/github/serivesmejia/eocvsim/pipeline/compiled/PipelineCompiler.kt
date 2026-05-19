@@ -8,7 +8,7 @@ package com.github.serivesmejia.eocvsim.pipeline.compiled
 import com.github.serivesmejia.eocvsim.util.*
 import com.github.serivesmejia.eocvsim.util.compiler.JarPacker
 import com.github.serivesmejia.eocvsim.util.compiler.compiler
-import io.github.deltacv.common.util.loggerFor
+import org.deltacv.common.util.loggerFor
 import java.io.File
 import java.io.PrintWriter
 import java.nio.charset.Charset

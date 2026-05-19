@@ -9,7 +9,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanelConfig
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import io.github.deltacv.eocvsim.virtualreflect.VirtualField
+import org.deltacv.eocvsim.virtualreflect.VirtualField
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

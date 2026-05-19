@@ -38,7 +38,7 @@ import android.util.Size;
 
 import com.qualcomm.robotcore.util.RobotLog;
 
-import io.github.deltacv.vision.internal.source.ftc.SourcedCameraName;
+import org.deltacv.vision.internal.source.ftc.SourcedCameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.CameraControl;

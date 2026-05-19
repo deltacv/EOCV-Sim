@@ -5,7 +5,7 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.instantiator
 
-import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
+import org.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.openftc.easyopencv.OpenCvPipeline
 

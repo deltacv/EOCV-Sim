@@ -6,7 +6,7 @@
 package com.github.serivesmejia.eocvsim.plugin.output
 
 import com.github.serivesmejia.eocvsim.util.event.ParamEventHandler
-import io.github.deltacv.common.util.loggerOf
+import org.deltacv.common.util.loggerOf
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds

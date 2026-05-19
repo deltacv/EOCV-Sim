@@ -8,9 +8,9 @@ package com.github.serivesmejia.eocvsim.plugin.api.impl
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.SidebarPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TopMenuBar
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.*
-import io.github.deltacv.vision.external.gui.SwingOpenCvViewport
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.*
+import org.deltacv.vision.external.gui.SwingOpenCvViewport
 
 class VisualizerApiImpl(owner: EOCVSimPlugin, val internalVisualizer: Visualizer) : VisualizerApi(owner) {
     override val frame by liveNullableApiField { internalVisualizer.frame }

@@ -18,9 +18,10 @@ wpilibTools.deps.wpilibVersion = wpilibVersion
 
 dependencies {
     // WPILib OpenCV replaces openpnp
-    api wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
+    compileOnly wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
 
-    implementation "com.moandjiezana.toml:toml4j:$toml4j_version"
+    // Replace toml4j with Jackson TOML dataformat
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-toml:$jackson_version"
     implementation "info.picocli:picocli:$picocli_version"
     implementation "org.slf4j:slf4j-api:$slf4j_version"
 

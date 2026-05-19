@@ -8,8 +8,8 @@ package com.github.serivesmejia.eocvsim.gui.util
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.FileAlreadyExists
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import io.github.deltacv.common.util.loggerForThis
-import io.github.deltacv.vision.external.util.CvUtil
+import org.deltacv.common.util.loggerForThis
+import org.deltacv.vision.external.util.CvUtil
 import org.opencv.core.Mat
 import org.slf4j.LoggerFactory
 import java.awt.Color

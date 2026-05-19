@@ -5,11 +5,11 @@
 
 package org.openftc.easyopencv;
 
-import io.github.deltacv.vision.external.FrameReceiverOpenCvCamera;
-import io.github.deltacv.vision.external.source.VisionSource;
-import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider;
-import io.github.deltacv.vision.external.source.ViewportVisionSourceProvider;
-import io.github.deltacv.vision.internal.source.ftc.SourcedCameraName;
+import org.deltacv.vision.external.FrameReceiverOpenCvCamera;
+import org.deltacv.vision.external.source.VisionSource;
+import org.deltacv.vision.external.source.ThreadVisionSourceProvider;
+import org.deltacv.vision.external.source.ViewportVisionSourceProvider;
+import org.deltacv.vision.internal.source.ftc.SourcedCameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 
 public class SourcedOpenCvCameraFactoryImpl extends OpenCvCameraFactory {

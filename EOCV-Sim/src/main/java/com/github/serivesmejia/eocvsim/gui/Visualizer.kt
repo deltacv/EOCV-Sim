@@ -21,7 +21,6 @@ import com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode.SidebarOp
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SidebarPipelineTabPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.output.RecordingManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
@@ -33,9 +32,9 @@ import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
 import com.github.serivesmejia.eocvsim.workspace.util.template.GradleWorkspaceTemplate
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
-import io.github.deltacv.common.util.loggerForThis
-import io.github.deltacv.vision.external.gui.SwingOpenCvViewport
+import org.deltacv.common.pipeline.PipelineStatisticsCalculator
+import org.deltacv.common.util.loggerForThis
+import org.deltacv.vision.external.gui.SwingOpenCvViewport
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel

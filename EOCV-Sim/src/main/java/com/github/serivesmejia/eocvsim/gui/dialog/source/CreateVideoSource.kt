@@ -13,7 +13,7 @@ import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.input.source.VideoSource
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import io.github.deltacv.vision.external.util.CvUtil
+import org.deltacv.vision.external.util.CvUtil
 import org.opencv.core.Size
 import java.awt.BorderLayout
 import java.awt.FlowLayout

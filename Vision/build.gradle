@@ -13,9 +13,9 @@ dependencies {
     implementation project(':Common')
 
     compileOnly wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
+    compileOnly wpilibTools.deps.wpilibJava("apriltag")
     compileOnly wpilibTools.deps.wpilibJava("wpiutil")
     compileOnly wpilibTools.deps.wpilibJava("wpimath")
-    compileOnly wpilibTools.deps.wpilibJava("apriltag")
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'

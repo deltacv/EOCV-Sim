@@ -5,7 +5,7 @@
 
 package com.github.serivesmejia.eocvsim.util.compiler
 
-import io.github.deltacv.common.util.loggerOf
+import org.deltacv.common.util.loggerOf
 import org.eclipse.jdt.internal.compiler.tool.EclipseCompiler
 import javax.tools.JavaCompiler
 import javax.tools.ToolProvider

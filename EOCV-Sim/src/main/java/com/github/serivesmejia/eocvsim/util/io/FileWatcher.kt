@@ -6,7 +6,7 @@
 package com.github.serivesmejia.eocvsim.util.io
 
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import io.github.deltacv.common.util.loggerOf
+import org.deltacv.common.util.loggerOf
 import org.slf4j.Logger
 import java.io.File
 import java.nio.file.*

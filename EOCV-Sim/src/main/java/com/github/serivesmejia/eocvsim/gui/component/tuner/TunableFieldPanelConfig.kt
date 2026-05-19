@@ -12,7 +12,7 @@ import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields
 import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import org.deltacv.eocvsim.plugin.loader.PluginManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import org.opencv.core.Size

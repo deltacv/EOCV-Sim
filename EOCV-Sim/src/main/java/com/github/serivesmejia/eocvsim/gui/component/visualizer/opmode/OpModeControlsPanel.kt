@@ -8,8 +8,8 @@ package com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.qualcomm.robotcore.eventloop.opmode.OpMode
-import io.github.deltacv.vision.internal.opmode.OpModeNotification
-import io.github.deltacv.vision.internal.opmode.OpModeState
+import org.deltacv.vision.internal.opmode.OpModeNotification
+import org.deltacv.vision.internal.opmode.OpModeState
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JButton

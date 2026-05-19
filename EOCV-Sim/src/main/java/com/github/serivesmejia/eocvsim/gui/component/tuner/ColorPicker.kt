@@ -8,7 +8,7 @@ package com.github.serivesmejia.eocvsim.gui.component.tuner
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import io.github.deltacv.vision.external.gui.SwingOpenCvViewport
+import org.deltacv.vision.external.gui.SwingOpenCvViewport
 import org.opencv.core.Scalar
 import java.awt.Cursor
 import java.awt.Point

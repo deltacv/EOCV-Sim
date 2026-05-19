@@ -7,10 +7,10 @@ package com.github.serivesmejia.eocvsim.tuner
 
 import com.github.serivesmejia.eocvsim.gui.component.tuner.TunableFieldPanel
 import com.github.serivesmejia.eocvsim.tuner.exception.CancelTunableFieldAddingException
-import io.github.deltacv.common.util.loggerForThis
-import io.github.deltacv.eocvsim.virtualreflect.VirtualField
-import io.github.deltacv.eocvsim.virtualreflect.VirtualReflection
-import io.github.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
+import org.deltacv.common.util.loggerForThis
+import org.deltacv.eocvsim.virtualreflect.VirtualField
+import org.deltacv.eocvsim.virtualreflect.VirtualReflection
+import org.deltacv.eocvsim.virtualreflect.jvm.JvmVirtualReflection
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

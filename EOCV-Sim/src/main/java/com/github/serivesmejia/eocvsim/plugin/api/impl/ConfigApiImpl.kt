@@ -6,8 +6,8 @@
 package com.github.serivesmejia.eocvsim.plugin.api.impl
 
 import com.github.serivesmejia.eocvsim.config.ConfigManager
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.ConfigApi
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.ConfigApi
 
 class ConfigApiImpl(owner: EOCVSimPlugin, val internalConfigManager: ConfigManager) : ConfigApi(owner) {
     override fun putFlag(flag: String) = apiImpl {

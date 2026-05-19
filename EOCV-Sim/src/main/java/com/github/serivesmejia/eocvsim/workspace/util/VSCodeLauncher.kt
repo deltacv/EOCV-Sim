@@ -10,7 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import kotlinx.coroutines.DelicateCoroutinesApi
 import java.io.File
 

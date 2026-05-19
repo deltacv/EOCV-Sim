@@ -10,9 +10,9 @@ import com.github.serivesmejia.eocvsim.input.source.CameraSource
 import com.github.serivesmejia.eocvsim.input.source.HttpSource
 import com.github.serivesmejia.eocvsim.input.source.ImageSource
 import com.github.serivesmejia.eocvsim.input.source.VideoSource
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.InputSourceApi
-import io.github.deltacv.eocvsim.plugin.api.InputSourceManagerApi
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.InputSourceApi
+import org.deltacv.eocvsim.plugin.api.InputSourceManagerApi
 import org.opencv.core.Size
 
 class InputSourceApiImpl(owner: EOCVSimPlugin, val internalInputSource: com.github.serivesmejia.eocvsim.input.InputSource) : InputSourceApi(owner) {

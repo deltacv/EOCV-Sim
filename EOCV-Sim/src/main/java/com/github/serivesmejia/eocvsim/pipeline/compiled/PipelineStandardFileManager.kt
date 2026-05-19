@@ -7,7 +7,7 @@ package com.github.serivesmejia.eocvsim.pipeline.compiled
 
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.compiler.DelegatingStandardFileManager
-import io.github.deltacv.common.util.loggerFor
+import org.deltacv.common.util.loggerFor
 import java.io.File
 import java.util.*
 import javax.tools.StandardJavaFileManager

@@ -12,10 +12,10 @@ import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import com.github.serivesmejia.eocvsim.plugin.output.PluginDialogSignal
 import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.plugin.output.VisualPluginOutputHandler
-import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoaderImpl
-import io.github.deltacv.eocvsim.plugin.loader.PluginManager
-import io.github.deltacv.eocvsim.plugin.loader.PluginSource
-import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
+import org.deltacv.eocvsim.plugin.loader.FilePluginLoaderImpl
+import org.deltacv.eocvsim.plugin.loader.PluginManager
+import org.deltacv.eocvsim.plugin.loader.PluginSource
+import org.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
 import org.koin.core.component.KoinComponent
@@ -27,7 +27,7 @@ import javax.swing.*
 
 class PluginOutput(
     val outputHandler: PluginOutputHandler,
-    val pluginManager: PluginManager,
+    val pluginManager: org.deltacv.eocvsim.plugin.loader.PluginManager,
     val configManager: ConfigManager,
     val scope: CoroutineScope
 ) : Appendable, KoinComponent {
@@ -352,7 +352,7 @@ class PluginOutput(
             )
 
             if(dialogResult == JOptionPane.YES_OPTION) {
-                configManager.config.flags["startFresh"] = true
+                configManager.config.flags["startFreshPlugins"] = true
  
                 PluginRepositoryManager.REPOSITORY_FILE.delete()
                 PluginRepositoryManager.CACHE_FILE.delete()

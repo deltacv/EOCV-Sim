@@ -5,7 +5,7 @@
 
 package com.github.serivesmejia.eocvsim.workspace.util
 
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import java.io.File
 
 abstract class WorkspaceTemplate {

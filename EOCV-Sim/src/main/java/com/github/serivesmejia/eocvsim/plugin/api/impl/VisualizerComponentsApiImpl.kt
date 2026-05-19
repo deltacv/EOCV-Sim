@@ -8,11 +8,11 @@ package com.github.serivesmejia.eocvsim.plugin.api.impl
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.PipelineSelectorPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline.SourceSelectorPanel
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.PipelineSelectorPanelApi
-import io.github.deltacv.eocvsim.plugin.api.SourceSelectorPanelApi
-import io.github.deltacv.eocvsim.plugin.api.TelemetryPanelApi
-import io.github.deltacv.eocvsim.plugin.api.VisualizerComponentsFactoryApi
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.PipelineSelectorPanelApi
+import org.deltacv.eocvsim.plugin.api.SourceSelectorPanelApi
+import org.deltacv.eocvsim.plugin.api.TelemetryPanelApi
+import org.deltacv.eocvsim.plugin.api.VisualizerComponentsFactoryApi
 
 class VisualizerComponentsFactoryApiImpl(owner: EOCVSimPlugin) : VisualizerComponentsFactoryApi(owner) {
     override fun createPipelineSelectorPanel() = apiImpl { PipelineSelectorPanelApiImpl(owner, PipelineSelectorPanel()) }

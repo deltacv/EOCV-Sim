@@ -6,14 +6,14 @@
 package com.github.serivesmejia.eocvsim.plugin.api.impl
 
 import com.github.serivesmejia.eocvsim.EOCVSim
-import io.github.deltacv.common.util.loggerForThis
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.ConfigApi
-import io.github.deltacv.eocvsim.plugin.api.EOCVSimApi
-import io.github.deltacv.eocvsim.plugin.api.InputSourceManagerApi
-import io.github.deltacv.eocvsim.plugin.api.PipelineManagerApi
-import io.github.deltacv.eocvsim.plugin.api.VariableTunerApi
-import io.github.deltacv.eocvsim.plugin.api.VisualizerApi
+import org.deltacv.common.util.loggerForThis
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.ConfigApi
+import org.deltacv.eocvsim.plugin.api.EOCVSimApi
+import org.deltacv.eocvsim.plugin.api.InputSourceManagerApi
+import org.deltacv.eocvsim.plugin.api.PipelineManagerApi
+import org.deltacv.eocvsim.plugin.api.VariableTunerApi
+import org.deltacv.eocvsim.plugin.api.VisualizerApi
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

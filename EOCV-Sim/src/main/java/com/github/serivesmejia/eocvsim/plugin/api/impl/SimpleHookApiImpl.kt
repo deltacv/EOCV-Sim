@@ -5,8 +5,8 @@
 
 package com.github.serivesmejia.eocvsim.plugin.api.impl
 
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.HookApi
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.HookApi
 
 class SimpleHookApiImpl(owner: EOCVSimPlugin) : HookApi(owner) {
 

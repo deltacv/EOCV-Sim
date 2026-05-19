@@ -21,12 +21,12 @@ import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrable
 import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrator
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
-import io.github.deltacv.common.pipeline.util.PipelineStatisticsCalculator
-import io.github.deltacv.eocvsim.plugin.loader.PluginManager
+import org.deltacv.common.pipeline.PipelineStatisticsCalculator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import org.deltacv.eocvsim.plugin.loader.PluginManager
 import org.koin.core.definition.KoinDefinition
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind

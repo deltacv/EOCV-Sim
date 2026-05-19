@@ -6,7 +6,7 @@
 package com.github.serivesmejia.eocvsim.config
 
 import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import org.koin.core.component.KoinComponent
 
 class ConfigManager : PhaseOrchestrableBase(), KoinComponent {

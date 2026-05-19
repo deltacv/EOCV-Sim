@@ -8,8 +8,8 @@ package com.github.serivesmejia.eocvsim.pipeline.compiled
 import com.github.serivesmejia.eocvsim.util.ClasspathScan
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.removeFromEnd
-import io.github.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
-import io.github.deltacv.eocvsim.sandbox.restrictions.dynamicCodeMethodBlacklist
+import org.deltacv.eocvsim.sandbox.restrictions.MethodCallByteCodeChecker
+import org.deltacv.eocvsim.sandbox.restrictions.dynamicCodeMethodBlacklist
 import org.openftc.easyopencv.OpenCvPipeline
 import java.io.ByteArrayOutputStream
 import java.io.File

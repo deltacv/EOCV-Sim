@@ -10,7 +10,7 @@ import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.util.StrUtil
-import io.github.deltacv.vision.external.gui.component.ImageX
+import org.deltacv.vision.external.gui.component.ImageX
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.awt.*

@@ -9,7 +9,7 @@ import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.tuner.TunableField
 import com.github.serivesmejia.eocvsim.tuner.TunableNumber
 import org.opencv.core.Rect
-import io.github.deltacv.eocvsim.virtualreflect.VirtualField
+import org.deltacv.eocvsim.virtualreflect.VirtualField
 
 class RectField(instance: Any, reflectionField: VirtualField) :
     TunableField<Rect>(instance, reflectionField, AllowMode.ONLY_NUMBERS_DECIMAL) {

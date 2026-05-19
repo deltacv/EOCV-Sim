@@ -7,7 +7,7 @@ package com.github.serivesmejia.eocvsim.tuner.field.numeric
 
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.tuner.field.NumericField
-import io.github.deltacv.eocvsim.virtualreflect.VirtualField
+import org.deltacv.eocvsim.virtualreflect.VirtualField
 import com.github.serivesmejia.eocvsim.tuner.TunableFieldAcceptor
 
 class DoubleField(

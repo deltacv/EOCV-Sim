@@ -8,7 +8,7 @@ package com.github.serivesmejia.eocvsim.gui.component.visualizer
 import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.input.SourceType
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.awt.datatransfer.DataFlavor

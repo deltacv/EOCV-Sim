@@ -8,7 +8,7 @@ package com.github.serivesmejia.eocvsim.workspace.config
 import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.serialization.JacksonJsonSupport
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import java.io.File
 
 /**
