@@ -1,4 +1,4 @@
-package org.deltacv.common.util;
+package org.deltacv.common.util.serialization;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

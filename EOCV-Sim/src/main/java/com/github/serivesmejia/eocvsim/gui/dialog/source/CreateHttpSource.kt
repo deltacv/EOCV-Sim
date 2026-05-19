@@ -53,7 +53,7 @@ class CreateHttpSource : KoinComponent {
             // Name field
             gbc.gridy = 1
             gbc.gridx = 0
-            add(JLabel("Source name: "), gbc)
+            add(JLabel("Source Name: "), gbc)
             gbc.gridx = 1
             val sourceCount = inputSourceManager.sources.size + 1
             nameTextField = JTextField("HttpSource-$sourceCount", 15)

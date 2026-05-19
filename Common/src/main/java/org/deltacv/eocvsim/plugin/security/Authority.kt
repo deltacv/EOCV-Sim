@@ -8,7 +8,7 @@ package org.deltacv.eocvsim.plugin.security
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.LockFile
 import org.deltacv.common.util.loggerForThis
-import org.deltacv.common.util.Toml
+import org.deltacv.common.util.serialization.Toml
 import org.deltacv.eocvsim.plugin.PLUGIN_CACHING_FOLDER
 import java.io.File
 import java.net.URI

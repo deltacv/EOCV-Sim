@@ -73,7 +73,7 @@ class CreateImageSource(
 
         // Name part
         val namePanel = JPanel(FlowLayout())
-        val nameLabel = JLabel("Source name: ").apply { horizontalAlignment = JLabel.LEFT }
+        val nameLabel = JLabel("Source Name: ").apply { horizontalAlignment = JLabel.LEFT }
 
         nameTextField.text = "ImageSource-${inputSourceManager.sources.size + 1}"
         namePanel.add(nameLabel)

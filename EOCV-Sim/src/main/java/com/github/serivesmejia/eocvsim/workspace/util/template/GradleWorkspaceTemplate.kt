@@ -15,8 +15,6 @@ import java.io.IOException
 
 object GradleWorkspaceTemplate : WorkspaceTemplate() {
 
-    private val TAG = "GradleWorkspaceTemplate"
-
     val logger by loggerForThis()
 
     val templateZipResource = javaClass.getResourceAsStream("/templates/gradle_workspace.zip")

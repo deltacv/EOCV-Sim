@@ -6,7 +6,7 @@
 package org.deltacv.eocvsim.plugin.loader
 
 import com.github.serivesmejia.eocvsim.util.extension.hashString
-import org.deltacv.common.util.Toml
+import org.deltacv.common.util.serialization.Toml
 import org.deltacv.eocvsim.plugin.EOCVSimPlugin
 import org.deltacv.eocvsim.plugin.api.EOCVSimApi
 import org.deltacv.eocvsim.plugin.security.PluginSignature

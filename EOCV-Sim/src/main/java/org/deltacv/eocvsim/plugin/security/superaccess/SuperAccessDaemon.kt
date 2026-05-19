@@ -10,7 +10,7 @@ import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.serialization.JacksonJsonSupport
 import org.deltacv.common.util.loggerForThis
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import org.deltacv.common.util.Toml
+import org.deltacv.common.util.serialization.Toml
 import org.deltacv.eocvsim.gui.dialog.SuperAccessRequest
 import org.deltacv.eocvsim.plugin.loader.PluginInfo
 import org.deltacv.eocvsim.plugin.loader.PluginManager

@@ -7,7 +7,7 @@ package org.deltacv.eocvsim.plugin.security
 
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import org.deltacv.common.util.loggerForThis
-import org.deltacv.common.util.Toml
+import org.deltacv.common.util.serialization.Toml
 import org.deltacv.eocvsim.plugin.loader.InvalidPluginException
 import java.io.File
 import java.security.PublicKey

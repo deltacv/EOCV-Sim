@@ -11,7 +11,7 @@ import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.hashString
 import com.github.serivesmejia.eocvsim.util.extension.plus
-import org.deltacv.common.util.Toml
+import org.deltacv.common.util.serialization.Toml
 import org.deltacv.common.util.ParsedVersion
 import org.deltacv.common.util.loggerForThis
 import org.deltacv.eocvsim.plugin.loader.PluginManager

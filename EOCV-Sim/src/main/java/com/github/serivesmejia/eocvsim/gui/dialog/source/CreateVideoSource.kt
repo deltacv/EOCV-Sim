@@ -73,7 +73,7 @@ class CreateVideoSource(
         val namePanel = JPanel(FlowLayout()).apply {
             val sourceCount = inputSourceManager.sources.size + 1
             nameTextField = JTextField("VideoSource-$sourceCount", 15)
-            add(JLabel("Source name: "))
+            add(JLabel("Source Name: "))
             add(nameTextField)
         }
         contentsPanel.add(namePanel)

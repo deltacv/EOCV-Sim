@@ -409,6 +409,6 @@ public class Bootstrap {
     // ---------------- LOG ----------------
 
     private static void log(String msg) {
-        System.out.println("[EOCV-SIM BOOTSTRAP] " + msg);
+        System.out.println("[EOCV-Sim/Bootstrap] " + msg);
     }
 }
