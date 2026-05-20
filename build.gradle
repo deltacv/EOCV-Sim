@@ -72,8 +72,6 @@ allprojects {
         mavenLocal()
         google()
         maven { url "https://maven.pkg.jetbrains.space/public/p/compose/dev" }
-        maven { url 'https://artifacts.openmicroscopy.org/artifactory/ome.releases/' }
-        maven { url "https://maven.photonvision.org/releases" }
     }
 
     wpilibRepositories.use2027Repos()

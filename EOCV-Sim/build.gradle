@@ -30,6 +30,8 @@ sourceSets {
             srcDirs = ['src/bootstrap/java']
         }
     }
+
+    natives {}
 }
 
 tasks.named('compileBootstrapJava', JavaCompile) {
@@ -48,6 +50,7 @@ shadowJar {
 
     from(sourceSets.main.output)
     from(sourceSets.bootstrap.output)
+    from(sourceSets.natives.output)
 
     manifest {
         attributes(
@@ -58,6 +61,8 @@ shadowJar {
 
 test {
     useJUnitPlatform()
+    dependsOn processNativesResources
+    classpath += sourceSets.natives.output
 }
 
 apply from: '../test-logging.gradle'
@@ -92,7 +97,7 @@ def nativeTasks = wpilibTools.createExtractionTasks {
     configurationName = nativeConfigName
 }
 
-nativeTasks.addToSourceSetResources(sourceSets.main)
+nativeTasks.addToSourceSetResources(sourceSets.natives)
 
 nativeConfig.dependencies.add wpilibTools.deps.wpilib("wpiutil")
 nativeConfig.dependencies.add wpilibTools.deps.wpilib("cscore")
