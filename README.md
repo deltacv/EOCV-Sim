@@ -101,6 +101,43 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v4.2.0 - Lifecycle & Platform Architecture Rework](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.2.0)
+
+* This is the 37th release for EOCV-Sim
+
+    * Major internal architecture rework focused on lifecycle management, startup orchestration and long-term platform maintainability
+    * Changelog
+        * **BREAKING**: Migrates package namespaces from io.github.deltacv to org.deltacv
+        * PaperVision is missing in this release and will be added in the next patch.
+        * Migrates OpenCV and webcam handling away from OpenPnP distributions into WPILib's OpenCV packaging and CSCore backend
+            * Adds support for Linux ARM64 and Intel macOS native distributions
+            * Replaces the legacy AprilTag plugin implementation with WPILib's AprilTag support while preserving backwards compatibility
+        * Adds multiplatform releases for:
+            * Windows x86-64
+            * Linux x86-64
+            * Linux ARM64
+            * macOS Intel
+            * macOS Apple Silicon
+        * Adds a Bootstrap launcher that validates the Java runtime before startup instead of silently failing
+        * Bootstrap now scans common Java installation locations on Windows to help users locate compatible runtimes
+        * Adds timeout configuration controls for webcams
+        * Refactors the tunable field API into a cleaner and more maintainable implementation
+        * Implements individual APIs for accessing visualizer component controls
+    * Internal changes:
+        * Redesigns initialization and lifecycle handling around a centralized orchestrator with phased startup/shutdown
+        * Centralizes EOCV-Sim lifecycle scopes and improves cancellation handling across the application
+        * Adds support for non-blocking cancellation of input sources
+        * Migrates major internal systems and managers to Kotlin
+        * Migrates dependency injection to Koin
+        * Rewrites InputSourceManager and Visualizer into Kotlin
+        * Replaces Gson usage with Jackson serialization APIs
+        * Updates GitHub workflows to Java 25
+        * Consolidates Maven publishing and multiplatform workflow handling
+    * Bugfixes:
+        * Fixes cases where onDrawFrame could be called before initialization completed
+        * Fixes continuation handling edge cases in the plugin manager
+        * Improves workflow artifact publishing reliability across platforms
+
 ## [v4.1.2 - PaperVision Stable Release](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.1.2)
 - This is the 36th release for EOCV-Sim
     - Adds [PaperVision v1.1.0](https://github.com/deltacv/PaperVision/releases/tag/v1.1.0)

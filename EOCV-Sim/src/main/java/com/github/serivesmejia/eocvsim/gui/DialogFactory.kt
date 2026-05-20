@@ -28,7 +28,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
 class DialogFactory : KoinComponent {
 
     private val visualizer: Visualizer by inject()
-    private val pluginManager: org.deltacv.eocvsim.plugin.loader.PluginManager by inject()
+    private val pluginManager: PluginManager by inject()
     private val configManager: ConfigManager by inject()
     private val scope: CoroutineScope by inject()
     private val outputHandler: PluginOutputHandler by inject()

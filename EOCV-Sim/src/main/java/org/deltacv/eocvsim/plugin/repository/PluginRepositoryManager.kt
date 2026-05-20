@@ -178,7 +178,6 @@ class PluginRepositoryManager(
             }
 
             // Update the version
-            val oldLine = tomlLines[pluginLineIndex]
             tomlLines[pluginLineIndex] = "$pluginName = \"${artifact.groupId}:${artifact.artifactId}:${latest.version}\""
 
             // Write updated content back to the TOML file

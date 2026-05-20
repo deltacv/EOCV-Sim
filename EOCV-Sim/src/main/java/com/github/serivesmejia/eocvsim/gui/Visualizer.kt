@@ -243,7 +243,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
         inputSourceManager.onInputSourceInitError {
             dialogFactory.createInformation(
                 frame,
-                "Error while loading requested source", "Falling back to previous source",
+                "Error while loading source.", "Falling back to previous source.",
                 "Operation failed"
             )
         }
