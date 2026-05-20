@@ -6,7 +6,6 @@ on:
     tags: ['v*']
   pull_request:
 
-
 jobs:
   build_linux:
     runs-on: ubuntu-24.04
@@ -145,9 +144,6 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
         run: ./gradlew -Penv=release :Common:publishToMavenCentral :Vision:publishToMavenCentral :EOCV-Sim:publishToMavenCentral -x test -x :EOCV-Sim:shadowJar
-
-      - name: Build release shadow jar with Gradle
-        run: ./gradlew -Penv=release shadowJar -x test
 
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4

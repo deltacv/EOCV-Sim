@@ -11,6 +11,7 @@ dependencies {
 
 tasks.register('runSim', JavaExec) {
     dependsOn 'classes'
+    dependsOn ':EOCV-Sim:processNativesResources'
     mainClass = 'com.github.serivesmejia.eocvsim.Main'
-    classpath = sourceSets.main.runtimeClasspath
+    classpath = sourceSets.main.runtimeClasspath + project(':EOCV-Sim').sourceSets.natives.output
 }

@@ -34,7 +34,7 @@ public class LibraryLoader {
                     "apriltagjni", "wpimathjni", "wpinetjni", "cscorejni");
 
             CombinedRuntimeLoader.loadLibraries(LibraryLoader.class, Core.NATIVE_LIBRARY_NAME);
-        } catch(IOException | UnsatisfiedLinkError e) {
+        } catch(Exception | UnsatisfiedLinkError e) {
             return new Result(false, e);
         }
 
