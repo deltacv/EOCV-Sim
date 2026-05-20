@@ -260,3 +260,5 @@ class PredominantColorProcessorImpl extends PredominantColorProcessor
         return rgb;
     }
 }
+
+

@@ -19,6 +19,7 @@
  * SOFTWARE.
  */
 
+
 package com.qualcomm.robotcore.util;
 
 public enum SortOrder
@@ -26,3 +27,4 @@ public enum SortOrder
     ASCENDING,
     DESCENDING
 }
+

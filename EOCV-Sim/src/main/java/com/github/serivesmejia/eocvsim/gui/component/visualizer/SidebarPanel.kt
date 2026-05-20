@@ -1,39 +1,23 @@
 /*
  * Copyright (c) 2024 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import java.awt.Font
 import java.awt.LayoutManager
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
 
-class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
+import org.koin.core.component.KoinComponent
 
-    private var previousActiveIndex = -1;
+class SidebarPanel : JTabbedPane(), KoinComponent {
+
+    private var previousActiveIndex = -1
 
     val onTabChange = EventHandler("SidebarPanel-OnTabChange")
 
@@ -57,9 +41,12 @@ class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
 
         addChangeListener {
             val index = this.selectedIndex
+            val currentIndexValid = index in 0 until componentCount
+            val previousIndexValid = previousActiveIndex in 0 until componentCount
 
             // deactivate previous pane first
-            val previousPane = if (previousActiveIndex != -1) this.getComponentAt(previousActiveIndex) else null
+            val previousPane = if (previousIndexValid) this.getComponentAt(previousActiveIndex) else null
+
             if (previousPane is TabJPanel && previousActiveIndex != index) {
                 previousPane.isActive = false
 
@@ -68,7 +55,7 @@ class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
             }
 
             // activate current pane
-            val currentPane = this.getComponentAt(index)
+            val currentPane = if (currentIndexValid) this.getComponentAt(index) else null
             if (currentPane is TabJPanel && previousActiveIndex != index) {
                 currentPane.isActive = true
 
@@ -76,7 +63,7 @@ class SidebarPanel(val eocvSim: EOCVSim) : JTabbedPane() {
                 logger.info("Activating $name")
             }
 
-            previousActiveIndex = index
+            previousActiveIndex = if (currentIndexValid) index else -1
 
             onTabChange.run()
         }

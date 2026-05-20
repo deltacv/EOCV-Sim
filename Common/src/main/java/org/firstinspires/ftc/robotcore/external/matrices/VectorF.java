@@ -316,3 +316,6 @@ public class VectorF
         return new IllegalArgumentException(String.format("vector dimensions are incorrect: length=%d", length));
     }
 }
+
+
+

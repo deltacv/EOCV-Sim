@@ -73,3 +73,6 @@ public abstract class DenseMatrixF extends MatrixF
      */
     protected abstract int indexFromRowCol(int row, int col);
 }
+
+
+

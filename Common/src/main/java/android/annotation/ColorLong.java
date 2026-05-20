@@ -42,3 +42,4 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 @Target({PARAMETER,METHOD,LOCAL_VARIABLE,FIELD})
 public @interface ColorLong {
 }
+

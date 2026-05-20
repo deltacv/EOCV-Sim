@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 OpenFTC Team
+ * Copyright (c) 2020 OpenFTC Team
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,3 +38,4 @@ public interface OpenCvInternalCamera2 extends OpenCvCamera
         }
     }
 }
+

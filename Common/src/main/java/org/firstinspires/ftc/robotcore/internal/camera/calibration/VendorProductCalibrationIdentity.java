@@ -82,3 +82,6 @@ public class VendorProductCalibrationIdentity implements CameraCalibrationIdenti
         return Integer.valueOf(vid).hashCode() ^ Integer.valueOf(pid).hashCode() ^ 738187;
     }
 }
+
+
+

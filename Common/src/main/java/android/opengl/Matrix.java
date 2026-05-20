@@ -851,3 +851,4 @@ public class Matrix {
         translateM(rm, rmOffset, -eyeX, -eyeY, -eyeZ);
     }
 }
+

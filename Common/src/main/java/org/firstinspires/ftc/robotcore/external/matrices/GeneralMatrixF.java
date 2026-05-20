@@ -73,3 +73,6 @@ public class GeneralMatrixF extends RowMajorMatrixF
         return (GeneralMatrixF)super.transposed();
     }
 }
+
+
+

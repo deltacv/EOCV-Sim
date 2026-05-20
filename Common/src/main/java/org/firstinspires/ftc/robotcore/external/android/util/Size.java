@@ -150,3 +150,4 @@ public final class Size {
     private final int mWidth;
     private final int mHeight;
 }
+

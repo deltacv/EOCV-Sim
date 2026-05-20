@@ -19,6 +19,7 @@
  * SOFTWARE.
  */
 
+
 package org.openftc.easyopencv;
 
 import org.opencv.core.CvType;
@@ -151,3 +152,4 @@ public class MatRecycler {
         }
     }
 }
+

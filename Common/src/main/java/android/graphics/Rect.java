@@ -617,3 +617,4 @@ public final class Rect {
         return new org.jetbrains.skia.Rect(left, top, right, bottom);
     }
 }
+

@@ -33,3 +33,4 @@ import java.lang.annotation.Target;
 @Target({TYPE, FIELD, METHOD, PARAMETER, CONSTRUCTOR, LOCAL_VARIABLE})
 public @interface SuppressAutoDoc {
 }
+

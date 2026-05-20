@@ -1,347 +1,356 @@
 /*
- * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.dialog.source
 
-import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox
-import com.github.serivesmejia.eocvsim.gui.util.WebcamDriver
+import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.input.source.CameraSource
-import io.github.deltacv.steve.Webcam
-import io.github.deltacv.steve.WebcamRotation
-import io.github.deltacv.steve.commonResolutions
-import io.github.deltacv.steve.opencv.OpenCvWebcam
-import io.github.deltacv.steve.opencv.OpenCvWebcamBackend
-import io.github.deltacv.steve.openpnp.OpenPnpBackend
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import org.opencv.core.Mat
-import org.opencv.core.Size
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
+import org.wpilib.vision.camera.UsbCamera
+import org.wpilib.vision.camera.UsbCameraInfo
+import org.wpilib.vision.camera.VideoMode
 import java.awt.*
 import javax.swing.*
 
-class CreateCameraSource(
-    parent: JFrame,
-    private val eocvSim: EOCVSim
-) {
+class CreateCameraSource : KoinComponent {
 
-    companion object {
-        const val VISIBLE_CHARACTERS_COMBO_BOX = 22
-        private val sizes = mutableMapOf<String, List<Size>>()
-    }
-
-    val createCameraSource = JDialog(parent)
-    private val statusLabel = JLabel("", SwingConstants.CENTER)
+    private val inputSourceManager: InputSourceManager by inject()
+    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+    private val visualizer: Visualizer by inject()
 
     private val camerasComboBox = JComboBox<String>()
-    private val dimensionsComboBox = JComboBox<String>()
-    private val rotationComboBox = EnumComboBox(
-        "",
-        WebcamRotation::class.java,
-        WebcamRotation.entries.toTypedArray(), // Correction: Using .entries
-        WebcamRotation::displayName
-    ) { WebcamRotation.fromDisplayName(it) ?: WebcamRotation.UPRIGHT } // Correction: Lambda moved out
-    private val nameTextField = JTextField(15)
-    private val createButton = JButton()
-    private var wasCancelled = false
+    private val resolutionComboBox = JComboBox<String>()
+    private val fpsComboBox = JComboBox<Int>()
+    private val pixelFormatComboBox = JComboBox<Any>()
+    private val nameTextField = JTextField(20)
+    private val sameCameraCheckBox = JCheckBox("Match to exact port")
 
-    private var webcams = listOf<Webcam>()
-    private val indexes = mutableMapOf<String, Int>()
-    private var usingOpenCvDiscovery = false
+    private val createButton = JButton("Create")
 
-    private var state = State.INITIAL
-    private enum class State { INITIAL, CLICKED_TEST, TEST_SUCCESSFUL, TEST_FAILED, NO_WEBCAMS, UNSUPPORTED }
+    private val dialog = JDialog(visualizer.frame)
+
+    private var cameraInfos: Array<UsbCameraInfo> = emptyArray()
+    private var modes: Array<VideoMode> = emptyArray()
 
     init {
-        eocvSim.visualizer.childDialogs.add(createCameraSource)
-
-        // Force preferred driver fallback
-        if (eocvSim.config.preferredWebcamDriver == WebcamDriver.OpenIMAJ)
-            eocvSim.config.preferredWebcamDriver = WebcamDriver.OpenPnp
-
-        val preferredDriver = eocvSim.config.preferredWebcamDriver
-
-        when (preferredDriver) {
-            WebcamDriver.OpenPnp -> {
-                Webcam.backend = OpenPnpBackend
-                webcams = try {
-                    Webcam.availableWebcams
-                } catch (t: Throwable) {
-                    t.printStackTrace()
-                    emptyList()
-                }
-            }
-
-            WebcamDriver.OpenCV -> {
-                webcams = emptyList()
-                Webcam.backend = OpenCvWebcamBackend
-                usingOpenCvDiscovery = true
-            }
-
-            else -> webcams = emptyList()
+        cameraInfos = try {
+            UsbCamera.enumerateUsbCameras()
+        } catch (t: Throwable) {
+            t.printStackTrace()
+            emptyArray()
         }
 
-        createCameraSource.apply {
+        dialog.apply {
             isModal = true
-            title = "Create camera source"
+            title = "Create Camera Source"
         }
 
-        // Build UI
-        val contentsPanel = JPanel(GridBagLayout())
+        val root = JPanel(GridBagLayout())
+
         val gbc = GridBagConstraints().apply {
             fill = GridBagConstraints.HORIZONTAL
-            insets = Insets(7, 0, 0, 7)
+            weightx = 1.0
+            insets = Insets(6, 6, 6, 6)
         }
 
-        // Camera combo box
-        val idLabel = JLabel("Available cameras: ", JLabel.RIGHT)
-        if (webcams.isEmpty()) {
-            camerasComboBox.addItem("No Cameras Detected")
-            state = State.NO_WEBCAMS
+        // ---------------- CAMERA LIST ----------------
+
+        if (cameraInfos.isEmpty()) {
+            camerasComboBox.addItem("No Cameras Found")
+            createButton.isEnabled = false
         } else {
-            webcams.forEachIndexed { index, webcam ->
-                val name = webcam.name.let {
-                    if (it.length > VISIBLE_CHARACTERS_COMBO_BOX) it.take(VISIBLE_CHARACTERS_COMBO_BOX) + "..."
-                    else it
-                }
-
-                camerasComboBox.addItem(name)
-                indexes[name] = index
-
-                if (!sizes.containsKey(name)) {
-                    val resolutions = if (webcam is OpenCvWebcam) {
-                        commonResolutions
-                    } else webcam.supportedResolutions.ifEmpty {
-                        println("Webcam $name has no resolutions, skipping")
-                        return@forEachIndexed
-                    }
-
-                    sizes[name] = resolutions
-                }
+            cameraInfos.forEach {
+                camerasComboBox.addItem(it.name)
             }
 
-            SwingUtilities.invokeLater { camerasComboBox.selectedIndex = 0 }
+            camerasComboBox.selectedIndex = 0
+
+            updateAutomaticName()
+            loadModes(0)
         }
 
-        val fieldsPanel = JPanel(GridBagLayout()).apply {
-            add(idLabel, gbc)
-            gbc.gridx = 1; add(camerasComboBox, gbc)
-
-            // Name field
-            gbc.gridx = 0; gbc.gridy = 1
-            add(JLabel("Source name: ", JLabel.RIGHT), gbc)
-            gbc.gridx = 1
-            nameTextField.text = "CameraSource-${eocvSim.inputSourceManager.sources.size + 1}"
-            add(nameTextField, gbc)
-
-            // Suggested resolution
-            gbc.gridx = 0; gbc.gridy = 2
-            add(JLabel("Suggested resolutions: ", JLabel.RIGHT), gbc)
-            gbc.gridx = 1
-            add(dimensionsComboBox, gbc)
-
-            // Rotation
-            gbc.gridx = 0; gbc.gridy = 3
-            add(JLabel("Camera rotation: ", JLabel.RIGHT), gbc)
-            gbc.gridx = 1
-            add(rotationComboBox.comboBox, gbc)
+        camerasComboBox.addActionListener {
+            updateAutomaticName()
+            loadModes(camerasComboBox.selectedIndex)
         }
 
-        gbc.gridx = 0; gbc.gridy = 0
-        contentsPanel.add(fieldsPanel, gbc)
+        // ---------------- MODE CONTROLS ----------------
 
+        // simple renderers (defaults are fine, but keep fps/pixfmt readable)
+        fpsComboBox.renderer = object : DefaultListCellRenderer() {
+            override fun getListCellRendererComponent(list: JList<*>, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+                text = (value as? Int)?.toString() ?: "-"
+                return this
+            }
+        }
+
+        // ---------------- FORM ----------------
+
+        gbc.gridx = 0
+        gbc.gridy = 0
+        gbc.weightx = 0.0
+        root.add(JLabel("Camera:"), gbc)
+
+        gbc.gridx = 1
+        gbc.weightx = 1.0
+        root.add(camerasComboBox, gbc)
+
+        // Resolution
+        gbc.gridx = 0
         gbc.gridy = 1
-        contentsPanel.add(statusLabel, gbc)
+        gbc.weightx = 0.0
+        root.add(JLabel("Resolution:"), gbc)
 
-        // Bottom buttons
-        val bottomPanel = JPanel(GridBagLayout())
-        val gbcBtts = GridBagConstraints().apply { insets = Insets(0, 0, 0, 10) }
-        bottomPanel.add(createButton, gbcBtts)
-        gbcBtts.gridx = 1; gbcBtts.insets = Insets(0, 0, 0, 0)
+        gbc.gridx = 1
+        gbc.weightx = 1.0
+        root.add(resolutionComboBox, gbc)
+
+        // FPS
+        gbc.gridx = 0
+        gbc.gridy = 2
+        gbc.weightx = 0.0
+        root.add(JLabel("FPS:"), gbc)
+
+        gbc.gridx = 1
+        gbc.weightx = 1.0
+        root.add(fpsComboBox, gbc)
+
+        // Pixel Format
+        gbc.gridx = 0
+        gbc.gridy = 3
+        gbc.weightx = 0.0
+        root.add(JLabel("Pixel Format:"), gbc)
+
+        gbc.gridx = 1
+        gbc.weightx = 1.0
+        root.add(pixelFormatComboBox, gbc)
+
+        // Name
+        gbc.gridx = 0
+        gbc.gridy = 4
+        gbc.weightx = 0.0
+        root.add(JLabel("Source Name:"), gbc)
+
+        gbc.gridx = 1
+        gbc.weightx = 1.0
+        root.add(nameTextField, gbc)
+
+        gbc.gridx = 1
+        gbc.gridy = 5
+        gbc.weightx = 1.0
+        root.add(sameCameraCheckBox, gbc)
+
+        // ---------------- BUTTONS ----------------
+
+        val buttons = JPanel(FlowLayout(FlowLayout.RIGHT))
+
         val cancelButton = JButton("Cancel")
-        bottomPanel.add(cancelButton, gbcBtts)
 
-        gbc.insets = Insets(10, 0, 0, 0)
-        gbc.gridx = 0; gbc.gridy = 2
-        contentsPanel.add(bottomPanel, gbc)
+        buttons.add(createButton)
+        buttons.add(cancelButton)
 
-        contentsPanel.border = BorderFactory.createEmptyBorder(8, 15, 15, 0)
-        createCameraSource.contentPane.add(contentsPanel, BorderLayout.CENTER)
+        gbc.gridx = 0
+        gbc.gridy = 6
+        gbc.gridwidth = 2
 
-        // Event listeners
-        createButton.addActionListener { onCreateButton() }
+        root.add(buttons, gbc)
 
-        camerasComboBox.addActionListener { onCameraSelectionChanged() }
+        // ---------------- EVENTS ----------------
 
-        nameTextField.document.addDocumentListener(SimpleDocumentListener { updateCreateButton() })
-        cancelButton.addActionListener { wasCancelled = true; close() }
-
-        updateState()
-
-        createCameraSource.apply {
-            pack()
-            isResizable = false
-            isAlwaysOnTop = true
-            setLocationRelativeTo(null)
-            isVisible = true
+        createButton.addActionListener {
+            create()
         }
-    }
 
-    private fun onCreateButton() {
-        if (state == State.TEST_SUCCESSFUL) {
-            val webcam = webcams[getSelectedIndex()]
-            val dim = sizes[camerasComboBox.selectedItem]!![dimensionsComboBox.selectedIndex]
-            val rotation = rotationComboBox.selectedEnum ?: WebcamRotation.UPRIGHT // Correction: Handle null case
-
-            if (usingOpenCvDiscovery) {
-                val index = if (webcam is OpenCvWebcam) webcam.index else camerasComboBox.selectedIndex
-                createSource(nameTextField.text, index, dim, rotation)
-            } else {
-                createSource(nameTextField.text, webcam.name, dim, rotation)
-            }
+        cancelButton.addActionListener {
             close()
-        } else {
-            state = State.CLICKED_TEST
-            updateState()
-            CoroutineScope(Dispatchers.IO).launch {
-                val webcam = webcams[getSelectedIndex()]
-                val dim = sizes[camerasComboBox.selectedItem]!![dimensionsComboBox.selectedIndex]
+        }
 
-                webcam.resolution = dim
-                val success = testCamera(webcam)
+        // ---------------- DIALOG ----------------
 
-                SwingUtilities.invokeLater {
-                    if (!wasCancelled) {
-                        state = if (success) State.TEST_SUCCESSFUL else State.TEST_FAILED
-                        updateState()
-                    }
+        dialog.contentPane.add(root)
+
+        dialog.pack()
+        dialog.minimumSize = dialog.size
+
+        dialog.setLocationRelativeTo(null)
+        dialog.isVisible = true
+    }
+
+    private fun updateAutomaticName() {
+        val info = cameraInfos.getOrNull(camerasComboBox.selectedIndex)
+            ?: return
+
+        nameTextField.text = inputSourceManager.tryName(info.name)
+    }
+
+    private fun loadModes(index: Int) {
+
+        val info = cameraInfos.getOrNull(index) ?: return
+
+        try {
+            val cam = UsbCamera(info.name, info.dev)
+
+            modes = cam.enumerateVideoModes()
+                .distinctBy {
+                    "${it.width}x${it.height}_${it.fps}_${it.pixelFormat}"
                 }
+                .sortedWith(
+                    compareByDescending<VideoMode> {
+                        it.width * it.height
+                    }.thenByDescending {
+                        it.fps
+                    }
+                )
+                .toTypedArray()
+
+            cam.close()
+
+        } catch (t: Throwable) {
+
+            t.printStackTrace()
+            modes = emptyArray()
+        }
+
+        // Populate resolution / fps / pixel format combo boxes based on available modes
+        resolutionComboBox.removeAllItems()
+        fpsComboBox.removeAllItems()
+        pixelFormatComboBox.removeAllItems()
+
+        val resolutions = modes
+            .map { "${it.width}x${it.height}" }
+            .distinct()
+            .sortedByDescending { res ->
+                val (w, h) = parseResolution(res) ?: Pair(0, 0)
+                w * h
             }
+
+        for (r in resolutions) resolutionComboBox.addItem(r)
+
+        if (resolutions.isNotEmpty()) {
+            resolutionComboBox.selectedIndex = 0
+        }
+
+        // listeners (remove previous to avoid duplicates)
+        for (l in resolutionComboBox.actionListeners) resolutionComboBox.removeActionListener(l)
+        for (l in fpsComboBox.actionListeners) fpsComboBox.removeActionListener(l)
+
+        resolutionComboBox.addActionListener {
+            updateFpsAndPixelFormats()
+        }
+
+        fpsComboBox.addActionListener {
+            updatePixelFormatsForFps()
+        }
+
+        // initialize dependent lists
+        if (resolutionComboBox.itemCount > 0) updateFpsAndPixelFormats()
+    }
+
+    private fun parseResolution(res: String?): Pair<Int, Int>? {
+        if (res == null) return null
+        val parts = res.split('x')
+        if (parts.size != 2) return null
+        return try {
+            Pair(parts[0].toInt(), parts[1].toInt())
+        } catch (_: NumberFormatException) {
+            null
         }
     }
 
-    private fun onCameraSelectionChanged() {
-        val webcam = webcams.getOrNull(getSelectedIndex()) ?: run {
-            state = State.UNSUPPORTED
-            updateState()
-            return
-        }
+    private fun updateFpsAndPixelFormats() {
+        val res = resolutionComboBox.selectedItem as? String ?: return
+        val (w, h) = parseResolution(res) ?: return
 
-        nameTextField.text = eocvSim.inputSourceManager.tryName(webcam.name)
-        dimensionsComboBox.removeAllItems()
+        val modesForRes = modes.filter { it.width == w && it.height == h }
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val webcamSizes = sizes[camerasComboBox.selectedItem] ?: return@launch
-            SwingUtilities.invokeLater {
-                dimensionsComboBox.removeAllItems()
-                webcamSizes.forEach { dimensionsComboBox.addItem("${it.width.toInt()}x${it.height.toInt()}") }
-                state = State.INITIAL
-                updateCreateButton()
-                updateState()
-            }
-        }
+        val fpsList = modesForRes.map { it.fps }.distinct().sortedDescending()
+
+        fpsComboBox.removeAllItems()
+        for (f in fpsList) fpsComboBox.addItem(f)
+        if (fpsComboBox.itemCount > 0) fpsComboBox.selectedIndex = 0
+
+        // populate pixel formats for the initially selected fps
+        updatePixelFormatsForFps()
     }
 
-    private fun testCamera(webcam: Webcam): Boolean {
-        webcam.open()
-        var success = webcam.isOpen
-        if (success) {
-            val m = Mat()
-            try { webcam.read(m) } catch (_: Exception) { success = false }
-            m.release()
-            webcam.close()
+    private fun updatePixelFormatsForFps() {
+        val res = resolutionComboBox.selectedItem as? String ?: return
+        val (w, h) = parseResolution(res) ?: return
+        val selectedFps = fpsComboBox.selectedItem as? Int
+
+        val modesForRes = modes.filter { it.width == w && it.height == h }
+
+        val pfList = if (selectedFps != null) {
+            modesForRes.filter { it.fps == selectedFps }.map { it.pixelFormat }
+        } else {
+            modesForRes.map { it.pixelFormat }
         }
-        return success
+
+        val distinctPf = pfList.distinct()
+
+        pixelFormatComboBox.removeAllItems()
+        for (pf in distinctPf) pixelFormatComboBox.addItem(pf)
+        if (pixelFormatComboBox.itemCount > 0) pixelFormatComboBox.selectedIndex = 0
     }
 
-    private fun updateState() {
-        when (state) {
-            State.INITIAL -> {
-                statusLabel.text = "Click \"test\" to test camera."
-                createButton.text = "Test"
-                setInteractables(true)
-            }
-            State.CLICKED_TEST -> {
-                statusLabel.text = "Trying to open camera, please wait..."
-                setInteractables(false)
-            }
-            State.TEST_SUCCESSFUL -> {
-                statusLabel.text = "Camera was opened successfully."
-                createButton.text = "Create"
-                setInteractables(true)
-            }
-            State.TEST_FAILED -> {
-                statusLabel.text = "Failed to open camera, try another one."
-                createButton.text = "Test"
-                setInteractables(true)
-            }
-            State.NO_WEBCAMS -> {
-                statusLabel.text = "No cameras detected."
-                createButton.text = "Test"
-                nameTextField.text = ""
-                setInteractables(false)
-            }
-            State.UNSUPPORTED -> {
-                statusLabel.text = "This camera is currently unavailable."
-                createButton.text = "Test"
-                nameTextField.text = ""
-                setInteractables(false)
-                camerasComboBox.isEnabled = true
-            }
-        }
-    }
+    private fun create() {
 
-    private fun setInteractables(enabled: Boolean) {
-        createButton.isEnabled = enabled
-        nameTextField.isEnabled = enabled
-        camerasComboBox.isEnabled = enabled
-        dimensionsComboBox.isEnabled = enabled
+        val camIndex = camerasComboBox.selectedIndex
+
+        val info = cameraInfos.getOrNull(camIndex)
+            ?: return
+
+        // Build desired VideoMode from selected resolution / fps / pixel format
+        val resStr = resolutionComboBox.selectedItem as? String ?: return
+        val (w, h) = parseResolution(resStr) ?: return
+        val fps = fpsComboBox.selectedItem as? Int
+        val pf = pixelFormatComboBox.selectedItem
+
+        var mode: VideoMode? = null
+
+        if (fps != null && pf != null) {
+            mode = modes.find { it.width == w && it.height == h && it.fps == fps && it.pixelFormat == pf }
+        }
+
+        // fallback: match by resolution + fps
+        if (mode == null && fps != null) {
+            mode = modes.find { it.width == w && it.height == h && it.fps == fps }
+        }
+
+        // fallback: any mode with resolution
+        if (mode == null) {
+            mode = modes.find { it.width == w && it.height == h }
+        }
+
+        mode ?: return
+
+        onMainUpdate.once {
+
+            inputSourceManager.addInputSource(
+                nameTextField.text.trim(),
+                CameraSource(
+                    info.name,
+                    info.dev,
+                    sameCameraCheckBox.isSelected,
+                    info.vendorId,
+                    info.productId,
+                    mode
+                ),
+                true
+            )
+        }
+
+        close()
     }
 
     private fun close() {
-        createCameraSource.isVisible = false
-        createCameraSource.dispose()
-    }
-
-    private fun createSource(name: String, camName: String, size: Size, rotation: WebcamRotation) {
-        eocvSim.onMainUpdate.once { eocvSim.inputSourceManager.addInputSource(name, CameraSource(camName, size, rotation), true) }
-    }
-
-    private fun createSource(name: String, camIndex: Int, size: Size, rotation: WebcamRotation) {
-        eocvSim.onMainUpdate.once { eocvSim.inputSourceManager.addInputSource(name, CameraSource(camIndex, size, rotation), true) }
-    }
-
-    private fun updateCreateButton() {
-        createButton.isEnabled = nameTextField.text.trim().isNotEmpty() &&
-                !eocvSim.inputSourceManager.isNameOnUse(nameTextField.text)
-    }
-
-    private fun getSelectedIndex() = indexes[camerasComboBox.selectedItem] ?: 0
-
-    // Simple helper for DocumentListener in Kotlin
-    private class SimpleDocumentListener(val onChange: () -> Unit) : javax.swing.event.DocumentListener {
-        override fun insertUpdate(e: javax.swing.event.DocumentEvent) = onChange()
-        override fun removeUpdate(e: javax.swing.event.DocumentEvent) = onChange()
-        override fun changedUpdate(e: javax.swing.event.DocumentEvent) = onChange()
+        dialog.dispose()
     }
 }

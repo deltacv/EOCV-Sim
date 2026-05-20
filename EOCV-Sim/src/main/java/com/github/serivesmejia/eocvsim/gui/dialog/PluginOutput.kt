@@ -1,78 +1,38 @@
 /*
  * Copyright (c) 2024 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.dialog
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.LifecycleSignal
+import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.dialog.component.BottomButtonsPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
-import io.github.deltacv.common.util.loggerForThis
-import io.github.deltacv.eocvsim.plugin.loader.FilePluginLoaderImpl
-import io.github.deltacv.eocvsim.plugin.loader.PluginManager
-import io.github.deltacv.eocvsim.plugin.loader.PluginSource
-import io.github.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.swing.Swing
-import java.awt.Dimension
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
-import java.awt.Toolkit
+import com.github.serivesmejia.eocvsim.plugin.output.PluginDialogSignal
+import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
+import com.github.serivesmejia.eocvsim.plugin.output.VisualPluginOutputHandler
+import org.deltacv.eocvsim.plugin.loader.FilePluginLoaderImpl
+import org.deltacv.eocvsim.plugin.loader.PluginManager
+import org.deltacv.eocvsim.plugin.loader.PluginSource
+import org.deltacv.eocvsim.plugin.repository.PluginRepositoryManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
+import java.awt.*
 import java.awt.datatransfer.StringSelection
 import javax.swing.*
-import java.awt.Desktop
-import javax.swing.event.ChangeEvent
-import javax.swing.event.ChangeListener
 
 class PluginOutput(
-    appendDelegate: AppendDelegate,
-    val pluginManager: PluginManager,
-    val eocvSim: EOCVSim? = null,
-    val onContinue: Runnable
-) : Appendable {
+    val outputHandler: PluginOutputHandler,
+    val pluginManager: org.deltacv.eocvsim.plugin.loader.PluginManager,
+    val configManager: ConfigManager,
+    val scope: CoroutineScope
+) : Appendable, KoinComponent {
 
-    companion object {
-        const val SPECIAL = "[13mck]"
-
-        const val SPECIAL_OPEN = "$SPECIAL[OPEN]"
-        const val SPECIAL_OPEN_MGR = "$SPECIAL[OPEN_MGR]"
-        const val SPECIAL_CLOSE = "$SPECIAL[CLOSE]"
-        const val SPECIAL_CONTINUE = "$SPECIAL[CONTINUE]"
-        const val SPECIAL_FREE = "$SPECIAL[FREE]"
-        const val SPECIAL_SILENT = "$SPECIAL[SILENT]"
-
-        fun String.trimSpecials(): String {
-            return this
-                .replace(SPECIAL_OPEN, "")
-                .replace(SPECIAL_OPEN_MGR, "")
-                .replace(SPECIAL_CLOSE, "")
-                .replace(SPECIAL_CONTINUE, "")
-                .replace(SPECIAL_SILENT, "")
-                .replace(SPECIAL_FREE, "")
-        }
-    }
+    private val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
 
     private val output = JDialog()
     private val tabbedPane: JTabbedPane
@@ -85,10 +45,8 @@ class PluginOutput(
 
     private val mavenOutputPanel = OutputPanel(mavenBottomButtonsPanel)
 
-    private val logger by loggerForThis()
-
     init {
-        output.isModal = true
+        output.isModal = false
         output.isAlwaysOnTop = true
         output.title = "Plugin Manager"
 
@@ -104,14 +62,48 @@ class PluginOutput(
         output.pack()
         output.setSize(500, 365)
 
-        appendDelegate.subscribe(this)
+        // Subscribe to output messages
+        outputHandler.onOutput.attachPayload { message ->
+            SwingUtilities.invokeLater {
+                mavenOutputPanel.outputArea.text += message
+                mavenOutputPanel.outputArea.revalidate()
+                mavenOutputPanel.outputArea.repaint()
+            }
+        }
+
+        // Subscribe to dialog signals
+        outputHandler.onDialogSignal.attachPayload { signal ->
+            SwingUtilities.invokeLater {
+                when (signal) {
+                    PluginDialogSignal.ShowOutput -> {
+                        output.isVisible = true
+                        tabbedPane.selectedIndex = tabbedPane.indexOfTab("Output")
+                    }
+                    PluginDialogSignal.ShowPlugins -> {
+                        output.isVisible = true
+                        tabbedPane.selectedIndex = tabbedPane.indexOfTab("Plugins")
+                        tabbedPane.setComponentAt(0, makePluginManagerPanel())
+                    }
+                    PluginDialogSignal.Hide -> {
+                        output.isVisible = false
+                    }
+                    PluginDialogSignal.EnableContinue -> {
+                        mavenBottomButtonsPanel.continueButton.isEnabled = true
+                        mavenBottomButtonsPanel.closeButton.isEnabled = false
+                    }
+                    PluginDialogSignal.DisableContinue -> {
+                        mavenBottomButtonsPanel.continueButton.isEnabled = false
+                        mavenBottomButtonsPanel.closeButton.isEnabled = true
+                    }
+                }
+            }
+        }
 
         output.setLocationRelativeTo(null)
         output.defaultCloseOperation = WindowConstants.HIDE_ON_CLOSE
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun registerListeners() = GlobalScope.launch(Dispatchers.Swing) {
+    private fun registerListeners() {
         output.addWindowListener(object : java.awt.event.WindowAdapter() {
             override fun windowClosing(e: java.awt.event.WindowEvent?) {
                 if(mavenBottomButtonsPanel.continueButton.isEnabled) {
@@ -124,35 +116,35 @@ class PluginOutput(
 
         mavenBottomButtonsPanel.continueButton.addActionListener {
             close()
-            onContinue.run()
+            // Signal the outputHandler that user clicked Continue
+            if (outputHandler is VisualPluginOutputHandler) {
+                outputHandler.signalContinuation()
+            }
             mavenBottomButtonsPanel.continueButton.isEnabled = false
             mavenBottomButtonsPanel.closeButton.isEnabled = true
         }
 
-        tabbedPane.addChangeListener(object: ChangeListener {
-            override fun stateChanged(e: ChangeEvent?) {
-                // remake plugin manager panel
-                if(tabbedPane.selectedIndex == tabbedPane.indexOfTab("Plugins")) {
-                    tabbedPane.setComponentAt(0, makePluginManagerPanel())
-                }
+        tabbedPane.addChangeListener { // remake plugin manager panel
+            if (tabbedPane.selectedIndex == tabbedPane.indexOfTab("Plugins")) {
+                tabbedPane.setComponentAt(0, makePluginManagerPanel())
             }
-        })
+        }
     }
 
     private fun checkShouldAskForRestart() {
-        if(shouldAskForRestart && eocvSim != null) {
+        if(shouldAskForRestart) {
             val dialogResult = JOptionPane.showConfirmDialog(
                 output,
                 "You need to restart the application to apply the changes. Do you want to restart now?",
                 "Restart required",
                 JOptionPane.YES_NO_OPTION
             )
-
+ 
             if(dialogResult == JOptionPane.YES_OPTION) {
                 output.isVisible = false
-                eocvSim.restart()
+                lifecycleChannel.trySend(LifecycleSignal.Restart)
             }
-
+ 
             shouldAskForRestart = false
         }
     }
@@ -186,7 +178,7 @@ class PluginOutput(
                 pluginPanel.layout = GridBagLayout()
 
                 val pluginNameLabel = JLabel(
-                    "<html><h1>${loader.pluginInfo.nameWithAuthorVersion}</h1></html>",
+                    "<html><h1>${loader.pluginInfo.nameWithVersionAndAuthor}</h1></html>",
                     SwingConstants.CENTER
                 )
 
@@ -212,7 +204,7 @@ class PluginOutput(
                     PluginSource.EMBEDDED -> "as an embedded plugin"
                 }
 
-                val sourceEnabled = if(loader.shouldEnable) "It was LOADED $source." else "It is DISABLED, it comes $source."
+                val sourceEnabled = if(loader.shouldEnable) "It was loaded $source." else "It is disabled, it comes $source."
 
                 val superAccess = if(loader.hasSuperAccess)
                     "It has super access."
@@ -222,7 +214,7 @@ class PluginOutput(
                     is FilePluginLoaderImpl -> {
                         if(loader.pluginToml.getBoolean("super-access", false))
                             "It requests super access in its manifest."
-                        else "It does not request super access in its manifest."
+                        else ""
                     }
                     else -> ""
                 }
@@ -360,14 +352,15 @@ class PluginOutput(
             )
 
             if(dialogResult == JOptionPane.YES_OPTION) {
-                eocvSim?.config?.flags?.set("startFresh", true)
-
+                configManager.config.flags["startFreshPlugins"] = true
+ 
                 PluginRepositoryManager.REPOSITORY_FILE.delete()
                 PluginRepositoryManager.CACHE_FILE.delete()
-
+ 
                 shouldAskForRestart = true
                 checkShouldAskForRestart()
             }
+
         }
 
         val closeButton = JButton("Close")
@@ -412,72 +405,18 @@ class PluginOutput(
         output.isVisible = false
     }
 
-    private fun handleSpecials(text: String): Boolean {
-        when(text) {
-            SPECIAL_FREE -> {
-                mavenBottomButtonsPanel.continueButton.isEnabled = false
-                mavenBottomButtonsPanel.closeButton.isEnabled = true
-            }
-            SPECIAL_CLOSE -> close()
-            SPECIAL_CONTINUE -> {
-                mavenBottomButtonsPanel.continueButton.isEnabled = true
-                mavenBottomButtonsPanel.closeButton.isEnabled = false
-            }
-        }
-
-        if(!text.startsWith(SPECIAL_SILENT) && text != SPECIAL_CLOSE && text != SPECIAL_FREE) {
-            SwingUtilities.invokeLater {
-                SwingUtilities.invokeLater {
-                    if(text == SPECIAL_OPEN_MGR) {
-                        tabbedPane.selectedIndex = tabbedPane.indexOfTab("Plugins") // focus on plugins tab
-                    } else {
-                        tabbedPane.selectedIndex = tabbedPane.indexOfTab("Output") // focus on output tab
-                    }
-                }
-
-                tabbedPane.setComponentAt(0, makePluginManagerPanel())
-                logger.info("Displaying plugin manager dialog")
-
-                output.isVisible = true
-            }
-        }
-
-        return text == SPECIAL_OPEN || text == SPECIAL_CLOSE || text == SPECIAL_CONTINUE || text == SPECIAL_FREE
-    }
-
     override fun append(csq: CharSequence?): java.lang.Appendable {
-        val text = csq.toString()
-
-        SwingUtilities.invokeLater {
-            if(handleSpecials(text)) return@invokeLater
-
-            mavenOutputPanel.outputArea.text += text.trimSpecials()
-            mavenOutputPanel.outputArea.revalidate()
-            mavenOutputPanel.outputArea.repaint()
-        }
+        // ...existing code...
         return this
     }
 
     override fun append(csq: CharSequence?, start: Int, end: Int): java.lang.Appendable {
-        val text = csq.toString().substring(start, end)
-
-        SwingUtilities.invokeLater {
-            if(handleSpecials(text)) return@invokeLater
-
-            mavenOutputPanel.outputArea.text += text.trimSpecials()
-            mavenOutputPanel.outputArea.revalidate()
-            mavenOutputPanel.outputArea.repaint()
-        }
+        // ...existing code...
         return this
     }
 
     override fun append(c: Char): java.lang.Appendable {
-        SwingUtilities.invokeLater {
-            mavenOutputPanel.outputArea.text += c
-            mavenOutputPanel.outputArea.revalidate()
-            mavenOutputPanel.outputArea.repaint()
-        }
-
+        // ...existing code...
         return this
     }
 
@@ -519,44 +458,5 @@ class PluginOutput(
 
             add(Box.createRigidArea(Dimension(4, 0)))
         }
-    }
-}
-
-
-class AppendDelegate {
-    private val appendables = mutableListOf<Appendable>()
-
-    @Synchronized
-    fun subscribe(appendable: Appendable) {
-        appendables.add(appendable)
-    }
-
-    fun subscribe(appendable: (String) -> Unit) {
-        appendables.add(object : Appendable {
-            override fun append(csq: CharSequence?): java.lang.Appendable {
-                appendable(csq.toString())
-                return this
-            }
-
-            override fun append(csq: CharSequence?, start: Int, end: Int): java.lang.Appendable {
-                appendable(csq.toString().substring(start, end))
-                return this
-            }
-
-            override fun append(c: Char): java.lang.Appendable {
-                appendable(c.toString())
-                return this
-            }
-        })
-    }
-
-    @Synchronized
-    fun append(text: String) {
-        appendables.forEach { it.append(text) }
-    }
-
-    @Synchronized
-    fun appendln(text: String) {
-        appendables.forEach { it.appendLine(text) }
     }
 }

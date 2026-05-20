@@ -1,6 +1,11 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.util.io
 
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import java.io.File
 import java.io.RandomAccessFile
 import java.nio.channels.FileLock

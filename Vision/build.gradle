@@ -1,29 +1,26 @@
 plugins {
     id 'kotlin'
     id 'signing'
+    id 'org.photonvision.tools.WpilibTools'
     id "com.vanniktech.maven.publish" version "0.30.0"
 }
 
 apply from: '../build.common.gradle'
 
+wpilibTools.deps.wpilibVersion = wpilibVersion
+
 dependencies {
     implementation project(':Common')
 
-    api("org.deltacv:AprilTagDesktop:$apriltag_plugin_version") {
-        transitive = false
-    }
-
-    api "org.openpnp:opencv:$opencv_version"
+    compileOnly wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
+    compileOnly wpilibTools.deps.wpilibJava("apriltag")
+    compileOnly wpilibTools.deps.wpilibJava("wpiutil")
+    compileOnly wpilibTools.deps.wpilibJava("wpimath")
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"
     implementation 'org.jetbrains.kotlin:kotlin-stdlib'
 
-
-    // Compatibility: Skiko supports many platforms but we will only be adding
-    // those that are supported by AprilTagDesktop as well
-
     implementation("org.jetbrains.skiko:skiko-awt-runtime-windows-x64:$skiko_version")
-    implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-x64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-linux-arm64:$skiko_version")
     implementation("org.jetbrains.skiko:skiko-awt-runtime-macos-x64:$skiko_version")

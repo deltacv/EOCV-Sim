@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package org.firstinspires.ftc.robotcore.robocol;
 
 /**
@@ -20,3 +25,4 @@ public class TelemetryMessage {
     public final static int cbValueMax = (1 << (cbValueLen*8)) - 1;
 
 }
+

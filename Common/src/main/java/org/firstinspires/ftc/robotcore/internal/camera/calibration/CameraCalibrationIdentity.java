@@ -36,3 +36,5 @@ public interface CameraCalibrationIdentity
 {
     boolean isDegenerate();
 }
+
+

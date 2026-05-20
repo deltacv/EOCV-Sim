@@ -1,10 +1,17 @@
-name: Build and test with Gradle
+name: Build, Test & Release
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ master, dev ]
+    tags: ['v*']
+  pull_request:
+
 
 jobs:
-  test_linux:
-    runs-on: ubuntu-latest
+  build_linux:
+    runs-on: ubuntu-24.04
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
 
     steps:
     - uses: actions/checkout@v2
@@ -12,14 +19,45 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '25'
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle
-      run: ./gradlew test
+      run: ./gradlew -Penv=${{ env.BUILD_ENV }} clean build shadowJar
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: eocvsim-ubuntu-latest
+        path: |
+          EOCV-Sim/build/libs/*.jar
 
-  test_windows:
+  build_linux_arm:
+    runs-on: ubuntu-24.04-arm
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '25'
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build and test with Gradle
+      run: ./gradlew -Penv=${{ env.BUILD_ENV }} clean build shadowJar
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: eocvsim-ubuntu-arm64
+        path: |
+          EOCV-Sim/build/libs/*.jar
+
+  build_windows:
     runs-on: windows-latest
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
 
     steps:
     - uses: actions/checkout@v2
@@ -27,14 +65,21 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '17'
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-    - name: Build and test with Gradle
-      run: ./gradlew test
+        java-version: '25'
+    - name: Build and test with Gradle (Windows)
+      shell: pwsh
+      run: .\gradlew.bat -Penv=${{ env.BUILD_ENV }} clean build shadowJar
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: eocvsim-windows-latest
+        path: |
+          EOCV-Sim/build/libs/*.jar
 
-  test_mac:
-    runs-on: macos-latest
+  build_mac:
+    runs-on: macos-26
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
 
     steps:
     - uses: actions/checkout@v2
@@ -42,8 +87,187 @@ jobs:
       uses: actions/setup-java@v3
       with:
         distribution: 'zulu'
-        java-version: '17'
+        java-version: '25'
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build and test with Gradle
-      run: ./gradlew test
+      run: ./gradlew -Penv=${{ env.BUILD_ENV }} clean build shadowJar
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: eocvsim-macos-latest
+        path: |
+          EOCV-Sim/build/libs/*.jar
+
+  build_mac_intel:
+    runs-on: macos-26-intel
+    env:
+      BUILD_ENV: ${{ startsWith(github.ref, 'refs/tags/v') && 'release' || 'dev' }}
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '25'
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build and test with Gradle
+      run: ./gradlew -Penv=${{ env.BUILD_ENV }} clean build shadowJar
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: eocvsim-macos-13
+        path: |
+          EOCV-Sim/build/libs/*.jar
+
+  release:
+    needs: [build_linux, build_linux_arm, build_windows, build_mac, build_mac_intel]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '25'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Publish package to maven central
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.JRELEASER_MAVENCENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.JRELEASER_MAVENCENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
+        run: ./gradlew -Penv=release :Common:publishToMavenCentral :Vision:publishToMavenCentral :EOCV-Sim:publishToMavenCentral -x test -x :EOCV-Sim:shadowJar
+
+      - name: Build release shadow jar with Gradle
+        run: ./gradlew -Penv=release shadowJar -x test
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-ubuntu-latest
+          path: artifacts/ubuntu
+
+      - name: Download Linux ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-ubuntu-arm64
+          path: artifacts/ubuntu-arm64
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-macos-latest
+          path: artifacts/macos
+
+      - name: Download Intel macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-macos-13
+          path: artifacts/macos-intel
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-windows-latest
+          path: artifacts/windows
+
+      - name: List downloaded artifacts
+        run: |
+          ls -la artifacts || true
+          ls -la artifacts/ubuntu || true
+          ls -la artifacts/ubuntu-arm64 || true
+          ls -la artifacts/macos || true
+          ls -la artifacts/macos-intel || true
+          ls -la artifacts/windows || true
+
+      - name: Select platform jars for release
+        run: |
+          mkdir -p release-jars
+          # Copy the first (and should be only) jar from each platform folder
+          cp artifacts/ubuntu/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
+          cp artifacts/ubuntu-arm64/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux ARM64 jar found"
+          cp artifacts/windows/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
+          cp artifacts/macos/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
+          cp artifacts/macos-intel/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Intel macOS jar found"
+          # Remove source jars if any were copied
+          rm -f release-jars/*-sources.jar
+          # Remove the generic jar (no platform suffix)
+          find release-jars -name "EOCV-Sim-*.jar" ! -name "*x86*" ! -name "*arm*" ! -name "*win*" -delete
+          echo "Release jars to upload:"
+          ls -la release-jars/
+
+      - name: Create GitHub Release and upload artifacts
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: release-jars/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dev_release:
+    needs: [build_linux, build_linux_arm, build_windows, build_mac, build_mac_intel]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref != 'refs/heads/master' && !startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-ubuntu-latest
+          path: artifacts/dev/ubuntu
+
+      - name: Download Linux ARM64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-ubuntu-arm64
+          path: artifacts/dev/ubuntu-arm64
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-macos-latest
+          path: artifacts/dev/macos
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-windows-latest
+          path: artifacts/dev/windows
+
+      - name: Download Intel macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: eocvsim-macos-13
+          path: artifacts/dev/macos-intel
+
+      - name: Select platform jars for dev release
+        run: |
+          mkdir -p release-jars
+          # Copy the first (and should be only) jar from each platform folder
+          cp artifacts/dev/ubuntu/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
+          cp artifacts/dev/ubuntu-arm64/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux ARM64 jar found"
+          cp artifacts/dev/windows/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
+          cp artifacts/dev/macos/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
+          cp artifacts/dev/macos-intel/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Intel macOS jar found"
+          # Remove source jars if any were copied
+          rm -f release-jars/*-sources.jar
+          # Remove the generic jar (no platform suffix)
+          find release-jars -name "EOCV-Sim-*.jar" ! -name "*x86*" ! -name "*arm*" ! -name "*win*" -delete
+          echo "Dev release jars to upload:"
+          ls -la release-jars/
+
+      - name: Create Dev Release and upload artifacts
+        uses: pyTooling/Actions/releaser@r0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: 'Dev'
+          rm: true
+          files: |
+            release-jars/*.jar

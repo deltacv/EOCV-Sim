@@ -1,24 +1,6 @@
 /*
  * Copyright (c) 2024 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer
@@ -38,7 +20,13 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.border.TitledBorder
 
-class TelemetryPanel(pipelineManager: PipelineManager? = null) : JPanel(), TelemetryTransmissionReceiver {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class TelemetryPanel : JPanel(), TelemetryTransmissionReceiver, KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+
 
     val telemetryScroll = JScrollPane()
     val telemetryList  = JList<String>()
@@ -95,14 +83,13 @@ class TelemetryPanel(pipelineManager: PipelineManager? = null) : JPanel(), Telem
             ipady = 20
         })
 
-        if(pipelineManager != null) {
-            pipelineManager.onPipelineChange { // update telemetry receiver on pipeline change
-                val telemetry = pipelineManager.currentTelemetry
-                if (telemetry is EOCVSimTelemetryImpl) {
-                    telemetry.addTransmissionReceiver(this@TelemetryPanel)
-                }
+        pipelineManager.onPipelineChange { // update telemetry receiver on pipeline change
+            val telemetry = pipelineManager.currentTelemetry
+            if (telemetry is EOCVSimTelemetryImpl) {
+                telemetry.addTransmissionReceiver(this@TelemetryPanel)
             }
         }
+
     }
 
     fun revalAndRepaint() {
@@ -139,7 +126,7 @@ class TelemetryPanel(pipelineManager: PipelineManager? = null) : JPanel(), Telem
 
     private var lastTelemetry = "";
 
-    override fun onTelemetryTransmission(text: String, srcTelemetry: Telemetry) {
+    override fun consumeTelemetry(text: String, srcTelemetry: Telemetry) {
         SwingUtilities.invokeLater {
             if(lastTelemetry != text) {
                 updateTelemetry(text, srcTelemetry.captionValueSeparator, srcTelemetry.itemSeparator)
@@ -149,3 +136,4 @@ class TelemetryPanel(pipelineManager: PipelineManager? = null) : JPanel(), Telem
     }
 
 }
+

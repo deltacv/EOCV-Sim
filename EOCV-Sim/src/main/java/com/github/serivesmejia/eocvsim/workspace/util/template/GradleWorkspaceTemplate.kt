@@ -1,39 +1,19 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.workspace.util.template
 
 import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import com.github.serivesmejia.eocvsim.workspace.util.WorkspaceTemplate
 import net.lingala.zip4j.ZipFile
 import java.io.File
 import java.io.IOException
 
 object GradleWorkspaceTemplate : WorkspaceTemplate() {
-
-    private val TAG = "GradleWorkspaceTemplate"
 
     val logger by loggerForThis()
 
@@ -72,9 +52,9 @@ object GradleWorkspaceTemplate : WorkspaceTemplate() {
         val fileContents = SysUtil.loadFileStr(buildGradleFile)
             .replace("\$eocvsim_version", Build.standardVersionString)
             .replace("\$opencv_version", Build.opencvVersion)
-            .replace("\$apriltag_version", Build.apriltagPluginVersion)
 
         SysUtil.saveFileStr(buildGradleFile, fileContents)
     }
 
 }
+

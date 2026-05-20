@@ -1,4 +1,3 @@
-  
 /*
  * Copyright (c) 2014, 2015 Qualcomm Technologies Inc
  *
@@ -156,3 +155,4 @@ public class Range {
         }
     }
 }
+

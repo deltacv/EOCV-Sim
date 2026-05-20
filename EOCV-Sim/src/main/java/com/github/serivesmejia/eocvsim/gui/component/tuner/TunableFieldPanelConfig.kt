@@ -1,33 +1,18 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.component.tuner
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
 import com.github.serivesmejia.eocvsim.gui.component.input.EnumComboBox
 import com.github.serivesmejia.eocvsim.gui.component.input.SizeFields
 import com.github.serivesmejia.eocvsim.tuner.TunableField
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import org.deltacv.eocvsim.plugin.loader.PluginManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import org.opencv.core.Size
@@ -38,11 +23,20 @@ import java.awt.GridBagLayout
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 
-@OptIn(DelicateCoroutinesApi::class)
-class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions,
-                              private val eocvSim: EOCVSim) : JPanel() {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
-    var localConfig = eocvSim.config.globalTunableFieldsConfig.copy()
+@OptIn(DelicateCoroutinesApi::class)
+class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions) : JPanel(), KoinComponent {
+
+    private val configManager: ConfigManager by inject()
+    private val scope: CoroutineScope by inject()
+
+
+
+    var localConfig = configManager.config.globalTunableFieldsConfig.copy()
+
         private set
 
     private var lastApplyPopup: PopupX? = null
@@ -159,15 +153,16 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
                         it.closeOnFocusLost = true
 
                         //launch the waiting in the background
-                        GlobalScope.launch {
-                            delay(100)
-                            //close config popup if still hasn't focused after a bit
-                            launch(Dispatchers.Swing) {
-                                if (!it.window.isFocused && (lastApplyPopup == null || lastApplyPopup?.window?.isFocused == false)) {
-                                    it.hide()
-                                }
+                    scope.launch {
+                        delay(100)
+                        //close config popup if still hasn't focused after a bit
+                        launch(Dispatchers.Swing) {
+                            if (!it.window.isFocused && (lastApplyPopup == null || lastApplyPopup?.window?.isFocused == false)) {
+                                it.hide()
                             }
                         }
+                    }
+
                     }
                 }
 
@@ -232,7 +227,8 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
         applyToConfig() //saves the current values to the current local config
 
         localConfig.source = ConfigSource.GLOBAL //changes the source of the local config to global
-        eocvSim.config.globalTunableFieldsConfig = localConfig.copy()
+        configManager.config.globalTunableFieldsConfig = localConfig.copy()
+
 
         updateConfigSourceLabel()
         fieldOptions.fieldPanel.requestAllConfigReeval()
@@ -244,7 +240,8 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
         val typeClass = fieldOptions.fieldPanel.tunableField::class.java
 
         localConfig.source = ConfigSource.TYPE_SPECIFIC //changes the source of the local config to type specific
-        eocvSim.config.specificTunableFieldConfig[typeClass.name] = localConfig.copy()
+        configManager.config.specificTunableFieldConfig[typeClass.name] = localConfig.copy()
+
 
         updateConfigSourceLabel()
         fieldOptions.fieldPanel.requestAllConfigReeval()
@@ -252,18 +249,19 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
 
     //loads the config from global eocv sim config file
     internal fun applyFromEOCVSimConfig() {
-        val specificConfigs = eocvSim.config.specificTunableFieldConfig
+        val specificConfigs = configManager.config.specificTunableFieldConfig
 
         //apply specific config if we have one, or else, apply global
         localConfig = if(specificConfigs.containsKey(fieldTypeClass.name)) {
             specificConfigs[fieldTypeClass.name]!!.copy()
         } else {
-            eocvSim.config.globalTunableFieldsConfig.copy()
+            configManager.config.globalTunableFieldsConfig.copy()
         }
 
         updateConfigGuiFromConfig()
         updateConfigSourceLabel()
     }
+
 
     //applies the current values to the specified config, defaults to local
     @Suppress("UNNECESSARY_SAFE_CALL")
@@ -282,9 +280,7 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
         }
 
         //sets the panel mode (sliders or textboxes) to config from the current mode
-        if(fieldOptions.fieldPanel?.mode != null) {
-            config.fieldPanelMode = fieldOptions.fieldPanel.mode
-        }
+        config.fieldPanelMode = fieldOptions.fieldPanel.mode
     }
 
     private fun updateConfigSourceLabel(currentConfig: Config = localConfig) {
@@ -306,7 +302,7 @@ class TunableFieldPanelConfig(private val fieldOptions: TunableFieldPanelOptions
         //sets the slider range from config
         fieldOptions.fieldPanel.setSlidersRange(localConfig.sliderRange.width, localConfig.sliderRange.height)
         //sets the panel mode (sliders or textboxes) to config from the current mode
-        if(fieldOptions.fieldPanel?.fields != null){
+        if(fieldOptions.fieldPanel.fields != null){
             fieldOptions.fieldPanel.mode = localConfig.fieldPanelMode
         }
     }

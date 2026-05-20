@@ -1,30 +1,13 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.util.icon.PipelineListIconRenderer
+
 import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
@@ -41,7 +24,15 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.*
 
-class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class PipelineSelectorPanel : JPanel(), KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+    private val visualizer: Visualizer by inject()
+
+
 
     var selectedIndex: Int
         get() = indexMap[pipelineSelector.selectedIndex] ?: -1
@@ -61,7 +52,8 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     // <opModeSelector index, PipelineManager index>
     private val indexMap = mutableMapOf<Int, Int>()
 
-    val buttonsPanel = PipelineSelectorButtonsPanel(eocvSim)
+    val buttonsPanel = PipelineSelectorButtonsPanel()
+
 
     var allowPipelineSwitching = false
 
@@ -77,7 +69,8 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
         pipelineSelectorLabel.horizontalAlignment = JLabel.CENTER
 
-        pipelineSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager) { indexMap }
+        pipelineSelector.cellRenderer = PipelineListIconRenderer(pipelineManager) { indexMap }
+
         pipelineSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
 
         pipelineSelectorScroll.setViewportView(pipelineSelector)
@@ -114,47 +107,49 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
                     val pipeline = indexMap[index] ?: return
 
                     if (pipeline != beforeSelectedPipeline) {
-                        if (!eocvSim.pipelineManager.paused) {
-                            eocvSim.pipelineManager.requestChangePipeline(pipeline)
+                        if (!pipelineManager.paused) {
+                            pipelineManager.requestChangePipeline(pipeline)
                             beforeSelectedPipeline = pipeline
                         } else {
-                            if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
+                            if (pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
                                 pipelineSelector.setSelectedIndex(beforeSelectedPipeline)
                             } else { //handling pausing
-                                eocvSim.pipelineManager.requestSetPaused(false)
-                                eocvSim.pipelineManager.requestChangePipeline(pipeline)
+                                pipelineManager.requestSetPaused(false)
+                                pipelineManager.requestChangePipeline(pipeline)
                                 beforeSelectedPipeline = pipeline
                             }
                         }
                     }
+
                 } else {
                     pipelineSelector.setSelectedIndex(0)
                 }
             }
         })
 
-        eocvSim.pipelineManager.onPipelineChange {
-            selectedIndex = eocvSim.pipelineManager.currentPipelineIndex
+        pipelineManager.onPipelineChange {
+            selectedIndex = pipelineManager.currentPipelineIndex
         }
 
-        eocvSim.pipelineManager.onPipelineListRefresh {
+        pipelineManager.onPipelineListRefresh {
             updatePipelinesList()
         }
 
-        eocvSim.pipelineManager.onExternalSwitchingEnable {
+        pipelineManager.onExternalSwitchingEnable {
             allowPipelineSwitching = true
         }
-        eocvSim.pipelineManager.onExternalSwitchingDisable {
+        pipelineManager.onExternalSwitchingDisable {
             allowPipelineSwitching = false
         }
 
         val pauseListener: EventListener = {
-            eocvSim.visualizer.pipelineSelectorPanel.buttonsPanel.pipelinePauseBtt.isSelected =
-                eocvSim.pipelineManager.paused
+            visualizer.pipelineSelectorPanel.buttonsPanel.pipelinePauseBtt.isSelected =
+                pipelineManager.paused
         }
 
-        eocvSim.pipelineManager.onPause(pauseListener)
-        eocvSim.pipelineManager.onResume(pauseListener)
+        pipelineManager.onPause(pauseListener)
+        pipelineManager.onResume(pauseListener)
+
     }
 
     fun updatePipelinesList() = SwingUtilities.invokeLater {
@@ -163,9 +158,10 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
         indexMap.clear()
 
-        pipelinesData = eocvSim.pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
+        pipelinesData = pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
 
-        for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
+        for ((managerIndex, pipeline) in pipelineManager.pipelines.withIndex()) {
+
             if (!ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java) && !pipeline.hidden) {
                 listModel.addElement(pipeline.clazz.simpleName)
                 indexMap[selectorIndex] = managerIndex
@@ -188,3 +184,4 @@ class PipelineSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     }
 
 }
+

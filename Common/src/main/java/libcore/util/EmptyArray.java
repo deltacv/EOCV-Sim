@@ -70,3 +70,4 @@ public final class EmptyArray {
     /** @hide */
     public static final Annotation[] ANNOTATION = new Annotation[0];
 }
+

@@ -1,9 +1,14 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.workspace.config
 
 import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.util.SysUtil
-import io.github.deltacv.common.util.loggerForThis
-import com.google.gson.GsonBuilder
+import com.github.serivesmejia.eocvsim.util.serialization.JacksonJsonSupport
+import org.deltacv.common.util.loggerForThis
 import java.io.File
 
 /**
@@ -12,10 +17,6 @@ import java.io.File
  * @see WorkspaceConfig
  */
 class WorkspaceConfigLoader(var workspaceFile: File) {
-
-    companion object {
-        private val gson = GsonBuilder().setPrettyPrinting().create()
-    }
 
     /**
      * The workspace configuration file
@@ -34,7 +35,7 @@ class WorkspaceConfigLoader(var workspaceFile: File) {
         val configStr = SysUtil.loadFileStr(workspaceConfigFile)
 
         return try {
-            gson.fromJson(configStr, WorkspaceConfig::class.java)
+            JacksonJsonSupport.persistenceMapper.readValue(configStr, WorkspaceConfig::class.java)
         } catch(e: Exception) {
             logger.error("Failed to load workspace config", e)
             null
@@ -47,7 +48,7 @@ class WorkspaceConfigLoader(var workspaceFile: File) {
      */
     fun saveWorkspaceConfig(config: WorkspaceConfig) {
         config.eocvSimVersion = Build.standardVersionString
-        val configStr = gson.toJson(config)
+        val configStr = JacksonJsonSupport.persistenceMapper.writeValueAsString(config)
         SysUtil.saveFileStr(workspaceConfigFile, configStr)
     }
 

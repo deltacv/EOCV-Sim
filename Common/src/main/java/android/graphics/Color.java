@@ -1481,3 +1481,4 @@ public class Color {
         sColorNameMap.put("teal", 0xFF008080);
     }
 }
+

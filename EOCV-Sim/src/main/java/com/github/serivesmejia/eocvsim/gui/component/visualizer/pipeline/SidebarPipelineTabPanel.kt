@@ -1,29 +1,12 @@
 /*
  * Copyright (c) 2026 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.SidebarPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TelemetryPanel
 import java.awt.Font
@@ -34,12 +17,20 @@ import javax.swing.JPanel
 import javax.swing.border.EmptyBorder
 import javax.swing.border.TitledBorder
 
-class SidebarPipelineTabPanel(private val eocvSim: EOCVSim) : SidebarPanel.TabJPanel() {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-    val pipelineSelectorPanel = PipelineSelectorPanel(eocvSim)
-    val sourceSelectorPanel = SourceSelectorPanel(eocvSim)
+class SidebarPipelineTabPanel : SidebarPanel.TabJPanel(), KoinComponent {
 
-    val telemetryPanel = TelemetryPanel(eocvSim.pipelineManager)
+    private val pipelineManager: PipelineManager by inject()
+
+
+    val pipelineSelectorPanel = PipelineSelectorPanel()
+    val sourceSelectorPanel = SourceSelectorPanel()
+
+
+    val telemetryPanel = TelemetryPanel()
+
 
     init {
         font = font.deriveFont(Font.PLAIN, 14f)
@@ -93,10 +84,11 @@ class SidebarPipelineTabPanel(private val eocvSim: EOCVSim) : SidebarPanel.TabJP
 
     override fun onActivated() {
         pipelineSelectorPanel.isActive = true
-        eocvSim.pipelineManager.onUpdate.once {
-            eocvSim.pipelineManager.changePipeline(0)
+        pipelineManager.onUpdate.once {
+            pipelineManager.changePipeline(0)
         }
     }
+
 
     override fun onDeactivated() {
         pipelineSelectorPanel.isActive = false

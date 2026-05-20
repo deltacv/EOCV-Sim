@@ -28,3 +28,4 @@ public class OpenCvCameraException extends RuntimeException
         super(msg);
     }
 }
+

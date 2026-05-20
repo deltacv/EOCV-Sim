@@ -66,3 +66,5 @@ public interface GainControl extends CameraControl
      */
     boolean setGain(int gain);
 }
+
+

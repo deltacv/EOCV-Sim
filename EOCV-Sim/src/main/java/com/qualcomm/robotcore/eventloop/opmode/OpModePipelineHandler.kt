@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.qualcomm.robotcore.eventloop.opmode
 
 import com.github.serivesmejia.eocvsim.input.InputSource
@@ -5,8 +10,8 @@ import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.pipeline.handler.SpecificPipelineHandler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.qualcomm.robotcore.hardware.HardwareMap
-import io.github.deltacv.eocvsim.input.VisionInputSourceProvider
-import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider
+import org.deltacv.eocvsim.input.VisionInputSourceProvider
+import org.deltacv.vision.external.source.ThreadVisionSourceProvider
 import org.firstinspires.ftc.robotcore.external.Telemetry
 import org.openftc.easyopencv.OpenCvPipeline
 import org.openftc.easyopencv.OpenCvViewport

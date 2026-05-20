@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.gui.dialog
 
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
@@ -13,12 +18,15 @@ import javax.swing.JLabel
 import javax.swing.JOptionPane
 import javax.swing.JPanel
 
-class CreateWorkspace(
-    val parent: JFrame,
-    val visualizer: Visualizer
-) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-    val dialog = JDialog(parent)
+class CreateWorkspace : KoinComponent {
+
+    val visualizer: Visualizer by inject()
+
+    val dialog = JDialog(visualizer.frame)
+
 
     init {
         dialog.isModal = true
@@ -57,7 +65,8 @@ class CreateWorkspace(
                 dialog.dispose()
 
                 JOptionPane.showConfirmDialog(
-                    this@CreateWorkspace.parent,
+                    visualizer.frame,
+
                     "This feature prefers that you have Visual Studio Code already installed. You can opt to use IntelliJ IDEA instead, but you will have to do so manually.\n\n",
                     "VS Code Workspace",
                     JOptionPane.DEFAULT_OPTION,

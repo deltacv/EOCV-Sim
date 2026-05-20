@@ -298,3 +298,6 @@ public class Quaternion
         return String.format(Locale.US, "{w=%.3f, x=%.3f, y=%.3f, z=%.3f}", w, x, y, z);
     }
 }
+
+
+

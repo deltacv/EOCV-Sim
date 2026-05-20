@@ -1,24 +1,6 @@
 /*
  * Copyright (c) 2026 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.plugin.api.impl
@@ -26,11 +8,9 @@ package com.github.serivesmejia.eocvsim.plugin.api.impl
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.SidebarPanel
 import com.github.serivesmejia.eocvsim.gui.component.visualizer.TopMenuBar
-import io.github.deltacv.eocvsim.plugin.EOCVSimPlugin
-import io.github.deltacv.eocvsim.plugin.api.DialogFactoryApi
-import io.github.deltacv.eocvsim.plugin.api.VisualizerApi
-import io.github.deltacv.eocvsim.plugin.api.VisualizerSidebarApi
-import io.github.deltacv.eocvsim.plugin.api.VisualizerTopMenuBarApi
+import org.deltacv.eocvsim.plugin.EOCVSimPlugin
+import org.deltacv.eocvsim.plugin.api.*
+import org.deltacv.vision.external.gui.SwingOpenCvViewport
 
 class VisualizerApiImpl(owner: EOCVSimPlugin, val internalVisualizer: Visualizer) : VisualizerApi(owner) {
     override val frame by liveNullableApiField { internalVisualizer.frame }
@@ -39,6 +19,8 @@ class VisualizerApiImpl(owner: EOCVSimPlugin, val internalVisualizer: Visualizer
 
     override val topMenuBarApi: VisualizerTopMenuBarApi by apiField { VisualizerTopMenuBarApiImpl(owner, internalVisualizer.menuBar) }
     override val sidebarApi: VisualizerSidebarApi by apiField { VisualizerSidebarApiImpl(owner, internalVisualizer.sidebarPanel) }
+    override val viewportApi: VisualizerViewportApi by apiField { VisualizerViewportApiImpl(owner, internalVisualizer.viewport) }
+    override val visualizerComponentsFactoryApi: VisualizerComponentsFactoryApi by apiField { VisualizerComponentsFactoryApiImpl(owner) }
     override val dialogFactoryApi: DialogFactoryApi by apiField { DialogFactoryApiImpl(owner, internalVisualizer) }
 
     override fun disableApi() { }
@@ -94,4 +76,20 @@ private class VisualizerSidebarApiImpl(owner: EOCVSimPlugin, val internalSidebar
         tabs.keys.forEach { removeTab(it) }
         tabs.clear()
     }
+}
+
+class VisualizerViewportApiImpl(owner: EOCVSimPlugin, val internalViewport: SwingOpenCvViewport) : VisualizerViewportApi(owner) {
+    override fun activate() = apiImpl {
+        internalViewport.activate()
+    }
+
+    override fun deactivate() = apiImpl {
+        internalViewport.deactivate()
+    }
+
+    override fun setFpsMeterEnabled(enabled: Boolean) = apiImpl {
+        internalViewport.renderer.setFpsMeterEnabled(enabled)
+    }
+
+    override fun disableApi() { }
 }

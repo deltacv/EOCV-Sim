@@ -1,7 +1,12 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.qualcomm.robotcore.hardware;
 
-import io.github.deltacv.vision.external.source.ThreadVisionSourceProvider;
-import io.github.deltacv.vision.internal.source.ftc.SourcedCameraNameImpl;
+import org.deltacv.vision.external.source.ThreadVisionSourceProvider;
+import org.deltacv.vision.internal.source.ftc.SourcedCameraNameImpl;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 
 public class HardwareMap {

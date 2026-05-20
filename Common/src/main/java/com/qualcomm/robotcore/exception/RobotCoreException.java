@@ -52,3 +52,4 @@ public class RobotCoreException extends Exception {
         return new RobotCoreException(String.format(format, args), e);
     }
 }
+

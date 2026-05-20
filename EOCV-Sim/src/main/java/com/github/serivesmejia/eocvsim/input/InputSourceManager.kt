@@ -1,0 +1,299 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+package com.github.serivesmejia.eocvsim.input
+
+import com.github.serivesmejia.eocvsim.config.ConfigManager
+import com.github.serivesmejia.eocvsim.input.source.ImageSource
+import com.github.serivesmejia.eocvsim.input.source.NullSource
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.util.SysUtil
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
+import org.deltacv.common.util.loggerForThis
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
+import org.opencv.core.Mat
+import org.opencv.core.Scalar
+import org.opencv.core.Size
+import org.opencv.imgproc.Imgproc
+import org.openftc.easyopencv.MatRecycler
+import java.io.IOException
+
+class InputSourceManager : PhaseOrchestrableBase(), KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+    private val configManager: ConfigManager by inject()
+
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
+
+    private val inputSourceInitializer: InputSourceInitializer by inject()
+
+    companion object {
+        private val BLACK = Scalar(0.0, 0.0, 0.0, 255.0)
+    }
+
+    @Volatile var lastMatFromSource: Mat? = null
+    @Volatile var currentInputSource: InputSource? = null
+
+    val sources = mutableMapOf<String, InputSource>()
+
+    val inputSourceLoader = InputSourceLoader()
+    private lateinit var matRecycler: MatRecycler
+
+    val onInputSourceAdded = EventHandler("InputSourceManager-OnInputSourceAdded")
+    val onInputSourceRemoved = EventHandler("InputSourceManager-OnInputSourceRemoved")
+
+    var lastAddedSourceName = ""
+        private set
+    var wasLastSourceAddedByUser = false
+        private set
+
+    private var defaultSource = ""
+
+    private val logger by loggerForThis()
+
+    override suspend fun init() {
+        logger.info("Initializing...")
+
+        matRecycler = MatRecycler(4)
+
+        if (lastMatFromSource == null) {
+            lastMatFromSource = Mat(Size(640.0, 480.0), 24) // 24 is CV_8UC4 (RGBA)
+            lastMatFromSource!!.setTo(BLACK)
+        }
+
+        val size = Size(640.0, 480.0)
+
+        createDefaultImgInputSource("/images/ug_4.jpg", "ug_eocvsim_4.jpg", "Ultimate Goal 4 Ring", size)
+        createDefaultImgInputSource("/images/ug_1.jpg", "ug_eocvsim_1.jpg", "Ultimate Goal 1 Ring", size)
+        createDefaultImgInputSource("/images/ug_0.jpg", "ug_eocvsim_0.jpg", "Ultimate Goal 0 Ring", size)
+
+        if (sources.isEmpty()) {
+            logger.warn("No input sources found, creating default null source")
+
+            val nullSource = NullSource().apply {
+                isDefault = true
+            }
+
+            addInputSource("Default", nullSource)
+        } else {
+            setInputSource("Ultimate Goal 4 Ring", true)
+        }
+
+        inputSourceLoader.loadInputSourcesFromFile()
+
+        for ((name, source) in inputSourceLoader.loadedInputSources) {
+            logger.info("Loaded input source $name")
+            addInputSource(name, source)
+        }
+    }
+
+    private fun createDefaultImgInputSource(resourcePath: String, fileName: String, sourceName: String, imgSize: Size) {
+        try {
+            val `is` = InputSource::class.java.getResourceAsStream(resourcePath)
+            val f = SysUtil.copyFileIsTemp(`is`, fileName, false).file
+
+            val src = ImageSource(f.absolutePath, imgSize).apply {
+                isDefault = true
+                createdOn = sources.size.toLong()
+            }
+
+            addInputSource(sourceName, src)
+        } catch (e: IOException) {
+            logger.error("Error while creating default image input source", e)
+        }
+    }
+    
+    override suspend fun run() {
+        val isPaused = pipelineManager.paused
+
+        val currentSource = currentInputSource ?: return
+
+        try {
+            currentSource.isPaused = isPaused
+
+            val m = currentSource.update()
+
+            if (m != null && !m.empty()) {
+                val nextMat = matRecycler.takeMatOrNull() ?: matRecycler.takeMatOrInterrupt()
+                
+                // Directly convert from the source 'm' (RGB) into our properly sized 'nextMat' (RGBA)
+                // This avoids allocating native buffers once nextMat is initialized natively for the first few frames
+                Imgproc.cvtColor(m, nextMat, Imgproc.COLOR_RGB2RGBA)
+                
+                val prev = lastMatFromSource
+                if (prev is MatRecycler.RecyclableMat) {
+                    prev.returnMat()
+                } else {
+                    prev?.release()
+                }
+                
+                lastMatFromSource = nextMat
+            }
+        } catch (ex: Exception) {
+            logger.error("Error while processing current source", ex)
+            logger.warn("Changing to default source")
+
+            setInputSource(defaultSource)
+        }
+    }
+
+    override suspend fun destroy() {
+        currentInputSource?.close()
+    }
+
+    @JvmOverloads
+    fun addInputSource(name: String, inputSource: InputSource?, dispatchedByUser: Boolean = false) {
+        if (inputSource == null) return
+
+        if (sources.containsKey(name)) return
+
+        inputSource.name = name
+        sources[name] = inputSource
+
+        if (inputSource.createdOn == -1L) {
+            inputSource.createdOn = System.currentTimeMillis()
+        }
+
+        if (!inputSource.isDefault) {
+            inputSourceLoader.saveInputSource(name, inputSource)
+            inputSourceLoader.saveInputSourcesToFile()
+        }
+
+        lastAddedSourceName = name
+        wasLastSourceAddedByUser = dispatchedByUser
+
+        onInputSourceAdded.run()
+
+        logger.info("Adding InputSource $inputSource (${inputSource.javaClass.simpleName})")
+    }
+
+    fun deleteInputSource(sourceName: String) {
+        val src = sources[sourceName] ?: return
+        if (src.isDefault) return
+
+        sources.remove(sourceName)
+
+        inputSourceLoader.deleteInputSource(sourceName)
+        inputSourceLoader.saveInputSourcesToFile()
+
+        onInputSourceRemoved.run()
+    }
+
+    fun setInputSource(sourceName: String?, makeDefault: Boolean): Boolean {
+        val result = setInputSource(sourceName)
+
+        if (result && makeDefault) {
+            defaultSource = sourceName ?: ""
+        }
+
+        return result
+    }
+
+    val onInputSourceInitError = EventHandler("InputSourceManager-OnInputSourceInitError")
+
+    fun setInputSource(sourceName: String?): Boolean {
+        val src = if (sourceName == null) {
+            NullSource()
+        } else {
+            sources[sourceName]
+        }
+
+        src?.reset()
+
+        if (src != null) {
+            when (val initResult = inputSourceInitializer.initializeWithTimeout(src)) {
+                InputSourceInitializer.Result.SUCCESS -> Unit
+                InputSourceInitializer.Result.CANCELED -> {
+                    logger.info("Input source loading canceled by user ($sourceName)")
+                    return false
+                }
+                InputSourceInitializer.Result.FAILED,
+                InputSourceInitializer.Result.TIMED_OUT -> {
+                    onInputSourceInitError.run()
+                    logger.error("Error while loading requested source ($sourceName), result=$initResult")
+                    return false
+                }
+            }
+        }
+
+        currentInputSource?.reset()
+        currentInputSource = src
+
+        // if pause on images option is turned on by user
+        if (configManager.config.pauseOnImages) {
+            pauseIfImage()
+        }
+
+        logger.info("Set InputSource to ${currentInputSource.toString()} (${src?.javaClass?.simpleName})")
+
+        return true
+    }
+
+    @Suppress("unused")
+    fun cleanSourceIfDirty() {
+        currentInputSource?.cleanIfDirty()
+    }
+
+    fun isNameInUse(name: String) = sources.containsKey(name)
+
+    fun tryName(name: String): String {
+        var sourceName = name
+        var count = 0
+
+        while (isNameInUse(sourceName)) {
+            count++
+            sourceName = "$name ($count)"
+        }
+
+        return sourceName
+    }
+
+    fun pauseIfImage() {
+        val source = currentInputSource ?: return
+
+        // if the new input source is an image, we will pause the next frame
+        // to execute one shot analysis on images and save resources.
+        if (SourceType.fromClass(source.javaClass) == SourceType.IMAGE) {
+            onMainLoop.once {
+                pipelineManager.setPaused(
+                    true,
+                    PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS
+                )
+            }
+        }
+    }
+
+    fun pauseIfImageTwoFrames() {
+        // if the new input source is an image, we will pause the next frame
+        // to execute one shot analysis on images and save resources.
+        onMainLoop.once { pauseIfImage() }
+    }
+
+    fun requestSetInputSource(name: String?) {
+        onMainLoop.once { setInputSource(name) }
+    }
+
+
+    @Suppress("unused")
+    fun getDefaultInputSource() = defaultSource
+
+    fun getSourceType(sourceName: String?): SourceType {
+        if (sourceName == null) return SourceType.UNKNOWN
+
+        val source = sources[sourceName] ?: return SourceType.UNKNOWN
+        return SourceType.fromClass(source.javaClass)
+    }
+
+    val sortedInputSources: List<InputSource> get() {
+        val sourcesList = ArrayList(sources.values)
+        sourcesList.sort()
+
+        return sourcesList
+    }
+}
+

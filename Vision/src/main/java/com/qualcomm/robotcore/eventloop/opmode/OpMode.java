@@ -33,10 +33,10 @@ package com.qualcomm.robotcore.eventloop.opmode;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import io.github.deltacv.vision.external.util.FrameQueue;
-import io.github.deltacv.vision.internal.opmode.OpModeNotification;
-import io.github.deltacv.vision.internal.opmode.OpModeNotifier;
-import io.github.deltacv.vision.internal.opmode.OpModeState;
+import org.deltacv.vision.external.util.FrameQueue;
+import org.deltacv.vision.internal.opmode.OpModeNotification;
+import org.deltacv.vision.internal.opmode.OpModeNotifier;
+import org.deltacv.vision.internal.opmode.OpModeState;
 import org.openftc.easyopencv.TimestampedOpenCvPipeline;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.opencv.core.Mat;
@@ -211,3 +211,6 @@ public abstract class OpMode extends TimestampedOpenCvPipeline { // never in my 
         stopped = true;
     }
 }
+
+
+

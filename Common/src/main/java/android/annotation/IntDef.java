@@ -53,3 +53,4 @@ public @interface IntDef {
     /** Defines whether the constants can be used as a flag, or just as an enum (the default) */
     boolean flag() default false;
 }
+

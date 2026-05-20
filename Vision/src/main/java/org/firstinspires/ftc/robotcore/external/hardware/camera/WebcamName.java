@@ -61,3 +61,5 @@ public interface WebcamName extends CameraName, HardwareDevice
      */
     boolean isAttached();
 }
+
+

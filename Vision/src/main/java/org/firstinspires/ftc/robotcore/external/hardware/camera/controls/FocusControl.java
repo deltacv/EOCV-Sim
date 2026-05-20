@@ -115,3 +115,6 @@ public interface FocusControl extends CameraControl
      */
     boolean isFocusLengthSupported();
 }
+
+
+

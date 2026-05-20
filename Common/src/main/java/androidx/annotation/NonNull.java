@@ -34,3 +34,4 @@ import java.lang.annotation.Target;
 @Target({METHOD, PARAMETER, FIELD, LOCAL_VARIABLE, ANNOTATION_TYPE, PACKAGE})
 public @interface NonNull {
 }
+

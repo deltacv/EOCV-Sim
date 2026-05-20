@@ -1,45 +1,31 @@
 /*
  * Copyright (c) 2026 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.pipeline
 
-import com.github.serivesmejia.eocvsim.EOCVSim
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.util.icon.SourcesListIconRenderer
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.swing.Swing
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import java.awt.FlowLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.event.MouseAdapter
 import javax.swing.*
 
-class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
+class SourceSelectorPanel : JPanel(), KoinComponent {
+
+    private val inputSourceManager: InputSourceManager by inject()
+    private val pipelineManager: PipelineManager by inject()
+    private val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+    private val dialogFactory: DialogFactory by inject()
 
     val sourceSelector = JList<String>()
     val sourceSelectorScroll = JScrollPane()
@@ -83,10 +69,11 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
         })
 
         //different icons
-        sourceSelector.cellRenderer = SourcesListIconRenderer(eocvSim.inputSourceManager)
+        sourceSelector.cellRenderer = SourcesListIconRenderer(inputSourceManager)
+
 
         sourceSelectorCreateBtt.addActionListener {
-            DialogFactory.createSourceExDialog(eocvSim)
+            dialogFactory.createSourceExDialog()
         }
 
         sourceSelectorButtonsContainer = JPanel(FlowLayout(FlowLayout.CENTER))
@@ -118,24 +105,26 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
                                 //enable or disable source delete button depending if source is default or not
                                 sourceSelectorDeleteBtt.isEnabled =
-                                    eocvSim.inputSourceManager.sources[source]?.isDefault == false
+                                    inputSourceManager.sources[source]?.isDefault == false
 
                                 if (source != beforeSelectedSource) {
-                                    if (!eocvSim.pipelineManager.paused) {
-                                        eocvSim.inputSourceManager.requestSetInputSource(source)
+                                    if (!pipelineManager.paused) {
+                                        inputSourceManager.requestSetInputSource(source)
                                         beforeSelectedSource = source
                                         beforeSelectedSourceIndex = sourceSelector.selectedIndex
+
                                     } else {
                                         //check if the user requested the pause or if it was due to one shoot analysis when selecting images
-                                        if (eocvSim.pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
+                                        if (pipelineManager.pauseReason !== PipelineManager.PauseReason.IMAGE_ONE_ANALYSIS) {
                                             sourceSelector.setSelectedIndex(beforeSelectedSourceIndex)
                                         } else { //handling pausing
-                                            eocvSim.pipelineManager.requestSetPaused(false)
-                                            eocvSim.inputSourceManager.requestSetInputSource(source)
+                                            pipelineManager.requestSetPaused(false)
+                                            inputSourceManager.requestSetInputSource(source)
                                             beforeSelectedSource = source
                                             beforeSelectedSourceIndex = sourceSelector.selectedIndex
                                         }
                                     }
+
                                 }
                             } else {
                                 sourceSelector.setSelectedIndex(1)
@@ -152,20 +141,53 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
             val index = sourceSelector.selectedIndex
             val source = sourceSelector.model.getElementAt(index)
 
-            eocvSim.onMainUpdate.once {
-                eocvSim.inputSourceManager.deleteInputSource(source)
+            onMainUpdate.once {
+                inputSourceManager.deleteInputSource(source)
                 updateSourcesList()
 
                 sourceSelector.selectedIndex = (index - 1).clipUpperZero()
             }
+
         }
+
+        inputSourceManager.onInputSourceRemoved {
+            updateSourcesList()
+        }
+
+        inputSourceManager.onInputSourceAdded {
+            val name = inputSourceManager.lastAddedSourceName
+            val dispatchedByUser = inputSourceManager.wasLastSourceAddedByUser
+
+            updateSourcesList()
+
+            SwingUtilities.invokeLater {
+                val currentIndex = sourceSelector.selectedIndex
+
+                if (dispatchedByUser) {
+                    val index = getIndexOf(name)
+                    sourceSelector.selectedIndex = index
+
+                    inputSourceManager.requestSetInputSource(name)
+
+                    onMainUpdate.once {
+                        pipelineManager.requestSetPaused(false)
+                        inputSourceManager.pauseIfImageTwoFrames()
+                    }
+                } else {
+                    sourceSelector.selectedIndex = currentIndex
+                }
+
+                allowSourceSwitching = true
+            }
+        }
+
     }
 
-    fun updateSourcesList(): Job {
+    fun updateSourcesList() {
         SwingUtilities.invokeLater {
             val listModel = DefaultListModel<String>()
 
-            for (source in eocvSim.inputSourceManager.sortedInputSources) {
+            inputSourceManager.sortedInputSources.forEach { source ->
                 listModel.addElement(source.name)
             }
 
@@ -177,12 +199,10 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
 
             sourceSelector.selectedIndex = 0
         }
-
-        return Job() // we can't break ABI here, so we return a dummy Job
     }
 
     fun getIndexOf(name: String): Int {
-        for (i in 0..sourceSelector.model.size) {
+        for (i in 0 until sourceSelector.model.size) {
             if (sourceSelector.model.getElementAt(i) == name)
                 return i
         }
@@ -191,3 +211,4 @@ class SourceSelectorPanel(private val eocvSim: EOCVSim) : JPanel() {
     }
 
 }
+

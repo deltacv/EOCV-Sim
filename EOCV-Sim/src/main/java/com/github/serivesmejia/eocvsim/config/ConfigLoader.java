@@ -1,31 +1,12 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.config;
 
 import com.github.serivesmejia.eocvsim.util.SysUtil;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.github.serivesmejia.eocvsim.util.serialization.JacksonJsonSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +22,6 @@ public class ConfigLoader {
 
     Logger logger = LoggerFactory.getLogger(getClass());
 
-    static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
     public Config loadFromFile(File file) throws FileNotFoundException {
         if (!file.exists()) throw new FileNotFoundException();
 
@@ -50,9 +29,9 @@ public class ConfigLoader {
         if (jsonConfig.trim().equals("")) return null;
 
         try {
-            return gson.fromJson(jsonConfig, Config.class);
+            return JacksonJsonSupport.persistenceMapper.readValue(jsonConfig, Config.class);
         } catch (Exception ex) {
-            logger.info("Gson exception while parsing config file", ex);
+            logger.info("Jackson exception while parsing config file", ex);
             return null;
         }
     }
@@ -63,7 +42,15 @@ public class ConfigLoader {
     }
 
     public void saveToFile(File file, Config conf) {
-        String jsonConfig = gson.toJson(conf);
+        String jsonConfig;
+
+        try {
+            jsonConfig = JacksonJsonSupport.persistenceMapper.writeValueAsString(conf);
+        } catch (Exception ex) {
+            logger.error("Failed to serialize config file", ex);
+            return;
+        }
+
         SysUtil.saveFileStr(file, jsonConfig);
     }
 
@@ -72,3 +59,4 @@ public class ConfigLoader {
     }
 
 }
+

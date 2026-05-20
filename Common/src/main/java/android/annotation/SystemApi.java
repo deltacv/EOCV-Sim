@@ -37,7 +37,7 @@ import java.lang.annotation.Target;
  */
 @Target({TYPE, FIELD, METHOD, CONSTRUCTOR, ANNOTATION_TYPE, PACKAGE})
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(SystemApi.Container.class) // TODO(b/146727827): make this non-repeatable
+@Repeatable(SystemApi.Container.class)
 public @interface SystemApi {
     enum Client {
         /**
@@ -72,3 +72,4 @@ public @interface SystemApi {
         SystemApi[] value();
     }
 }
+

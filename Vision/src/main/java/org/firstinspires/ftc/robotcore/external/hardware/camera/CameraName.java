@@ -82,3 +82,5 @@ public interface CameraName
      */
     CameraCharacteristics getCameraCharacteristics();
 }
+
+

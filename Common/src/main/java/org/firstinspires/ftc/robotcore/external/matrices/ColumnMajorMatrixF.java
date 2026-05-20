@@ -54,3 +54,6 @@ public abstract class ColumnMajorMatrixF extends DenseMatrixF
         return new VectorF(this.getData());
     }
 }
+
+
+

@@ -19,6 +19,7 @@
  * SOFTWARE.
  */
 
+
 package org.openftc.easyopencv;
 
 import android.hardware.Camera;
@@ -38,3 +39,4 @@ public interface OpenCvInternalCamera extends OpenCvCamera
         }
     }
 }
+

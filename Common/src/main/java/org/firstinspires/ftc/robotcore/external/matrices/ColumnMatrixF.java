@@ -60,3 +60,6 @@ public class ColumnMatrixF extends MatrixF
         return new GeneralMatrixF(numRows, numCols);
     }
 }
+
+
+

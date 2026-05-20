@@ -1,29 +1,15 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
+
 package com.github.serivesmejia.eocvsim.gui.dialog.source
 
 import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.input.InputSourceManager
 import com.github.serivesmejia.eocvsim.input.source.HttpSource
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.GridBagConstraints
@@ -33,16 +19,23 @@ import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
-class CreateHttpSource(parent: JFrame, private val eocvSim: EOCVSim) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 
-    private val dialog = JDialog(parent)
+class CreateHttpSource : KoinComponent {
+
+    private val inputSourceManager: InputSourceManager by inject()
+    private val onMainLoop: EventHandler by inject(named("onMainLoop"))
+    private val visualizer: Visualizer by inject()
+
+    private val dialog = JDialog(visualizer.frame)
+
     private val nameTextField: JTextField
     private val urlField: JTextField
     private val createButton: JButton
 
     init {
-        eocvSim.visualizer.childDialogs.add(dialog)
-
         // Panel for input fields
         val fieldsPanel = JPanel(GridBagLayout()).apply {
             border = BorderFactory.createEmptyBorder(0, 0, 10, 0)
@@ -60,9 +53,9 @@ class CreateHttpSource(parent: JFrame, private val eocvSim: EOCVSim) {
             // Name field
             gbc.gridy = 1
             gbc.gridx = 0
-            add(JLabel("Source name: "), gbc)
+            add(JLabel("Source Name: "), gbc)
             gbc.gridx = 1
-            val sourceCount = eocvSim.inputSourceManager.sources.size + 1
+            val sourceCount = inputSourceManager.sources.size + 1
             nameTextField = JTextField("HttpSource-$sourceCount", 15)
             add(nameTextField, gbc)
         }
@@ -111,8 +104,8 @@ class CreateHttpSource(parent: JFrame, private val eocvSim: EOCVSim) {
     }
 
     private fun createSource(sourceName: String, url: String) {
-        eocvSim.onMainUpdate.once {
-            eocvSim.inputSourceManager.addInputSource(
+        onMainLoop.once {
+            inputSourceManager.addInputSource(
                 sourceName,
                 HttpSource(url),
                 false
@@ -121,8 +114,7 @@ class CreateHttpSource(parent: JFrame, private val eocvSim: EOCVSim) {
     }
 
     private fun updateCreateButton() {
-        val isNameValid = nameTextField.text.isNotBlank() &&
-                !eocvSim.inputSourceManager.isNameOnUse(nameTextField.text)
+        val isNameValid = nameTextField.text.isNotBlank() && !inputSourceManager.isNameInUse(nameTextField.text)
         val isUrlValid = urlField.text.isNotBlank()
         createButton.isEnabled = isNameValid && isUrlValid
     }

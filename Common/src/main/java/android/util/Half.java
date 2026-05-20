@@ -845,3 +845,4 @@ public final class Half extends Number implements Comparable<Half> {
         return FP16.toHexString(h);
     }
 }
+

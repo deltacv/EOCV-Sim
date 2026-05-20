@@ -1,48 +1,37 @@
 /*
  * Copyright (c) 2023 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer.opmode
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.component.PopupX.Companion.popUpXOnThis
 import com.github.serivesmejia.eocvsim.gui.util.Corner
 import com.github.serivesmejia.eocvsim.gui.util.icon.PipelineListIconRenderer
 import com.github.serivesmejia.eocvsim.pipeline.PipelineData
 import com.github.serivesmejia.eocvsim.util.ReflectUtil
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import com.qualcomm.robotcore.eventloop.opmode.*
 import com.qualcomm.robotcore.util.Range
-import io.github.deltacv.vision.internal.opmode.OpModeState
+import org.deltacv.vision.internal.opmode.OpModeState
 import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
-import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import javax.swing.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import java.awt.GridBagLayout
+import java.awt.event.MouseAdapter
 
-class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeControlsPanel) : JPanel() {
+class OpModeSelectorPanel(val opModeControlsPanel: OpModeControlsPanel) : JPanel(), KoinComponent {
+
+    private val pipelineManager: PipelineManager by inject()
+
+
 
     private var _selectedIndex = -1
+
 
     private val logger by loggerForThis()
 
@@ -93,8 +82,9 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         autonomousSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
         teleopSelector.selectionMode = ListSelectionModel.SINGLE_SELECTION
 
-        autonomousSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager) { autonomousIndexMap }
-        teleopSelector.cellRenderer = PipelineListIconRenderer(eocvSim.pipelineManager) { teleopIndexMap }
+        autonomousSelector.cellRenderer = PipelineListIconRenderer(pipelineManager) { autonomousIndexMap }
+        teleopSelector.cellRenderer = PipelineListIconRenderer(pipelineManager) { teleopIndexMap }
+
 
         autonomousButton.icon = EOCVSimIconLibrary.icoArrowDropdown
 
@@ -216,7 +206,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             }
         })
 
-        eocvSim.pipelineManager.onPipelineChange {
+        pipelineManager.onPipelineChange {
             if (!isActive) return@onPipelineChange
 
             // we are doing this to detect external pipeline changes and reflect them
@@ -226,9 +216,9 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             // we need to hold on a cycle so that the state has been fully updated,
             // just to be able to check correctly and, if it was requested by
             // OpModeSelectorPanel, skip this message and not do anything.
-            eocvSim.pipelineManager.onUpdate.once {
-                if (isActive && opModeControlsPanel.currentOpMode != eocvSim.pipelineManager.currentPipeline && eocvSim.pipelineManager.currentPipeline != null) {
-                    val opMode = eocvSim.pipelineManager.currentPipeline
+            pipelineManager.onUpdate.once {
+                if (isActive && opModeControlsPanel.currentOpMode != pipelineManager.currentPipeline && pipelineManager.currentPipeline != null) {
+                    val opMode = pipelineManager.currentPipeline
 
                     if (opMode is OpMode) {
                         val name = if (opMode.opModeType == OpModeType.AUTONOMOUS)
@@ -237,7 +227,7 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
                         logger.info("External change detected \"$name\"")
 
-                        opModeSelected(eocvSim.pipelineManager.currentPipelineIndex, name, false)
+                        opModeSelected(pipelineManager.currentPipelineIndex, name, false)
                     } else if (isActive) {
                         reset(-1)
                     }
@@ -245,16 +235,17 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
             }
         }
 
-        eocvSim.pipelineManager.onPipelineListRefresh {
+        pipelineManager.onPipelineListRefresh {
             updateOpModesList()
         }
 
-        eocvSim.pipelineManager.onExternalSwitchingEnable {
+        pipelineManager.onExternalSwitchingEnable {
             allowOpModeSwitching = true
         }
-        eocvSim.pipelineManager.onExternalSwitchingDisable {
+        pipelineManager.onExternalSwitchingDisable {
             allowOpModeSwitching = false
         }
+
     }
 
     private fun teleOpSelected(index: Int) {
@@ -298,7 +289,8 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         val autonomousListModel = DefaultListModel<String>()
         val teleopListModel = DefaultListModel<String>()
 
-        pipelinesData = eocvSim.pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
+        pipelinesData = pipelineManager.pipelines.toArray(arrayOf<PipelineData>())
+
 
         var autonomousSelectorIndex = Range.clip(autonomousListModel.size() - 1, 0, Int.MAX_VALUE)
         var teleopSelectorIndex = Range.clip(teleopListModel.size() - 1, 0, Int.MAX_VALUE)
@@ -306,7 +298,8 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
         autonomousIndexMap.clear()
         teleopIndexMap.clear()
 
-        for ((managerIndex, pipeline) in eocvSim.pipelineManager.pipelines.withIndex()) {
+        for ((managerIndex, pipeline) in pipelineManager.pipelines.withIndex()) {
+
             if (ReflectUtil.hasSuperclass(pipeline.clazz, OpMode::class.java)) {
                 val type = pipeline.clazz.opModeType
 
@@ -345,27 +338,26 @@ class OpModeSelectorPanel(val eocvSim: EOCVSim, val opModeControlsPanel: OpModeC
 
         val opMode = opModeControlsPanel.currentOpMode
 
-        if (eocvSim.pipelineManager.currentPipeline == opMode && opMode != null && opMode.notifier.state != OpModeState.SELECTED) {
-            opMode.notifier?.onStateChange?.let { it ->
-                it {
-                    val state = opMode.notifier.state
+        if (pipelineManager.currentPipeline == opMode && opMode != null && opMode.notifier.state != OpModeState.SELECTED) {
+            opMode.notifier?.onStateChange?.attach {
+                val state = opMode.notifier.state
 
-                    if (state == OpModeState.STOPPED) {
-                        removeListener()
+                if (state == OpModeState.STOPPED) {
+                    removeListener()
 
-                        if (nextPipeline == null || nextPipeline >= 0) {
-                            eocvSim.pipelineManager.onUpdate.once {
-                                eocvSim.pipelineManager.changePipeline(nextPipeline)
-                            }
+                    if (nextPipeline == null || nextPipeline >= 0) {
+                        pipelineManager.onUpdate.once {
+                            pipelineManager.changePipeline(nextPipeline)
                         }
                     }
                 }
             }
         } else if (nextPipeline == null || nextPipeline >= 0) {
-            eocvSim.pipelineManager.onUpdate.once {
-                eocvSim.pipelineManager.requestChangePipeline(nextPipeline)
+            pipelineManager.onUpdate.once {
+                pipelineManager.requestChangePipeline(nextPipeline)
             }
         }
+
 
         _selectedIndex = -1
         opModeControlsPanel.stopCurrentOpMode()

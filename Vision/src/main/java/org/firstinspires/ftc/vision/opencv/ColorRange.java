@@ -96,3 +96,5 @@ public class ColorRange
         this.max = max;
     }
 }
+
+

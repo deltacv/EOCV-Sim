@@ -118,3 +118,6 @@ public class Acceleration
         return String.format(Locale.getDefault(), "(%.3f %.3f %.3f)%s/s^2", xAccel, yAccel, zAccel, unit.toString());
     }
 }
+
+
+

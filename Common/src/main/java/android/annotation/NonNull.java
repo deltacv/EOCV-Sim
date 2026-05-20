@@ -32,3 +32,4 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
 @Target({METHOD, PARAMETER, FIELD, LOCAL_VARIABLE, ANNOTATION_TYPE, PACKAGE})
 public @interface NonNull {
 }
+

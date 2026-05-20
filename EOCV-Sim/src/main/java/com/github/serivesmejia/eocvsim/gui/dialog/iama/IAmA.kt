@@ -1,30 +1,14 @@
 /*
  * Copyright (c) 2026 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.dialog.iama
 
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.config.ConfigManager
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -36,12 +20,18 @@ import javax.swing.JFrame
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-class IAmA(
-    val parent: JFrame,
-    val visualizer: Visualizer
-) {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-    val dialog = JDialog(parent)
+class IAmA : KoinComponent {
+
+    private val visualizer: Visualizer by inject()
+    private val configManager: ConfigManager by inject()
+
+    private val dialogFactory: DialogFactory by inject()
+
+    val dialog = JDialog(visualizer.frame)
+
 
     init {
         dialog.isModal = true
@@ -78,7 +68,7 @@ class IAmA(
 
             addActionListener {
                 dialog.dispose()
-                IAmAFirstRobotics(this@IAmA.parent, visualizer)
+                IAmAFirstRobotics()
             }
         })
 
@@ -92,7 +82,7 @@ class IAmA(
 
             addActionListener {
                 dialog.dispose()
-                IAmAGeneralPublic(this@IAmA.parent, visualizer)
+                IAmAGeneralPublic()
             }
         })
 
@@ -106,7 +96,7 @@ class IAmA(
 
             addActionListener {
                 dialog.dispose()
-                IAmAPaperVision(this@IAmA.parent, visualizer, specificallyInterested = true)
+                IAmAPaperVision(specificallyInterested = true)
             }
         })
 
@@ -125,7 +115,7 @@ class IAmA(
         dialog.defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE
         dialog.setLocationRelativeTo(null)
 
-        visualizer.eocvSim.config.flags["hasShownIamA"] = true
+        configManager.config.flags["hasShownIamA"] = true
         dialog.isVisible = true
     }
 

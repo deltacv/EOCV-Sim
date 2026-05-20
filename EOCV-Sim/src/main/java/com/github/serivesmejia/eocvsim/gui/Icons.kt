@@ -1,36 +1,25 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui
 
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
-import io.github.deltacv.common.util.loggerForThis
-import io.github.deltacv.vision.external.gui.util.ImgUtil
+import org.deltacv.common.util.loggerForThis
+import org.deltacv.vision.external.gui.util.ImgUtil
 import java.awt.image.BufferedImage
 import java.util.NoSuchElementException
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import javax.swing.ImageIcon
 
-object Icons {
+
+object Icons : KoinComponent {
+
+    private val visualizer: Visualizer by inject()
+
+
 
     private val bufferedImages = HashMap<String, Image>()
 
@@ -94,6 +83,8 @@ object Icons {
             GuiUtil.invertBufferedImageColors(buffImg)
         }
 
+
+
         bufferedImages[name] = Image(buffImg, allowInvert)
         icons[name] = NamedImageIcon(name, buffImg)
     }
@@ -119,6 +110,8 @@ object Icons {
             }
         }
     }
+
+
 
     data class Image(val img: BufferedImage, val allowInvert: Boolean)
 

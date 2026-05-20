@@ -514,3 +514,4 @@ class ColorBlobLocatorProcessorImpl extends ColorBlobLocatorProcessor implements
         }
     }
 }
+

@@ -31,3 +31,4 @@ import java.lang.annotation.Target;
 @Target({METHOD, PARAMETER, FIELD, LOCAL_VARIABLE})
 public @interface StringRes {
 }
+

@@ -1,32 +1,15 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.component.tuner
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.component.PopupX
-import io.github.deltacv.vision.external.util.extension.cvtColor
+import com.github.serivesmejia.eocvsim.tuner.TunableNumber
+import org.deltacv.vision.external.util.extension.cvtColor
 import com.github.serivesmejia.eocvsim.util.extension.clipUpperZero
 import java.awt.FlowLayout
 import java.awt.GridLayout
@@ -36,8 +19,13 @@ import javax.swing.*
 import javax.swing.event.AncestorEvent
 import javax.swing.event.AncestorListener
 
-class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
-                               eocvSim: EOCVSim) : JPanel() {
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel) : JPanel(), KoinComponent {
+
+    val visualizer: Visualizer by inject()
+
 
     private val sliderIco    by EOCVSimIconLibrary.icoSlider.lazyResized(15, 15)
     private val textBoxIco   by EOCVSimIconLibrary.icoTextbox.lazyResized(15, 15)
@@ -48,7 +36,8 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
     private val configButton          = JButton()
     private val colorPickButton       = JToggleButton()
 
-    val configPanel = TunableFieldPanelConfig(this, eocvSim)
+    val configPanel = TunableFieldPanelConfig(this)
+
     var lastConfigPopup: PopupX? = null
         private set
 
@@ -114,7 +103,8 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
         }
 
         colorPickButton.addActionListener {
-            val colorPicker = eocvSim.visualizer.colorPicker
+            val colorPicker = visualizer.colorPicker
+
 
             //start picking if global color picker is not being used by other panel
             if(!colorPicker.isPicking && colorPickButton.isSelected) {
@@ -144,15 +134,21 @@ class TunableFieldPanelOptions(val fieldPanel: TunableFieldPanel,
         colorPicker.onPick.once {
             val colorScalar = colorPicker.colorRgb.cvtColor(configPanel.localConfig.pickerColorSpace.cvtCode)
 
-            //setting the scalar value in order from first to fourth field
-            for(i in 0..(fieldPanel.fields.size - 1).clipUpperZero()) {
-                //if we're still in range of the scalar values amount
-                if(i < colorScalar.`val`.size) {
-                    val colorVal = colorScalar.`val`[i]
-                    fieldPanel.setFieldValue(i, colorVal)
-                    fieldPanel.tunableField.setFieldValueFromGui(i, colorVal.toString())
-                } else { break } //keep looping until we write the entire scalar value
+            fieldPanel.fields?.let {
+                //setting the scalar value in order from first to fourth field
+                for (i in 0..(it.size - 1).clipUpperZero()) {
+                    //if we're still in range of the scalar values amount
+                    if (i < colorScalar.`val`.size) {
+                        val colorVal = colorScalar.`val`[i]
+
+                        val tv = fieldPanel.tunableField.tunableValues.getOrNull(i) as? TunableNumber
+                        tv?.setFromGui(colorVal)
+                    } else {
+                        break
+                    } //keep looping until we write the entire scalar value
+                }
             }
+
             colorPickButton.isSelected = false
         }
 

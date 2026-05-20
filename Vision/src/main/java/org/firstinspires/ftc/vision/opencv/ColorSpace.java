@@ -42,3 +42,5 @@ public enum ColorSpace
     HSV,
     RGB,
 }
+
+

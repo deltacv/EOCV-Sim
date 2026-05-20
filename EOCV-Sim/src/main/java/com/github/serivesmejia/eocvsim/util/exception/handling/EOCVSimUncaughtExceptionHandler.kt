@@ -1,13 +1,27 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
 package com.github.serivesmejia.eocvsim.util.exception.handling
 
 import com.github.serivesmejia.eocvsim.currentMainThread
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.util.JavaProcess
-import io.github.deltacv.common.util.loggerForThis
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import org.deltacv.common.util.loggerForThis
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.swing.Swing
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import org.koin.core.qualifier.named
 import java.lang.Thread.sleep
 import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
 
-class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExceptionHandler {
+class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExceptionHandler, KoinComponent{
 
     companion object {
         const val MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH = 3
@@ -18,6 +32,9 @@ class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExc
     }
 
     val logger by loggerForThis()
+
+    private val dialogFactory: DialogFactory by inject()
+    private val onCrash: EventHandler by inject(named("onCrash"))
 
     private var uncaughtExceptionsCount = 0
 
@@ -33,21 +50,21 @@ class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExc
 
         logger.error("Uncaught exception thrown in \"${t.name}\" thread", e)
 
-        //Exit if uncaught exception happened in the main thread
-        //since we would be basically in a deadlock state if that happened
-        //or if we have a lotta uncaught exceptions.
+        // Exit if uncaught exception happened in the main thread
+        // since we would be basically in an invalid state if that happened
         if(t == currentMainThread || SwingUtilities.isEventDispatchThread() || e !is Exception || uncaughtExceptionsCount > MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH) {
             val file = CrashReport(e).saveCrashReport()
 
             logger.warn("If this error persists, open an issue on EOCV-Sim's GitHub attaching the crash report file.")
             logger.warn("The application will exit now (exit code 1)")
 
-            Thread {
-                JavaProcess.killSubprocessesOnExit = false
-                JavaProcess.exec(CrashReportOutputMain::class.java, listOf(), listOf("-p=${file.absolutePath}"))
-            }.start()
+            onCrash.run()
 
-            sleep(3000) // wait enough for the subprocess to start
+            runBlocking {
+                launch(Dispatchers.Swing) {
+                    dialogFactory.instantiateCrashReport(file.readText())
+                }
+            }
 
             exitProcess(1)
         } else {

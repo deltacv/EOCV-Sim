@@ -84,3 +84,5 @@ public interface WhiteBalanceControl extends CameraControl
      */
     boolean setWhiteBalanceTemperature(int temperature);
 }
+
+

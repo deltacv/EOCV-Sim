@@ -1,36 +1,19 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.gui.component.visualizer
 
-import com.github.serivesmejia.eocvsim.EOCVSim
+import com.github.serivesmejia.eocvsim.LifecycleSignal
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
-import com.github.serivesmejia.eocvsim.gui.dialog.PluginOutput
 import com.github.serivesmejia.eocvsim.gui.util.GuiUtil
 import com.github.serivesmejia.eocvsim.input.SourceType
-import com.github.serivesmejia.eocvsim.pipeline.compiler.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.pipeline.compiled.CompiledPipelineManager
+import com.github.serivesmejia.eocvsim.plugin.output.PluginDialogSignal
+import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.util.FileFilters
 import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
 import com.github.serivesmejia.eocvsim.workspace.util.VSCodeLauncher
@@ -44,7 +27,27 @@ import javax.swing.JMenu
 import javax.swing.JMenuBar
 import javax.swing.JMenuItem
 
-class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
+import org.deltacv.eocvsim.plugin.loader.PluginManager
+import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
+import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
+import com.github.serivesmejia.eocvsim.util.event.EventHandler
+import org.koin.core.qualifier.named
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+
+class TopMenuBar : JMenuBar(), KoinComponent {
+
+    val visualizer: Visualizer by inject()
+    val dialogFactory: DialogFactory by inject()
+    val pluginManager: org.deltacv.eocvsim.plugin.loader.PluginManager by inject()
+    val outputHandler: PluginOutputHandler by inject()
+    val workspaceManager: WorkspaceManager by inject()
+    val pipelineManager: PipelineManager by inject()
+    val onMainUpdate: EventHandler by inject(named("onMainLoop"))
+    val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
+    val scope: CoroutineScope by inject()
 
     companion object {
         val docsUrl = URI("https://docs.deltacv.org/eocv-sim/")
@@ -72,7 +75,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
             val fileNewInputSourceItem = JMenuItem(type.coolName)
 
             fileNewInputSourceItem.addActionListener {
-                DialogFactory.createSourceDialog(eocvSim, type)
+                dialogFactory.createSourceDialog(type)
             }
 
             fileNewInputSourceSubmenu.add(fileNewInputSourceItem)
@@ -88,7 +91,7 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
             GuiUtil.saveMatFileChooser(
                 visualizer.frame,
                 mat,
-                eocvSim
+                dialogFactory
             )
 
             mat.release()
@@ -98,15 +101,17 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         mFileMenu.addSeparator()
 
         if (desktop.isSupported(Desktop.Action.APP_PREFERENCES)) {
-            desktop.setPreferencesHandler { DialogFactory.createConfigDialog(eocvSim) }
+            desktop.setPreferencesHandler { dialogFactory.createConfigDialog() }
         } else {
             val editSettings = JMenuItem("Settings")
-            editSettings.addActionListener { DialogFactory.createConfigDialog(eocvSim) }
+            editSettings.addActionListener { dialogFactory.createConfigDialog() }
             mFileMenu.add(editSettings)
         }
 
         val filePlugins = JMenuItem("Manage Plugins")
-        filePlugins.addActionListener { eocvSim.pluginManager.appender.append(PluginOutput.SPECIAL_OPEN_MGR)}
+        filePlugins.addActionListener {
+            outputHandler.sendDialogSignal(PluginDialogSignal.ShowPlugins)
+        }
 
         mFileMenu.add(filePlugins)
 
@@ -114,7 +119,8 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val fileRestart = JMenuItem("Restart")
 
-        fileRestart.addActionListener { eocvSim.onMainUpdate.once { eocvSim.restart() } }
+        fileRestart.addActionListener { onMainUpdate.once { lifecycleChannel.trySend(LifecycleSignal.Restart) } }
+
         mFileMenu.add(fileRestart)
 
         add(mFileMenu)
@@ -123,28 +129,30 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
 
         val workspSetWorkspace = JMenuItem("Select Workspace")
 
-        workspSetWorkspace.addActionListener { DialogFactory.createWorkspace(visualizer) }
+        workspSetWorkspace.addActionListener { dialogFactory.createWorkspace() }
         mWorkspMenu.add(workspSetWorkspace)
 
         val workspClose = JMenuItem("Close Current Workspace")
 
         workspClose.addActionListener {
-            eocvSim.onMainUpdate.once {
-                eocvSim.workspaceManager.workspaceFile = CompiledPipelineManager.DEF_WORKSPACE_FOLDER
+            onMainUpdate.once {
+                workspaceManager.workspaceFile = CompiledPipelineManager.DEF_WORKSPACE_FOLDER
             }
         }
+
         mWorkspMenu.add(workspClose)
 
         mWorkspMenu.addSeparator()
 
-        workspCompile.addActionListener { visualizer.asyncCompilePipelines() }
+        workspCompile.addActionListener { pipelineManager.compiledPipelineManager.asyncBuild() }
+
         mWorkspMenu.add(workspCompile)
 
         val workspBuildOutput = JMenuItem("Output")
 
         workspBuildOutput.addActionListener {
             if(!Output.isAlreadyOpened)
-                DialogFactory.createOutput(eocvSim, true)
+                dialogFactory.createOutput(true)
         }
         mWorkspMenu.add(workspBuildOutput)
 
@@ -162,7 +170,8 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         val workspVSCodeOpen = JMenuItem("Open VS Code Here")
 
         workspVSCodeOpen.addActionListener {
-            VSCodeLauncher.asyncLaunch(eocvSim.workspaceManager.workspaceFile)
+            VSCodeLauncher.asyncLaunch(workspaceManager.workspaceFile, scope)
+
         }
         workspVSCode.add(workspVSCodeOpen)
 
@@ -192,12 +201,12 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
                 crashReport = CrashReport(e, isDummy = true)
             }
 
-            DialogFactory.createFileChooser(visualizer.frame,
+            dialogFactory.createFileChooser(visualizer.frame,
                 DialogFactory.FileChooser.Mode.SAVE_FILE_SELECT,
                 CrashReport.defaultCrashFileName, FileFilters.logFileFilter
             ).addCloseListener { OPTION, selectedFile, _ ->
                     if(OPTION == JFileChooser.APPROVE_OPTION) {
-                        var path = selectedFile.absolutePath
+                        var path = selectedFile?.absolutePath ?: return@addCloseListener
                         if (path.endsWith(File.separator))
                             path = path.removeSuffix(File.separator)
 
@@ -215,16 +224,16 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
         mHelpMenu.addSeparator()
 
         val helpIAmA = JMenuItem("I am a...")
-        helpIAmA.addActionListener { DialogFactory.createIAmA(eocvSim.visualizer) }
+        helpIAmA.addActionListener { dialogFactory.createIAmA() }
 
         mHelpMenu.add(helpIAmA)
 
         if (desktop.isSupported(Desktop.Action.APP_ABOUT)) {
-            desktop.setAboutHandler { DialogFactory.createAboutDialog(eocvSim) }
+            desktop.setAboutHandler { dialogFactory.createAboutDialog() }
         }
         else {
             val helpAbout = JMenuItem("About")
-            helpAbout.addActionListener { DialogFactory.createAboutDialog(eocvSim) }
+            helpAbout.addActionListener { dialogFactory.createAboutDialog() }
             mHelpMenu.add(helpAbout)
         }
 
@@ -232,3 +241,4 @@ class TopMenuBar(visualizer: Visualizer, eocvSim: EOCVSim) : JMenuBar() {
     }
 
 }
+

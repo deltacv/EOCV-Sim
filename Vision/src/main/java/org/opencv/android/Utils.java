@@ -95,7 +95,7 @@ public class Utils {
         }
     }
 
-    private static ThreadLocal<WeakHashMap<Integer, byte[]>> threadLocalm2bReusableBuffers = ThreadLocal.withInitial(WeakHashMap::new);
+    private static final ThreadLocal<WeakHashMap<Integer, byte[]>> m2bReusableBuffers = ThreadLocal.withInitial(WeakHashMap::new);
 
     private static void nMatToBitmap2(Mat src, Bitmap b, boolean premultiplyAlpha) {
         Mat tmp;
@@ -127,7 +127,7 @@ public class Utils {
 
         int size = tmp.rows() * tmp.cols() * tmp.channels();
 
-        WeakHashMap<Integer, byte[]> m2bArrays = threadLocalm2bReusableBuffers.get();
+        WeakHashMap<Integer, byte[]> m2bArrays = m2bReusableBuffers.get();
 
         byte[] m2bData = m2bArrays.get(size);
 
@@ -146,3 +146,4 @@ public class Utils {
         tmp.release();
     }
 }
+

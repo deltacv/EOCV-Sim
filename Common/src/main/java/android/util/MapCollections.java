@@ -485,3 +485,4 @@ abstract class MapCollections<K, V> {
     protected abstract void colRemoveAt(int index);
     protected abstract void colClear();
 }
+

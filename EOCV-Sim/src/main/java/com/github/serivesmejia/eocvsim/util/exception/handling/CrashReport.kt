@@ -1,24 +1,6 @@
 /*
  * Copyright (c) 2021 Sebastian Erives
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
+ * Licensed under the MIT License.
  */
 
 package com.github.serivesmejia.eocvsim.util.exception.handling
@@ -29,7 +11,7 @@ import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.plus
 import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
-import io.github.deltacv.common.util.loggerForThis
+import org.deltacv.common.util.loggerForThis
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -65,15 +47,13 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             "Oops.",
             "Uh... Did I do that?",
             "This is fine.",
-            "I'm not even angry. I'm being so sincere right now.",
             "I feel sad now :(",
             "I let you down. Sorry :(",
             "On the bright side, I bought you a teddy bear!",
             "Daisy, daisy...",
             "Oh - I know what I did wrong!",
-            "Hey, that tickles! Hehehe!",
-            "I blame Dean Kamen.",
-            "You should try our sister simulator!",
+            "I blame ESD.",
+            "You should try PaperVision!",
             "Don't be sad. I'll do better next time, I promise!",
             "Don't be sad, have a hug! <3",
             "I just don't know what went wrong :(",
@@ -86,15 +66,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             "This doesn't make any sense!",
             "Why is it breaking :(",
             "Don't do that.",
-            "Ouch. That hurt :(",
-            "This is a token for 1 free hug. Redeem at your nearest local team: [~~HUG~~]",
-            "But it works on my machine!",
-            "Y a través de las estrellas ella viaja...",
-            "Tras el extraño silencio del sol ausente",
-            "no lo pienses demasiado, todo estará bien,",
-            "encontrarás otro desastre que hacer,",
-            "¿qué será de sentarse bajo la tumba del sol sin nunca hacer un desastre?",
-            "y por una ultima noche juntos,"
+            "But it works on my machine!"
         )
 
         @JvmStatic val defaultCrashFileName get() = "crashreport-$defaultFileName"
@@ -106,9 +78,14 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
     private val sb = StringBuilder()
 
     init {
-        sb.appendLine("/--------------------------------\\").appendLine()
-        sb.appendLine("  EOCV-Sim v${EOCVSim.VERSION} crash report").appendLine()
-        sb.appendLine("\\--------------------------------/").appendLine()
+        val title = "  EOCV-Sim v${EOCVSim.VERSION} crash report"
+        val dashes = "-".repeat(title.length)
+        val topBorder = "/$dashes\\"
+        val bottomBorder = "\\$dashes/"
+
+        sb.appendLine(topBorder).appendLine()
+        sb.appendLine(title).appendLine()
+        sb.appendLine(bottomBorder).appendLine()
 
         sb.appendLine("! ${wittyComments.random()}").appendLine()
 
@@ -119,23 +96,39 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             sb.appendLine(causedByException.message).appendLine()
         }
 
-        sb.appendLine("==========================================").appendLine()
+        val infoSectionLines = listOf(
+            ": EOCV-Sim info",
+            "   Version: ${EOCVSim.VERSION}",
+            "   Built on: ${Build.buildDate}",
+            ": System specs",
+            "   OS name: $OS_NAME",
+            "   OS version: $OS_VERSION",
+            "   Detected OS: $SYSUTIL_DETECTED_OS",
+            "   Arch: $OS_ARCH",
+            "   Detected Arch: ${SysUtil.ARCH}",
+            "   Java version: $JAVA_VERSION",
+            "   Java vendor: $JAVA_VENDOR",
+            "   Last memory usage: ${SysUtil.getMemoryUsageMB()} MB"
+        )
+        val infoSectionDivider = "=".repeat(infoSectionLines.maxOf { it.length })
 
-        sb.appendLine(": EOCV-Sim info")
-        sb.appendLine("   Version: ${EOCVSim.VERSION}")
-        sb.appendLine("   Built on: ${Build.buildDate}").appendLine()
+        sb.appendLine(infoSectionDivider).appendLine()
 
-        sb.appendLine(": System specs")
-        sb.appendLine("   OS name: $OS_NAME")
-        sb.appendLine("   OS version: $OS_VERSION")
-        sb.appendLine("   Detected OS: $SYSUTIL_DETECTED_OS")
-        sb.appendLine("   Arch: $OS_ARCH")
-        sb.appendLine("   Detected Arch: ${SysUtil.ARCH}")
-        sb.appendLine("   Java version: $JAVA_VERSION")
-        sb.appendLine("   Java vendor: $JAVA_VENDOR")
-        sb.appendLine("   Last memory usage: ${SysUtil.getMemoryUsageMB()} MB").appendLine()
+        sb.appendLine(infoSectionLines[0])
+        sb.appendLine(infoSectionLines[1])
+        sb.appendLine(infoSectionLines[2]).appendLine()
 
-        sb.appendLine("==========================================").appendLine()
+        sb.appendLine(infoSectionLines[3])
+        sb.appendLine(infoSectionLines[4])
+        sb.appendLine(infoSectionLines[5])
+        sb.appendLine(infoSectionLines[6])
+        sb.appendLine(infoSectionLines[7])
+        sb.appendLine(infoSectionLines[8])
+        sb.appendLine(infoSectionLines[9])
+        sb.appendLine(infoSectionLines[10])
+        sb.appendLine(infoSectionLines[11]).appendLine()
+
+        sb.appendLine(infoSectionDivider).appendLine()
 
         sb.appendLine(": Full thread dump").appendLine()
 
@@ -148,10 +141,10 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
         }
         sb.appendLine()
 
-        sb.appendLine("==================================").appendLine()
+        sb.appendLine(infoSectionDivider).appendLine()
 
 
-        sb.appendLine(": Full logs").appendLine()
+        sb.appendLine(": Full log").appendLine()
 
         val lastLogFile = EOCVSimFolder.lastLogFile
         if(lastLogFile != null) {
@@ -203,3 +196,4 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
     override fun toString() = sb.toString()
 
 }
+

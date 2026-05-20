@@ -100,3 +100,4 @@ public interface PtzControl extends CameraControl
      */
     int getMaxZoom();
 }
+

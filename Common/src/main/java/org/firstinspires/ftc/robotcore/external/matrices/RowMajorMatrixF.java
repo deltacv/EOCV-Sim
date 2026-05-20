@@ -55,3 +55,6 @@ public abstract class RowMajorMatrixF extends DenseMatrixF
         return new VectorF(this.getData());
     }
 }
+
+
+

@@ -60,3 +60,6 @@ public class RowMatrixF extends MatrixF
         return new GeneralMatrixF(numRows, numCols);
     }
 }
+
+
+
