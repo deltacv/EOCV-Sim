@@ -5,7 +5,7 @@
 
 package com.github.serivesmejia.eocvsim.pipeline.compiled
 
-import com.github.serivesmejia.eocvsim.Build
+import com.github.serivesmejia.eocvsim.BuildInfo
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
 import com.github.serivesmejia.eocvsim.gui.dialog.Output
 import com.github.serivesmejia.eocvsim.pipeline.PipelineManager
@@ -49,7 +49,7 @@ class CompiledPipelineManager : PhaseOrchestrableBase(), KoinComponent {
                 val loader = WorkspaceConfigLoader(this)
                 val config = loader.loadWorkspaceConfig()
 
-                if(config?.eocvSimVersion != Build.standardVersionString) {
+                if(config?.eocvSimVersion != BuildInfo.STANDARD_VERSION_STRING) {
                     logger.info("Replacing old default workspace with latest one (version mismatch)")
                     SysUtil.deleteFilesUnder(this)
                     DefaultWorkspaceTemplate.extractTo(this)

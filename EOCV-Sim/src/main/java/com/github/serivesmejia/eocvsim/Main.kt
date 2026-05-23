@@ -45,7 +45,7 @@ object Main {
  * @see CommandLine
  * @see EOCVSim.Parameters
  */
-@CommandLine.Command(name = "eocvsim", mixinStandardHelpOptions = true, version = [Build.versionString])
+@CommandLine.Command(name = "eocvsim", mixinStandardHelpOptions = true, versionProvider = BuildInfoVersionProvider::class)
 class EOCVSimCommandInterface : Runnable {
 
     @CommandLine.Option(
@@ -116,3 +116,11 @@ class EOCVSimCommandInterface : Runnable {
     }
 
 }
+
+/**
+ * Supplies the simulator version string at runtime for Picocli commands.
+ */
+class BuildInfoVersionProvider : CommandLine.IVersionProvider {
+    override fun getVersion(): Array<String> = arrayOf(BuildInfo.VERSION_STRING)
+}
+

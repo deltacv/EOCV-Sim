@@ -6,7 +6,7 @@
 package com.github.serivesmejia.eocvsim.gui
 
 import com.formdev.flatlaf.FlatLaf
-import com.github.serivesmejia.eocvsim.Build
+import com.github.serivesmejia.eocvsim.BuildInfo
 import com.github.serivesmejia.eocvsim.LifecycleSignal
 import com.github.serivesmejia.eocvsim.LifecycleSignal.Destroy.Reason
 import com.github.serivesmejia.eocvsim.config.ConfigManager
@@ -78,7 +78,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
         private set
 
     private val fpsMeterDescriptor: String
-        get() = "deltacv EOCV-Sim v" + Build.standardVersionString + if (Build.isDev) "-dev" else ""
+        get() = "deltacv EOCV-Sim v" + BuildInfo.STANDARD_VERSION_STRING + if (BuildInfo.IS_DEV) "-dev" else ""
 
     @JvmField
     val viewport = SwingOpenCvViewport(Size(1080.0, 720.0), fpsMeterDescriptor)
@@ -111,7 +111,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
     lateinit var tunerCollapsible: CollapsiblePanelX
         private set
 
-    private var title = "EasyOpenCV Simulator v" + Build.standardVersionString
+    private var title = "EasyOpenCV Simulator v" + BuildInfo.STANDARD_VERSION_STRING
     private var titleMsg = "No pipeline"
     private var beforeTitleMsg = ""
 
@@ -141,7 +141,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
 
         Icons.setDark(FlatLaf.isLafDark())
 
-        if (Build.isDev) {
+        if (BuildInfo.IS_DEV) {
             title += "-dev "
         }
 

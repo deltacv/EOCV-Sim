@@ -5,7 +5,7 @@
 
 package com.github.serivesmejia.eocvsim.workspace.config
 
-import com.github.serivesmejia.eocvsim.Build
+import com.github.serivesmejia.eocvsim.BuildInfo
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.serialization.JacksonJsonSupport
 import org.deltacv.common.util.loggerForThis
@@ -47,7 +47,7 @@ class WorkspaceConfigLoader(var workspaceFile: File) {
      * @param config the workspace configuration to save
      */
     fun saveWorkspaceConfig(config: WorkspaceConfig) {
-        config.eocvSimVersion = Build.standardVersionString
+        config.eocvSimVersion = BuildInfo.STANDARD_VERSION_STRING
         val configStr = JacksonJsonSupport.persistenceMapper.writeValueAsString(config)
         SysUtil.saveFileStr(workspaceConfigFile, configStr)
     }

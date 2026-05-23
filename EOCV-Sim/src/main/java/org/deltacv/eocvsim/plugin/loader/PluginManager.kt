@@ -5,7 +5,7 @@
 
 package org.deltacv.eocvsim.plugin.loader
 
-import com.github.serivesmejia.eocvsim.Build
+import com.github.serivesmejia.eocvsim.BuildInfo
 import com.github.serivesmejia.eocvsim.LifecycleSignal
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.Visualizer
@@ -187,7 +187,7 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
                 try {
                     val pluginInfo = PluginInfo(
                         "PaperVision",
-                        Build.paperVisionVersion,
+                        BuildInfo.PAPER_VISION_VERSION,
                         "deltacv",
                         "dev@deltacv.org",
                         "org.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin",

@@ -5,6 +5,7 @@
 
 package com.github.serivesmejia.eocvsim
 
+import com.github.serivesmejia.eocvsim.BuildInfo
 import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
@@ -55,8 +56,8 @@ import kotlin.system.exitProcess
 class EOCVSim : KoinComponent {
 
     companion object {
-        const val VERSION = Build.versionString
-        const val STANDARD_VERSION = Build.standardVersionString
+        @JvmField val VERSION = BuildInfo.VERSION_STRING
+        @JvmField val STANDARD_VERSION = BuildInfo.STANDARD_VERSION_STRING
 
         val PARSED_VERSION = ParsedVersion(STANDARD_VERSION)
 
@@ -196,7 +197,7 @@ class EOCVSim : KoinComponent {
                     val crashHeader = """
                         Failed to load one or more WPILib native libraries during initialization.
 
-                        This EOCV-Sim package is intended for ${Build.packagePlatform}.
+                                    This EOCV-Sim package is intended for ${BuildInfo.PACKAGE_PLATFORM}.
                         Please verify that you are running the correct build.
 
                         Additional details are available in the crash report below.

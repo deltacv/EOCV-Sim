@@ -5,8 +5,8 @@
 
 package com.github.serivesmejia.eocvsim.util.exception.handling
 
+import com.github.serivesmejia.eocvsim.BuildInfo
 import com.github.serivesmejia.eocvsim.EOCVSim
-import com.github.serivesmejia.eocvsim.Build
 import com.github.serivesmejia.eocvsim.util.StrUtil
 import com.github.serivesmejia.eocvsim.util.SysUtil
 import com.github.serivesmejia.eocvsim.util.extension.plus
@@ -99,7 +99,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
         val infoSectionLines = listOf(
             ": EOCV-Sim info",
             "   Version: ${EOCVSim.VERSION}",
-            "   Built on: ${Build.buildDate}",
+            "   Built on: ${BuildInfo.BUILD_DATE}",
             ": System specs",
             "   OS name: $OS_NAME",
             "   OS version: $OS_VERSION",
