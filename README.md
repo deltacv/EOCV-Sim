@@ -1,7 +1,6 @@
 <img src='/EOCV-Sim/src/main/resources/images/icon/ico_eocvsim_new.png' height='128px'>
 
-![Java CI with Gradle](https://github.com/deltacv/EOCV-Sim/workflows/Build%20and%20test%20with%20Gradle/badge.svg)
-[![Maven Publish & Create GitHub Release(s)](https://github.com/deltacv/EOCV-Sim/actions/workflows/release_ci.yml/badge.svg)](https://github.com/deltacv/EOCV-Sim/actions/workflows/release_ci.yml)
+[![Build, Test & Release](https://github.com/deltacv/EOCV-Sim/actions/workflows/build_ci.yml/badge.svg)](https://github.com/deltacv/EOCV-Sim/actions/workflows/release_ci.yml)
 
 # Welcome!
 
