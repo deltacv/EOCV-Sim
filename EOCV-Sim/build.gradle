@@ -201,3 +201,8 @@ tasks.register('writeBuildInfoJson') {
 tasks.named('processResources') {
     dependsOn writeBuildInfoJson
 }
+
+tasks.named('sourcesJar') {
+    dependsOn writeBuildInfoJson
+}
+

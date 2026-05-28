@@ -6,6 +6,7 @@
 package com.github.serivesmejia.eocvsim
 
 import com.github.serivesmejia.eocvsim.pipeline.PipelineSource
+import com.github.serivesmejia.eocvsim.util.exception.handling.EOCVSimUncaughtExceptionHandler
 import org.koin.core.context.GlobalContext
 import org.koin.dsl.module
 import picocli.CommandLine
@@ -31,7 +32,12 @@ object Main {
 
         val result = CommandLine(
             EOCVSimCommandInterface()
-        ).setCaseInsensitiveEnumValuesAllowed(true).execute(*args)
+        ).setCaseInsensitiveEnumValuesAllowed(true)
+            .setExecutionExceptionHandler { exception, line, result ->
+                EOCVSimUncaughtExceptionHandler.uncaughtException(currentMainThread, exception)
+                -1
+            }
+            .execute(*args)
 
         exitProcess(result)
     }

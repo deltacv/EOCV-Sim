@@ -313,6 +313,8 @@ class EOCVSim : KoinComponent {
         orchestrator.changePhase(Orchestrator.Phase.RUN)
 
         while (!eocvSimThread.isInterrupted && !destroying) {
+            throw Exception("test")
+
             //run all pending requested runnables
             onMainLoop.run()
 

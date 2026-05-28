@@ -21,14 +21,13 @@ import java.lang.Thread.sleep
 import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
 
-class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExceptionHandler, KoinComponent{
+object EOCVSimUncaughtExceptionHandler : Thread.UncaughtExceptionHandler, KoinComponent {
 
-    companion object {
-        const val MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH = 3
+    const val MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH = 3
 
-        @JvmStatic fun register() {
-            Thread.setDefaultUncaughtExceptionHandler(EOCVSimUncaughtExceptionHandler())
-        }
+    @JvmStatic
+    fun register() {
+        Thread.setDefaultUncaughtExceptionHandler(this)
     }
 
     val logger by loggerForThis()
@@ -40,7 +39,7 @@ class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExc
 
     override fun uncaughtException(t: Thread, e: Throwable) {
         //we don't want the whole app to crash on a simple interrupted exception right?
-        if(e is InterruptedException) {
+        if (e is InterruptedException) {
             logger.warn("Uncaught InterruptedException thrown in Thread ${t.name}, it will be interrupted", e)
             t.interrupt()
             return
@@ -52,7 +51,7 @@ class EOCVSimUncaughtExceptionHandler private constructor() : Thread.UncaughtExc
 
         // Exit if uncaught exception happened in the main thread
         // since we would be basically in an invalid state if that happened
-        if(t == currentMainThread || SwingUtilities.isEventDispatchThread() || e !is Exception || uncaughtExceptionsCount > MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH) {
+        if (t == currentMainThread || SwingUtilities.isEventDispatchThread() || e !is Exception || uncaughtExceptionsCount > MAX_UNCAUGHT_EXCEPTIONS_BEFORE_CRASH) {
             val file = CrashReport(e).saveCrashReport()
 
             logger.warn("If this error persists, open an issue on EOCV-Sim's GitHub attaching the crash report file.")
