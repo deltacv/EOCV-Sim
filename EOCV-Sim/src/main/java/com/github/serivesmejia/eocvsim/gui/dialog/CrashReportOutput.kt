@@ -5,27 +5,20 @@
 
 package com.github.serivesmejia.eocvsim.gui.dialog
 
-import com.formdev.flatlaf.intellijthemes.FlatArcDarkIJTheme
 import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
 import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel.DefaultBottomButtonsPanel
 import java.awt.Dimension
 import java.awt.Font
-import javax.swing.BoxLayout
-import javax.swing.JDialog
-import javax.swing.JFrame
-import javax.swing.JLabel
-import javax.swing.SwingUtilities
-import javax.swing.WindowConstants
+import javax.swing.*
 import kotlin.system.exitProcess
 
 class CrashReportOutput(
-    parent: JFrame?,
     crashReport: String,
     headerText: String? = null
 ){
     val output by lazy {
-        JDialog(parent)
+        JDialog()
     }
 
     private val reportPanel by lazy {
@@ -33,7 +26,6 @@ class CrashReportOutput(
     }
 
     init {
-        output.isModal = true
         output.title = "Crash Report"
         output.layout = BoxLayout(output.contentPane, BoxLayout.Y_AXIS)
         output.isAlwaysOnTop = true

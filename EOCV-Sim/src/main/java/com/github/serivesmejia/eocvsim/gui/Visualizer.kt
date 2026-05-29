@@ -59,7 +59,6 @@ import javax.swing.*
 class Visualizer : PhaseOrchestrableBase(), KoinComponent {
 
     val onMainUpdate: EventHandler by inject(named("onMainLoop"))
-    val onCrash: EventHandler by inject(named("onCrash"))
 
     val lifecycleChannel: Channel<LifecycleSignal> by inject(named("lifecycle"))
 
@@ -293,6 +292,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
     override suspend fun run() { }
 
     private fun registerListeners() {
+
         frame.addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent) {
                 lifecycleChannel.trySend(LifecycleSignal.Destroy(Reason.USER_REQUESTED))

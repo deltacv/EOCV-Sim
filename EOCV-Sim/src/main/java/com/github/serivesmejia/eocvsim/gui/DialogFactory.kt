@@ -13,9 +13,8 @@ import com.github.serivesmejia.eocvsim.gui.dialog.source.*
 import com.github.serivesmejia.eocvsim.input.SourceType
 import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
-import com.github.serivesmejia.eocvsim.util.exception.handling.CrashReport
-import org.deltacv.eocvsim.plugin.loader.PluginManager
 import kotlinx.coroutines.CoroutineScope
+import org.deltacv.eocvsim.plugin.loader.PluginManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.awt.Component
@@ -182,7 +181,7 @@ class DialogFactory : KoinComponent {
     }
 
     fun instantiateCrashReport(crash: String?, headerText: String? = null) =
-        CrashReportOutput(frame, crash ?: "", headerText)
+        CrashReportOutput(crash ?: "", headerText)
 
     fun createCrashReport(crash: String?, headerText: String? = null) {
         invokeLater { instantiateCrashReport(crash, headerText) }

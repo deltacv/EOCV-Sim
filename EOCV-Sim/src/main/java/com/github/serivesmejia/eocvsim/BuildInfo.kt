@@ -65,5 +65,13 @@ object BuildInfo {
 
     val PAPER_VISION_VERSION: String
         get() = metadata.paperVisionVersion
-}
 
+    // Backwards-compatible aliases for existing call sites and any external code.
+    val versionString: String get() = VERSION_STRING
+    val standardVersionString: String get() = STANDARD_VERSION_STRING
+    val buildDate: String get() = BUILD_DATE
+    val isDev: Boolean get() = IS_DEV
+    val packagePlatform: String get() = PACKAGE_PLATFORM
+    val opencvVersion: String get() = OPENCV_VERSION
+    val paperVisionVersion: String get() = PAPER_VISION_VERSION
+}

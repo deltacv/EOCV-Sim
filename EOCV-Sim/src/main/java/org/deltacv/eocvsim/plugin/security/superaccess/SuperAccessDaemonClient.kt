@@ -18,6 +18,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
 
 typealias ResponseReceiver = (SuperAccessDaemon.SuperAccessResponse) -> Unit
 typealias ResponseCondition = (SuperAccessDaemon.SuperAccessResponse) -> Boolean
@@ -37,6 +39,7 @@ class SuperAccessDaemonClient(
 
     private val startLock = ReentrantLock()
     val startCondition = startLock.newCondition()
+    private val initMutex = Mutex()
 
     private val cacheLock = Any()
     private val accessCache = mutableMapOf<String, AccessCache>()
@@ -48,16 +51,25 @@ class SuperAccessDaemonClient(
 
     fun initIfNeeded() {
         if (isInitialized) return
-        
-        server = WsServer(startLock, startCondition, autoacceptOnTrusted)
-        server!!.start()
 
-        startLock.withLock {
-            startCondition.await()
+        runBlocking {
+            initMutex.lock()
+            try {
+                if (isInitialized) return@runBlocking
+
+                server = WsServer(startLock, startCondition, autoacceptOnTrusted)
+                server!!.start()
+
+                startLock.withLock {
+                    startCondition.await()
+                }
+
+                logger.info("SuperAccessDaemonClient initialized")
+                isInitialized = true
+            } finally {
+                initMutex.unlock()
+            }
         }
-
-        logger.info("SuperAccessDaemonClient initialized")
-        isInitialized = true
     }
 
     fun sendRequest(request: SuperAccessDaemon.SuperAccessMessage.Request, onResponse: (Boolean) -> Unit) {

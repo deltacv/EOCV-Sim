@@ -143,7 +143,6 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
 
         sb.appendLine(infoSectionDivider).appendLine()
 
-
         sb.appendLine(": Full log").appendLine()
 
         val lastLogFile = EOCVSimFolder.lastLogFile
