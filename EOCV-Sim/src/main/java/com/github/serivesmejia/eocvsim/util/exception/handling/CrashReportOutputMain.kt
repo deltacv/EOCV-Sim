@@ -36,7 +36,7 @@ object CrashReportOutputMain {
 
             try {
                 val crashContent = SysUtil.loadFileStr(file)
-                CrashReportOutput(null, crashContent ?: "")
+                CrashReportOutput(crashContent ?: "")
             } catch (e: Exception) {
                 System.err.println("Failed to display crash report: ${e.message}")
                 e.printStackTrace()

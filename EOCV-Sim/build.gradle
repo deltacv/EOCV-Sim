@@ -1,3 +1,4 @@
+import groovy.json.JsonOutput
 import io.github.fvarrui.javapackager.gradle.PackageTask
 
 import java.time.LocalDateTime
@@ -16,12 +17,46 @@ apply from: '../build.common.gradle'
 
 ext.kotest_version = '5.7.2'
 
-def generatedResourcesDir = layout.buildDirectory.dir("generated/resources/buildinfo/main")
+def generatedResourcesDirProvider =
+        layout.buildDirectory.dir("generated/resources/buildinfo/main")
+
+tasks.register('writeBuildInfoJson') {
+    outputs.dir(generatedResourcesDirProvider)
+
+    doLast {
+        String date = DateTimeFormatter.ofPattern("yyyy-M-d hh:mm:ss")
+                .format(LocalDateTime.now())
+
+        def outputDir = generatedResourcesDirProvider.get().asFile
+        outputDir.mkdirs()
+
+        def buildInfo = [
+                versionString        : "$version",
+                standardVersionString: "$standardVersion",
+                buildDate            : date,
+                isDev                : version.toString().contains("dev"),
+                packagePlatform      : "${wpilibTools.currentPlatform.platformName}",
+                opencvVersion        : "$opencvVersion",
+                paperVisionVersion   : "$papervision_version"
+        ]
+
+        def versionFile = new File(outputDir, "EOCVSimBuildInfo.json")
+
+        versionFile.text =
+                JsonOutput.prettyPrint(
+                        groovy.json.JsonOutput.toJson(buildInfo)
+                ) + System.lineSeparator()
+    }
+}
+
+def generatedResourcesDir = files(
+        generatedResourcesDirProvider
+).builtBy(tasks.named("writeBuildInfoJson"))
 
 sourceSets {
     main {
         resources {
-            srcDir generatedResourcesDir
+            srcDir(generatedResourcesDir)
         }
     }
 
@@ -171,38 +206,7 @@ dependencies {
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain:3.3.3'
     implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:3.3.2'
 
-    implementation('org.deltacv.visionloop:streaming:1.2.9') { transitive = false }
-}
-
-tasks.register('writeBuildInfoJson') {
-    outputs.dir(generatedResourcesDir)
-
-    doLast {
-        String date = DateTimeFormatter.ofPattern("yyyy-M-d hh:mm:ss").format(LocalDateTime.now())
-
-        def outputDir = file(generatedResourcesDir.get().asFile)
-        outputDir.mkdirs()
-
-        def buildInfo = [
-                versionString      : "$version",
-                standardVersionString: "$standardVersion",
-                buildDate          : date,
-                isDev              : version.toString().contains("dev"),
-                packagePlatform    : "${wpilibTools.currentPlatform.platformName}",
-                opencvVersion      : "$opencvVersion",
-                paperVisionVersion  : "$papervision_version"
-        ]
-
-        def versionFile = file("${outputDir}/EOCVSimBuildInfo.json")
-        versionFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(buildInfo)) + System.lineSeparator()
+    implementation('org.deltacv.visionloop:streaming:1.2.9') {
+        transitive = false
     }
 }
-
-tasks.named('processResources') {
-    dependsOn writeBuildInfoJson
-}
-
-tasks.named('sourcesJar') {
-    dependsOn writeBuildInfoJson
-}
-
