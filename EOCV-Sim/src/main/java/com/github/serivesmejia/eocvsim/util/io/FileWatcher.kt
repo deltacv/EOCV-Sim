@@ -91,9 +91,9 @@ class FileWatcher(
                 while (running.get()) {
                     val key = try {
                         watchService.take()
-                    } catch (e: ClosedWatchServiceException) {
+                    } catch (_: ClosedWatchServiceException) {
                         break
-                    } catch (e: InterruptedException) {
+                    } catch (_: InterruptedException) {
                         Thread.currentThread().interrupt()
                         break
                     }

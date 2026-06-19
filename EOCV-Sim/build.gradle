@@ -172,8 +172,8 @@ dependencies {
     implementation wpilibTools.deps.wpilibJava("wpimath")
     wpilibNatives wpilibTools.deps.wpilib("wpimath")
 
-    // we don't use this at all... But if we don't have it in the classpath,
-    // we can't use WPILib's Geometry classes for apriltags.
+    // we don't use this directly... but we need this in the classpath
+    // for wpilib's geometry classes to work, used for apriltags
     implementation "us.hebi.quickbuf:quickbuf-runtime:$quickbufVersion"
 
     implementation "org.slf4j:slf4j-api:$slf4j_version"

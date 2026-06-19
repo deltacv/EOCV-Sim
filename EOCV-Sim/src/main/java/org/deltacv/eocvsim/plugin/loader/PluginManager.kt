@@ -12,6 +12,7 @@ import com.github.serivesmejia.eocvsim.gui.Visualizer
 import com.github.serivesmejia.eocvsim.plugin.api.impl.EOCVSimApiImpl
 import com.github.serivesmejia.eocvsim.plugin.output.PluginDialogSignal
 import com.github.serivesmejia.eocvsim.plugin.output.PluginOutputHandler
+import com.github.serivesmejia.eocvsim.util.InitClasspathScan
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import com.github.serivesmejia.eocvsim.util.orchestration.initDependency
 import com.github.serivesmejia.eocvsim.util.orchestration.PhaseOrchestrableBase
@@ -27,6 +28,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
 import java.io.File
+import kotlin.getValue
 import kotlin.properties.Delegates
 
 /**
@@ -34,7 +36,9 @@ import kotlin.properties.Delegates
  */
 class PluginManager : PhaseOrchestrableBase(), KoinComponent {
 
+    private val classpathScan: InitClasspathScan by initDependency<InitClasspathScan>(inject())
     private val configManager: ConfigManager by initDependency(inject())
+
     private val visualizer: Visualizer by inject()
     private val outputHandler: PluginOutputHandler by inject()
 
@@ -171,43 +175,14 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
         enableTimestamp = System.currentTimeMillis()
         isEnabled = true
 
-        if (_loaders.find { it.pluginInfo.name == "PaperVision" && it.pluginInfo.author == "deltacv" } == null) {
-            if (PluginManager::class.java.getResourceAsStream("/embedded_plugins/PaperVisionPlugin.jar") != null) {
-                _loaders.add(
-                    EmbeddedFilePluginLoader(
-                        "/embedded_plugins/PaperVisionPlugin.jar",
-                        listOf(),
-                        this,
-                        outputHandler
-                    )
-                )
-
-                logger.info("Loaded embedded PaperVision from resources")
+        for(uri in classpathScan.scanResult!!.embeddedPlugins) {
+            val loader = EmbeddedFilePluginLoader(uri.toURL(), listOf(), this, outputHandler)
+            if(_loaders.map { it.hash() }.none { it == loader.hash() }) {
+                _loaders.add(loader)
+                logger.info("Added $uri from embedded_plugins")
             } else {
-                try {
-                    val pluginInfo = PluginInfo(
-                        "PaperVision",
-                        BuildInfo.PAPER_VISION_VERSION,
-                        "deltacv",
-                        "dev@deltacv.org",
-                        "org.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin",
-                        "Create your custom OpenCV algorithms using a user-friendly node editor interface",
-                        true
-                    )
-
-                    @Suppress("UNCHECKED_CAST")
-                    addEmbeddedPlugin(
-                        pluginInfo,
-                        Class.forName("org.deltacv.papervision.plugin.PaperVisionEOCVSimPlugin") as Class<out EOCVSimPlugin>,
-                    )
-
-                    logger.info("Loaded embedded PaperVision from built-in class")
-                } catch(_: ClassNotFoundException) {
-                    logger.info("Embedded PaperVision was not found")
-                }
+                logger.warn("Skipped loading '${loader.pluginInfo.nameWithVersionAndAuthor}' from embedded_plugins, already loaded from another source")
             }
-        } else {
-            outputHandler.sendOutputLine("PaperVision plugin is already loaded, skipping embedded plugin.")
         }
 
         loadPlugins()

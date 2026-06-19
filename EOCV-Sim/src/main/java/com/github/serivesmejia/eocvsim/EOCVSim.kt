@@ -36,6 +36,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.swing.Swing
+import org.deltacv.eocvsim.plugin.loader.PluginManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
@@ -95,7 +96,7 @@ class EOCVSim : KoinComponent {
 
     val configManager: ConfigManager by inject()
     val inputSourceManager: InputSourceManager by inject()
-    val pluginManager: org.deltacv.eocvsim.plugin.loader.PluginManager by inject()
+    val pluginManager: PluginManager by inject()
 
     val recordingManager: RecordingManager by inject()
     val dialogFactory: DialogFactory by inject()

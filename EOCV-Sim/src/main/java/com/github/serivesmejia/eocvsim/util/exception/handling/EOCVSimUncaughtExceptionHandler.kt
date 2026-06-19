@@ -7,7 +7,6 @@ package com.github.serivesmejia.eocvsim.util.exception.handling
 
 import com.github.serivesmejia.eocvsim.currentMainThread
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
-import com.github.serivesmejia.eocvsim.util.JavaProcess
 import com.github.serivesmejia.eocvsim.util.event.EventHandler
 import org.deltacv.common.util.loggerForThis
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +16,6 @@ import kotlinx.coroutines.swing.Swing
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.qualifier.named
-import java.lang.Thread.sleep
 import javax.swing.SwingUtilities
 import kotlin.system.exitProcess
 
@@ -69,7 +67,7 @@ object EOCVSimUncaughtExceptionHandler : Thread.UncaughtExceptionHandler, KoinCo
         } else {
             CrashReport(e).saveCrashReport("lasterror-eocvsim")
 
-            //if not, eocv sim might still be working (i.e a crash from a MatPoster thread)
+            //if not, eocv sim might still be working (e.g a crash from a MatPoster thread)
             //so we might not need to exit in this point, but we'll need to send a warning
             //to the user
             logger.warn("If this error persists, open an issue on EOCV-Sim's GitHub.")

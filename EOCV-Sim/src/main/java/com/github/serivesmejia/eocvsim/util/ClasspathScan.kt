@@ -15,20 +15,19 @@ import io.github.classgraph.ClassGraph
 import org.deltacv.common.util.loggerForThis
 import org.firstinspires.ftc.vision.VisionProcessor
 import org.openftc.easyopencv.OpenCvPipeline
+import java.net.URI
 
 class InitClasspathScan : ClasspathScan(), Orchestrable {
-    override fun wire(orchestrator: Orchestrator) {
+    override fun wire(orchestrator: Orchestrator) =
         orchestrator.register(this) {
             phase(Orchestrator.Phase.INIT) {
-                target { scan() }
+                target { scan(scanForEmbeddedPlugins = true) }
             }
         }
-    }
 }
 
 /**
  * Classpath scanner using ClassGraph.
- *
  * It scans for OpenCvPipelines, OpModes, VisionProcessors and TunableFields
  */
 open class ClasspathScan {
@@ -52,15 +51,12 @@ open class ClasspathScan {
 
     val logger by loggerForThis()
 
-    var scanResult: ScanResult? = null
-        private set
-
-    var hasScanned = false
+    var scanResult: EOCVSimScanResult? = null
         private set
 
     /**
      * Perform the classpath scan using ClassGraph, surprisingly fast due to
-     * the miracles of said library using bytecode scanning instead of reflection.
+     * the miracles of that library, as it uses bytecode scanning instead of reflection.
      *
      * This method will scan for OpenCvPipelines, OpModes, VisionProcessors and TunableFields
      * @param jarFile the jar file to scan, if null, the classpath will be scanned
@@ -71,14 +67,19 @@ open class ClasspathScan {
     fun scan(
         jarFile: String? = null,
         classLoader: ClassLoader? = null,
-        addProcessorsAsPipelines: Boolean = true
-    ): ScanResult {
+        addProcessorsAsPipelines: Boolean = true,
+        scanForEmbeddedPlugins: Boolean = false
+    ): EOCVSimScanResult {
         val timer = ElapsedTime()
         val classGraph = ClassGraph()
             .enableClassInfo()
             // .verbose()
             .enableAnnotationInfo()
             .rejectPackages(*ignoredPackages)
+
+        if(scanForEmbeddedPlugins) {
+            classGraph.acceptPaths("/embedded_plugins")
+        }
 
         if (jarFile != null) {
             classGraph.overrideClasspath("$jarFile!/")
@@ -91,77 +92,90 @@ open class ClasspathScan {
             classGraph.overrideClassLoaders(classLoader)
         }
 
-        val scanResult = classGraph.scan()
-
-        logger.info("ClassGraph finished scanning (took ${timer.seconds()}s)")
-
-
         val pipelineClasses = mutableListOf<Class<*>>()
+        val embeddedPlugins = mutableListOf<URI>()
 
-        // i...don't even know how to name this, sorry, future readers
-        // but classgraph for some reason does not have a recursive search for subclasses...
-        fun searchPipelinesOfSuperclass(superclass: String) {
-            logger.trace("searchPipelinesOfSuperclass: {}", superclass)
+        classGraph.scan().use { scanResult ->
 
-            val superclassClazz = if (classLoader != null) {
-                classLoader.loadClass(superclass)
-            } else Class.forName(superclass)
+            logger.info("ClassGraph finished scanning (took ${timer.seconds()}s)")
 
-            val pipelineClassesInfo = if (superclassClazz.isInterface)
-                scanResult.getClassesImplementing(superclass)
-            else scanResult.getSubclasses(superclass)
+            // i...don't even know how to name this, sorry, future readers
+            // but classgraph for some reason does not have a recursive search for subclasses...
+            fun searchPipelinesOfSuperclass(superclass: String) {
+                logger.trace("searchPipelinesOfSuperclass: {}", superclass)
 
-            for (pipelineClassInfo in pipelineClassesInfo) {
-                logger.trace("pipelineClassInfo: {}", pipelineClassInfo.name)
+                val superclassClazz = if (classLoader != null) {
+                    classLoader.loadClass(superclass)
+                } else Class.forName(superclass)
 
-                for (pipelineSubclassInfo in pipelineClassInfo.subclasses) {
-                    searchPipelinesOfSuperclass(pipelineSubclassInfo.name) // naming is my passion
-                }
+                val pipelineClassesInfo = if (superclassClazz.isInterface)
+                    scanResult.getClassesImplementing(superclass)
+                else scanResult.getSubclasses(superclass)
 
-                if (pipelineClassInfo.isAbstract || pipelineClassInfo.isInterface) {
-                    continue // nope'd outta here
-                }
+                for (pipelineClassInfo in pipelineClassesInfo) {
+                    logger.trace("pipelineClassInfo: {}", pipelineClassInfo.name)
 
-                val clazz = if (classLoader != null) {
-                    classLoader.loadClass(pipelineClassInfo.name)
-                } else Class.forName(pipelineClassInfo.name)
+                    for (pipelineSubclassInfo in pipelineClassInfo.subclasses) {
+                        searchPipelinesOfSuperclass(pipelineSubclassInfo.name) // naming is my passion
+                    }
 
-                logger.trace("class {} super {}", clazz.typeName, clazz.superclass.typeName)
+                    if (pipelineClassInfo.isAbstract || pipelineClassInfo.isInterface) {
+                        continue // nope'd outta here
+                    }
 
-                if (!pipelineClasses.contains(clazz) && ReflectUtil.hasSuperclass(clazz, superclassClazz)) {
-                    if (clazz.isAnnotationPresent(Disabled::class.java)) {
-                        logger.info("Found @Disabled pipeline ${clazz.typeName}")
-                    } else {
-                        logger.info("Found pipeline ${clazz.typeName}")
-                        pipelineClasses.add(clazz)
+                    val clazz = if (classLoader != null) {
+                        classLoader.loadClass(pipelineClassInfo.name)
+                    } else Class.forName(pipelineClassInfo.name)
+
+                    logger.trace("class {} super {}", clazz.typeName, clazz.superclass.typeName)
+
+                    if (!pipelineClasses.contains(clazz) && ReflectUtil.hasSuperclass(clazz, superclassClazz)) {
+                        if (clazz.isAnnotationPresent(Disabled::class.java)) {
+                            logger.debug("Found @Disabled pipeline ${clazz.typeName}")
+                        } else {
+                            logger.info("Found pipeline ${clazz.typeName}")
+                            pipelineClasses.add(clazz)
+                        }
                     }
                 }
             }
+
+            // start recursive hell
+            searchPipelinesOfSuperclass(OpenCvPipeline::class.java.name)
+
+            if (jarFile != null) {
+                // When specifying a jar file, we consequently remove
+                // EOCV-Sim from the scan classpath, ClassGraph does not know
+                // that OpMode and LinearOpMode are subclasses of OpenCvPipeline,
+                // so we have to scan them manually...
+                searchPipelinesOfSuperclass(OpMode::class.java.name)
+                searchPipelinesOfSuperclass(LinearOpMode::class.java.name)
+            }
+
+            if (addProcessorsAsPipelines) {
+                logger.info("Searching for VisionProcessors...")
+                searchPipelinesOfSuperclass(VisionProcessor::class.java.name)
+            }
+
+            logger.info("Found ${pipelineClasses.size} pipelines")
+
+            if (scanForEmbeddedPlugins) {
+                scanResult
+                    .getResourcesWithExtension("jar")
+                    .filter { it.path.startsWith("embedded_plugins/") }
+                    .forEach {
+                        logger.info("Found embedded plugin: {}", it.path)
+                        embeddedPlugins.add(it.uri)
+                    }
+
+                logger.info("Found {} embedded plugins", embeddedPlugins.size)
+            }
         }
-
-        // start recursive hell
-        searchPipelinesOfSuperclass(OpenCvPipeline::class.java.name)
-
-        if (jarFile != null) {
-            // Since we removed EOCV-Sim from the scan classpath,
-            // ClassGraph does not know that OpMode and LinearOpMode
-            // are subclasses of OpenCvPipeline, so we have to scan them
-            // manually...
-            searchPipelinesOfSuperclass(OpMode::class.java.name)
-            searchPipelinesOfSuperclass(LinearOpMode::class.java.name)
-        }
-
-        if (addProcessorsAsPipelines) {
-            logger.info("Searching for VisionProcessors...")
-            searchPipelinesOfSuperclass(VisionProcessor::class.java.name)
-        }
-
-        logger.info("Found ${pipelineClasses.size} pipelines")
 
         logger.info("Finished scanning (took ${timer.seconds()}s)")
 
-        this.scanResult = ScanResult(
-            pipelineClasses
+        this.scanResult = EOCVSimScanResult(
+            pipelineClasses, embeddedPlugins
         )
 
         return this.scanResult!!
@@ -173,6 +187,7 @@ open class ClasspathScan {
  * Result of the classpath scan
  * @param pipelineClasses the found OpenCvPipelines
  */
-data class ScanResult(
-    val pipelineClasses: List<Class<*>>
+data class EOCVSimScanResult(
+    val pipelineClasses: List<Class<*>>,
+    val embeddedPlugins: List<URI>
 )

@@ -23,6 +23,8 @@ import org.deltacv.eocvsim.plugin.security.PluginSignatureVerifier
 import org.deltacv.eocvsim.sandbox.nio.SandboxFileSystem
 import net.lingala.zip4j.ZipFile
 import java.io.File
+import java.net.URI
+import java.net.URL
 import java.nio.file.Path
 
 /**
@@ -259,20 +261,20 @@ open class FilePluginLoaderImpl(
 }
 
 class EmbeddedFilePluginLoader(
-    resourcePath: String,
+    resource: URL,
     classpath: List<File>,
     pluginManager: PluginManager,
     outputHandler: PluginOutputHandler
 ) : FilePluginLoaderImpl(
-    pluginFile = resourcePath.let {
+    pluginFile = resource.let {
         // extract to EMBEDDED_PLUGIN_FOLDER
         val hash = it.hashString
         val file = EMBEDDED_PLUGIN_FOLDER + File.separator + "$hash.jar"
 
         try {
-            SysUtil.copyFileIs(EmbeddedFilePluginLoader::class.java.getResourceAsStream(it), file, true)
+            SysUtil.copyFileIs(it.openStream(), file, true)
         } catch (e: Exception) {
-            throw InvalidPluginException("Failed to extract embedded plugin from resource path $resourcePath", e)
+            throw InvalidPluginException("Failed to copy embedded plugin from $resource", e)
         }
 
         file
