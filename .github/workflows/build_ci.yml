@@ -28,7 +28,7 @@ jobs:
       with:
         name: eocvsim-ubuntu-latest
         path: |
-          EOCV-Sim/build/libs/*.jar
+          VisionBench/build/libs/*.jar
 
   build_linux_arm:
     runs-on: ubuntu-24.04-arm
@@ -51,7 +51,7 @@ jobs:
       with:
         name: eocvsim-ubuntu-arm64
         path: |
-          EOCV-Sim/build/libs/*.jar
+          VisionBench/build/libs/*.jar
 
   build_windows:
     runs-on: windows-latest
@@ -73,7 +73,7 @@ jobs:
       with:
         name: eocvsim-windows-latest
         path: |
-          EOCV-Sim/build/libs/*.jar
+          VisionBench/build/libs/*.jar
 
   build_mac:
     runs-on: macos-26
@@ -96,7 +96,7 @@ jobs:
       with:
         name: eocvsim-macos-latest
         path: |
-          EOCV-Sim/build/libs/*.jar
+          VisionBench/build/libs/*.jar
 
   build_mac_intel:
     runs-on: macos-26-intel
@@ -119,7 +119,7 @@ jobs:
       with:
         name: eocvsim-macos-13
         path: |
-          EOCV-Sim/build/libs/*.jar
+          VisionBench/build/libs/*.jar
 
   release:
     needs: [build_linux, build_linux_arm, build_windows, build_mac, build_mac_intel]
@@ -143,7 +143,7 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.JRELEASER_MAVENCENTRAL_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
-        run: ./gradlew -Penv=release :Common:publishToMavenCentral :Vision:publishToMavenCentral :EOCV-Sim:publishToMavenCentral -x test -x :EOCV-Sim:shadowJar
+        run: ./gradlew -Penv=release :Common:publishToMavenCentral :Vision:publishToMavenCentral :VisionBench:publishToMavenCentral -x test -x :VisionBench:shadowJar
 
       - name: Download Linux artifacts
         uses: actions/download-artifact@v4
@@ -188,15 +188,15 @@ jobs:
         run: |
           mkdir -p release-jars
           # Copy the first (and should be only) jar from each platform folder
-          cp artifacts/ubuntu/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
-          cp artifacts/ubuntu-arm64/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux ARM64 jar found"
-          cp artifacts/windows/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
-          cp artifacts/macos/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
-          cp artifacts/macos-intel/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Intel macOS jar found"
+          cp artifacts/ubuntu/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found" jar found"
+          cp artifacts/ubuntu-arm64/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Linux ARM64 jar found"
+          cp artifacts/windows/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
+          cp artifacts/macos/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
+          cp artifacts/macos-intel/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Intel macOS jar found"
           # Remove source jars if any were copied
           rm -f release-jars/*-sources.jar
           # Remove the generic jar (no platform suffix)
-          find release-jars -name "EOCV-Sim-*.jar" ! -name "*x86*" ! -name "*arm*" ! -name "*win*" -delete
+          find release-jars -name "VisionBench-*.jar" ! -name "*x86*" ! -name "*arm*" ! -name "*win*" -delete
           echo "Release jars to upload:"
           ls -la release-jars/
 
@@ -247,11 +247,11 @@ jobs:
         run: |
           mkdir -p release-jars
           # Copy the first (and should be only) jar from each platform folder
-          cp artifacts/dev/ubuntu/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
-          cp artifacts/dev/ubuntu-arm64/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Linux ARM64 jar found"
-          cp artifacts/dev/windows/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
-          cp artifacts/dev/macos/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
-          cp artifacts/dev/macos-intel/EOCV-Sim-*.jar release-jars/ 2>/dev/null || echo "No Intel macOS jar found"
+          cp artifacts/dev/ubuntu/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
+          cp artifacts/dev/ubuntu-arm64/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Linux ARM64 jar found"
+          cp artifacts/dev/windows/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
+          cp artifacts/dev/macos/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
+          cp artifacts/dev/macos-intel/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Intel macOS jar found"
           # Remove source jars if any were copied
           rm -f release-jars/*-sources.jar
           # Remove the generic jar (no platform suffix)
@@ -263,7 +263,7 @@ jobs:
         uses: pyTooling/Actions/releaser@r0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: 'Dev'
+          tag: ${{ github.ref_name }}
           rm: true
           files: |
             release-jars/*.jar
