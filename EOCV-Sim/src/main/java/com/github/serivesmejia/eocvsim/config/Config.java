@@ -22,6 +22,7 @@ public class Config {
     public volatile PipelineTimeout pipelineTimeout = PipelineTimeout.MEDIUM;
 
     public volatile boolean pauseOnImages = true;
+    public volatile boolean showFpsMeter = true;
 
     public volatile double webcamOpenTimeoutSec = 5.0;
     public volatile double webcamNewFrameTimeoutSec = 3.0;

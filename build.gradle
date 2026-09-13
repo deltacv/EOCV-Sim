@@ -21,8 +21,8 @@ plugins {
 }
 
 ext {
-    paperVisionVersion = "1.1.0"
-    paperVisionPluginUrl = "https://github.com/deltacv/PaperVision/releases/download/v${paperVisionVersion}/PaperVisionPlugin-${paperVisionVersion}-all.jar"
+    paperVisionVersion = "2027.0.0"
+    paperVisionPluginUrl = "https://github.com/deltacv/VisionGraph/releases/download/v${paperVisionVersion}/VisionGraphPlugin-${paperVisionVersion}-all.jar"
 
     wpilibVersion   = "2027.0.0-alpha-6"
     opencvVersion   = "2027-4.13.0-3"

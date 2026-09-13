@@ -89,8 +89,16 @@ def embeddedPluginsDir =
         layout.buildDirectory.dir("generated/embeddedPlugins/embedded_plugins")
 
 tasks.register("downloadPaperVisionPlugin", Download) {
+    doFirst {
+        delete fileTree(embeddedPluginsDir.get().asFile) {
+            include "PaperVisionPlugin.jar"
+            include "VisionGraphPlugin-*.jar"
+            exclude "VisionGraphPlugin-${paperVisionVersion}.jar"
+        }
+    }
+
     src paperVisionPluginUrl
-    dest embeddedPluginsDir.map { it.file("PaperVisionPlugin.jar") }
+    dest embeddedPluginsDir.map { it.file("VisionGraphPlugin-${paperVisionVersion}.jar") }
 
     overwrite false
     onlyIfModified true

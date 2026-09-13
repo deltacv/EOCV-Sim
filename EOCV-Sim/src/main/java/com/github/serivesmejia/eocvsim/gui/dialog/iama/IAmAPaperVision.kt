@@ -139,7 +139,7 @@ class IAmAPaperVision(
                         JOptionPane.showConfirmDialog(
                             visualizer.frame,
 
-                            "From now on, EOCV-Sim will focus on VisionGraph upon startup.\nYou can change this in the settings.",
+                            "From now on, VisionBench will focus on VisionGraph upon startup.\nYou can change this in the settings.",
                             "VisionGraph",
                             JOptionPane.DEFAULT_OPTION,
                             JOptionPane.INFORMATION_MESSAGE

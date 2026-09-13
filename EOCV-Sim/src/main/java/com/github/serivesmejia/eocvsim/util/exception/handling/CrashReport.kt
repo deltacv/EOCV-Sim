@@ -61,7 +61,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             "Do not go gentle into that good night...",
             "Sorry :(",
             "Surprise! Haha. Well, this is awkward.",
-            "Hi. I'm EOCV-Sim, and I'm a crashaholic.",
+            "Hi. I'm VisionBench, and I'm a crashaholic.",
             "Ooh. Shiny.",
             "This doesn't make any sense!",
             "Why is it breaking :(",
@@ -78,7 +78,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
     private val sb = StringBuilder()
 
     init {
-        val title = "  EOCV-Sim v${EOCVSim.VERSION} crash report"
+        val title = "  VisionBench v${EOCVSim.VERSION} crash report"
         val dashes = "-".repeat(title.length)
         val topBorder = "/$dashes\\"
         val bottomBorder = "\\$dashes/"
@@ -97,7 +97,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
         }
 
         val infoSectionLines = listOf(
-            ": EOCV-Sim info",
+            ": VisionBench info",
             "   Version: ${EOCVSim.VERSION}",
             "   Built on: ${BuildInfo.BUILD_DATE}",
             ": System specs",

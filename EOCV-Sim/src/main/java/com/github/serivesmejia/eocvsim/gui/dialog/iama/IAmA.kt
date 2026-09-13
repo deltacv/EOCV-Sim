@@ -40,7 +40,7 @@ class IAmA : KoinComponent {
         dialog.contentPane.layout = GridBagLayout()
 
         val text = """
-            <b>Welcome to EOCV-Sim! We'll start with a walkthrough.</b><br>
+            <b>Welcome to VisionBench! We'll start with a walkthrough.</b><br>
             Please select the option that best describes you.<br><br>
             <b>I am..</b>
         """.trimIndent()

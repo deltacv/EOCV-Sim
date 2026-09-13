@@ -78,7 +78,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
         private set
 
     private val fpsMeterDescriptor: String
-        get() = "deltacv EOCV-Sim v" + BuildInfo.STANDARD_VERSION_STRING + if (BuildInfo.IS_DEV) "-dev" else ""
+        get() = "deltacv VisionBench v" + BuildInfo.STANDARD_VERSION_STRING + if (BuildInfo.IS_DEV) "-dev" else ""
 
     @JvmField
     val viewport = SwingOpenCvViewport(Size(1080.0, 720.0), fpsMeterDescriptor)
@@ -111,7 +111,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
     lateinit var tunerCollapsible: CollapsiblePanelX
         private set
 
-    private var title = "EasyOpenCV Simulator v" + BuildInfo.STANDARD_VERSION_STRING
+    private var title = "VisionBench v" + BuildInfo.STANDARD_VERSION_STRING
     private var titleMsg = "No pipeline"
     private var beforeTitleMsg = ""
 
@@ -155,6 +155,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
 
         viewport.init()
         viewport.dark = FlatLaf.isLafDark()
+        viewport.setFpsMeterEnabled(configManager.config.showFpsMeter)
 
         colorPicker = ColorPicker(viewport)
 
@@ -208,7 +209,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
 
         frame.size = Dimension(780, 645)
         frame.minimumSize = frame.size
-        frame.title = "EasyOpenCV Simulator - No Pipeline"
+        frame.title = "VisionBench - No Pipeline"
 
         frame.defaultCloseOperation = JFrame.DO_NOTHING_ON_CLOSE
 
@@ -403,7 +404,7 @@ class Visualizer : PhaseOrchestrableBase(), KoinComponent {
         dialogFactory.createInformation(
             frame,
             "Runtime pipeline builds are not supported on this JVM",
-            "For further info, check the EOCV-Sim docs",
+            "For further info, check the VisionBench docs",
             "Operation failed"
         )
     }

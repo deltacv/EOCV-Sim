@@ -40,6 +40,7 @@ class Configuration : KoinComponent {
     private val themeComboBox: JComboBox<String>
     private val superAccessCheckBox: JCheckBox
     private val prefersPaperVisionCheckbox: JCheckBox
+    private val fpsMeterCheckBox: JCheckBox
     private val pauseOnImageCheckBox: JCheckBox
     private val webcamOpenTimeoutSpinner: JSpinner
     private val webcamNewFrameTimeoutSpinner: JSpinner
@@ -61,13 +62,17 @@ class Configuration : KoinComponent {
         prefersPaperVisionCheckbox = JCheckBox("Focus on VisionGraph Upon Startup").apply {
             isSelected = config.flags["prefersPaperVision"] ?: false
         }
-        val uiPanel = JPanel(GridLayout(3, 1, 1, 8)).apply {
+        fpsMeterCheckBox = JCheckBox("Show FPS Meter in Viewport").apply {
+            isSelected = config.showFpsMeter
+        }
+        val uiPanel = JPanel(GridLayout(4, 1, 1, 8)).apply {
             add(JPanel(FlowLayout()).apply {
                 add(JLabel("Theme: "))
                 add(themeComboBox)
             })
             add(JPanel(FlowLayout()).apply { add(superAccessCheckBox) })
             add(JPanel(FlowLayout()).apply { add(prefersPaperVisionCheckbox) })
+            add(JPanel(FlowLayout()).apply { add(fpsMeterCheckBox) })
         }
 
         // --- Input Sources Tab ---
@@ -177,6 +182,8 @@ class Configuration : KoinComponent {
         config.videoRecordingFps = videoRecordingFpsComboBox.selectedEnum
         config.autoAcceptSuperAccessOnTrusted = superAccessCheckBox.isSelected
         config.flags["prefersPaperVision"] = prefersPaperVisionCheckbox.isSelected
+        config.showFpsMeter = fpsMeterCheckBox.isSelected
+        visualizer.viewport.setFpsMeterEnabled(config.showFpsMeter)
 
         configManager.saveToFile()
 

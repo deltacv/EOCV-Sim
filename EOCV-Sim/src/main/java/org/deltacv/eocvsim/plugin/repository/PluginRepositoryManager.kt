@@ -194,7 +194,7 @@ class PluginRepositoryManager(
     ): Boolean {
         val result = JOptionPane.showOptionDialog(
             null,
-            "Plugin \"$pluginName\" is outdated. Latest version is ${latest.version}. Do you want to update? This will restart EOCV-Sim.",
+            "Plugin \"$pluginName\" is outdated. Latest version is ${latest.version}. Do you want to update? This will restart VisionBench.",
             "Update Plugin",
             JOptionPane.YES_NO_OPTION,
             JOptionPane.QUESTION_MESSAGE,

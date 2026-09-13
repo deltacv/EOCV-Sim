@@ -312,6 +312,12 @@ public class OpenCvViewRenderer
 
     public void renderPaused(Canvas canvas)
     {
+        if (!fpsMeterEnabled)
+        {
+            canvas.drawColor(PAUSED_COLOR);
+            return;
+        }
+
         canvas.drawColor(PAUSED_COLOR);
 
         Rect rect = createRect(

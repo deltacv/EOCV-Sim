@@ -73,7 +73,7 @@ object SuperAccessDaemon {
         System.setProperty("sun.java2d.d3d", "false")
         System.setProperty("apple.awt.UIElement", "true")
         System.setProperty("apple.awt.application.appearance", "system")
-        System.setProperty("apple.awt.application.name", "EasyOpenCV Simulator - SuperAccess")
+        System.setProperty("apple.awt.application.name", "VisionBench - SuperAccess")
 
         // start websocket client, listen for EOCV-Sim's requests
         WsClient(args[0].toIntOrNull() ?: throw IllegalArgumentException("Port is not a valid int"), args[1].toBoolean()).connect()
@@ -173,7 +173,7 @@ object SuperAccessDaemon {
             }
 
             warning += if(validAuthority != null) {
-                "<br><br>This plugin has been digitally signed by <b>${validAuthority.name}</b>.<br>It is a trusted authority in the EOCV-Sim ecosystem."
+                "<br><br>This plugin has been digitally signed by <b>${validAuthority.name}</b>.<br>It is a trusted authority in the VisionBench ecosystem."
             } else if(untrusted) {
                 "<br><br>This plugin claims to be made by <b>${parser.author}</b>, but it has not been digitally signed by them.<br><h2>Beware of potential security risks.</h2>"
             } else {

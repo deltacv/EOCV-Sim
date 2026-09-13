@@ -55,7 +55,7 @@ class About : KoinComponent {
         icon.alignmentX = Component.CENTER_ALIGNMENT
         icon.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
 
-        val appInfo = JLabel("EasyOpenCV Simulator v" + EOCVSim.VERSION)
+        val appInfo = JLabel("VisionBench v" + EOCVSim.VERSION)
         appInfo.font = appInfo.font.deriveFont(appInfo.font.style or Font.BOLD) // set font to bold
 
         val appInfoLogo = JPanel(FlowLayout())

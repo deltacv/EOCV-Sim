@@ -44,11 +44,11 @@ class IAmAFirstRobotics : KoinComponent {
         contentsPanel.border = BorderFactory.createEmptyBorder(10, 0, 0, 0)
 
         val contentText = """
-            <b>Hey FTC teams! EOCV-Sim helps you develop EasyOpenCV pipelines<br>
+            <b>Hello FTC teams! VisionBench helps you develop EasyOpenCV pipelines<br>
             without needing to always have the robot hardware at hand.</b><br><br>
             Work with code identical to the FtcRobotController, iterate with tools like the<br>
             variable tuner, and quickly visualize your code changes using workspaces.<br><br>
-            <b>Click on "Open Docs"</b> to learn more about EOCV-Sim and workspaces.<br>
+            <b>Click on "Open Docs"</b> to learn more about VisionBench and workspaces.<br>
         """.trimIndent()
 
         // Add a descriptive JLabel to the contents panel

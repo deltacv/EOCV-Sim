@@ -27,7 +27,7 @@ class SuperAccessRequest(sourceName: String, reason: String, val untrusted: Bool
         val panel = JPanel(BorderLayout())
         val frame = JDialog()
 
-        frame.title = "EOCV-Sim SuperAccess Request"
+        frame.title = "VisionBench SuperAccess Request"
 
         // Create UI components
         val titleLabel = JLabel("SuperAccess request from $sourceName", JLabel.CENTER)
