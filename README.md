@@ -91,6 +91,40 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 ### Formerly, VisionBench was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
+## [v2027.0.0 - Welcome to VisionBench](https://github.com/deltacv/EOCV-Sim/releases/tag/v2027.0.0)
+
+* This is the 38th release for VisionBench (formerly EOCV-Sim)
+
+    * Major milestone release featuring the official project rebrand to **VisionBench**, the renaming of PaperVision to **VisionGraph**, and the transition to Season-based Calendar Versioning (CalVer) aligned with WPILib 2027
+    * **Semantic Versioning Transition (CalVer)**:
+        * **BREAKING**: VisionBench has transitioned from sequential Semantic Versioning (`v4.x.x`) to **Season-based Calendar Versioning** (`vYYYY.Minor.Patch`), kicking off with `v2027.0.0`.
+        * **Why the change**: Versions now align directly with the FIRST robotics competition season cycle and the underlying WPILib ecosystem (`2027.0.0` repository plugin, WPILib `2027.0.0-alpha-6`, and OpenCV `2027-4.13.0-3`). This makes compatibility and season targeting immediately clear for FTC and FRC robotics teams.
+        * **Maven Coordinates**: Group ID and artifact coordinates are updated to:
+            * Gradle: `org.deltacv.VisionBench:VisionBench:2027.0.0`
+            * Maven: `<groupId>org.deltacv.VisionBench</groupId><artifactId>VisionBench</artifactId><version>2027.0.0</version>`
+    * Changelog:
+        * **Rebrand to VisionBench**:
+            * Renames core simulator module from `EOCV-Sim` to `VisionBench`.
+            * All visual references across the UI—including the About dialog, onboarding walkthrough dialogs, and crash output screens—now display VisionBench branding.
+            * Migrates CI/CD build workflows and Maven publish tasks to the VisionBench naming scheme.
+        * **(Re)Introducing VisionGraph (formerly PaperVision)**:
+            * Rebrands the node-based visual pipeline editor to **VisionGraph**, with companion plugin packaged as `VisionGraphPlugin-2027.0.0-all.jar`.
+            * Settings dialog and flags now reflect VisionGraph ("*Focus on VisionGraph Upon Startup*").
+        * **Viewport FPS Meter Toggle**:
+            * Adds a configuration option in settings (`showFpsMeter`) to toggle the visibility of the FPS counter overlay in the viewport.
+            * Viewport renderer (`SwingOpenCvViewport`, `OpenCvViewRenderer`) updated to respect `setFpsMeterEnabled`.
+        * **Embedded Plugins Resource Loading**:
+            * Adds `embedded_plugins` resource directory structure, allowing plugin JARs bundled within application resources to be automatically discovered, unpacked, and loaded by `PluginManager` during startup.
+    * Internal changes:
+        * Replaces generated `Build.java` with a Gradle-generated `EOCVSimBuildInfo.json` resource loaded dynamically via `BuildInfo.kt`.
+        * Upgrades build pipeline dependencies to `WPILibRepositoriesPlugin 2027.0.0`, WPILib `2027.0.0-alpha-6`, and OpenCV `2027-4.13.0-3`.
+        * Removes the deprecated `PaperVisionShadow` module from the build.
+    * Bugfixes:
+        * **SuperAccess Daemon Thread Safety**: Adds coroutine `Mutex` locking to `SuperAccessDaemonClient` during daemon initialization to eliminate race conditions during concurrent permission requests.
+        * **Plugin Security Cache Handling**: Fixes uncaught exceptions when reading malformed or corrupted authorities cache files.
+        * **Build Info Task Ordering**: Fixes Gradle task dependencies for `writeBuildInfoJson` to ensure reliable build metadata generation prior to packaging.
+        * **Crash Dialog Decoupling**: Decouples the crash report dialog from the main window hierarchy and removes modal blocking to prevent UI lockups during uncaught exception handling.
+
 ## [v4.2.0 - Lifecycle & Platform Architecture Rework](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.2.0)
 
 * This is the 37th release for EOCV-Sim
