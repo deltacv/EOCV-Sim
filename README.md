@@ -4,30 +4,31 @@
 
 # Welcome!
 
-EOCV-Sim (EasyOpenCV Simulator) is a straightforward way to test your pipelines in a 
+VisionBench (formerly EOCV-Sim) is a straightforward way to test your pipelines in a 
 simple user interface directly in your computer, simulating the EasyOpenCV library & a bit of
 FTC SDK structure, allowing you to simply copy paste directly your pipeline code once you want to 
 transfer it onto your robot!
 
 <img src='doc/images/eocvsim_screenshot_1.png' width='75%' height='75%'>
 
-## Introducing PaperVision
+## Introducing VisionGraph
 
-EOCV-Sim comes with a tool that will make it even easier to work on your computer vision pipelines.
-PaperVision takes inspiration in Blender and Unreal Engine's blueprint system, allowing you to create pipelines by connecting nodes together.<br><br>
-PaperVision is still in its early stages, but it's already a powerful tool that will make it easier to work on your pipelines.<br><br>
-<b>Find it in the "PaperVision" tab in the simulator !</b>
+VisionBench comes with a tool that will make it even easier to work on your computer vision pipelines.
+VisionGraph takes inspiration in industry-leading node editor tools, allowing you to create pipelines by connecting nodes together.<br><br>
+VisionGraph is still in its early stages, but it's already a powerful tool that will make it easier to work on your pipelines.<br><br>
+<b>Find it in the "VisionGraph" tab in the bench !</b>
 
 <img src='/EOCV-Sim/src/main/resources/images/papervision.gif' height='300px'>
 
-# Learn how to install and use the simulator in the [documentation here](https://docs.deltacv.org/eocv-sim)
-### (Common users won't need to scroll down any further from here - the docs have everything you need)
+# Learn how to install and use VisionBench in the [documentation here](https://docs.deltacv.org/visionbench)
 
 # [Buy me a coffee](https://buymeacoffee.com/serivesmejia)
 
 For the past 4 years I've been developing and maintaining learning tools for robotics kids to have a better understanding of programming and computer vision. Now that I've graduated from the robotics competition and I'm headed to college it is my goal to keep maintaining and improving these tools for future generations to keep learning, completely cost-free and open source. Your donation in [buy me a coffee](https://buymeacoffee.com/serivesmejia) will help me maintain those goals through the following years as life gets busier. It is completely voluntary, but it will help ensure these tools remain accessible and continuously improved for future robotics enthusiasts. Thank you for considering supporting my passion for robotics!
 
 \- Sebastian Erives, deltacv's main dev
+
+### (Common users won't need to scroll down any further from here - the docs have everything you need)
 
 # Acknowledgments
 
@@ -61,33 +62,23 @@ Follow the steps in [this page](https://docs.deltacv.org/eocv-sim/downloading-eo
    ### Gradle
    ```groovy
    repositories {
-       maven { url 'https://jitpack.com' } //add jitpack as a maven repo
        mavenCentral() //add maven central as a maven repo
    }
    
    dependencies {
-      implementation 'com.github.deltacv:EOCV-Sim:3.3.2' // add the EOCV-Sim dependency, make sure to replace for the latest version
+      implementation 'org.deltacv.VisionBench:VisionBench:2027.0.0' // add the VisionBench dependency, make sure to replace for the latest version
    }
    ```
    
    ## Maven
    
-   Adding the jitpack maven repo
-   ```xml
-    <repositories>
-		<repository>
-		    <id>jitpack.io</id>
-		    <url>https://jitpack.io</url>
-		</repository>
-	</repositories>
-   ```
    
-   Adding the EOCV-Sim dependecy
+   Adding the VisionBench dependency
    ```xml
     <dependency>
-	    <groupId>com.github.deltacv</groupId>
-	    <artifactId>EOCV-Sim</artifactId>
-	    <version>3.3.2</version>
+	    <groupId>org.deltacv.VisionBench</groupId>
+	    <artifactId>VisionBench</artifactId>
+	    <version>2027.0.0</version>
 	</dependency>
    ```
 
@@ -98,7 +89,7 @@ Join the [deltacv discord server](https://discord.gg/A3RMYzf6DA) !
 
 # Change logs
 
-### Formerly, EOCV-Sim was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
+### Formerly, VisionBench was hosted on a [personal account repo](https://github.com/serivesmejia/EOCV-Sim/). Released prior to 3.0.0 can be found there for historic purposes.
 
 ## [v4.2.0 - Lifecycle & Platform Architecture Rework](https://github.com/deltacv/EOCV-Sim/releases/tag/v4.2.0)
 
