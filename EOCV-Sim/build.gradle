@@ -9,16 +9,16 @@ plugins {
     id 'com.gradleup.shadow'
     id 'org.photonvision.tools.WpilibTools'
     id 'signing'
-    id "com.vanniktech.maven.publish" version "0.30.0"
+    id "com.vanniktech.maven.publish"
     id 'io.github.fvarrui.javapackager.plugin'
+    id "de.undercouch.download" version "5.7.0"
 }
 
 apply from: '../build.common.gradle'
 
 ext.kotest_version = '5.7.2'
 
-def generatedResourcesDirProvider =
-        layout.buildDirectory.dir("generated/resources/buildinfo/main")
+def generatedResourcesDirProvider = layout.buildDirectory.dir("generated/resources/buildinfo/main")
 
 tasks.register('writeBuildInfoJson') {
     outputs.dir(generatedResourcesDirProvider)
@@ -37,14 +37,14 @@ tasks.register('writeBuildInfoJson') {
                 isDev                : version.toString().contains("dev"),
                 packagePlatform      : "${wpilibTools.currentPlatform.platformName}",
                 opencvVersion        : "$opencvVersion",
-                paperVisionVersion   : "$papervision_version"
+                paperVisionVersion   : "$paperVisionVersion"
         ]
 
         def versionFile = new File(outputDir, "EOCVSimBuildInfo.json")
 
         versionFile.text =
                 JsonOutput.prettyPrint(
-                        groovy.json.JsonOutput.toJson(buildInfo)
+                        JsonOutput.toJson(buildInfo)
                 ) + System.lineSeparator()
     }
 }
@@ -66,6 +66,12 @@ sourceSets {
         }
     }
 
+    embeddedPlugins {
+        resources {
+            srcDir(layout.buildDirectory.dir("generated/embeddedPlugins"))
+        }
+    }
+
     natives {}
 }
 
@@ -79,6 +85,24 @@ components.java {
     }
 }
 
+def embeddedPluginsDir =
+        layout.buildDirectory.dir("generated/embeddedPlugins/embedded_plugins")
+
+tasks.register("downloadPaperVisionPlugin", Download) {
+    src paperVisionPluginUrl
+    dest embeddedPluginsDir.map { it.file("PaperVisionPlugin.jar") }
+
+    overwrite false
+    onlyIfModified true
+    retries 3
+
+    inputs.property("paperVisionVersion", paperVisionVersion)
+}
+
+tasks.named("processEmbeddedPluginsResources") {
+    dependsOn("downloadPaperVisionPlugin")
+}
+
 shadowJar {
     mergeServiceFiles()
     archiveClassifier.set(wpilibTools.currentPlatform.platformName)
@@ -86,6 +110,7 @@ shadowJar {
     from(sourceSets.main.output)
     from(sourceSets.bootstrap.output)
     from(sourceSets.natives.output)
+    from(sourceSets.embeddedPlugins.output)
 
     manifest {
         attributes(

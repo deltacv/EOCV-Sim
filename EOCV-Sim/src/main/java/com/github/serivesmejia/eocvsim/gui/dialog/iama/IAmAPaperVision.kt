@@ -51,7 +51,7 @@ class IAmAPaperVision(
     }
 
     init {
-        val title = JLabel("<html><div style='text-align: center;'><b>Introducing PaperVision</b></div></html>")
+        val title = JLabel("<html><div style='text-align: center;'><b>Introducing VisionGraph</b></div></html>")
 
         title.font = title.font.deriveFont(20f)
         title.horizontalAlignment = SwingConstants.CENTER
@@ -70,7 +70,7 @@ class IAmAPaperVision(
         val text = """
             <html>
                 <div style='text-align: center;'>
-                    PaperVision is a new pipeline development tool that allows you to create<br>
+                    VisionGraph is a new pipeline development tool that allows you to create<br>
                     your OpenCV algorithms with a visual programming interface, easier than ever before.
                 </div>
             </html>
@@ -111,18 +111,18 @@ class IAmAPaperVision(
                 add(Box.createHorizontalStrut(10)) // Add some space between the buttons
             }
 
-            add(JButton("Use PaperVision").apply {
+            add(JButton("Use VisionGraph").apply {
                 addActionListener {
                     dialog.dispose() // Close the dialog on click
 
-                    val indexOfTab = visualizer.sidebarPanel.indexOfTab("PaperVision")
+                    val indexOfTab = visualizer.sidebarPanel.indexOfTab("VisionGraph")
                     if(indexOfTab >= 0) {
                         visualizer.sidebarPanel.selectedIndex = indexOfTab
                     } else {
                         JOptionPane.showMessageDialog(
                             visualizer.frame,
 
-                            "PaperVision is not currently available, please check your plugin settings.",
+                            "VisionGraph is not currently available, please check your plugin settings.",
                             "Warning",
                             JOptionPane.ERROR_MESSAGE
                         )
@@ -139,8 +139,8 @@ class IAmAPaperVision(
                         JOptionPane.showConfirmDialog(
                             visualizer.frame,
 
-                            "From now on, EOCV-Sim will focus on PaperVision upon startup.\nYou can change this in the settings.",
-                            "PaperVision",
+                            "From now on, EOCV-Sim will focus on VisionGraph upon startup.\nYou can change this in the settings.",
+                            "VisionGraph",
                             JOptionPane.DEFAULT_OPTION,
                             JOptionPane.INFORMATION_MESSAGE
                         )
@@ -148,8 +148,8 @@ class IAmAPaperVision(
                         JOptionPane.showOptionDialog(
                             visualizer.frame,
 
-                            "Would you like to focus on PaperVision by default?\nThis is useful if you're not interested on the other tools.\nYou can change this in the settings.",
-                            "PaperVision",
+                            "Would you like to focus on VisionGraph by default?\nThis is useful if you're not interested on the other tools.\nYou can change this in the settings.",
+                            "VisionGraph",
                             JOptionPane.YES_NO_OPTION,
                             JOptionPane.QUESTION_MESSAGE,
                             null,

@@ -229,8 +229,8 @@ class EOCVSim : KoinComponent {
                 // so we show it here if the user hasn't seen it yet
                 dialogFactory.createIAmAPaperVision(false)
             } else if(config.flags["prefersPaperVision"] == true) {
-                // if the user prefers PaperVision, switch to it upon start up
-                val indexOfTab = visualizer.sidebarPanel.indexOfTab("PaperVision")
+                // if the user prefers VisionGraph, switch to it upon start up
+                val indexOfTab = visualizer.sidebarPanel.indexOfTab("VisionGraph")
                 if(indexOfTab >= 0) {
                     visualizer.sidebarPanel.selectedIndex = indexOfTab
                 }

@@ -53,7 +53,7 @@ class CrashReport(causedByException: Throwable, isDummy: Boolean = false) {
             "Daisy, daisy...",
             "Oh - I know what I did wrong!",
             "I blame ESD.",
-            "You should try PaperVision!",
+            "You should try VisionGraph!",
             "Don't be sad. I'll do better next time, I promise!",
             "Don't be sad, have a hug! <3",
             "I just don't know what went wrong :(",

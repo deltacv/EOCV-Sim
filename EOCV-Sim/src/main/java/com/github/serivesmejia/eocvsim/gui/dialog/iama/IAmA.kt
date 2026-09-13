@@ -87,7 +87,7 @@ class IAmA : KoinComponent {
         })
 
         buttonsPanel.add(JButton(
-            "<html><div style='text-align: center;'>Specifically Interested<br>in PaperVision</div></html>",
+            "<html><div style='text-align: center;'>Specifically Interested<br>in VisionGraph</div></html>",
             EOCVSimIconLibrary.icoPaperVision.scaleToFit(60, 60)
         ).apply {
             font = font.deriveFont(14f)

@@ -230,7 +230,7 @@ class PluginManager : PhaseOrchestrableBase(), KoinComponent {
             } catch (e: Throwable) {
                 outputHandler.sendDialogSignal(PluginDialogSignal.ShowOutput)
                 outputHandler.sendOutputLine("-- Failure loading ${loader.pluginInfo.nameWithVersion} --")
-                outputHandler.sendOutputLine("'${e.toString()}'")
+                outputHandler.sendOutputLine("'$e'")
 
                 logger.error("Failure loading ${loader.pluginInfo.nameWithVersion}", e)
 

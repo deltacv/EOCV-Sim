@@ -41,7 +41,8 @@ public class Toml {
 
     public Toml read(InputStream in) {
         try {
-            Map<String, Object> m = MAPPER.readValue(in, new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> m = MAPPER.readValue(in, new TypeReference<>() {
+            });
             return new Toml(m);
         } catch (Exception e) {
             throw new RuntimeException("Failed to read TOML from stream", e);

@@ -58,7 +58,7 @@ class Configuration : KoinComponent {
         superAccessCheckBox = JCheckBox("Auto Accept SuperAccess on Trusted Plugins").apply {
             isSelected = config.autoAcceptSuperAccessOnTrusted
         }
-        prefersPaperVisionCheckbox = JCheckBox("Focus on PaperVision Upon Startup").apply {
+        prefersPaperVisionCheckbox = JCheckBox("Focus on VisionGraph Upon Startup").apply {
             isSelected = config.flags["prefersPaperVision"] ?: false
         }
         val uiPanel = JPanel(GridLayout(3, 1, 1, 8)).apply {
