@@ -188,7 +188,7 @@ jobs:
         run: |
           mkdir -p release-jars
           # Copy the first (and should be only) jar from each platform folder
-          cp artifacts/ubuntu/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found" jar found"
+          cp artifacts/ubuntu/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Linux jar found"
           cp artifacts/ubuntu-arm64/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Linux ARM64 jar found"
           cp artifacts/windows/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No Windows jar found"
           cp artifacts/macos/VisionBench-*.jar release-jars/ 2>/dev/null || echo "No macOS jar found"
