@@ -91,7 +91,7 @@ The project uses Koin as its dependency injection system. In `Module.kt`, the ap
 - `WorkspaceManager`
 - `PipelineManager`
 - `InputSourceManager`
-- `TunerManager`
+- `TunerManager` — live field inspection and runtime tuning for active pipeline objects
 - `PluginManager`
 - `CompiledPipelineManager`
 - `Visualizer`
@@ -108,6 +108,8 @@ The project also makes heavy use of `EventHandler`. Many cross-cutting behaviors
 - plugin output and UI signals.
 
 This pattern keeps the runtime responsive and reduces the need for tightly coupled object references scattered throughout the codebase.
+
+The live tuning system is another cross-cutting concern worth noting: `TunerManager` discovers editable fields from the current pipeline via reflection, wires them to Swing controls, and continuously syncs values between the pipeline object and the GUI. This is how the simulator can expose runtime settings like thresholds, blur values, or draw parameters without forcing a full rebuild or restart.
 
 ## OpenCV-first execution model
 

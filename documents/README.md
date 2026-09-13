@@ -21,6 +21,8 @@ This directory contains subsystem guides for the project’s major runtime areas
 - [07-workspaces.md](./07-workspaces.md) — editable project folders, compiler integration, and watch-based rebuilds
 - [08-plugins-and-superaccess.md](./08-plugins-and-superaccess.md) — plugin loading, repository handling, and security prompts
 - [09-vision-and-common-libraries.md](./09-vision-and-common-libraries.md) — rendering layer and foundational shared libraries
+- [10-runtime-utilities.md](./10-runtime-utilities.md) — event handling, lifecycle orchestration, and shared runtime infrastructure
+- [11-tunable-fields.md](./11-tunable-fields.md) — live pipeline tuning, reflection-driven field discovery, and the runtime editor system
 
 ## Core execution path
 
@@ -51,5 +53,7 @@ If you are new to the codebase, a practical reading order is:
 - `07-workspaces.md`
 - `08-plugins-and-superaccess.md`
 - `09-vision-and-common-libraries.md`
+- `10-runtime-utilities.md`
+- `11-tunable-fields.md`
 
 This order moves from overall architecture to runtime behavior and then to subsystems that depend on that runtime.

@@ -95,6 +95,93 @@ Key event handlers include:
 
 These events are not ornamental. They are part of the runtime’s communication layer. For example, when a pipeline change occurs, the manager resets counters, clears exception output windows, and calls the lifecycle hooks for each attached handler. That means other systems can respond without knowing the details of the pipeline internals.
 
+## Actual execution flow: from frame to output
+
+The run loop is more concrete than a generic “process frame” description. In the `PipelineManager.run()` method, the system does the following in order:
+
+1. It checks whether the pipeline is paused or no pipeline is active.
+2. It reads the latest frame from `InputSourceManager.lastMatFromSource`.
+3. It records the start of a frame in the shared `PipelineStatisticsCalculator`.
+4. It launches a coroutine on a per-pipeline dispatcher (`currentPipelineContext`), which is a dedicated single-thread context named like `Pipeline-MyPipeline`.
+5. If the current pipeline has not yet completed its first initialization, it calls `preInit()` on each subscribed `PipelineHandler`.
+6. It records a `beforeProcessFrame()` timestamp and calls `currentPipeline.processFrameInternal(inputMat)`.
+7. It records `afterProcessFrame()` and posts the result mat to all registered `MatPoster`s.
+8. If the pipeline has not yet initialized, it calls `init()` on each handler and sets `hasInitCurrentPipeline = true`.
+9. It updates the exception tracker and ends the frame statistics measurement.
+
+This is a key detail: the actual user `processFrame()` call does not happen synchronously on the main Swing thread. It is executed in a coroutine-backed worker context, and the manager waits only up to a configured timeout.
+
+The reason this matters is that a buggy pipeline should not freeze the entire simulator UI for an indefinite period. The runtime isolates costly or hung processing in a separate job and then uses cancellation to recover.
+
+## Timeout and fallback behavior
+
+The timeout model is one of the most important parts of the runtime. It is configured in `Config`:
+
+- `pipelineTimeout` — an enum (`LOW`, `MEDIUM`, `HIGH`, `HIGHEST`)
+- `pipelineMaxFps` — a separate limiter controlling the maximum pipeline rate
+
+The timeout value is consumed in `PipelineManager.run()`:
+
+- default timeout = `configManager.config.pipelineTimeout.ms`
+- if the pipeline has not initialized yet, the manager allows a looser limit: `configTimeout * 1.8`
+
+Then the pipeline job is wrapped in:
+
+```kotlin
+withTimeout(timeout) {
+    pipelineJob.join()
+}
+```
+
+If the timeout is exceeded, the code runs the following recovery path:
+
+- `requestForceChangePipeline(0)` switches back to the default pipeline
+- `onPipelineTimeout.run()` fires the timeout event
+- the app logs a warning such as “User pipeline X took too long to processFrame … falling back to DefaultPipeline.”
+- the job is cancelled in `finally` so it cannot post stale output later
+
+This is not a generic watchdog; it is the main mechanism that keeps the app usable when a user pipeline blocks or enters an infinite loop. The simulator’s philosophy is to keep running, even if the active user pipeline fails, by replacing it with a safe fallback.
+
+The same pattern is used for `onViewportTapped()`: the app invokes the user callback in a background job and applies a timeout to it so a UI event cannot permanently stall the runtime.
+
+## Pause semantics and frame gating
+
+The runtime has explicit pause logic outside of the timeout layer. `PipelineManager` keeps a `paused` flag and a `pauseReason` enum with values:
+
+- `USER_REQUESTED`
+- `IMAGE_ONE_ANALYSIS`
+- `NOT_PAUSED`
+
+When the app is paused, `run()` exits early before calling `processFrameInternal()`. It still updates the exception tracker, but it does not keep processing frames. This is particularly important when the simulator is waiting for the first image analysis or when the user explicitly pauses the pipeline via the UI.
+
+`pauseOnImages` is another configuration-aware behavior. During pipeline change, if that setting is enabled and the source is an image-based input source, the manager may pause after the first image passes through the pipeline. That makes it easier to inspect a single frame without the runtime continuously advancing through subsequent images.
+
+## Pipeline switching and state handoff
+
+Changing the active pipeline is not just a simple assignment. The `forceChangePipeline(...)` flow does a number of important things:
+
+- captures the current snapshot so values can be restored later,
+- instantiates the next pipeline through the appropriate `PipelineInstantiator`,
+- creates a fresh telemetry object (`EOCVSimTelemetryImpl`),
+- creates a fresh single-thread coroutine context for that pipeline,
+- resets `hasInitCurrentPipeline = false`,
+- calls `onPipelineChange.run()`,
+- and optionally applies a previous snapshot or static snapshot to the new pipeline.
+
+This is why pipeline switching is relatively smooth in the simulator: it is not only a UI selection but also a runtime handoff in which telemetry, reflection targets, and coroutine execution state are reinitialized.
+
+## Why the processing model is safe and resilient
+
+The runtime’s execution pattern is intentionally defensive:
+
+- a pipeline runs in an isolated coroutine context,
+- its output is only posted if the pipeline still matches the active execution state,
+- timed jobs are cancelled aggressively,
+- exceptions are caught and routed into `PipelineExceptionTracker`,
+- and the system falls back to `DefaultPipeline` when a user pipeline hangs or crashes.
+
+That combination is what makes EOCV-Sim a usable development environment instead of a fragile demo. The simulator behaves like a real runtime that must protect the host app from the unreliability of untrusted user code.
+
 ## Pipeline handlers and wrappers
 
 The class `PipelineHandler` and its `SpecificPipelineHandler` implementation serve as adapters between the manager and different runtime behaviors. This is the place where a pipeline can be enriched with extra execution logic without bleeding that logic into the central manager itself.
