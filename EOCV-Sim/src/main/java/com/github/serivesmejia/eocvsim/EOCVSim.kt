@@ -5,7 +5,6 @@
 
 package com.github.serivesmejia.eocvsim
 
-import com.github.serivesmejia.eocvsim.BuildInfo
 import com.github.serivesmejia.eocvsim.config.Config
 import com.github.serivesmejia.eocvsim.config.ConfigManager
 import com.github.serivesmejia.eocvsim.gui.DialogFactory
@@ -25,17 +24,12 @@ import com.github.serivesmejia.eocvsim.util.io.EOCVSimFolder
 import com.github.serivesmejia.eocvsim.util.orchestration.Orchestrator
 import com.github.serivesmejia.eocvsim.workspace.WorkspaceManager
 import com.qualcomm.robotcore.eventloop.opmode.OpModePipelineHandler
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.swing.Swing
 import org.deltacv.common.pipeline.PipelineStatisticsCalculator
 import org.deltacv.common.util.ParsedVersion
 import org.deltacv.common.util.loggerFor
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.swing.Swing
 import org.deltacv.eocvsim.plugin.loader.PluginManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
