@@ -5,13 +5,18 @@ plugins {
 apply from: '../build.common.gradle'
 
 dependencies {
-    api project(':EOCV-Sim')
+    api project(':VisionBench')
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
 }
 
 tasks.register('runSim', JavaExec) {
     dependsOn 'classes'
-    dependsOn ':EOCV-Sim:processNativesResources'
+    dependsOn ':VisionBench:processNativesResources'
+    dependsOn ':VisionBench:processEmbeddedPluginsResources'
+
     mainClass = 'com.github.serivesmejia.eocvsim.Main'
-    classpath = sourceSets.main.runtimeClasspath + project(':EOCV-Sim').sourceSets.natives.output
+
+    classpath = sourceSets.main.runtimeClasspath +
+            project(':VisionBench').sourceSets.natives.output +
+            project(':VisionBench').sourceSets.embeddedPlugins.output
 }

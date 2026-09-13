@@ -155,7 +155,9 @@ class SwingOpenCvViewport(
         }
     }
 
-    override fun setFpsMeterEnabled(enabled: Boolean) {}
+    override fun setFpsMeterEnabled(enabled: Boolean) {
+        renderer.setFpsMeterEnabled(enabled)
+    }
 
     override fun resume() {
         synchronized(syncObj) {

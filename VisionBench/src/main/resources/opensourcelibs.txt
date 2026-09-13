@@ -1,0 +1,25 @@
+<html><a href="https://github.com/deltacv/EOCV-Sim/">VisionBench</a> and its source code is distributed under the MIT License</html>
+<html></html>
+<html><a href="https://github.com/opencv/opencv">OpenCV</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/wpilibsuite/allwpilib">WPILib</a> - Under BSD 3-Clause License</html>
+<html><a href="https://github.com/FIRST-Tech-Challenge/FtcRobotController">FTC SDK</a> - Some source code under BSD 3-Clause License</html>
+<html><a href="https://github.com/OpenFTC/EasyOpenCV">EasyOpenCV</a> - Some source code under MIT License</html>
+<html><a href="https://github.com/OpenFTC/EOCV-AprilTag-Plugin">EOCV-AprilTag-Plugin</a> - API under the MIT License</html>
+<html><a href="https://github.com/JetBrains/skiko">Skiko</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/JetBrains/kotlin">Kotlin stdlib & coroutines</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/remkop/picocli">picocli</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/JFormDesigner/FlatLaf/">FlatLaf</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/classgraph/classgraph">ClassGraph</a> - Under MIT License</html>
+<html><a href="https://github.com/FasterXML/jackson">Jackson</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/apache/logging-log4j2">Log4j</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/qos-ch/slf4j">SLF4J</a> - Under MIT License</html>
+<html><a href="https://github.com/InsertKoinIO/koin">Koin</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/eclipse/eclipse.jdt.core">ECJ</a> - Under Eclipse Public License 2.0</html>
+<html><a href="https://github.com/miglayout/miglayout">MigLayout</a> - Under BSD 3-Clause License</html>
+<html><a href="https://github.com/TooTallNate/Java-WebSocket">Java-WebSocket</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/srikanth-lingala/zip4j">zip4j</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/Kotlin/kotlinx.coroutines">kotlinx-coroutines</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/kotest/kotest">Kotest</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/asm/asm">ASM</a> - Under BSD 3-Clause License</html>
+<html><a href="https://github.com/shrinkwrap/shrinkwrap-resolver">ShrinkWrap Resolver</a> - Under Apache 2.0 License</html>
+<html><a href="https://github.com/hebi/quickbuf">QuickBuf</a> - Under Apache 2.0 License</html>

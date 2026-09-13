@@ -1,0 +1,245 @@
+import groovy.json.JsonOutput
+import io.github.fvarrui.javapackager.gradle.PackageTask
+
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id 'com.gradleup.shadow'
+    id 'org.photonvision.tools.WpilibTools'
+    id 'signing'
+    id "com.vanniktech.maven.publish"
+    id 'io.github.fvarrui.javapackager.plugin'
+    id "de.undercouch.download" version "5.7.0"
+}
+
+apply from: '../build.common.gradle'
+
+ext.kotest_version = '5.7.2'
+
+def generatedResourcesDirProvider = layout.buildDirectory.dir("generated/resources/buildinfo/main")
+
+tasks.register('writeBuildInfoJson') {
+    outputs.dir(generatedResourcesDirProvider)
+
+    doLast {
+        String date = DateTimeFormatter.ofPattern("yyyy-M-d hh:mm:ss")
+                .format(LocalDateTime.now())
+
+        def outputDir = generatedResourcesDirProvider.get().asFile
+        outputDir.mkdirs()
+
+        def buildInfo = [
+                versionString        : "$version",
+                standardVersionString: "$standardVersion",
+                buildDate            : date,
+                isDev                : version.toString().contains("dev"),
+                packagePlatform      : "${wpilibTools.currentPlatform.platformName}",
+                opencvVersion        : "$opencvVersion",
+                paperVisionVersion   : "$paperVisionVersion"
+        ]
+
+        def versionFile = new File(outputDir, "EOCVSimBuildInfo.json")
+
+        versionFile.text =
+                JsonOutput.prettyPrint(
+                        JsonOutput.toJson(buildInfo)
+                ) + System.lineSeparator()
+    }
+}
+
+def generatedResourcesDir = files(
+        generatedResourcesDirProvider
+).builtBy(tasks.named("writeBuildInfoJson"))
+
+sourceSets {
+    main {
+        resources {
+            srcDir(generatedResourcesDir)
+        }
+    }
+
+    bootstrap {
+        java {
+            srcDirs = ['src/bootstrap/java']
+        }
+    }
+
+    embeddedPlugins {
+        resources {
+            srcDir(layout.buildDirectory.dir("generated/embeddedPlugins"))
+        }
+    }
+
+    natives {}
+}
+
+tasks.named('compileBootstrapJava', JavaCompile) {
+    options.release.set(8)
+}
+
+components.java {
+    tasks.named("shadowJar").configure {
+        enabled = project.gradle.startParameter.taskNames.contains("shadowJar")
+    }
+}
+
+def embeddedPluginsDir =
+        layout.buildDirectory.dir("generated/embeddedPlugins/embedded_plugins")
+
+tasks.register("downloadPaperVisionPlugin", Download) {
+    doFirst {
+        delete fileTree(embeddedPluginsDir.get().asFile) {
+            include "PaperVisionPlugin.jar"
+            include "VisionGraphPlugin-*.jar"
+            exclude "VisionGraphPlugin-${paperVisionVersion}.jar"
+        }
+    }
+
+    src paperVisionPluginUrl
+    dest embeddedPluginsDir.map { it.file("VisionGraphPlugin-${paperVisionVersion}.jar") }
+
+    overwrite false
+    onlyIfModified true
+    retries 3
+
+    inputs.property("paperVisionVersion", paperVisionVersion)
+}
+
+tasks.named("processEmbeddedPluginsResources") {
+    dependsOn("downloadPaperVisionPlugin")
+}
+
+shadowJar {
+    mergeServiceFiles()
+    archiveClassifier.set(wpilibTools.currentPlatform.platformName)
+
+    from(sourceSets.main.output)
+    from(sourceSets.bootstrap.output)
+    from(sourceSets.natives.output)
+    from(sourceSets.embeddedPlugins.output)
+
+    manifest {
+        attributes(
+                'Main-Class': 'com.github.serivesmejia.eocvsim.Bootstrap'
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+    dependsOn processNativesResources
+    classpath += sourceSets.natives.output
+}
+
+apply from: '../test-logging.gradle'
+
+tasks.register('pack', PackageTask) {
+    dependsOn build
+    mainClass = 'com.github.serivesmejia.eocvsim.Main'
+    bundleJre = true
+    customizedJre = false
+    generateInstaller = true
+    platform = "auto"
+
+    winConfig {
+        icoFile = file('src/main/resources/images/icon/ico_eocvsim.ico')
+        generateMsi = false
+        disableDirPage = false
+        disableProgramGroupPage = false
+        disableFinishedPage = false
+    }
+
+    linuxConfig {
+        pngFile = file('src/main/resources/images/icon/ico_eocvsim.png')
+    }
+}
+
+wpilibTools.deps.wpilibVersion = wpilibVersion
+
+def nativeConfigName = 'wpilibNatives'
+def nativeConfig = configurations.create(nativeConfigName)
+
+def nativeTasks = wpilibTools.createExtractionTasks {
+    configurationName = nativeConfigName
+}
+
+nativeTasks.addToSourceSetResources(sourceSets.natives)
+
+nativeConfig.dependencies.add wpilibTools.deps.wpilib("wpiutil")
+nativeConfig.dependencies.add wpilibTools.deps.wpilib("cscore")
+nativeConfig.dependencies.add wpilibTools.deps.wpilibOpenCv(opencvVersion)
+
+dependencies {
+    api project(':Common')
+    api project(':Vision')
+
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib'
+
+    implementation(platform("io.insert-koin:koin-bom:$koin_version"))
+    implementation("io.insert-koin:koin-core")
+
+    implementation "org.eclipse.jdt:ecj:3.21.0"
+
+    // WPILib OpenCV replaces openpnp
+    api wpilibTools.deps.wpilibOpenCvJava(opencvVersion)
+    wpilibNatives wpilibTools.deps.wpilibOpenCv(opencvVersion)
+
+    // WPILib AprilTag replaces AprilTagDesktop
+    api wpilibTools.deps.wpilibJava("apriltag")
+    wpilibNatives wpilibTools.deps.wpilib("apriltag")
+
+    // WPILib cscore replaces steve
+    implementation wpilibTools.deps.wpilibJava("cscore")
+    wpilibNatives wpilibTools.deps.wpilib("cscore")
+
+    // cscore depends on these
+    implementation wpilibTools.deps.wpilibJava("wpinet")
+    wpilibNatives wpilibTools.deps.wpilib("wpinet")
+
+    implementation wpilibTools.deps.wpilibJava("wpiutil")
+    wpilibNatives wpilibTools.deps.wpilib("wpiutil")
+
+    // needed for apriltags
+    implementation wpilibTools.deps.wpilibJava("wpimath")
+    wpilibNatives wpilibTools.deps.wpilib("wpimath")
+
+    // we don't use this directly... but we need this in the classpath
+    // for wpilib's geometry classes to work, used for apriltags
+    implementation "us.hebi.quickbuf:quickbuf-runtime:$quickbufVersion"
+
+    implementation "org.slf4j:slf4j-api:$slf4j_version"
+    implementation "org.apache.logging.log4j:log4j-api:$log4j_version"
+    implementation 'org.apache.logging.log4j:log4j-core:2.25.4'
+    implementation "org.apache.logging.log4j:log4j-slf4j2-impl:$log4j_version"
+
+    implementation "info.picocli:picocli:$picocli_version"
+    implementation "com.fasterxml.jackson.core:jackson-databind:$jackson_version"
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version"
+    implementation "io.github.classgraph:classgraph:$classgraph_version"
+
+    implementation "com.formdev:flatlaf:$flatlaf_version"
+    implementation "com.formdev:flatlaf-intellij-themes:$flatlaf_version"
+    implementation "com.miglayout:miglayout-swing:$miglayout_version"
+
+    implementation("org.java-websocket:Java-WebSocket:1.5.2")
+
+    implementation 'net.lingala.zip4j:zip4j:2.11.3'
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-swing:$kotlinx_coroutines_version"
+
+    testImplementation "io.kotest:kotest-runner-junit5:$kotest_version"
+    testImplementation "io.kotest:kotest-assertions-core:$kotest_version"
+
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-toml:$jackson_version"
+    implementation 'org.ow2.asm:asm:9.7'
+
+    implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-depchain:3.3.3'
+    implementation 'org.jboss.shrinkwrap.resolver:shrinkwrap-resolver-impl-maven-archive:3.3.2'
+
+    implementation('org.deltacv.visionloop:streaming:1.2.9') {
+        transitive = false
+    }
+}

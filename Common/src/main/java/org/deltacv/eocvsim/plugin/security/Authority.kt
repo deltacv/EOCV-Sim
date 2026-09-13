@@ -50,21 +50,25 @@ object AuthorityFetcher {
     private val cache = mutableMapOf<String, CachedAuthority>()
 
     fun fetchAuthority(name: String): Authority? {
-        validateCache()
+        try {
+            validateCache()
 
-        // Check if the authority is cached and the file is valid
-        cache[name]?.let { cachedAuthority ->
-            logger.info("Returning cached authority for $name")
-            return cachedAuthority.authority
+            // Check if the authority is cached and the file is valid
+            cache[name]?.let { cachedAuthority ->
+                logger.info("Returning cached authority for $name")
+                return cachedAuthority.authority
+            }
+        } catch (e: Exception) {
+            logger.error("Failed to validate cache", e)
         }
 
         // Load authorities from file if it exists
         if (AUTHORITIES_FILE.exists() && tryLockAuthoritiesFile()) {
             try {
-                    val authoritiesToml = Toml().read(AUTHORITIES_FILE)
+                val authoritiesToml = readAuthoritiesFile() ?: return null
                 val timestamp = authoritiesToml.getLong("timestamp")
 
-                if(System.currentTimeMillis() - timestamp > TTL_DURATION_MS) {
+                if (System.currentTimeMillis() - (timestamp ?: 0L) > TTL_DURATION_MS) {
                     AUTHORITIES_FILE.delete()
                 } else {
                     val authorityData = authoritiesToml.getTable(name)
@@ -118,22 +122,43 @@ object AuthorityFetcher {
             return
         }
 
-        val currentTime = System.currentTimeMillis()
+        try {
+            val currentTime = System.currentTimeMillis()
 
-        if(!AUTHORITIES_FILE.exists()) {
-            AUTHORITIES_FILE.writeText("timestamp = $currentTime\n")
-        }
+            if(!AUTHORITIES_FILE.exists()) {
+                AUTHORITIES_FILE.writeText("timestamp = $currentTime\n")
+                return
+            }
 
-        val authoritiesToml = Toml().read(AUTHORITIES_FILE)
-        val timestamp = authoritiesToml.getLong("timestamp")
+            val authoritiesToml = readAuthoritiesFile()
+            val timestamp = authoritiesToml?.getLong("timestamp")
 
-        if(timestamp != null && currentTime - timestamp > TTL_DURATION_MS) {
+            if(timestamp != null && currentTime - timestamp > TTL_DURATION_MS) {
+                AUTHORITIES_FILE.delete()
+                logger.info("Authorities file has expired, clearing cache")
+                cache.clear()
+            }
+        } catch (e: Exception) {
+            logger.error("Authorities cache is corrupted, clearing it", e)
             AUTHORITIES_FILE.delete()
-            logger.info("Authorities file has expired, clearing cache")
             cache.clear()
+        } finally {
+            AUTHORITIES_LOCK_FILE.unlock()
+        }
+    }
+
+    private fun readAuthoritiesFile(): Toml? {
+        if (!AUTHORITIES_FILE.exists()) {
+            return null
         }
 
-        AUTHORITIES_LOCK_FILE.unlock()
+        return try {
+            Toml().read(AUTHORITIES_FILE)
+        } catch (e: Exception) {
+            logger.warn("Authorities cache is invalid, deleting it and recreating later", e)
+            AUTHORITIES_FILE.delete()
+            null
+        }
     }
 
     private fun saveAuthorityToFile(name: String, publicKey: String) {
@@ -142,28 +167,67 @@ object AuthorityFetcher {
         }
 
         try {
-            val sb = StringBuilder()
+            val currentTime = System.currentTimeMillis()
+            val existingAuthorities = linkedMapOf<String, Any?>()
 
-            // Load existing authorities if the file exists
             if (AUTHORITIES_FILE.exists()) {
-                val existingToml = AUTHORITIES_FILE.readText()
-                sb.append(existingToml)
-            } else {
-                sb.append("timestamp = ${System.currentTimeMillis()}\n")
+                val existingToml = readAuthoritiesFile() ?: Toml()
+                val existingMap = existingToml.toMap().filterKeys { it != "timestamp" }
+                existingMap.forEach { (key, value) ->
+                    if (value is Map<*, *>) {
+                        existingAuthorities[key] = linkedMapOf<String, Any?>().apply {
+                            value.forEach { (nestedKey, nestedValue) -> put(nestedKey.toString(), nestedValue) }
+                        }
+                    } else {
+                        existingAuthorities[key] = value
+                    }
+                }
+
+                val topLevelTimestamp = existingToml.getLong("timestamp")
+                if (topLevelTimestamp != null) {
+                    existingAuthorities["timestamp"] = topLevelTimestamp
+                }
             }
 
-            // Append new authority information
-            sb.appendLine("[$name]")
-            sb.appendLine("public = \"$publicKey\"")
-            sb.appendLine("timestamp = ${System.currentTimeMillis()}")
+            existingAuthorities["timestamp"] = existingAuthorities["timestamp"] as? Number ?: currentTime
+            val authorityTable = linkedMapOf<String, Any?>()
+            authorityTable["public"] = publicKey
+            authorityTable["timestamp"] = currentTime
+            existingAuthorities[name] = authorityTable
 
-            // Write the updated content to the file
-            AUTHORITIES_FILE.writeText(sb.toString())
+            AUTHORITIES_FILE.writeText(buildAuthoritiesToml(existingAuthorities))
         } catch (e: Exception) {
             logger.error("Failed to save authority to file", e)
         } finally {
             AUTHORITIES_LOCK_FILE.unlock()
         }
+    }
+
+    private fun buildAuthoritiesToml(authorities: Map<String, Any?>): String {
+        val sb = StringBuilder()
+        val topLevelTimestamp = authorities["timestamp"]
+        if (topLevelTimestamp != null) {
+            sb.appendLine("timestamp = $topLevelTimestamp")
+        }
+
+        for ((name, value) in authorities.filterKeys { it != "timestamp" }) {
+            if (value !is Map<*, *>) continue
+
+            sb.appendLine()
+            sb.appendLine("[$name]")
+            for ((key, entryValue) in value) {
+                val fieldName = key.toString()
+                when (entryValue) {
+                    is Number -> sb.appendLine("$fieldName = $entryValue")
+                    is Boolean -> sb.appendLine("$fieldName = ${entryValue.toString().lowercase(Locale.ROOT)}")
+                    is String -> sb.appendLine("$fieldName = \"$entryValue\"")
+                    null -> sb.appendLine("$fieldName = \"\"")
+                    else -> sb.appendLine("$fieldName = \"$entryValue\"")
+                }
+            }
+        }
+
+        return sb.toString().trimEnd() + "\n"
     }
 
     private fun tryLockAuthoritiesFile(): Boolean {

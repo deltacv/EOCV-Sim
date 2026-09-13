@@ -2,7 +2,7 @@ plugins {
     id 'kotlin'
     id 'signing'
     id 'org.photonvision.tools.WpilibTools'
-    id "com.vanniktech.maven.publish" version "0.30.0"
+    id "com.vanniktech.maven.publish"
 }
 
 apply from: '../build.common.gradle'

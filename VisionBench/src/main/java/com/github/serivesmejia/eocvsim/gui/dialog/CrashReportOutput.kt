@@ -1,0 +1,58 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+package com.github.serivesmejia.eocvsim.gui.dialog
+
+import com.github.serivesmejia.eocvsim.gui.EOCVSimIconLibrary
+import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel
+import com.github.serivesmejia.eocvsim.gui.dialog.component.OutputPanel.DefaultBottomButtonsPanel
+import java.awt.Dimension
+import java.awt.Font
+import javax.swing.*
+import kotlin.system.exitProcess
+
+class CrashReportOutput(
+    crashReport: String,
+    headerText: String? = null
+){
+    val output by lazy {
+        JDialog()
+    }
+
+    private val reportPanel by lazy {
+        OutputPanel(DefaultBottomButtonsPanel(hasClearButton = false) { exitProcess(0) })
+    }
+
+    init {
+        output.title = "Crash Report"
+        output.layout = BoxLayout(output.contentPane, BoxLayout.Y_AXIS)
+        output.isAlwaysOnTop = true
+
+        reportPanel.outputArea.text = crashReport
+        SwingUtilities.invokeLater {
+            reportPanel.resetScroll()
+        }
+
+        output.add(JLabel(headerText ?: "An unexpected fatal error occurred, please report this to the developers.").apply {
+            font = font.deriveFont(Font.BOLD, 18f)
+            alignmentX = JLabel.CENTER_ALIGNMENT
+        })
+        output.add(reportPanel)
+
+        output.defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
+
+        output.size = Dimension(800, 400)
+
+        output.iconImages = listOf(
+            EOCVSimIconLibrary.icoEOCVSim128.image,
+            EOCVSimIconLibrary.icoEOCVSim64.image,
+            EOCVSimIconLibrary.icoEOCVSim32.image,
+            EOCVSimIconLibrary.icoEOCVSim16.image
+        )
+
+        output.setLocationRelativeTo(null)
+        output.isVisible = true
+    }
+}

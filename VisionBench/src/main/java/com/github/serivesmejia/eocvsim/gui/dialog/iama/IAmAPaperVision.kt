@@ -1,0 +1,180 @@
+/*
+ * Copyright (c) 2026 Sebastian Erives
+ * Licensed under the MIT License.
+ */
+
+package com.github.serivesmejia.eocvsim.gui.dialog.iama
+
+import com.github.serivesmejia.eocvsim.gui.DialogFactory
+import com.github.serivesmejia.eocvsim.gui.Visualizer
+import com.github.serivesmejia.eocvsim.config.ConfigManager
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import java.awt.BorderLayout
+import java.awt.Dimension
+import javax.swing.BorderFactory
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.ImageIcon
+import javax.swing.JButton
+import javax.swing.JDialog
+import javax.swing.JFrame
+import javax.swing.JLabel
+import javax.swing.JOptionPane
+import javax.swing.JPanel
+import javax.swing.SwingConstants
+
+class IAmAPaperVision(
+    private val specificallyInterested: Boolean = false,
+    private val showWorkspacesButton: Boolean = true
+) : KoinComponent {
+
+    companion object {
+        val papervisionGif = ImageIcon(this::class.java.getResource("/images/papervision.gif"))
+    }
+
+    private val visualizer: Visualizer by inject()
+    private val configManager: ConfigManager by inject()
+
+    private val dialogFactory: DialogFactory by inject()
+
+    val dialog = JDialog(visualizer.frame).apply {
+
+        isModal = true
+        title = "Welcome !"
+
+        layout = BoxLayout(contentPane, BoxLayout.Y_AXIS)
+
+        size = Dimension(820, 550)
+        isResizable = false
+        setLocationRelativeTo(null)
+    }
+
+    init {
+        val title = JLabel("<html><div style='text-align: center;'><b>Introducing VisionGraph</b></div></html>")
+
+        title.font = title.font.deriveFont(20f)
+        title.horizontalAlignment = SwingConstants.CENTER
+        title.alignmentX = JPanel.CENTER_ALIGNMENT // Align horizontally in the BoxLayout
+        dialog.contentPane.add(title)
+
+        dialog.contentPane.add(Box.createVerticalStrut(5))
+
+        val gifPanel = JPanel(BorderLayout())
+        val label = JLabel(papervisionGif)
+        gifPanel.add(label, BorderLayout.CENTER)
+
+        gifPanel.alignmentX = JPanel.CENTER_ALIGNMENT // Align the panel in the BoxLayout
+        dialog.contentPane.add(gifPanel)
+
+        val text = """
+            <html>
+                <div style='text-align: center;'>
+                    VisionGraph is a new pipeline development tool that allows you to create<br>
+                    your OpenCV algorithms with a visual programming interface, easier than ever before.
+                </div>
+            </html>
+        """.trimIndent()
+
+        dialog.contentPane.add(JLabel(text).apply {
+            font = font.deriveFont(18f)
+            horizontalAlignment = SwingConstants.CENTER
+            alignmentX = JPanel.CENTER_ALIGNMENT // Align horizontally in the BoxLayout
+        })
+
+        dialog.contentPane.add(Box.createVerticalStrut(10))
+
+        // Create the buttons panel
+        val buttonsPanel = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.X_AXIS)
+
+            add(Box.createHorizontalGlue()) // Align the button to the right
+
+
+            add(JButton("Close").apply {
+                addActionListener {
+                    // Handle the next button click here
+                    dialog.dispose() // Close the dialog on click
+                }
+            })
+
+            add(Box.createHorizontalStrut(10)) // Add some space between the buttons
+
+            if(!specificallyInterested && showWorkspacesButton) {
+                add(JButton("Use Workspaces Instead").apply {
+                    addActionListener {
+                        dialog.dispose() // Close the dialog on click
+                        dialogFactory.createWorkspace()
+                    }
+                })
+
+                add(Box.createHorizontalStrut(10)) // Add some space between the buttons
+            }
+
+            add(JButton("Use VisionGraph").apply {
+                addActionListener {
+                    dialog.dispose() // Close the dialog on click
+
+                    val indexOfTab = visualizer.sidebarPanel.indexOfTab("VisionGraph")
+                    if(indexOfTab >= 0) {
+                        visualizer.sidebarPanel.selectedIndex = indexOfTab
+                    } else {
+                        JOptionPane.showMessageDialog(
+                            visualizer.frame,
+
+                            "VisionGraph is not currently available, please check your plugin settings.",
+                            "Warning",
+                            JOptionPane.ERROR_MESSAGE
+                        )
+                        return@addActionListener
+                    }
+
+                    fun openPaperVisionByDefault() {
+                        configManager.config.flags["prefersPaperVision"] = true
+                    }
+
+                    if(specificallyInterested) {
+                        openPaperVisionByDefault()
+
+                        JOptionPane.showConfirmDialog(
+                            visualizer.frame,
+
+                            "From now on, VisionBench will focus on VisionGraph upon startup.\nYou can change this in the settings.",
+                            "VisionGraph",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.INFORMATION_MESSAGE
+                        )
+                    } else {
+                        JOptionPane.showOptionDialog(
+                            visualizer.frame,
+
+                            "Would you like to focus on VisionGraph by default?\nThis is useful if you're not interested on the other tools.\nYou can change this in the settings.",
+                            "VisionGraph",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            arrayOf("Yes", "No"),
+                            "No"
+                        ).let {
+                            if(it == JOptionPane.YES_OPTION) {
+                                openPaperVisionByDefault()
+                            } else {
+                                configManager.config.flags["prefersPaperVision"] = false
+                            }
+                        }
+                    }
+                }
+            })
+
+            border = BorderFactory.createEmptyBorder(0, 10, 10, 10)
+        }
+
+        buttonsPanel.alignmentX = JPanel.CENTER_ALIGNMENT // Align the panel in the BoxLayout
+        dialog.contentPane.add(buttonsPanel)
+
+
+        configManager.config.flags["hasShownIamPaperVision"] = true
+        dialog.isVisible = true
+    }
+
+}

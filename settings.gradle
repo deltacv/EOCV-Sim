@@ -15,9 +15,9 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version "0.4.0"
 }
 
-rootProject.name = 'EOCV-Sim'
+rootProject.name = 'VisionBench'
 
 include 'TeamCode'
-include 'EOCV-Sim'
+include 'VisionBench'
 include 'Common'
 include 'Vision'
