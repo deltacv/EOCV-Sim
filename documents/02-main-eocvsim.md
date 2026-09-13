@@ -2,7 +2,7 @@
 
 ## Entry points
 
-The process starts in `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/Main.kt`. This file is the JVM bootstrap layer. It does things that belong to app startup and platform integration rather than the business logic of the simulator itself, such as:
+The process starts in `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/Main.kt`. This file is the JVM bootstrap layer. It does things that belong to app startup and platform integration rather than the business logic of the simulator itself, such as:
 
 - setting Java 2D and desktop environment properties,
 - configuring OS-specific app naming for macOS,
@@ -13,7 +13,7 @@ This is the outer shell of the app. Most of the actual runtime behavior lives el
 
 ## The central runtime object
 
-The true app runtime is `EOCVSim` in `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/EOCVSim.kt`. It is the orchestration hub. The class resolves or owns references to the major subsystems:
+The true app runtime is `EOCVSim` in `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/EOCVSim.kt`. It is the orchestration hub. The class resolves or owns references to the major subsystems:
 
 - `ConfigManager`
 - `Visualizer`

@@ -6,11 +6,11 @@ The input source subsystem is the source-of-truth for media flowing into the sim
 
 The main runtime classes are:
 
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/input/InputSourceManager.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/input/InputSource.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/input/InputSourceInitializer.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/input/InputSourceLoader.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/input/source/`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/input/InputSourceManager.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/input/InputSource.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/input/InputSourceInitializer.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/input/InputSourceLoader.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/input/source/`
 
 ## High-level role in the app
 

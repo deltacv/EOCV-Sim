@@ -15,7 +15,7 @@ At a high level the project combines four major ideas:
 
 The repository is split into a few important modules:
 
-### `EOCV-Sim/`
+### `../VisionBench/`
 
 This is the main application module. It contains the desktop runtime, GUI, configuration manager, pipeline engine, workspace logic, plugin integration, and startup lifecycle. This module is the heart of the simulator.
 

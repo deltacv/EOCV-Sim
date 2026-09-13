@@ -6,10 +6,10 @@ The workspace subsystem is the developer-facing part of the simulator. It allows
 
 The main code lives in:
 
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/workspace/WorkspaceManager.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/workspace/config/`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/workspace/util/`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/compiled/CompiledPipelineManager.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/workspace/WorkspaceManager.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/workspace/config/`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/workspace/util/`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/compiled/CompiledPipelineManager.kt`
 
 ## What a workspace is
 

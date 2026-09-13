@@ -189,7 +189,7 @@ The separation is intentional:
 
 - `Common` = shared operational infrastructure
 - `Vision` = display and OpenCV adaptation layer
-- `EOCV-Sim` = app-level runtime, config, GUI, workspace, and pipeline orchestration
+- `VisionBench` = app-level runtime, config, GUI, workspace, and pipeline orchestration
 
 This arrangement keeps the code easier to maintain and lets each subsystem specialize in what it does best.
 

@@ -4,7 +4,7 @@ This repository is the EOCV-Sim desktop simulator for OpenCV/FIRST Tech Challeng
 
 Quick orientation:
 
-- `EOCV-Sim/` contains the main app runtime, workspace tooling, configuration, GUI, plugins, and pipeline orchestration.
+- `VisionBench/` contains the main app runtime, workspace tooling, configuration, GUI, plugins, and pipeline orchestration.
 - `Common/` contains shared lifecycle/orchestration utilities, event handling, and cross-cutting runtime helpers.
 - `Vision/` contains the rendering, camera compatibility, and FTC/OpenCV compatibility layer used to display and process frames.
 - `TeamCode/` contains sample FTC-style pipelines and example code.

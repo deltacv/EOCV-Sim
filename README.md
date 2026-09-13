@@ -1,4 +1,4 @@
-<img src='/EOCV-Sim/src/main/resources/images/icon/ico_eocvsim_new.png' height='128px'>
+<img src='//src/main/resources/images/icon/ico_eocvsim_new.png' height='128px'>
 
 [![Build, Test & Release](https://github.com/deltacv/EOCV-Sim/actions/workflows/build_ci.yml/badge.svg)](https://github.com/deltacv/EOCV-Sim/actions/workflows/release_ci.yml)
 
@@ -18,7 +18,7 @@ VisionGraph takes inspiration in industry-leading node editor tools, allowing yo
 VisionGraph is still in its early stages, but it's already a powerful tool that will make it easier to work on your pipelines.<br><br>
 <b>Find it in the "VisionGraph" tab in the bench !</b>
 
-<img src='/EOCV-Sim/src/main/resources/images/papervision.gif' height='300px'>
+<img src='//src/main/resources/images/papervision.gif' height='300px'>
 
 # Learn how to install and use VisionBench in the [documentation here](https://docs.deltacv.org/visionbench)
 

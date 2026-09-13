@@ -5,7 +5,7 @@ plugins {
 apply from: '../build.common.gradle'
 
 dependencies {
-    api project(':EOCV-Sim')
+    api project(':VisionBench')
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
 }
 

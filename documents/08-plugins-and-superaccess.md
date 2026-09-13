@@ -6,14 +6,14 @@ The plugin subsystem is the simulator’s extension mechanism. It allows externa
 
 The main implementation is spread across a few packages:
 
-- `EOCV-Sim/src/main/java/org/deltacv/eocvsim/plugin/loader/PluginManager.kt`
-- `EOCV-Sim/src/main/java/org/deltacv/eocvsim/plugin/loader/FilePluginLoaderImpl.kt`
-- `EOCV-Sim/src/main/java/org/deltacv/eocvsim/plugin/loader/EmbeddedPluginLoader.kt`
-- `EOCV-Sim/src/main/java/org/deltacv/eocvsim/plugin/loader/PluginClassLoader.kt`
-- `EOCV-Sim/src/main/java/org/deltacv/eocvsim/plugin/repository/PluginRepositoryManager.kt`
-- `EOCV-Sim/src/main/java/org/deltacv/eocvsim/plugin/security/superaccess/SuperAccessDaemon.kt`
-- `EOCV-Sim/src/main/java/org/deltacv/eocvsim/plugin/security/superaccess/SuperAccessDaemonClient.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/plugin/api/impl/`
+- `../VisionBench/src/main/java/org/deltacv/eocvsim/plugin/loader/PluginManager.kt`
+- `../VisionBench/src/main/java/org/deltacv/eocvsim/plugin/loader/FilePluginLoaderImpl.kt`
+- `../VisionBench/src/main/java/org/deltacv/eocvsim/plugin/loader/EmbeddedPluginLoader.kt`
+- `../VisionBench/src/main/java/org/deltacv/eocvsim/plugin/loader/PluginClassLoader.kt`
+- `../VisionBench/src/main/java/org/deltacv/eocvsim/plugin/repository/PluginRepositoryManager.kt`
+- `../VisionBench/src/main/java/org/deltacv/eocvsim/plugin/security/superaccess/SuperAccessDaemon.kt`
+- `../VisionBench/src/main/java/org/deltacv/eocvsim/plugin/security/superaccess/SuperAccessDaemonClient.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/plugin/api/impl/`
 
 This subsystem is responsible for:
 

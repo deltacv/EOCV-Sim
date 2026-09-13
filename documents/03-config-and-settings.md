@@ -6,9 +6,9 @@ The configuration subsystem is responsible for persistent runtime preferences an
 
 This subsystem is implemented mainly in:
 
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/config/Config.java`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/config/ConfigManager.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/gui/dialog/Configuration.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/config/Config.java`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/config/ConfigManager.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/gui/dialog/Configuration.kt`
 
 ## `Config.java`: the settings model
 

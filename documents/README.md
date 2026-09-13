@@ -4,7 +4,7 @@ This directory contains subsystem guides for the project’s major runtime areas
 
 ## Repository structure
 
-- `EOCV-Sim/` — main simulator application module
+- `../VisionBench/` — main simulator application module
 - `Common/` — shared orchestration and utility libraries
 - `Vision/` — OpenCV rendering and viewport adaptation layer
 - `TeamCode/` — sample FTC-style pipeline code and examples

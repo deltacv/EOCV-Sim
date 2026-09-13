@@ -6,15 +6,15 @@ The pipeline runtime is the execution engine of the simulator. It is the subsyst
 
 The pipeline stack is spread across several classes and packages:
 
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/PipelineManager.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/compiled/CompiledPipelineManager.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/compiled/PipelineCompiler.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/compiled/PipelineClassLoader.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/util/PipelineExceptionTracker.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/util/PipelineSnapshot.kt`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/handler/`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/instantiator/`
-- `EOCV-Sim/src/main/java/com/github/serivesmejia/eocvsim/pipeline/DefaultPipeline.java`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/PipelineManager.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/compiled/CompiledPipelineManager.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/compiled/PipelineCompiler.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/compiled/PipelineClassLoader.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/util/PipelineExceptionTracker.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/util/PipelineSnapshot.kt`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/handler/`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/instantiator/`
+- `../VisionBench/src/main/java/com/github/serivesmejia/eocvsim/pipeline/DefaultPipeline.java`
 
 Broadly speaking, the runtime is responsible for:
 

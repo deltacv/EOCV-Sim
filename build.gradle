@@ -61,7 +61,7 @@ ext {
 }
 
 allprojects {
-    group   'org.deltacv.EOCV-Sim'
+    group   'org.deltacv.VisionBench'
     version '2027.0.0'
 
     apply plugin: 'java'
