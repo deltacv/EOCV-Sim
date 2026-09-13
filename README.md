@@ -1,4 +1,4 @@
-<img src='//src/main/resources/images/icon/ico_eocvsim_new.png' height='128px'>
+<img src='VisionBench/src/main/resources/images/icon/ico_eocvsim_new.png' height='128px'>
 
 [![Build, Test & Release](https://github.com/deltacv/EOCV-Sim/actions/workflows/build_ci.yml/badge.svg)](https://github.com/deltacv/EOCV-Sim/actions/workflows/release_ci.yml)
 
